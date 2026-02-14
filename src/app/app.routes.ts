@@ -1,8 +1,8 @@
 import { Routes } from '@angular/router';
-import { JobsTabPlaceholderComponent } from './tabs/placeholders/jobs-tab-placeholder.component';
 import { TodayTabPlaceholderComponent } from './tabs/placeholders/today-tab-placeholder.component';
 import { SettingsTabPlaceholderComponent } from './tabs/placeholders/settings-tab-placeholder.component';
 import { SummaryComponent } from './summary/summary.component';
+import { JobsComponent } from './jobs/jobs.component';
 
 export const routes: Routes = [
   {
@@ -13,7 +13,7 @@ export const routes: Routes = [
   {
     path: 'tab-jobs',
     outlet: 'jobListTab',
-    component: JobsTabPlaceholderComponent,
+    component: JobsComponent,
   },
   {
     path: 'tab-today',
