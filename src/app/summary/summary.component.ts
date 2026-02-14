@@ -1,10 +1,9 @@
 import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { NativeScriptCommonModule } from '@nativescript/angular';
+import { finalize } from 'rxjs/operators';
+import { SummaryService } from './summary.service';
 
-type TotalsPerDayItem = {
-  dayName: string;
-  total: string;
-};
+type TotalsPerDayItem = { date: string; total: number };
 
 @Component({
   standalone: true,
@@ -15,30 +14,60 @@ type TotalsPerDayItem = {
   styleUrl: './summary.component.scss',
 })
 export class SummaryComponent {
-  protected paymentRange = 'Next Payment (Feb 10, 2026 - Feb 16, 2026)';
+  protected isLoading = false;
 
   protected summaryAmount = {
-    gross: '$2,250.00',
-    meterRent: '-$120.00',
-    billingPlatform: '-$55.00',
-    carRentalAmount: '-$80.00',
-    toolRentalAmount: '-$25.00',
-    net: '$1,970.00',
+    startDate: '2026-02-10',
+    endDate: '2026-02-16',
+    gross: 0,
+    meterRent: 0,
+    billingPlatform: 0,
+    carRentalAmount: 0,
+    toolRentalAmount: 0,
+    net: 0,
   };
 
   protected weekAverage = {
-    totalsPerDay: [
-      { dayName: 'Monday', total: '$340.00' },
-      { dayName: 'Tuesday', total: '$410.00' },
-      { dayName: 'Wednesday', total: '$355.00' },
-      { dayName: 'Thursday', total: '$390.00' },
-      { dayName: 'Friday', total: '$475.00' },
-    ] as TotalsPerDayItem[],
-    dailyAverage: '$394.00',
-    todayHourlyAverage: '$35.82',
+    totalsPerDay: [] as TotalsPerDayItem[],
+    dailyAverage: 0,
+    todayHourlyAverage: 0,
   };
 
-  protected onSyncSummary(): void {
-    console.log('Summary sync placeholder');
+  constructor(private summaryService: SummaryService) {
+    this.syncSummary();
+  }
+
+  protected syncSummary(): void {
+    const userId = this.summaryService.getCurrentUserId();
+    this.isLoading = true;
+
+    this.summaryService.getNextPayment(userId).subscribe((res) => {
+      this.summaryAmount = res;
+    });
+
+    this.summaryService
+      .getWeekAverage(userId)
+      .pipe(finalize(() => (this.isLoading = false)))
+      .subscribe((res) => {
+        const list = Array.isArray(res.totalsPerDay) ? res.totalsPerDay : [];
+        const total = list.reduce((acc, item) => acc + Number(item.total || 0), 0);
+        this.weekAverage = {
+          totalsPerDay: list,
+          dailyAverage: list.length ? total / list.length : 0,
+          todayHourlyAverage: res.todayHourlyAverage || 0,
+        };
+      });
+  }
+
+  protected formatMinusCurrency(value: number): string {
+    if (!value) {
+      return '$0.00';
+    }
+    return `-${this.currency(value)}`;
+  }
+
+  protected currency(value: number): string {
+    const num = Number(value || 0);
+    return `$${num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
   }
 }
