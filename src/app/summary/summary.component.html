@@ -1,0 +1,51 @@
+<ActionBar class="action-bar" title="Summary">
+  <ActionItem
+    ios.position="right"
+    text="Sync"
+    (tap)="onSyncSummary()"></ActionItem>
+</ActionBar>
+
+<ScrollView>
+  <StackLayout class="container">
+    <Label [text]="paymentRange" class="section-title"></Label>
+
+    <GridLayout rows="auto, auto, auto, auto, auto, auto" columns="*, auto" class="card">
+      <Label row="0" col="0" text="Gross Amount"></Label>
+      <Label row="0" col="1" [text]="summaryAmount.gross"></Label>
+
+      <Label row="1" col="0" text="Meter Rental Amount" class="line"></Label>
+      <Label row="1" col="1" [text]="summaryAmount.meterRent" class="line"></Label>
+
+      <Label row="2" col="0" text="Billing Platform" class="line"></Label>
+      <Label row="2" col="1" [text]="summaryAmount.billingPlatform" class="line"></Label>
+
+      <Label row="3" col="0" text="Car Rental Amount" class="line"></Label>
+      <Label row="3" col="1" [text]="summaryAmount.carRentalAmount" class="line"></Label>
+
+      <Label row="4" col="0" text="Tool Rental Amount" class="line"></Label>
+      <Label row="4" col="1" [text]="summaryAmount.toolRentalAmount" class="line"></Label>
+
+      <Label row="5" col="0" text="Net Amount" class="bold line"></Label>
+      <Label row="5" col="1" [text]="summaryAmount.net" class="bold line"></Label>
+    </GridLayout>
+
+    <Label text="Current Week Average" class="section-title second"></Label>
+
+    <StackLayout class="card">
+      <GridLayout *ngFor="let totalPerDay of weekAverage.totalsPerDay" columns="*, auto" class="line-row">
+        <Label col="0" [text]="totalPerDay.dayName"></Label>
+        <Label col="1" [text]="totalPerDay.total"></Label>
+      </GridLayout>
+
+      <GridLayout columns="*, auto" class="line-row">
+        <Label col="0" text="Daily Average" class="bold"></Label>
+        <Label col="1" [text]="weekAverage.dailyAverage" class="bold"></Label>
+      </GridLayout>
+
+      <GridLayout columns="*, auto" class="line-row">
+        <Label col="0" text="Today's Avg/hr (7am - 6pm)" class="bold"></Label>
+        <Label col="1" [text]="weekAverage.todayHourlyAverage" class="bold"></Label>
+      </GridLayout>
+    </StackLayout>
+  </StackLayout>
+</ScrollView>
