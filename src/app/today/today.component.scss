@@ -2,28 +2,58 @@
   margin: 12;
 }
 
-.title {
-  font-size: 20;
-  font-weight: 700;
+.totals {
+  margin-bottom: 10;
 }
 
-.subtitle {
-  margin-top: 6;
-  opacity: 0.8;
+.filter-row {
+  margin-bottom: 10;
 }
 
-.card {
-  margin-top: 14;
-  padding: 14;
+.job-card {
+  margin-bottom: 10;
+  padding: 12;
   border-radius: 8;
   background-color: rgba(126, 151, 185, 0.2);
 }
 
-.card-title {
-  font-size: 16;
+.job-title {
+  font-size: 15;
   font-weight: 700;
 }
 
-.card-text {
+.job-subtitle {
+  margin-top: 4;
+  opacity: 0.9;
+}
+
+.job-meta {
   margin-top: 6;
+  font-size: 12;
+}
+
+.status-chip {
+  margin-right: 6;
+  font-size: 12;
+  font-weight: 700;
+}
+
+.open {
+  color: #ffd166;
+}
+
+.closed {
+  color: #8bd08b;
+}
+
+.star-btn {
+  padding: 0;
+  margin: 0;
+  min-width: 26;
+  height: 26;
+  font-size: 16;
+}
+
+.starred {
+  color: #ffd166;
 }

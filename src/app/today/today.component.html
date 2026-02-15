@@ -1,11 +1,39 @@
-<ActionBar class="action-bar" title="Today"></ActionBar>
+<ActionBar class="action-bar">
+  <ActionBar.titleView>
+    <Label class="action-bar-title" [text]="'Today Jobs (' + jobList.length + ')'"></Label>
+  </ActionBar.titleView>
+  <ActionItem ios.position="right" text="Sync" (tap)="syncTap()"></ActionItem>
+</ActionBar>
 
-<GridLayout rows="auto, auto, *" class="container">
-  <Label row="0" text="Today base screen migrated" class="title"></Label>
-  <Label row="1" text="Next step: migrate today's jobs list and quick actions." class="subtitle"></Label>
+<StackLayout class="container">
+  <GridLayout columns="*, auto, *" class="totals">
+    <Label col="0" [text]="'Today: ' + currency(todayTotal)"></Label>
+    <Label col="1" [text]="'Units: ' + units"></Label>
+    <Label col="2" [text]="'Week: ' + currency(weeklyTotal)" textAlignment="right"></Label>
+  </GridLayout>
 
-  <StackLayout row="2" class="card">
-    <Label text="Today's Jobs" class="card-title"></Label>
-    <Label text="Placeholder for today list module" class="card-text"></Label>
-  </StackLayout>
-</GridLayout>
+  <GridLayout columns="auto, auto, auto" class="filter-row">
+    <Label col="0" text="All"></Label>
+    <Switch col="1" [checked]="showStarred" (checkedChange)="toggleStarredView()"></Switch>
+    <Label col="2" text="Starred"></Label>
+  </GridLayout>
+
+  <ScrollView>
+    <StackLayout>
+      <GridLayout *ngFor="let item of jobList" rows="auto, auto, auto" columns="*, auto" class="job-card">
+        <Label row="0" col="0" [text]="formatJobTitle(item)" class="job-title"></Label>
+        <Label row="0" col="1" [text]="currency(item.amount)" class="job-title"></Label>
+
+        <Label row="1" col="0" [text]="formatAddress(item)" colSpan="2" class="job-subtitle"></Label>
+        <Label row="2" col="0" [text]="'Job#: ' + item.number + '   Units: ' + (item.jobUnits || 0)" class="job-meta"></Label>
+
+        <StackLayout row="2" col="1" orientation="horizontal" horizontalAlignment="right">
+          <Label [text]="item.status" [class.open]="item.status === 'OPEN'" [class.closed]="item.status === 'CLOSED'" class="status-chip"></Label>
+          <Button text="★" [class.starred]="item.isStarred" class="star-btn" (tap)="setStarred(item)"></Button>
+        </StackLayout>
+      </GridLayout>
+    </StackLayout>
+  </ScrollView>
+
+  <ActivityIndicator [busy]="isLoading" horizontalAlignment="center" marginTop="12"></ActivityIndicator>
+</StackLayout>
