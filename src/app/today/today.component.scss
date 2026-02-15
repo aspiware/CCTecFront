@@ -22,6 +22,10 @@
   font-weight: 700;
 }
 
+.amount {
+  margin-right: 6;
+}
+
 .job-subtitle {
   margin-top: 4;
   opacity: 0.9;
@@ -56,4 +60,12 @@
 
 .starred {
   color: #ffd166;
+}
+
+.menu-btn {
+  padding: 0;
+  margin: 0;
+  min-width: 26;
+  height: 26;
+  font-size: 18;
 }

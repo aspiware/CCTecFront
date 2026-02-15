@@ -20,16 +20,19 @@
 
   <ScrollView>
     <StackLayout>
-      <GridLayout *ngFor="let item of jobList" rows="auto, auto, auto" columns="*, auto" class="job-card">
+      <GridLayout *ngFor="let item of jobList" rows="auto, auto, auto" columns="*, auto" class="job-card" (tap)="onItemTap(item)">
         <Label row="0" col="0" [text]="formatJobTitle(item)" class="job-title"></Label>
-        <Label row="0" col="1" [text]="currency(item.amount)" class="job-title"></Label>
+        <StackLayout row="0" col="1" orientation="horizontal" horizontalAlignment="right">
+          <Label [text]="currency(item.amount)" class="job-title amount"></Label>
+          <Button text="⋯" class="menu-btn" (tap)="openJobMenu(item); $event.cancelBubble = true"></Button>
+        </StackLayout>
 
         <Label row="1" col="0" [text]="formatAddress(item)" colSpan="2" class="job-subtitle"></Label>
         <Label row="2" col="0" [text]="'Job#: ' + item.number + '   Units: ' + (item.jobUnits || 0)" class="job-meta"></Label>
 
         <StackLayout row="2" col="1" orientation="horizontal" horizontalAlignment="right">
           <Label [text]="item.status" [class.open]="item.status === 'OPEN'" [class.closed]="item.status === 'CLOSED'" class="status-chip"></Label>
-          <Button text="★" [class.starred]="item.isStarred" class="star-btn" (tap)="setStarred(item)"></Button>
+          <Button text="★" [class.starred]="item.isStarred" class="star-btn" (tap)="setStarred(item); $event.cancelBubble = true"></Button>
         </StackLayout>
       </GridLayout>
     </StackLayout>
