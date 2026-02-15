@@ -1,0 +1,29 @@
+.container {
+  margin: 12;
+}
+
+.title {
+  font-size: 20;
+  font-weight: 700;
+}
+
+.subtitle {
+  margin-top: 6;
+  opacity: 0.8;
+}
+
+.card {
+  margin-top: 14;
+  padding: 14;
+  border-radius: 8;
+  background-color: rgba(126, 151, 185, 0.2);
+}
+
+.card-title {
+  font-size: 16;
+  font-weight: 700;
+}
+
+.card-text {
+  margin-top: 6;
+}
