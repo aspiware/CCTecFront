@@ -1,11 +1,57 @@
-<ActionBar class="action-bar" title="Today"></ActionBar>
+<ActionBar class="action-bar" [text]="`Today's Job List (${jobList.length})`">
+  <ActionItem
+    ios.position="right"
+    ios.systemIcon="13"
+    [visibility]="isSyncing ? 'collapse' : 'visible'"
+    [isEnabled]="!isSyncing"
+    (tap)="onSummaryDirectRefresh()">
+  </ActionItem>
+  <ActionItem ios.position="right" [visibility]="isSyncing ? 'visible' : 'collapse'">
+    <ActivityIndicator [busy]="isSyncing" width="20" height="20"></ActivityIndicator>
+  </ActionItem>
 
-<GridLayout rows="auto, auto, *" class="container">
-  <Label row="0" text="Today base screen migrated" class="title"></Label>
-  <Label row="1" text="Next step: migrate today's jobs list and quick actions." class="subtitle"></Label>
-
-  <StackLayout row="2" class="card">
-    <Label text="Today's Jobs" class="card-title"></Label>
-    <Label text="Placeholder for today list module" class="card-text"></Label>
+  <ActionItem ios.position="right">
+  <StackLayout>
+    <MenuButton
+      style="height: 48; width: 35; padding: 0; margin: 0;"
+      [useSFIcon]="true"
+      [sfIconName]="'ellipsis.circle'"
+      [isRightSide]="true"
+      [options]="mainMenuR.options"
+      (selected)="onSelectedMainMenuR($event)">
+    </MenuButton>
   </StackLayout>
-</GridLayout>
+</ActionItem>
+
+  <ActionItem ios.position="left" style="font-size: 17px" class="fas">
+    <StackLayout orientation="horizontal">
+
+      <MenuButton [useSFIcon]="true" class="fas"
+        style="background-color: transparent; font-size: 18px; height: 70px; width: 110px; padding-left: 10"
+        [sfIconName]="mainMenuIconName" [showSpinner]="isTechStatusLoading" #menuStatus [options]="mainMenu.options"
+        (selected)="onSelectedMainMenu($event, menuStatus)">
+      </MenuButton>
+    </StackLayout>
+  </ActionItem>
+
+  <ActionItem *ngIf="this.hasLunch" ios.position="left">
+  <StackLayout>
+    <MenuButton
+      [useSFIcon]="true"
+      [sfIconName]="'fork.knife.circle'"
+      [options]="[]"
+      (selected)="selected($event, item)">
+    </MenuButton>
+  </StackLayout>
+</ActionItem>
+
+  <!-- <ActionItem *ngIf="this.hasLunch" ios.position="left">
+      <Label class="today-label fas" text="&#xf805;"></Label>
+  </ActionItem> -->
+
+  <!-- <ActionItem ios.position="left" icon="font://&#xf805;" style="font-size: 17px" class="fas">
+  </ActionItem> -->
+
+  <!-- <ActionItem ios.position="left" icon="font://&#xf0ed;" style="font-size: 17px" class="fas" (tap)="openDialogAction()">
+  </ActionItem> -->
+</ActionBar>
