@@ -161,6 +161,129 @@
             [text]="(item.timeSlotStartDateTime | date: 'h:mm a') + ' - ' + (item.timeSlotEndDateTime | date: 'h:mm a')">
           </Label>
         </GridLayout>
+
+        <StackLayout horizontalAlignment="right" orientation="horizontal" style="padding: 0" backgroundColor="">
+            <GridLayout rows="auto" columns="auto, *">
+              <!-- <MDButton rippleColor="blue" text="">
+                                <FormattedString>
+                                  <Span text="&#xf26c;" class="fas"></Span>
+                                </FormattedString>
+                              </MDButton> -->
+
+              <!-- <Label *ngIf="item.status == 'CLOSED'" class="fas" text="&#xf26c;" (tap)="showAddDevicesModal(item)"
+                                style="margin-right: 10; font-size: 18px"></Label> -->
+
+              <StackLayout row="0" col="0" horizontalAlignment="left" orientation="horizontal" style="padding: 0"
+                backgroundColor="">
+                <Label *ngIf="item.sms_survey_sent" class="fas" text="&#xf7cd;" style="font-size: 18px"></Label>
+
+                <!-- <TimePicker *ngIf="item.status != 'CLOSED'" #etcTimePicker width="100" minuteInterval="5"
+                  horizontalAlignment="left" marginLeft="0" (timeChange)="onTimeChanged($event, item)">
+                </TimePicker> -->
+              </StackLayout>
+
+
+              <StackLayout row="0" col="1" horizontalAlignment="right" orientation="horizontal" style="padding: 0"
+                backgroundColor="">
+                <!-- <MDRipple rippleColor="blue" elevation="1" style="border-radius: 5;" style="margin-right: 20px"
+                  #bondingBtn>
+                  <Label class="fas" text="&#xf1eb;" (tap)="wifiConfig(item)" style="font-size: 14px"></Label>
+                </MDRipple> -->
+
+                <!-- <MDRipple *ngIf="roleId == 2" rippleColor="blue" elevation="1" style="border-radius: 5;"
+                  style="margin-right: 20px" #bondingBtn>
+                  <Label class="fas" text="&#xf02b;" (tap)="goToBondingValidation(item)"
+                    style="font-size: 14px"></Label>
+                </MDRipple> -->
+
+                <!-- <MDRipple *ngIf="item.status == 'CLOSED'" rippleColor="blue" elevation="1" style="border-radius: 5;"
+                  style="margin-right: 20px">
+                  <Label class="fas" text="&#xf044;" (tap)="showEditJob(item)" style="font-size: 14px"></Label>
+                </MDRipple> -->
+
+                <!-- <MDRipple rippleColor="blue" elevation="1" style="border-radius: 5;" style="margin-right: 20px">
+                  <Label class="fas" text="&#xf007;" (tap)="showCustomerInfo(item)" style="font-size: 14px"></Label>
+                </MDRipple> -->
+
+                <!-- <MDRipple rippleColor="blue" elevation="1" style="border-radius: 5; margin-right: 20px"> -->
+                  <Label class="far"
+                    [class.far]="!item.isStarred"
+                    [class.fas]="item.isStarred"
+                    text="&#xf005;"
+                    (tap)="setStarred(item)"
+                    style="font-size: 16px"></Label>
+                <!-- </MDRipple>s -->
+
+                <MenuButton class="fas"
+                  style="background-color: transparent; font-size: 14px; height: 70px; width: 100px; margin: 0"
+                  text="&#xf1eb;" (tap)="wifiConfig(item)">
+                </MenuButton>
+
+                <MenuButton *ngIf="item.status == 'CLOSED'" class="fas"
+                  style="background-color: transparent; font-size: 14px; height: 70px; width: 100px; margin: 0"
+                  text="&#xf044;" (tap)="showEditJob(item)">
+                </MenuButton>
+
+                <MenuButton class="fas"
+                  style="background-color: transparent; font-size: 14px; height: 70px; width: 100px; margin: 0"
+                  text="&#xf007;" (tap)="showCustomerInfo(item)">
+                </MenuButton>
+
+                <MenuButton class="fas"
+                  style="background-color: transparent; font-size: 16px; height: 70px; width: 100px; margin: 0"
+                  text="&#xff682;" (tap)="showJobHistory(item)">
+                </MenuButton>
+
+                <MenuButton class="fas"
+                  style="background-color: transparent; font-size: 14px; height: 70px; width: 100px; margin: 0"
+                  text="&#xf26c;" (tap)="showAddDevicesModal(item)">
+                </MenuButton>
+
+                <MenuButton class="fas"
+                  style="background-color: transparent; font-size: 16px; height: 70px; width: 100px; margin: 0"
+                  text="&#xe012;" (tap)="goToActivateService(item)">
+                </MenuButton>
+
+                <MenuButton *ngIf="(item.status == 'OPEN' && item.isCurrent) && roleId == 2" class="fas"
+                  style="background-color: transparent; font-size: 14px; height: 70px; width: 100px; margin: 0"
+                  text="&#xf2ed;" (tap)="showRemoveDevicesModal(item)">
+                </MenuButton>
+
+                <!-- <MDRipple *ngIf="(item.status == 'OPEN' && item.isCurrent) && roleId == 2" rippleColor="blue"
+                  elevation="1" style="border-radius: 5; margin-right: 20px">
+                  <Label class="fas" text="&#xf2ed;" (tap)="showRemoveDevicesModal(item)"
+                    style="font-size: 14px"></Label>
+                </MDRipple> -->
+
+                <!-- <MDRipple *ngIf="item.status != 'CLOSED' && roleId == 2" rippleColor="blue" elevation="1"
+                  style="border-radius: 5;">
+                  <Label class="fas" text="&#xf46c;" (tap)="completeJob(item)" style="font-size: 14px"></Label>
+                </MDRipple> -->
+
+                <!-- <MDRipple *ngIf="roleId == 2" rippleColor="blue" elevation="1"
+                  style="border-radius: 5;  margin-right: 20px">
+                  <Label class="fab" text="&#xf4f0;" (tap)="goXmIngress(item)" style="font-size: 17px"></Label>
+                </MDRipple>
+
+                <MDRipple *ngIf="roleId == 2" rippleColor="blue" elevation="1" style="border-radius: 5;">
+                  <Label class="fas" text="&#xe473;" (tap)="goPHTScans(item)" style="font-size: 17px"></Label>
+                </MDRipple> -->
+
+                <MenuButton *ngIf="roleId == 2" class="fas"
+                  style="background-color: transparent; font-size: 16px; height: 70px; width: 100px; margin: 0"
+                  text="&#xf0ee;" [options]="scansMenu.options" (selected)="selected($event, item)">
+                </MenuButton>
+
+                <MenuButton *ngIf="item.status != 'CLOSED' && roleId == 2" class="fas"
+                  style="background-color: transparent; font-size: 16px; height: 70px; width: 100px; margin: 0"
+                  text="&#xf560;" [options]="jobMenu.options" (selected)="onSelectedJobMenu($event, item)">
+                </MenuButton>
+              </StackLayout>
+            </GridLayout>
+
+            <!-- <Label class="fas firstRow" text="&#xf142;" (tap)="onDeleteJob(item)"></Label> -->
+          </StackLayout>
+          
       </StackLayout>
     </ng-template>
   </RadListView>

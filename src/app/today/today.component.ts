@@ -99,7 +99,7 @@ export class TodayComponent implements OnInit {
     private usersService: UsersService,
     private todayService: TodayService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.jobList = new ObservableArray([]);
@@ -109,8 +109,9 @@ export class TodayComponent implements OnInit {
     this.loadHeaderStatus();
   }
 
-  public onSummaryDirectRefresh(): void {
+  public onSummaryDirectRefresh(onFinished?: () => void): void {
     if (this.isSyncing) {
+      onFinished?.();
       return;
     }
 
@@ -123,6 +124,7 @@ export class TodayComponent implements OnInit {
       pending -= 1;
       if (pending <= 0) {
         this.isSyncing = false;
+        onFinished?.();
       }
       this.cdr.detectChanges();
     };
@@ -135,7 +137,6 @@ export class TodayComponent implements OnInit {
           .filter((job) => job?.status === 'CLOSED')
           .reduce((total, job) => total + Number(job?.amount || 0), 0);
         this.units = jobs.reduce((total, job) => total + Number(job?.jobUnits || 0), 0);
-        console.log(res);
         onDone();
       },
       error: () => onDone(),
@@ -167,11 +168,12 @@ export class TodayComponent implements OnInit {
   }
 
   public onPullToRefresh(event: any): void {
-    this.onSummaryDirectRefresh();
     const listView = event?.object;
-    if (listView?.notifyPullToRefreshFinished) {
-      setTimeout(() => listView.notifyPullToRefreshFinished(), 300);
-    }
+    this.onSummaryDirectRefresh(() => {
+      listView?.notifyPullToRefreshFinished?.();
+      listView?.scrollToIndex?.(0, false);
+
+    });
   }
 
   public onItemTap(event: any): void {
@@ -225,5 +227,9 @@ export class TodayComponent implements OnInit {
         this.cdr.detectChanges();
       },
     });
+  }
+
+  getFiveDigitZipCode(zip: string): string {
+    return zip.substring(0, 5);
   }
 }
