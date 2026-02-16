@@ -1,73 +1,97 @@
-import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
+import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnInit } from '@angular/core';
 import { NativeScriptCommonModule } from '@nativescript/angular';
-import { finalize } from 'rxjs/operators';
 import { SummaryService } from './summary.service';
-
-type TotalsPerDayItem = { date: string; total: number };
+import { CommonModule } from '@angular/common';
+import { UsersService } from "~/app/shared/services/users.service";
+import { UserModel } from '../shared/models/user.model';
 
 @Component({
   standalone: true,
   selector: 'app-summary',
-  imports: [NativeScriptCommonModule],
+  imports: [NativeScriptCommonModule, CommonModule],
   schemas: [NO_ERRORS_SCHEMA],
   templateUrl: './summary.component.html',
   styleUrl: './summary.component.scss',
 })
-export class SummaryComponent {
-  protected isLoading = false;
-
-  protected summaryAmount = {
-    startDate: '2026-02-10',
-    endDate: '2026-02-16',
-    gross: 0,
+export class SummaryComponent implements OnInit {
+  public isSyncing = false;
+  public user: UserModel;
+  public weekAverage: any = {};
+  public summaryAmount: any = {
     meterRent: 0,
     billingPlatform: 0,
     carRentalAmount: 0,
     toolRentalAmount: 0,
-    net: 0,
+    net: 0
   };
 
-  protected weekAverage = {
-    totalsPerDay: [] as TotalsPerDayItem[],
-    dailyAverage: 0,
-    todayHourlyAverage: 0,
-  };
 
-  constructor(private summaryService: SummaryService) {
+  constructor(
+    private usersService: UsersService,
+    private summaryService: SummaryService,
+    private cdr: ChangeDetectorRef
+  ) {
+
+  }
+
+  ngOnInit(): void {
+    this.user = { userId: 15 };
+
     this.syncSummary();
   }
 
-  protected syncSummary(): void {
-    const userId = this.summaryService.getCurrentUserId();
-    this.isLoading = true;
+  public syncSummary() {
+    if (this.isSyncing) {
+      return;
+    }
 
-    this.summaryService.getNextPayment(userId).subscribe((res) => {
-      this.summaryAmount = res;
+    this.isSyncing = true;
+    this.cdr.detectChanges();
+    let pending = 2;
+    const onDone = () => {
+      pending -= 1;
+      if (pending <= 0) {
+        this.isSyncing = false;
+      }
+      this.cdr.detectChanges();
+    };
+
+    this.summaryService.getNextPayment(this.user.userId || 0).subscribe({
+      next: (res) => {
+        this.summaryAmount = res;
+        onDone();
+      },
+      error: () => {
+        onDone();
+      },
     });
 
-    this.summaryService
-      .getWeekAverage(userId)
-      .pipe(finalize(() => (this.isLoading = false)))
-      .subscribe((res) => {
-        const list = Array.isArray(res.totalsPerDay) ? res.totalsPerDay : [];
-        const total = list.reduce((acc, item) => acc + Number(item.total || 0), 0);
-        this.weekAverage = {
-          totalsPerDay: list,
-          dailyAverage: list.length ? total / list.length : 0,
-          todayHourlyAverage: res.todayHourlyAverage || 0,
-        };
-      });
+    this.summaryService.getWeekAverage(this.user.userId || 0).subscribe({
+      next: (res) => {
+        this.weekAverage = res;
+        const list = Array.isArray(res?.totalsPerDay) ? res.totalsPerDay : [];
+        this.weekAverage.dailyAverage = list.length
+          ? list.reduce((total, i) => total + Number(i.total), 0) / list.length
+          : 0;
+        this.weekAverage.todayHourlyAverage = Number(res?.todayHourlyAverage || 0);
+        this.weekAverage.totalsPerDay = list;
+        onDone();
+      },
+      error: () => {
+        onDone();
+      },
+    });
   }
 
-  protected formatMinusCurrency(value: number): string {
+  public onSummaryDirectRefresh(): void {
+    this.syncSummary();
+  }
+
+  protected formatMinus(value: number): string {
     if (!value) {
-      return '$0.00';
+      return '0.00';
     }
-    return `-${this.currency(value)}`;
+    return `-${value}`;
   }
 
-  protected currency(value: number): string {
-    const num = Number(value || 0);
-    return `$${num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
-  }
 }
