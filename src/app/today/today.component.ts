@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnInit } from '@angular/core';
 import { NativeScriptCommonModule } from '@nativescript/angular';
 import { ObservableArray } from '@nativescript/core';
+import { NativeScriptUIListViewModule } from 'nativescript-ui-listview/angular';
 import { MenuEvent } from '~/app/shared/components/menu-button/common';
 import { Item } from '~/app/shared/components/menu-button/item';
 import { UserModel } from '../shared/models/user.model';
@@ -10,7 +11,7 @@ import { TodayService } from './today.service';
 @Component({
   standalone: true,
   selector: 'app-today',
-  imports: [NativeScriptCommonModule],
+  imports: [NativeScriptCommonModule, NativeScriptUIListViewModule],
   schemas: [NO_ERRORS_SCHEMA],
   templateUrl: './today.component.html',
   styleUrl: './today.component.scss',
@@ -18,6 +19,8 @@ import { TodayService } from './today.service';
 export class TodayComponent implements OnInit {
   public user: UserModel;
   public jobList: ObservableArray<any>;
+  public todayTotal = 0;
+  public units = 0;
   public weeklyTotal = 0;
   public mainMenuIconName = 'ellipsis.circle';
   public item: any;
@@ -128,6 +131,11 @@ export class TodayComponent implements OnInit {
       next: (res) => {
         const jobs = Array.isArray(res?.jobs) ? res.jobs : (Array.isArray(res) ? res : []);
         this.jobList = new ObservableArray(jobs);
+        this.todayTotal = jobs
+          .filter((job) => job?.status === 'CLOSED')
+          .reduce((total, job) => total + Number(job?.amount || 0), 0);
+        this.units = jobs.reduce((total, job) => total + Number(job?.jobUnits || 0), 0);
+        console.log(res);
         onDone();
       },
       error: () => onDone(),
@@ -156,6 +164,53 @@ export class TodayComponent implements OnInit {
 
   public selected(event: MenuEvent, item?: any): void {
     console.log('[Today] selected', event?.index, item);
+  }
+
+  public onPullToRefresh(event: any): void {
+    this.onSummaryDirectRefresh();
+    const listView = event?.object;
+    if (listView?.notifyPullToRefreshFinished) {
+      setTimeout(() => listView.notifyPullToRefreshFinished(), 300);
+    }
+  }
+
+  public onItemTap(event: any): void {
+    const tappedItem = this.jobList?.getItem?.(event?.index);
+    console.log('[Today] item tap', tappedItem?.number);
+  }
+
+  public itemStatusIcon(item: any): string {
+    if (item?.status === 'CLOSED') {
+      return '\uf058';
+    }
+    if (item?.status === 'OPEN' && item?.isCurrent) {
+      return '\uf017';
+    }
+    if (item?.status === 'OPEN') {
+      return '\uf49e';
+    }
+    return '\uf111';
+  }
+
+  public itemStatusClass(item: any): string {
+    if (item?.status === 'CLOSED') {
+      return 'status-closed';
+    }
+    if (item?.status === 'OPEN' && item?.isCurrent) {
+      return 'status-current';
+    }
+    if (item?.status === 'OPEN') {
+      return 'status-open';
+    }
+    return 'status-default';
+  }
+
+  public fiveDigitZip(zipcode: any): string {
+    const zip = String(zipcode || '').trim();
+    if (zip.includes('-')) {
+      return zip.split('-')[0];
+    }
+    return zip.slice(0, 5);
   }
 
   private loadHeaderStatus(): void {

@@ -1,4 +1,4 @@
-<ActionBar class="action-bar" [text]="`Today's Job List (${jobList.length})`">
+<ActionBar class="action-bar" [title]="`Today's Job List (${jobList.length})`">
   <ActionItem
     ios.position="right"
     ios.systemIcon="13"
@@ -11,47 +11,157 @@
   </ActionItem>
 
   <ActionItem ios.position="right">
-  <StackLayout>
-    <MenuButton
-      style="height: 48; width: 35; padding: 0; margin: 0;"
-      [useSFIcon]="true"
-      [sfIconName]="'ellipsis.circle'"
-      [isRightSide]="true"
-      [options]="mainMenuR.options"
-      (selected)="onSelectedMainMenuR($event)">
-    </MenuButton>
-  </StackLayout>
-</ActionItem>
-
-  <ActionItem ios.position="left" style="font-size: 17px" class="fas">
-    <StackLayout orientation="horizontal">
-
-      <MenuButton [useSFIcon]="true" class="fas"
-        style="background-color: transparent; font-size: 18px; height: 70px; width: 110px; padding-left: 10"
-        [sfIconName]="mainMenuIconName" [showSpinner]="isTechStatusLoading" #menuStatus [options]="mainMenu.options"
-        (selected)="onSelectedMainMenu($event, menuStatus)">
+    <StackLayout>
+      <MenuButton
+        style="height: 48; width: 35; padding: 0; margin: 0;"
+        [useSFIcon]="true"
+        [sfIconName]="'ellipsis.circle'"
+        [isRightSide]="true"
+        [options]="mainMenuR.options"
+        (selected)="onSelectedMainMenuR($event)">
       </MenuButton>
     </StackLayout>
   </ActionItem>
 
-  <ActionItem *ngIf="this.hasLunch" ios.position="left">
-  <StackLayout>
-    <MenuButton
-      [useSFIcon]="true"
-      [sfIconName]="'fork.knife.circle'"
-      [options]="[]"
-      (selected)="selected($event, item)">
-    </MenuButton>
-  </StackLayout>
-</ActionItem>
+  <ActionItem ios.position="left" style="font-size: 17px" class="fas">
+    <StackLayout orientation="horizontal">
+      <MenuButton
+        [useSFIcon]="true"
+        class="fas"
+        style="background-color: transparent; font-size: 18px; height: 70px; width: 110px; padding-left: 10"
+        [sfIconName]="mainMenuIconName"
+        [showSpinner]="isTechStatusLoading"
+        [options]="mainMenu.options"
+        (selected)="onSelectedMainMenu($event)">
+      </MenuButton>
+    </StackLayout>
+  </ActionItem>
 
-  <!-- <ActionItem *ngIf="this.hasLunch" ios.position="left">
-      <Label class="today-label fas" text="&#xf805;"></Label>
-  </ActionItem> -->
-
-  <!-- <ActionItem ios.position="left" icon="font://&#xf805;" style="font-size: 17px" class="fas">
-  </ActionItem> -->
-
-  <!-- <ActionItem ios.position="left" icon="font://&#xf0ed;" style="font-size: 17px" class="fas" (tap)="openDialogAction()">
-  </ActionItem> -->
+  <ActionItem *ngIf="hasLunch" ios.position="left">
+    <StackLayout>
+      <MenuButton
+        [useSFIcon]="true"
+        [sfIconName]="'fork.knife.circle'"
+        [options]="[]"
+        (selected)="selected($event, item)">
+      </MenuButton>
+    </StackLayout>
+  </ActionItem>
 </ActionBar>
+
+<StackLayout class="container">
+  <GridLayout rows="auto" columns="*" style="margin-left: 10; margin-right: 10; margin-top: 10;">
+    <StackLayout horizontalAlignment="left" orientation="horizontal">
+      <Label class="action-bar-title today-label" [text]="'Today: ' + (todayTotal | currency)" colSpan="2"></Label>
+
+      <!-- <Label row="1" (longPress)="showMenu($event, 'XXXXXXX')" class="text-2xl text-center">Show Menu</Label> -->
+    </StackLayout>
+
+    <!-- <StackLayout horizontalAlignment="left" orientation="horizontal">
+      <MenuButton class="fas"
+        style="background-color: transparent; font-size: 18px; height: 70px; width: 100px; margin: 0" text="&#xf560;"
+        [options]="jobMenu.options" (selected)="onSelectedJobMenu($event, item)">
+      </MenuButton>
+    </StackLayout> -->
+
+    <StackLayout horizontalAlignment="center" orientation="horizontal">
+      <Label class="action-bar-title today-label" [text]="'Units: ' + units" colSpan="2"></Label>
+    </StackLayout>
+
+    <!-- <MDButton rippleColor="blue" text="text button"></MDButton> -->
+
+    <StackLayout horizontalAlignment="right" orientation="horizontal">
+      <Label class="action-bar-title today-label" [text]="'Week: ' + (weeklyTotal | currency)" colSpan="2"></Label>
+    </StackLayout>
+  </GridLayout>
+
+  <!-- <RadListView selectionBehavior="None" [items]="items" itemReorder="true" (itemReordered)="onItemReordered($event)"
+    height="400">
+
+    <ng-template let-item="item">
+      <StackLayout backgroundColor="red">
+        <Label [text]="item.name" style="margin: 10; background-color: blue;"></Label>
+      </StackLayout>
+    </ng-template>
+
+  </RadListView> -->
+
+  <GridLayout rows="auto" columns="*, auto" style="margin-left: 10; margin-right: 10; margin-top: 10;">
+
+    <StackLayout col="0" horizontalAlignment="center" orientation="horizontal">
+      <StackLayout orientation="horizontal">
+        <Label class="fas" text="&#xf058;" style="font-size: 20px; margin-right: 5;"></Label>
+        <Label text="All" style="font-size: 17;"></Label>
+      </StackLayout>
+
+      <Switch id="userStatus" ></Switch>
+      <StackLayout orientation="horizontal">
+        <Label class="fas" text="&#xf005;" style="font-size: 20px; margin-right: 5;"></Label>
+        <Label text="Starred" style="font-size: 17;"></Label>
+      </StackLayout>
+    </StackLayout>
+
+    <StackLayout col="0" horizontalAlignment="right" orientation="horizontal">
+      
+    </StackLayout>
+
+    <!-- <StackLayout orientation="horizontal" col="1">
+      <StackLayout horizontalAlignment="left" orientation="horizontal" col="0">
+        <CheckBox text="Include Price" [(ngModel)]="includePrice" style="font-size: 20px" col="0"></CheckBox>
+      </StackLayout>
+    </StackLayout> -->
+
+    <!-- <CheckBox text="Current" [(ngModel)]="currentJob" style="font-size: 20px" col="1"></CheckBox> -->
+    <!-- <CheckBox text="Open" [(ngModel)]="openJobs" style="font-size: 20px" col="2"></CheckBox> -->
+  </GridLayout>
+
+  <RadListView
+    [items]="jobList"
+    pullToRefresh="true"
+    (pullToRefreshInitiated)="onPullToRefresh($event)"
+    (itemTap)="onItemTap($event)"
+    height="100%"
+    class="jobs-list">
+    <ng-template tkListItemTemplate let-item="item">
+      <StackLayout class="item-bag">
+        <GridLayout columns="auto,*,auto">
+          <Label
+            col="0"
+            class="fas status-icon {{ itemStatusClass(item) }}"
+            [text]="itemStatusIcon(item)">
+          </Label>
+          <Label
+            col="1"
+            class="first-row"
+            [text]="(item.jobDescription || 'Job') + (item.description ? ' - ' + item.description : '')">
+          </Label>
+          <Label col="2" class="first-row amount" [text]="(item.amount || 0) | currency"></Label>
+        </GridLayout>
+
+        <Label
+          class="second-row"
+          [text]="(item.address || '') + ', ' + (item.city || '') + ', ' + (item.state || '') + ' ' + fiveDigitZip(item.zipcode)">
+        </Label>
+
+        <GridLayout columns="auto,auto,*" class="meta-row">
+          <Label col="0" class="second-row" [text]="'Job#: ' + (item.number || 'n/a')"></Label>
+          <Label col="1" class="second-row" [text]="'Account#: ' + (item.accountNumber || 'n/a')"></Label>
+          <Label col="2" class="second-row units" [text]="'Units: ' + (item.jobUnits || 'n/a')"></Label>
+        </GridLayout>
+
+        <GridLayout columns="*,auto" class="meta-row">
+          <Label
+            col="0"
+            class="second-row"
+            [text]="'Modems: ' + (item.modems || 0) + '  TV Boxes: ' + (item.tvBoxes || 0) + '  Cameras: ' + (item.cameras || 0)">
+          </Label>
+          <Label
+            col="1"
+            class="second-row"
+            [text]="(item.timeSlotStartDateTime | date: 'h:mm a') + ' - ' + (item.timeSlotEndDateTime | date: 'h:mm a')">
+          </Label>
+        </GridLayout>
+      </StackLayout>
+    </ng-template>
+  </RadListView>
+</StackLayout>
