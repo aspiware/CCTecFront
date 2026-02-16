@@ -1,3 +1,14 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+
+
+.ns-light ActionBar,
+.ns-light .action-bar {
+  background-color: rgba(126, 149, 185, 0.589);
+  color: #000000;
+}
+
+.ns-dark ActionBar,
+.ns-dark .action-bar {
+  background-color: #1f2937;
+  color: #ffffff;
+}
+
