@@ -7,6 +7,7 @@ import { Item } from '~/app/shared/components/menu-button/item';
 import { UserModel } from '../shared/models/user.model';
 import { UsersService } from '../shared/services/users.service';
 import { TodayService } from './today.service';
+import { map } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -129,8 +130,39 @@ export class TodayComponent implements OnInit {
       this.cdr.detectChanges();
     };
 
-    this.todayService.findTodayByUser(userId).subscribe({
+    // getWorkOrder implemented
+    this.todayService.getWorkOrders(userId).pipe(
+      map(res => {
+        return res.map(job => {
+          // const surveySent = this.configService.getSurveySent(job.number);
+          // console.log('SURVEYSENT OF EACH JOB', surveySent)
+
+          // const isStarred = this.configService.isJobStarred(job.number);
+          // if (isStarred) {
+            // this.configService.setStarredJob(job, true);
+          // }
+          return {
+            ...job,
+            // sms_survey_sent: surveySent ? true : false,
+            // isStarred
+          };
+        });
+      })
+    ).subscribe({
       next: (res) => {
+        console.log('ORDERS1', res);
+
+        // this.originalJobList = new ObservableArray(res);
+        // if (!this.starredJobList) {
+        //   this.starredJobList = new ObservableArray([]);
+        // }
+
+        // this.rebuildStarredList();
+        // Inicializa como ObservableArray
+        // this.jobList.splice(0);     // limpia
+        // const listToShow = this.showStarred ? this.starredJobList : this.originalJobList;
+        // this.jobList.push(...listToShow);  // agrega nuevos elementos
+
         const jobs = Array.isArray(res?.jobs) ? res.jobs : (Array.isArray(res) ? res : []);
         this.jobList = new ObservableArray(jobs);
         this.todayTotal = jobs
@@ -138,9 +170,33 @@ export class TodayComponent implements OnInit {
           .reduce((total, job) => total + Number(job?.amount || 0), 0);
         this.units = jobs.reduce((total, job) => total + Number(job?.jobUnits || 0), 0);
         onDone();
-      },
-      error: () => onDone(),
-    });
+      }, error: (error) => {
+        console.log(error);
+        onDone()
+
+        // new Toasty({ text: error })
+        //   .setToastDuration(ToastDuration.LONG)
+        //   .setToastPosition(ToastPosition.TOP)
+        //   .setTextColor(new Color("white"))
+        //   .setBackgroundColor(new Color("gray"))
+        //   .show();
+      }
+    })
+
+    // this.todayService.findTodayByUser(userId).subscribe({
+    //   next: (res) => {
+    //     console.log(res.jobs);
+
+    //     const jobs = Array.isArray(res?.jobs) ? res.jobs : (Array.isArray(res) ? res : []);
+    //     this.jobList = new ObservableArray(jobs);
+    //     this.todayTotal = jobs
+    //       .filter((job) => job?.status === 'CLOSED')
+    //       .reduce((total, job) => total + Number(job?.amount || 0), 0);
+    //     this.units = jobs.reduce((total, job) => total + Number(job?.jobUnits || 0), 0);
+    //     onDone();
+    //   },
+    //   error: () => onDone(),
+    // });
 
     this.todayService.getTotalCurrentWeek(userId).subscribe({
       next: (res) => {

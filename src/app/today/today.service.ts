@@ -136,4 +136,12 @@ export class TodayService {
       null
     );
   }
+
+    public getWorkOrders(userId: number): Observable<any> {
+    return this.httpClient.post<void>(
+      this.configService.getUrlBase() + "/jobs/c/getWorkOrders",
+      { userId }
+    );
+  }
+  
 }
