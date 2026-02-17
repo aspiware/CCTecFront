@@ -98,6 +98,7 @@ export class TodayComponent implements OnInit {
   public hasLunch: boolean;
   public techStatus: boolean;
   public isTechStatusLoading = false;
+  public lastKnownTechStatus = 'AVAIL';
   showStarred = false;
   private isCopyMenuOpen = false;
   private lastCopyMenuTs = 0;
@@ -115,6 +116,7 @@ export class TodayComponent implements OnInit {
     this.mainMenuIconName = this.mainMenu?.options?.[0]?.icon || 'ellipsis.circle';
     this.onSummaryDirectRefresh();
     this.loadHeaderStatus();
+    this.getTechStatus();
   }
 
   public onSummaryDirectRefresh(onFinished?: () => void): void {
@@ -280,10 +282,26 @@ export class TodayComponent implements OnInit {
 
   public onSelectedMainMenu(event: MenuEvent): void {
     const selected = this.mainMenu?.options?.[event?.index || 0];
-    if (selected?.icon) {
-      this.mainMenuIconName = selected.icon;
+    switch (event?.index) {
+      case 0:
+        this.updateTechStatusMenu('AVAIL', 'AVAIL', selected?.icon);
+        break;
+      case 1:
+        this.updateTechStatusMenu('LUNCH', 'AVAIL', selected?.icon);
+        break;
+      case 2:
+        this.updateTechStatusMenu('TLOGISTICS', 'AVAIL', selected?.icon);
+        break;
+      case 3:
+        this.updateTechStatusMenu('MEETING', 'AVAIL', selected?.icon);
+        break;
+      case 4:
+        this.updateTechStatusMenu('LON', 'AVAIL', selected?.icon);
+        break;
+      case 5:
+        this.updateTechStatusMenu('EOD', 'AVAIL', selected?.icon);
+        break;
     }
-    console.log('[Today] mainMenu selected', event?.index, selected?.name);
   }
 
   public selected(event: MenuEvent, item?: any): void {
@@ -347,6 +365,76 @@ export class TodayComponent implements OnInit {
       },
       error: () => {
         this.hasLunch = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private getTechStatus(): void {
+    const userId = this.user?.userId || 0;
+    this.todayService.getTechStatus(userId).subscribe({
+      next: (res) => {
+        const status = String(res?.techStatus || res?.status || res || '').toUpperCase();
+        if (!status) {
+          return;
+        }
+        this.lastKnownTechStatus = status;
+
+        switch (status) {
+          case 'AVAIL':
+            this.mainMenuIconName = this.mainMenu.options[0]?.icon || this.mainMenuIconName;
+            break;
+          case 'LUNCH':
+            this.mainMenuIconName = this.mainMenu.options[1]?.icon || this.mainMenuIconName;
+            break;
+          case 'TLOGISTICS':
+            this.mainMenuIconName = this.mainMenu.options[2]?.icon || this.mainMenuIconName;
+            break;
+          case 'MEETING':
+            this.mainMenuIconName = this.mainMenu.options[3]?.icon || this.mainMenuIconName;
+            break;
+          case 'LON':
+            this.mainMenuIconName = this.mainMenu.options[4]?.icon || this.mainMenuIconName;
+            break;
+          case 'EOD':
+            this.mainMenuIconName = this.mainMenu.options[5]?.icon || this.mainMenuIconName;
+            break;
+          case 'ONROUTE':
+            this.mainMenuIconName = 'car';
+            break;
+          case 'ONJOB':
+            this.mainMenuIconName = 'wrench.adjustable.fill';
+            break;
+        }
+        this.cdr.detectChanges();
+      },
+      error: () => {},
+    });
+  }
+
+  private updateTechStatusMenu(
+    techStatus: string,
+    lastKnownTechStatus: string = 'AVAIL',
+    selectedIcon?: string
+  ): void {
+    if (this.isTechStatusLoading) {
+      return;
+    }
+    const userId = this.user?.userId || 0;
+    this.isTechStatusLoading = true;
+    this.cdr.detectChanges();
+
+    this.todayService.updateTechStatusMenu(userId, techStatus, lastKnownTechStatus).subscribe({
+      next: () => {
+        this.lastKnownTechStatus = techStatus;
+        if (selectedIcon) {
+          this.mainMenuIconName = selectedIcon;
+        }
+        this.isTechStatusLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.isTechStatusLoading = false;
         this.cdr.detectChanges();
       },
     });
