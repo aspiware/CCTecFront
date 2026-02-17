@@ -9,6 +9,7 @@ import { UsersService } from '../shared/services/users.service';
 import { TodayService } from './today.service';
 import { map } from 'rxjs';
 import { ConfigService } from '../shared/services/config.service';
+import { Router } from '@angular/router';
 
 @Component({
   standalone: true,
@@ -107,7 +108,8 @@ export class TodayComponent implements OnInit {
     private usersService: UsersService,
     private todayService: TodayService,
     private configService: ConfigService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private router: Router
   ) { }
 
   ngOnInit(): void {
@@ -279,6 +281,14 @@ export class TodayComponent implements OnInit {
 
   public onSelectedMainMenuR(event: MenuEvent): void {
     console.log('[Today] mainMenuR selected', event?.index);
+
+    switch (event?.index) {
+      case 2:
+        this.router.navigate(['/tabs', { outlets: { todayListTab: ['customer-consent'] } }]);
+        break;
+      default:
+        break;
+    }
   }
 
   public onSelectedMainMenu(event: MenuEvent): void {
