@@ -113,7 +113,7 @@ export class TodayComponent implements OnInit {
   ngOnInit(): void {
     this.jobList = new ObservableArray([]);
     this.user = this.usersService.getUser() || { userId: 15 };
-    this.mainMenuIconName = this.mainMenu?.options?.[0]?.icon || 'ellipsis.circle';
+    this.mainMenuIconName = 'questionmark';
     this.getWorkOrders();
   }
 
@@ -382,7 +382,9 @@ export class TodayComponent implements OnInit {
       return;
     }
 
-    this.isTechStatusLoading = true;
+    setTimeout(() => {
+      this.isTechStatusLoading = true;
+    })
 
     this.todayService.getTechStatus(userId).subscribe({
       next: (res) => {
@@ -542,11 +544,11 @@ export class TodayComponent implements OnInit {
         popover.sourceRect = sourceView
           ? sourceView.bounds
           : CGRectMake(
-              viewController.view.bounds.size.width / 2,
-              viewController.view.bounds.size.height / 2,
-              1,
-              1
-            );
+            viewController.view.bounds.size.width / 2,
+            viewController.view.bounds.size.height / 2,
+            1,
+            1
+          );
         popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
       }
 
@@ -615,11 +617,11 @@ export class TodayComponent implements OnInit {
       popover.sourceRect = sourceView
         ? sourceView.bounds
         : CGRectMake(
-            viewController.view.bounds.size.width / 2,
-            viewController.view.bounds.size.height / 2,
-            1,
-            1
-          );
+          viewController.view.bounds.size.width / 2,
+          viewController.view.bounds.size.height / 2,
+          1,
+          1
+        );
       popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
     }
 
