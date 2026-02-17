@@ -413,7 +413,7 @@ export class TodayComponent implements OnInit {
           case 'LON':
             this.mainMenuIconName = this.mainMenu.options[4]?.icon || this.mainMenuIconName;
             break;
-          case 'EOD':
+          case 'LOFF':
             this.mainMenuIconName = this.mainMenu.options[5]?.icon || this.mainMenuIconName;
             break;
           case 'ONROUTE':
