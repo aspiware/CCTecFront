@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnInit } from '@angular/core';
 import { NativeScriptCommonModule } from '@nativescript/angular';
-import { ObservableArray } from '@nativescript/core';
+import { Application, ObservableArray, Utils } from '@nativescript/core';
 import { NativeScriptUIListViewModule } from 'nativescript-ui-listview/angular';
 import { MenuEvent } from '~/app/shared/components/menu-button/common';
 import { Item } from '~/app/shared/components/menu-button/item';
@@ -99,6 +99,8 @@ export class TodayComponent implements OnInit {
   public techStatus: boolean;
   public isTechStatusLoading = false;
   showStarred = false;
+  private isCopyMenuOpen = false;
+  private lastCopyMenuTs = 0;
 
   constructor(
     private usersService: UsersService,
@@ -352,5 +354,153 @@ export class TodayComponent implements OnInit {
 
   getFiveDigitZipCode(zip: string): string {
     return zip.substring(0, 5);
+  }
+
+  public showMenu(args: any, value: any, type?: string): void {
+    if (args && typeof args.cancel === 'boolean') {
+      args.cancel = true;
+    }
+
+    const now = Date.now();
+    if (this.isCopyMenuOpen || now - this.lastCopyMenuTs < 500) {
+      return;
+    }
+
+    const textToCopy = String(value ?? '').trim();
+    if (!textToCopy) {
+      return;
+    }
+
+    if (__IOS__) {
+      this.isCopyMenuOpen = true;
+      this.lastCopyMenuTs = now;
+      const isAddress = type === 'address';
+      const title = isAddress ? 'Address' : 'Copy';
+      const alert = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
+        title,
+        textToCopy,
+        UIAlertControllerStyle.ActionSheet
+      );
+
+      alert.addAction(
+        UIAlertAction.actionWithTitleStyleHandler('Copy', UIAlertActionStyle.Default, () => {
+          UIPasteboard.generalPasteboard.string = textToCopy;
+          this.isCopyMenuOpen = false;
+        })
+      );
+
+      if (isAddress) {
+        alert.addAction(
+          UIAlertAction.actionWithTitleStyleHandler('Go', UIAlertActionStyle.Default, () => {
+            this.isCopyMenuOpen = false;
+            this.showMapOptions(args, textToCopy);
+          })
+        );
+      }
+
+      alert.addAction(
+        UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, () => {
+          this.isCopyMenuOpen = false;
+        })
+      );
+
+      let viewController = Application.ios?.rootController;
+      while (
+        viewController &&
+        viewController.presentedViewController &&
+        !viewController.presentedViewController.beingDismissed
+      ) {
+        viewController = viewController.presentedViewController;
+      }
+      if (!viewController) {
+        this.isCopyMenuOpen = false;
+        return;
+      }
+
+      const sourceView = args?.object?.ios as UIView | undefined;
+      const popover = alert.popoverPresentationController;
+      if (popover) {
+        popover.sourceView = sourceView || viewController.view;
+        popover.sourceRect = sourceView
+          ? sourceView.bounds
+          : CGRectMake(
+              viewController.view.bounds.size.width / 2,
+              viewController.view.bounds.size.height / 2,
+              1,
+              1
+            );
+        popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
+      }
+
+      viewController.presentViewControllerAnimatedCompletion(alert, true, null);
+      setTimeout(() => {
+        this.isCopyMenuOpen = false;
+      }, 1000);
+      return;
+    }
+  }
+
+  private showMapOptions(args: any, address: string): void {
+    if (!__IOS__) {
+      return;
+    }
+
+    const alert = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
+      'Open With',
+      address,
+      UIAlertControllerStyle.ActionSheet
+    );
+
+    alert.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('iOS Map', UIAlertActionStyle.Default, () => {
+        const query = encodeURIComponent(address);
+        Utils.openUrl(`http://maps.apple.com/?q=${query}`);
+      })
+    );
+
+    alert.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Google Map', UIAlertActionStyle.Default, () => {
+        const query = encodeURIComponent(address);
+        const googleAppUrl = `comgooglemaps://?q=${query}`;
+        const googleWebUrl = `https://www.google.com/maps/search/?api=1&query=${query}`;
+        const opened = Utils.openUrl(googleAppUrl);
+        if (!opened) {
+          Utils.openUrl(googleWebUrl);
+        }
+      })
+    );
+
+    alert.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, null)
+    );
+
+    let viewController = Application.ios?.rootController;
+    while (
+      viewController &&
+      viewController.presentedViewController &&
+      !viewController.presentedViewController.beingDismissed
+    ) {
+      viewController = viewController.presentedViewController;
+    }
+    if (!viewController) {
+      return;
+    }
+
+    const sourceView = args?.object?.ios as UIView | undefined;
+    const popover = alert.popoverPresentationController;
+    if (popover) {
+      popover.sourceView = sourceView || viewController.view;
+      popover.sourceRect = sourceView
+        ? sourceView.bounds
+        : CGRectMake(
+            viewController.view.bounds.size.width / 2,
+            viewController.view.bounds.size.height / 2,
+            1,
+            1
+          );
+      popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
+    }
+
+    viewController.presentViewControllerAnimatedCompletion(alert, true, null);
   }
 }

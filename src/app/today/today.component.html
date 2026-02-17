@@ -132,6 +132,7 @@
 
         <Label
           class="second-row"
+          (longPress)="showMenu($event, (item.address || '') + ', ' + (item.city || '') + ', ' + (item.state || '') + ' ' + fiveDigitZip(item.zipcode), 'address')"
           [text]="(item.address || '') + ', ' + (item.city || '') + ', ' + (item.state || '') + ' ' + fiveDigitZip(item.zipcode)">
         </Label>
 
