@@ -1,6 +1,6 @@
-import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnInit } from '@angular/core';
-import { NativeScriptCommonModule } from '@nativescript/angular';
-import { Application, ObservableArray, Utils } from '@nativescript/core';
+import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnInit, ViewContainerRef } from '@angular/core';
+import { ModalDialogService, NativeScriptCommonModule } from '@nativescript/angular';
+import { Application, ObservableArray, Screen, Utils } from '@nativescript/core';
 import { NativeScriptUIListViewModule } from 'nativescript-ui-listview/angular';
 import { MenuEvent } from '~/app/shared/components/menu-button/common';
 import { Item } from '~/app/shared/components/menu-button/item';
@@ -10,6 +10,7 @@ import { TodayService } from './today.service';
 import { map } from 'rxjs';
 import { ConfigService } from '../shared/services/config.service';
 import { Router } from '@angular/router';
+import { WifiConfigComponent } from '../wifi-config/wifi-config.component';
 
 @Component({
   standalone: true,
@@ -109,7 +110,9 @@ export class TodayComponent implements OnInit {
     private todayService: TodayService,
     private configService: ConfigService,
     private cdr: ChangeDetectorRef,
-    private router: Router
+    private router: Router,
+    private modalService: ModalDialogService,
+    private vcRef: ViewContainerRef
   ) { }
 
   ngOnInit(): void {
@@ -335,6 +338,32 @@ export class TodayComponent implements OnInit {
   public onItemTap(event: any): void {
     const tappedItem = this.jobList?.getItem?.(event?.index);
     console.log('[Today] item tap', tappedItem?.number);
+  }
+
+  public wifiConfig(job: any): void {
+    if (!job) {
+      return;
+    }
+
+    const modalWidth = Math.min(380, Math.max(300, Screen.mainScreen.widthDIPs - 32));
+    const modalHeight = Math.min(620, Math.max(420, Screen.mainScreen.heightDIPs - 120));
+
+    const options: any = {
+      context: job,
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: false,
+      stretched: false,
+      cancelable: true,
+      dismissEnabled: true,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.Custom,
+        width: modalWidth,
+        height: modalHeight,
+      },
+    };
+
+    this.modalService.showModal(WifiConfigComponent, options);
   }
 
   public itemStatusIcon(item: any): string {
