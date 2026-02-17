@@ -1,0 +1,17 @@
+<TabView [selectedIndex]="2" iosIconRenderingMode="alwaysTemplate" [tabTextFontSize]="12">
+  <GridLayout *tabItem="{ title: 'Summary', iconSource: 'sys://chart.pie.fill' }">
+    <page-router-outlet name="summaryTab"></page-router-outlet>
+  </GridLayout>
+
+  <GridLayout *tabItem="{ title: 'Jobs', iconSource: 'sys://list.bullet.rectangle.fill' }">
+    <page-router-outlet name="jobListTab"></page-router-outlet>
+  </GridLayout>
+
+  <GridLayout *tabItem="{ title: 'Today', iconSource: 'sys://clock.badge.checkmark.fill' }">
+    <page-router-outlet name="todayListTab"></page-router-outlet>
+  </GridLayout>
+
+  <GridLayout *tabItem="{ title: 'Settings', iconSource: 'sys://gearshape.fill' }">
+    <page-router-outlet name="settingsTab"></page-router-outlet>
+  </GridLayout>
+</TabView>

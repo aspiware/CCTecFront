@@ -1,0 +1,136 @@
+.container {
+  margin: 10;
+  height: 100%;
+}
+
+.totals-row {
+  margin: 4 0 10 0;
+}
+
+.totals-label {
+  font-size: 15;
+  font-weight: 600;
+}
+
+.left {
+  text-align: left;
+}
+
+.center {
+  text-align: center;
+}
+
+.right {
+  text-align: right;
+}
+
+.jobs-list {
+  height: 100%;
+}
+
+.item-bag {
+  margin: 0 0 10 0;
+  padding: 10;
+  border-radius: 8;
+  background-color: rgba(126, 151, 185, 0.2);
+}
+
+.status-icon {
+  width: 22;
+  font-size: 16;
+  margin-top: 2;
+}
+
+.floating-status {
+  horizontal-align: left;
+  vertical-align: top;
+  margin-left: 5;
+  margin-top: 0;
+  z-index: 10;
+}
+
+.status-closed {
+  color: #65b56b;
+}
+
+.status-open {
+  color: #c79042;
+}
+
+.status-current {
+  color: #5a90d6;
+}
+
+.status-default {
+  color: #888;
+}
+
+.first-row {
+  font-size: 15;
+  font-weight: 700;
+}
+
+.amount {
+  text-align: right;
+}
+
+.second-row {
+  font-size: 12;
+  margin-top: 15;
+}
+
+.meta-row {
+  margin-top: 15;
+}
+
+.units {
+  text-align: right;
+}
+
+.firstRow {
+  font-size: 15;
+}
+
+.secondRow {
+  font-size: 12;
+}
+
+.item-bag {
+  background-color: rgba(126, 151, 185, 0.308);
+  margin-left: 10;
+  margin-right: 10;
+  border-radius: 5;
+  margin-top: 7;
+}
+
+.item-bag1 {
+  border-color: rgba(128, 128, 128, 0.123);
+  margin-left: 10;
+  margin-right: 10;
+  border-radius: 5;
+  margin-top: 10;
+}
+
+.today-label {
+  // font-weight: bold;
+  // color: rgb(83, 121, 247);
+  font-size: 17;
+  background-color: rgba(128, 128, 128, 0.219);
+  padding: 5;
+  border-radius: 5;
+}
+
+.today-label1 {
+  // font-weight: bold;
+  color: rgb(255, 255, 255);
+  font-size: 10;
+  background-color: rgba(223, 83, 83, 0.24);
+  padding: 5;
+  border-radius: 5;
+}
+.ios-native-btn {
+  background-color: rgba(71, 52, 52, 0.412);
+  border-width: 0;
+  color: white;
+  font-size: 20;
+}

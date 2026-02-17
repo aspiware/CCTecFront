@@ -1,28 +1,40 @@
 import { Routes } from '@angular/router';
-import { SummaryTabPlaceholderComponent } from './tabs/placeholders/summary-tab-placeholder.component';
-import { JobsTabPlaceholderComponent } from './tabs/placeholders/jobs-tab-placeholder.component';
-import { TodayTabPlaceholderComponent } from './tabs/placeholders/today-tab-placeholder.component';
-import { SettingsTabPlaceholderComponent } from './tabs/placeholders/settings-tab-placeholder.component';
+import { TabsContainerComponent } from './tabs/tabs-container.component';
+import { SummaryComponent } from './summary/summary.component';
+import { JobsComponent } from './jobs/jobs.component';
+import { TodayComponent } from './today/today.component';
+import { SettingsComponent } from './settings/settings.component';
 
 export const routes: Routes = [
   {
-    path: 'tab-summary',
-    outlet: 'summaryTab',
-    component: SummaryTabPlaceholderComponent,
+    path: '',
+    redirectTo: 'tabs',
+    pathMatch: 'full',
   },
   {
-    path: 'tab-jobs',
-    outlet: 'jobListTab',
-    component: JobsTabPlaceholderComponent,
-  },
-  {
-    path: 'tab-today',
-    outlet: 'todayListTab',
-    component: TodayTabPlaceholderComponent,
-  },
-  {
-    path: 'tab-settings',
-    outlet: 'settingsTab',
-    component: SettingsTabPlaceholderComponent,
+    path: 'tabs',
+    component: TabsContainerComponent,
+    children: [
+      {
+        path: 'summary',
+        outlet: 'summaryTab',
+        component: SummaryComponent,
+      },
+      {
+        path: 'jobs',
+        outlet: 'jobListTab',
+        component: JobsComponent,
+      },
+      {
+        path: 'today',
+        outlet: 'todayListTab',
+        component: TodayComponent,
+      },
+      {
+        path: 'settings',
+        outlet: 'settingsTab',
+        component: SettingsComponent,
+      },
+    ],
   },
 ];
