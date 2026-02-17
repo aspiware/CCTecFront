@@ -374,35 +374,6 @@ export class TodayComponent implements OnInit {
     if (__IOS__) {
       this.isCopyMenuOpen = true;
       this.lastCopyMenuTs = now;
-      const isAddress = type === 'address';
-      const title = isAddress ? 'Address' : 'Copy';
-      const alert = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
-        title,
-        textToCopy,
-        UIAlertControllerStyle.ActionSheet
-      );
-
-      alert.addAction(
-        UIAlertAction.actionWithTitleStyleHandler('Copy', UIAlertActionStyle.Default, () => {
-          UIPasteboard.generalPasteboard.string = textToCopy;
-          this.isCopyMenuOpen = false;
-        })
-      );
-
-      if (isAddress) {
-        alert.addAction(
-          UIAlertAction.actionWithTitleStyleHandler('Go', UIAlertActionStyle.Default, () => {
-            this.isCopyMenuOpen = false;
-            this.showMapOptions(args, textToCopy);
-          })
-        );
-      }
-
-      alert.addAction(
-        UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, () => {
-          this.isCopyMenuOpen = false;
-        })
-      );
 
       let viewController = Application.ios?.rootController;
       while (
@@ -412,12 +383,48 @@ export class TodayComponent implements OnInit {
       ) {
         viewController = viewController.presentedViewController;
       }
-      if (!viewController) {
+      if (!viewController?.view) {
         this.isCopyMenuOpen = false;
         return;
       }
 
       const sourceView = args?.object?.ios as UIView | undefined;
+      const alert = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
+        type === 'address' ? 'Address' : 'Copy',
+        textToCopy,
+        UIAlertControllerStyle.ActionSheet
+      );
+
+      const copyAction = UIAlertAction.actionWithTitleStyleHandler(
+        'Copy',
+        UIAlertActionStyle.Default,
+        () => {
+          UIPasteboard.generalPasteboard.string = textToCopy;
+          this.isCopyMenuOpen = false;
+        }
+      );
+      copyAction.setValueForKey(UIImage.systemImageNamed('doc.on.doc'), 'image');
+      alert.addAction(copyAction);
+
+      if (type === 'address') {
+        const goAction = UIAlertAction.actionWithTitleStyleHandler(
+          'Go',
+          UIAlertActionStyle.Default,
+          () => {
+            this.isCopyMenuOpen = false;
+            this.showMapOptions(sourceView, textToCopy);
+          }
+        );
+        goAction.setValueForKey(UIImage.systemImageNamed('location'), 'image');
+        alert.addAction(goAction);
+      }
+
+      alert.addAction(
+        UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, () => {
+          this.isCopyMenuOpen = false;
+        })
+      );
+
       const popover = alert.popoverPresentationController;
       if (popover) {
         popover.sourceView = sourceView || viewController.view;
@@ -433,46 +440,14 @@ export class TodayComponent implements OnInit {
       }
 
       viewController.presentViewControllerAnimatedCompletion(alert, true, null);
-      setTimeout(() => {
-        this.isCopyMenuOpen = false;
-      }, 1000);
       return;
     }
   }
 
-  private showMapOptions(args: any, address: string): void {
+  private showMapOptions(sourceView: UIView | undefined, address: string): void {
     if (!__IOS__) {
       return;
     }
-
-    const alert = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
-      'Open With',
-      address,
-      UIAlertControllerStyle.ActionSheet
-    );
-
-    alert.addAction(
-      UIAlertAction.actionWithTitleStyleHandler('iOS Map', UIAlertActionStyle.Default, () => {
-        const query = encodeURIComponent(address);
-        Utils.openUrl(`http://maps.apple.com/?q=${query}`);
-      })
-    );
-
-    alert.addAction(
-      UIAlertAction.actionWithTitleStyleHandler('Google Map', UIAlertActionStyle.Default, () => {
-        const query = encodeURIComponent(address);
-        const googleAppUrl = `comgooglemaps://?q=${query}`;
-        const googleWebUrl = `https://www.google.com/maps/search/?api=1&query=${query}`;
-        const opened = Utils.openUrl(googleAppUrl);
-        if (!opened) {
-          Utils.openUrl(googleWebUrl);
-        }
-      })
-    );
-
-    alert.addAction(
-      UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, null)
-    );
 
     let viewController = Application.ios?.rootController;
     while (
@@ -482,11 +457,47 @@ export class TodayComponent implements OnInit {
     ) {
       viewController = viewController.presentedViewController;
     }
-    if (!viewController) {
+    if (!viewController?.view) {
       return;
     }
 
-    const sourceView = args?.object?.ios as UIView | undefined;
+    const alert = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
+      'Open With',
+      address,
+      UIAlertControllerStyle.ActionSheet
+    );
+
+    const appleAction = UIAlertAction.actionWithTitleStyleHandler(
+      'iOS Map',
+      UIAlertActionStyle.Default,
+      () => {
+        const query = encodeURIComponent(address);
+        Utils.openUrl(`http://maps.apple.com/?q=${query}`);
+      }
+    );
+    appleAction.setValueForKey(UIImage.systemImageNamed('map'), 'image');
+    alert.addAction(appleAction);
+
+    const googleAction = UIAlertAction.actionWithTitleStyleHandler(
+      'Google Map',
+      UIAlertActionStyle.Default,
+      () => {
+        const query = encodeURIComponent(address);
+        const googleAppUrl = `comgooglemaps://?q=${query}`;
+        const googleWebUrl = `https://www.google.com/maps/search/?api=1&query=${query}`;
+        const opened = Utils.openUrl(googleAppUrl);
+        if (!opened) {
+          Utils.openUrl(googleWebUrl);
+        }
+      }
+    );
+    googleAction.setValueForKey(UIImage.systemImageNamed('globe'), 'image');
+    alert.addAction(googleAction);
+
+    alert.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, null)
+    );
+
     const popover = alert.popoverPresentationController;
     if (popover) {
       popover.sourceView = sourceView || viewController.view;
