@@ -41,6 +41,14 @@
   margin-top: 2;
 }
 
+.floating-status {
+  horizontal-align: left;
+  vertical-align: top;
+  margin-left: 5;
+  margin-top: 0;
+  z-index: 10;
+}
+
 .status-closed {
   color: #65b56b;
 }
@@ -68,11 +76,11 @@
 
 .second-row {
   font-size: 12;
-  margin-top: 4;
+  margin-top: 15;
 }
 
 .meta-row {
-  margin-top: 2;
+  margin-top: 15;
 }
 
 .units {

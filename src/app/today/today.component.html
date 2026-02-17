@@ -88,21 +88,17 @@
 
   <GridLayout rows="auto" columns="*, auto" style="margin-left: 10; margin-right: 10; margin-top: 10;">
 
-    <StackLayout col="0" horizontalAlignment="center" orientation="horizontal">
+    <StackLayout col="0" horizontalAlignment="center" orientation="horizontal" style="margin-top: 10; margin-bottom: 20;">
       <StackLayout orientation="horizontal">
         <Label class="fas" text="&#xf058;" style="font-size: 20px; margin-right: 5;"></Label>
         <Label text="All" style="font-size: 17;"></Label>
       </StackLayout>
 
-      <Switch id="userStatus" (checkedChange)="toggleStarredView($event)"></Switch>
+      <Switch id="userStatus" (checkedChange)="toggleStarredView($event)" style="margin-left: 5; margin-right: 5;"></Switch>
       <StackLayout orientation="horizontal">
         <Label class="fas" text="&#xf005;" style="font-size: 20px; margin-right: 5;"></Label>
         <Label text="Starred" style="font-size: 17;"></Label>
       </StackLayout>
-    </StackLayout>
-
-    <StackLayout col="0" horizontalAlignment="right" orientation="horizontal">
-      
     </StackLayout>
 
     <!-- <StackLayout orientation="horizontal" col="1">
@@ -123,40 +119,47 @@
     height="100%"
     class="jobs-list">
     <ng-template tkListItemTemplate let-item="item">
-      <StackLayout class="item-bag">
-        <GridLayout columns="auto,*,auto">
-          <Label
-            col="0"
-            class="fas status-icon {{ itemStatusClass(item) }}"
-            [text]="itemStatusIcon(item)">
-          </Label>
-          <Label
-            col="1"
-            class="first-row"
-            [text]="(item.jobDescription || 'Job') + (item.description ? ' - ' + item.description : '')">
-          </Label>
-          <Label col="2" class="first-row amount" [text]="(item.amount || 0) | currency"></Label>
-        </GridLayout>
+      <GridLayout clipToBounds="false">
+        <StackLayout class="item-bag">
+          <GridLayout columns="*,auto" width="100%" class="item-header">
+            <Label
+              col="0"
+              class="first-row"
+              [text]="(item.jobDescription || 'Job') + (item.description ? ' - ' + item.description : '')">
+            </Label>
+            <Label col="1" class="first-row amount" [text]="(item.amount || 0) | currency"></Label>
+          </GridLayout>
 
         <Label
           class="second-row"
           [text]="(item.address || '') + ', ' + (item.city || '') + ', ' + (item.state || '') + ' ' + fiveDigitZip(item.zipcode)">
         </Label>
 
-        <GridLayout columns="auto,auto,*" class="meta-row">
+        <!-- <GridLayout rows="auto" columns="auto,*,auto" class="meta-row">
           <Label col="0" class="second-row" [text]="'Job#: ' + (item.number || 'n/a')"></Label>
           <Label col="1" class="second-row" [text]="'Account#: ' + (item.accountNumber || 'n/a')"></Label>
           <Label col="2" class="second-row units" [text]="'Units: ' + (item.jobUnits || 'n/a')"></Label>
-        </GridLayout>
+        </GridLayout> -->
 
-        <GridLayout columns="*,auto" class="meta-row">
+        <GridLayout rows="auto" columns="auto, *, auto" class="meta-row">
+            <Label col="0" (longPress)="showMenu($event, item.number)"  class="secondRow"
+              [text]="'Job#: ' + item.number" style="margin-right: 10;"></Label>
+
+            <Label col="1" (longPress)="showMenu($event, item.accountNumber)"  class="secondRow"
+              [text]="'Account#: ' + item.accountNumber"></Label>
+
+            <Label col="2" class="secondRow units" [text]="'Units: ' + (item.jobUnits ? item.jobUnits : 'n/a')"></Label>
+          </GridLayout>
+        
+
+        <GridLayout columns="*,auto" style="margin-bottom: 10;">
           <!-- <Label
             col="0"
             class="second-row"
             [text]="'Modems: ' + (item.modems || 0) + '  TV Boxes: ' + (item.tvBoxes || 0) + '  Cameras: ' + (item.cameras || 0)">
           </Label> -->
           <Label
-            col="1"
+            col="0"
             class="second-row"
             [text]="(item.timeSlotStartDateTime | date: 'h:mm a') + ' - ' + (item.timeSlotEndDateTime | date: 'h:mm a')">
           </Label>
@@ -211,7 +214,7 @@
                     [class.fas]="item.isStarred"
                     text="&#xf005;"
                     (tap)="setStarred(item)"
-                    style="font-size: 16px"></Label>
+                    style="font-size: 16px; margin-right: 5;"></Label>
                 <!-- </MDRipple>s -->
 
                 <MenuButton class="fas"
@@ -282,9 +285,13 @@
             </GridLayout>
 
             <!-- <Label class="fas firstRow" text="&#xf142;" (tap)="onDeleteJob(item)"></Label> -->
-          </StackLayout>
-          
-      </StackLayout>
+        </StackLayout>
+        </StackLayout>
+        <Label
+          class="fas status-icon floating-status {{ itemStatusClass(item) }}"
+          [text]="itemStatusIcon(item)">
+        </Label>
+      </GridLayout>
     </ng-template>
   </RadListView>
 </StackLayout>
