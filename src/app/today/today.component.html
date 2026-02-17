@@ -94,7 +94,7 @@
         <Label text="All" style="font-size: 17;"></Label>
       </StackLayout>
 
-      <Switch id="userStatus" ></Switch>
+      <Switch id="userStatus" (checkedChange)="toggleStarredView($event)"></Switch>
       <StackLayout orientation="horizontal">
         <Label class="fas" text="&#xf005;" style="font-size: 20px; margin-right: 5;"></Label>
         <Label text="Starred" style="font-size: 17;"></Label>

@@ -8,6 +8,7 @@ import { UserModel } from '../shared/models/user.model';
 import { UsersService } from '../shared/services/users.service';
 import { TodayService } from './today.service';
 import { map } from 'rxjs';
+import { ConfigService } from '../shared/services/config.service';
 
 @Component({
   standalone: true,
@@ -20,6 +21,8 @@ import { map } from 'rxjs';
 export class TodayComponent implements OnInit {
   public user: UserModel;
   public jobList: ObservableArray<any>;
+  public originalJobList: ObservableArray<any>;
+  public starredJobList: ObservableArray<any>;
   public todayTotal = 0;
   public units = 0;
   public weeklyTotal = 0;
@@ -95,10 +98,12 @@ export class TodayComponent implements OnInit {
   public hasLunch: boolean;
   public techStatus: boolean;
   public isTechStatusLoading = false;
+  showStarred = false;
 
   constructor(
     private usersService: UsersService,
     private todayService: TodayService,
+    private configService: ConfigService,
     private cdr: ChangeDetectorRef
   ) { }
 
@@ -130,21 +135,22 @@ export class TodayComponent implements OnInit {
       this.cdr.detectChanges();
     };
 
+    // starred jobs implemented
     // getWorkOrder implemented
     this.todayService.getWorkOrders(userId).pipe(
       map(res => {
         return res.map(job => {
-          // const surveySent = this.configService.getSurveySent(job.number);
+          const surveySent = this.configService.getSurveySent(job.number);
           // console.log('SURVEYSENT OF EACH JOB', surveySent)
 
-          // const isStarred = this.configService.isJobStarred(job.number);
-          // if (isStarred) {
-            // this.configService.setStarredJob(job, true);
-          // }
+          const isStarred = this.configService.isJobStarred(job.number);
+          if (isStarred) {
+            this.configService.setStarredJob(job, true);
+          }
           return {
             ...job,
-            // sms_survey_sent: surveySent ? true : false,
-            // isStarred
+            sms_survey_sent: surveySent ? true : false,
+            isStarred
           };
         });
       })
@@ -152,23 +158,23 @@ export class TodayComponent implements OnInit {
       next: (res) => {
         console.log('ORDERS1', res);
 
-        // this.originalJobList = new ObservableArray(res);
-        // if (!this.starredJobList) {
-        //   this.starredJobList = new ObservableArray([]);
-        // }
+        this.originalJobList = new ObservableArray(res);
+        if (!this.starredJobList) {
+          this.starredJobList = new ObservableArray([]);
+        }
 
-        // this.rebuildStarredList();
+        this.rebuildStarredList();
         // Inicializa como ObservableArray
-        // this.jobList.splice(0);     // limpia
-        // const listToShow = this.showStarred ? this.starredJobList : this.originalJobList;
-        // this.jobList.push(...listToShow);  // agrega nuevos elementos
+        this.jobList.splice(0);     // limpia
+        const listToShow = this.showStarred ? this.starredJobList : this.originalJobList;
+        this.jobList.push(...listToShow);  // agrega nuevos elementos
 
-        const jobs = Array.isArray(res?.jobs) ? res.jobs : (Array.isArray(res) ? res : []);
-        this.jobList = new ObservableArray(jobs);
-        this.todayTotal = jobs
+        // const jobs = Array.isArray(res?.jobs) ? res.jobs : (Array.isArray(res) ? res : []);
+        // this.jobList = new ObservableArray(jobs);
+        this.todayTotal = res
           .filter((job) => job?.status === 'CLOSED')
           .reduce((total, job) => total + Number(job?.amount || 0), 0);
-        this.units = jobs.reduce((total, job) => total + Number(job?.jobUnits || 0), 0);
+        this.units = res.reduce((total, job) => total + Number(job?.jobUnits || 0), 0);
         onDone();
       }, error: (error) => {
         console.log(error);
@@ -205,6 +211,65 @@ export class TodayComponent implements OnInit {
       },
       error: () => onDone(),
     });
+  }
+
+  private rebuildStarredList() {
+    if (!this.starredJobList) {
+      this.starredJobList = new ObservableArray([]);
+    }
+
+    this.starredJobList.splice(0);
+    const starredMap = this.configService.getStarredJobs();
+    const starredJobs: any[] = [];
+
+    Object.keys(starredMap || {}).forEach((key) => {
+      const stored = starredMap[key];
+      const latest = this.originalJobList?.find((job) => String(job.number) === String(key));
+
+      if (latest) {
+        latest.isStarred = true;
+        starredJobs.push(latest);
+        this.configService.setStarredJob(latest, true);
+        return;
+      }
+
+      if (stored && stored !== true) {
+        stored.isStarred = true;
+        starredJobs.push(stored);
+      }
+    });
+
+    if (starredJobs.length) {
+      this.starredJobList.push(...starredJobs);
+    }
+  }
+
+  toggleStarredView(event: any) {
+    this.showStarred = !!event?.object?.checked;
+    this.rebuildStarredList();
+
+    if (!this.jobList) {
+      this.jobList = new ObservableArray([]);
+    }
+
+    this.jobList.splice(0);
+    const listToShow = this.showStarred ? this.starredJobList : this.originalJobList;
+    listToShow && this.jobList.push(...listToShow);
+  }
+
+  setStarred(item: any) {
+    if (!item) {
+      return;
+    }
+    item.isStarred = !item.isStarred;
+    if (item.number !== undefined && item.number !== null) {
+      this.configService.setStarredJob(item, item.isStarred);
+    }
+    this.rebuildStarredList();
+    if (this.showStarred) {
+      this.jobList.splice(0);
+      this.jobList.push(...this.starredJobList);
+    }
   }
 
   public onSelectedMainMenuR(event: MenuEvent): void {
