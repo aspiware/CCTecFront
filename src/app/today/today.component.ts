@@ -311,6 +311,10 @@ export class TodayComponent implements OnInit {
 
   public onPullToRefresh(event: any): void {
     const listView = event?.object;
+    if (this.isSyncing) {
+      listView?.notifyPullToRefreshFinished?.();
+      return;
+    }
     this.getWorkOrders(() => {
       listView?.notifyPullToRefreshFinished?.();
       listView?.scrollToIndex?.(0, false);

@@ -113,7 +113,7 @@
 
   <RadListView
     [items]="jobList"
-    pullToRefresh="true"
+    [pullToRefresh]="!isSyncing"
     (pullToRefreshInitiated)="onPullToRefresh($event)"
     (itemTap)="onItemTap($event)"
     height="100%"
