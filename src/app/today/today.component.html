@@ -4,7 +4,7 @@
     ios.systemIcon="13"
     [visibility]="isSyncing ? 'collapse' : 'visible'"
     [isEnabled]="!isSyncing"
-    (tap)="onSummaryDirectRefresh()">
+    (tap)="getWorkOrders()">
   </ActionItem>
   <ActionItem ios.position="right" [visibility]="isSyncing ? 'visible' : 'collapse'">
     <ActivityIndicator [busy]="isSyncing" width="20" height="20"></ActivityIndicator>
@@ -37,7 +37,7 @@
     </StackLayout>
   </ActionItem>
 
-  <ActionItem *ngIf="hasLunch" ios.position="left">
+  <ActionItem *ngIf="isOnShift" ios.position="left">
     <StackLayout>
       <MenuButton
         [useSFIcon]="true"

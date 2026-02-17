@@ -95,7 +95,7 @@ export class TodayComponent implements OnInit {
       ],
     };
   public isSyncing = false;
-  public hasLunch: boolean;
+  public isOnShift: boolean;
   public techStatus: boolean;
   public isTechStatusLoading = false;
   public lastKnownTechStatus = 'AVAIL';
@@ -114,12 +114,10 @@ export class TodayComponent implements OnInit {
     this.jobList = new ObservableArray([]);
     this.user = this.usersService.getUser() || { userId: 15 };
     this.mainMenuIconName = this.mainMenu?.options?.[0]?.icon || 'ellipsis.circle';
-    this.onSummaryDirectRefresh();
-    this.loadHeaderStatus();
-    this.getTechStatus();
+    this.getWorkOrders();
   }
 
-  public onSummaryDirectRefresh(onFinished?: () => void): void {
+  public getWorkOrders(onFinished?: () => void): void {
     if (this.isSyncing) {
       onFinished?.();
       return;
@@ -138,6 +136,9 @@ export class TodayComponent implements OnInit {
       }
       this.cdr.detectChanges();
     };
+
+    this.hasLunch();
+    this.getTechStatus();
 
     // starred jobs implemented
     // getWorkOrder implemented
@@ -310,7 +311,7 @@ export class TodayComponent implements OnInit {
 
   public onPullToRefresh(event: any): void {
     const listView = event?.object;
-    this.onSummaryDirectRefresh(() => {
+    this.getWorkOrders(() => {
       listView?.notifyPullToRefreshFinished?.();
       listView?.scrollToIndex?.(0, false);
 
@@ -356,15 +357,15 @@ export class TodayComponent implements OnInit {
     return zip.slice(0, 5);
   }
 
-  private loadHeaderStatus(): void {
+  private hasLunch(): void {
     const userId = this.user?.userId || 0;
     this.todayService.hasLunch(userId).subscribe({
       next: (res) => {
-        this.hasLunch = !!(res?.hasLunch ?? res);
+        this.isOnShift = !!(res?.hasLunch ?? res);
         this.cdr.detectChanges();
       },
       error: () => {
-        this.hasLunch = false;
+        this.isOnShift = false;
         this.cdr.detectChanges();
       },
     });
@@ -372,13 +373,25 @@ export class TodayComponent implements OnInit {
 
   private getTechStatus(): void {
     const userId = this.user?.userId || 0;
+
+    if (this.isTechStatusLoading) {
+      return;
+    }
+
+    this.isTechStatusLoading = true;
+
     this.todayService.getTechStatus(userId).subscribe({
       next: (res) => {
-        const status = String(res?.techStatus || res?.status || res || '').toUpperCase();
+        console.log('TECH_STATUS', res);
+
+        const status = String(res?.data?.techStatus || '').toUpperCase();
+
         if (!status) {
           return;
         }
+
         this.lastKnownTechStatus = status;
+        this.isTechStatusLoading = false;
 
         switch (status) {
           case 'AVAIL':
@@ -408,7 +421,10 @@ export class TodayComponent implements OnInit {
         }
         this.cdr.detectChanges();
       },
-      error: () => {},
+      error: (e) => {
+        console.log(e)
+        this.isTechStatusLoading = false;
+      },
     });
   }
 
@@ -420,6 +436,7 @@ export class TodayComponent implements OnInit {
     if (this.isTechStatusLoading) {
       return;
     }
+
     const userId = this.user?.userId || 0;
     this.isTechStatusLoading = true;
     this.cdr.detectChanges();
@@ -427,9 +444,11 @@ export class TodayComponent implements OnInit {
     this.todayService.updateTechStatusMenu(userId, techStatus, lastKnownTechStatus).subscribe({
       next: () => {
         this.lastKnownTechStatus = techStatus;
+
         if (selectedIcon) {
           this.mainMenuIconName = selectedIcon;
         }
+
         this.isTechStatusLoading = false;
         this.cdr.detectChanges();
       },
