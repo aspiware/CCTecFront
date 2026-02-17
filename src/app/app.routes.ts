@@ -4,6 +4,7 @@ import { SummaryComponent } from './summary/summary.component';
 import { JobsComponent } from './jobs/jobs.component';
 import { TodayComponent } from './today/today.component';
 import { SettingsComponent } from './settings/settings.component';
+import { CustomerConsentComponent } from './customer-consent/customer-consent.component';
 
 export const routes: Routes = [
   {
@@ -29,6 +30,11 @@ export const routes: Routes = [
         path: 'today',
         outlet: 'todayListTab',
         component: TodayComponent,
+      },
+      {
+        path: 'customer-consent',
+        outlet: 'todayListTab',
+        component: CustomerConsentComponent,
       },
       {
         path: 'settings',
