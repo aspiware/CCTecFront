@@ -13,18 +13,29 @@
   // width: 340;
   padding: 10;
   margin: 15;
-  border-radius: 12;
+  border-radius: 16;
+  border-width: 1;
+  border-color: rgba(255, 255, 255, 0.10);
+  shadow-color: #000000;
+  shadow-offset: 0 8;
+  shadow-opacity: 0.28;
+  shadow-radius: 20;
   background-color: #281d1d;
   vertical-align: middle;
   horizontal-align: center;
 }
 
 .ns-light .modal-card {
-  background-color: rgb(140, 148, 159);
+  background-color: #F2F2F7;
+  border-color: rgba(60, 60, 67, 0.16);
+  shadow-offset: 0 6;
+  shadow-opacity: 0.18;
+  shadow-radius: 16;
 }
 
 .ns-dark .modal-card {
   background-color: #1C1C1E;
+  border-color: rgba(255, 255, 255, 0.14);
 }
 
 .header {
