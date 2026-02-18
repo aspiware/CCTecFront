@@ -32,12 +32,10 @@ export class SettingsComponent implements OnInit {
   }
 
   public simulateActive(): void {
-    this.subscriptionService.setBackendMockStatus(true);
     this.subscriptionService.setLocalStatus(true);
   }
 
   public simulateInactive(): void {
-    this.subscriptionService.setBackendMockStatus(false);
     this.subscriptionService.setLocalStatus(false);
     this.routerExtensions.navigate(['/subscription'], {
       clearHistory: true,
