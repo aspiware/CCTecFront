@@ -358,12 +358,53 @@ export class TodayComponent implements OnInit {
       dismissEnabled: true,
       ios: {
         presentationStyle: UIModalPresentationStyle.Custom,
-        width: modalWidth,
-        height: modalHeight,
+        // width: modalWidth,
+        // height: modalHeight,
       },
     };
 
-    this.modalService.showModal(WifiConfigComponent, options);
+    this.modalService.showModal(WifiConfigComponent, options).then((result) => {
+      if (!result) {
+        return;
+      }
+
+      if (!__IOS__) {
+        return;
+      }
+
+      if (typeof MFMessageComposeViewController === 'undefined' || !MFMessageComposeViewController.canSendText()) {
+        return;
+      }
+
+      const recipients = Array.isArray(result?.numbers)
+        ? result.numbers.filter((n: any) => !!n).map((n: any) => String(n))
+        : [];
+      const body = String(result?.wifiData || '');
+      const controller = MFMessageComposeViewController.new();
+      const MessageComposeDelegate = (NSObject as any).extend(
+        {
+          messageComposeViewControllerDidFinishWithResult(
+            msgController: MFMessageComposeViewController,
+            _msgResult: MessageComposeResult
+          ) {
+            msgController.dismissViewControllerAnimatedCompletion(true, null);
+          },
+        },
+        {
+          protocols: [MFMessageComposeViewControllerDelegate],
+        }
+      );
+      const delegate = MessageComposeDelegate.new();
+
+      controller.body = body;
+      controller.recipients = recipients as any;
+      controller.messageComposeDelegate = delegate;
+      (controller as any).__delegate = delegate;
+
+      const root = Application.ios?.rootController;
+      const presented = root?.presentedViewController || root;
+      presented?.presentViewControllerAnimatedCompletion(controller, true, null);
+    });
   }
 
   public itemStatusIcon(item: any): string {
