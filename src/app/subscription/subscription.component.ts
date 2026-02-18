@@ -16,7 +16,7 @@ export class SubscriptionComponent implements OnInit {
   public message = '';
 
   private redirectTo = '/tabs';
-  private readonly productId = 'com.aspiware.basic.weekly';
+  private readonly productId = 'com.aspiware.cctec.basic.weekly';
   private iapObserver: any;
   private pendingPurchase: {
     resolve: (value: { receiptData: string; productId?: string; transactionId?: string }) => void;
@@ -236,11 +236,34 @@ export class SubscriptionComponent implements OnInit {
             request: SKProductsRequest,
             response: SKProductsResponse
           ) {
+            const bundleId = NSBundle.mainBundle.bundleIdentifier || 'unknown.bundle';
+            const validCount = response?.products?.count || 0;
+            const invalidIdsArray =
+              response?.invalidProductIdentifiers?.count
+                ? Array.from(
+                    { length: response.invalidProductIdentifiers.count },
+                    (_, i) => String(response.invalidProductIdentifiers.objectAtIndex(i))
+                  )
+                : [];
+
+            console.log(
+              '[Subscription][StoreKit] products response',
+              JSON.stringify({
+                bundleId,
+                requestedProductId: productId,
+                validCount,
+                invalidIds: invalidIdsArray,
+              })
+            );
+
             self.productsRequest = null;
             self.productsRequestDelegate = null;
 
             if (!response || response.products.count === 0) {
-              reject('Product not found in App Store Connect.');
+              const invalidIds = invalidIdsArray.length ? invalidIdsArray.join(', ') : 'none';
+              reject(
+                `Product not found. bundleId=${bundleId} productId=${productId} invalidIds=${invalidIds}`
+              );
               return;
             }
 
@@ -248,6 +271,15 @@ export class SubscriptionComponent implements OnInit {
             resolve(product);
           },
           requestDidFailWithError(_request: SKRequest, error: NSError) {
+            console.log(
+              '[Subscription][StoreKit] products request failed',
+              JSON.stringify({
+                productId,
+                code: error?.code,
+                domain: error?.domain,
+                message: error?.localizedDescription,
+              })
+            );
             self.productsRequest = null;
             self.productsRequestDelegate = null;
             reject(error?.localizedDescription || 'Failed to load product information.');
