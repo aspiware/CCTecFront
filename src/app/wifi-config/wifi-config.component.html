@@ -5,12 +5,58 @@
     <GridLayout row="0" col="0" rows="auto,*" class="modal-card">
       <GridLayout row="0" columns="*,auto" class="header">
         <Label col="0" text="WiFi Config" class="title"></Label>
-        <Button col="1" text="Close" class="close-btn" (tap)="closeModal()"></Button>
+
+        <StackLayout col="1" style="">
+          <MenuButton [useSFIcon]="true" style="background-color: transparent; height: 24; width: 35;"
+            [sfIconName]="'ellipsis.circle'" [showSpinner]="viewReady && isLoading" #menuStatus [options]="mainMenu.options"
+            (selected)="onSelectedMainMenu($event, menuStatus)">
+          </MenuButton>
+        </StackLayout>
       </GridLayout>
 
       <StackLayout row="1" class="content">
-        <Label text="WiFi Config base screen created." class="subtitle"></Label>
-        <Label text="Now this opens as a centered modal." class="subtitle"></Label>
+        <StackLayout orientation="horizontal">
+          <ListPicker #devicePicker [items]="deviceLabels" [selectedIndex]="selectedIndex"
+            (selectedIndexChange)="onchange($event)" [height]="70" width="100%">
+          </ListPicker>
+        </StackLayout>
+
+        <StackLayout [formGroup]="wifiConfigForm">
+          <StackLayout formGroupName="primary">
+            <!-- <GridLayout rows="auto" columns="400, *" style="margin-bottom: 8;"> -->
+              <StackLayout orientation="horizontal">
+                <MenuButton [useSFIcon]="true" style="background-color: transparent; height: 35; width: 40;"
+                  [sfIconName]="'lock.shield'" [options]="securityMenuOptions(0)"
+                  (selected)="onSecuritySelected(0, $event)">
+                </MenuButton>
+                <Label [text]="bandTitle(0)" style="font-size: 16;"></Label>
+              </StackLayout>
+              
+            <!-- </GridLayout> -->
+            <TextField formControlName="name" hint="Name" class="-border custom-tf"></TextField>
+            <TextField formControlName="password" hint="Password" class="-border custom-tf"></TextField>
+          </StackLayout>
+
+          <!-- Bandas adicionales -->
+          <StackLayout *ngIf="!useSameForAll && bandsControls.length > 1" formArrayName="bands" style="margin-top: 10;">
+            <ng-container *ngFor="let band of bandsControls; let i = index">
+              <StackLayout *ngIf="i > 0" [formGroupName]="i" style="margin-bottom: 10;">
+                <GridLayout rows="auto" columns="40, *" style="margin-bottom: -10; margin-top: 10;">
+                <StackLayout col="0">
+                  <MenuButton verticalAlignment="middle" [useSFIcon]="true" style="background-color: transparent; height: 24; width: 24;"
+                    [sfIconName]="'lock.shield'" [options]="securityMenuOptions(i)"
+                    (selected)="onSecuritySelected(i, $event)">
+                  </MenuButton>
+                </StackLayout>
+                <Label col="1" verticalAlignment="middle" [text]="bandTitle(i)" style="font-size: 16;"></Label>
+              </GridLayout>
+                <TextField formControlName="name" hint="Name" class="-border custom-tf"></TextField>
+                <TextField formControlName="password" hint="Password" class="-border custom-tf"></TextField>
+              </StackLayout>
+            </ng-container>
+          </StackLayout>
+        </StackLayout>
+
       </StackLayout>
     </GridLayout>
   </GridLayout>
