@@ -41,20 +41,26 @@
           <StackLayout *ngIf="!useSameForAll && bandsControls.length > 1" formArrayName="bands" style="margin-top: 10;">
             <ng-container *ngFor="let band of bandsControls; let i = index">
               <StackLayout *ngIf="i > 0" [formGroupName]="i" style="margin-bottom: 10;">
-                <GridLayout rows="auto" columns="40, *" style="margin-bottom: -10; margin-top: 10;">
-                <StackLayout col="0">
-                  <MenuButton verticalAlignment="middle" [useSFIcon]="true" style="background-color: transparent; height: 24; width: 24;"
+                <!-- <GridLayout rows="auto" columns="40, *" style="margin-bottom: -10; margin-top: 10;"> -->
+                <StackLayout orientation="horizontal">
+                  <MenuButton [useSFIcon]="true" style="background-color: transparent; height: 35; width: 40;"
                     [sfIconName]="'lock.shield'" [options]="securityMenuOptions(i)"
                     (selected)="onSecuritySelected(i, $event)">
                   </MenuButton>
+                  <Label col="1" [text]="bandTitle(i)" class="band-title" style="font-size: 16;"></Label>
                 </StackLayout>
-                <Label col="1" verticalAlignment="middle" [text]="bandTitle(i)" class="band-title" style="font-size: 16;"></Label>
-              </GridLayout>
+                
+              <!-- </GridLayout> -->
               <TextField formControlName="name" hint="Name" class="custom-tf"></TextField>
               <TextField formControlName="password" hint="Password" class="custom-tf"></TextField>
               </StackLayout>
             </ng-container>
           </StackLayout>
+
+          <GridLayout columns="auto,12,*" class="use-same-row">
+            <Switch col="0" class="use-same-switch" [checked]="useSameForAll" (checkedChange)="onUseSameChanged($event)"></Switch>
+            <Label col="2" class="use-same-label" text="Use the same name and password for all bands"></Label>
+          </GridLayout>
         </StackLayout>
 
       </StackLayout>

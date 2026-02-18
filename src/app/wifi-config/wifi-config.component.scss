@@ -127,3 +127,26 @@ TextField.custom-tf {
   color: #ffffff;
   placeholder-color: #8e8e93;
 }
+
+.use-same-row {
+  margin-top: 10;
+  margin-left: 15;
+  margin-right: 15;
+  vertical-align: middle;
+}
+
+.use-same-switch {
+  horizontal-align: left;
+  vertical-align: middle;
+  margin-top: 2;
+}
+
+.use-same-label {
+  vertical-align: middle;
+  color: #ffffff;
+  font-size: 13;
+}
+
+.ns-light .use-same-label {
+  color: #000000;
+}
