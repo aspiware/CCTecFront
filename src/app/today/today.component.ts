@@ -104,6 +104,7 @@ export class TodayComponent implements OnInit {
   showStarred = false;
   private isCopyMenuOpen = false;
   private lastCopyMenuTs = 0;
+  private messageComposeDelegate: any;
 
   constructor(
     private usersService: UsersService,
@@ -380,31 +381,40 @@ export class TodayComponent implements OnInit {
         ? result.numbers.filter((n: any) => !!n).map((n: any) => String(n))
         : [];
       const body = String(result?.wifiData || '');
-      const controller = MFMessageComposeViewController.new();
-      const MessageComposeDelegate = (NSObject as any).extend(
-        {
-          messageComposeViewControllerDidFinishWithResult(
-            msgController: MFMessageComposeViewController,
-            _msgResult: MessageComposeResult
-          ) {
-            msgController.dismissViewControllerAnimatedCompletion(true, null);
-          },
-        },
-        {
-          protocols: [MFMessageComposeViewControllerDelegate],
-        }
-      );
-      const delegate = MessageComposeDelegate.new();
-
-      controller.body = body;
-      controller.recipients = recipients as any;
-      controller.messageComposeDelegate = delegate;
-      (controller as any).__delegate = delegate;
-
-      const root = Application.ios?.rootController;
-      const presented = root?.presentedViewController || root;
-      presented?.presentViewControllerAnimatedCompletion(controller, true, null);
+      // Wait one run-loop so Wifi modal is fully dismissed before presenting SMS composer.
+      setTimeout(() => this.presentSmsComposer(recipients, body), 150);
     });
+  }
+
+  private presentSmsComposer(recipients: string[], body: string): void {
+    const controller = MFMessageComposeViewController.new();
+    const MessageComposeDelegate = (NSObject as any).extend(
+      {
+        messageComposeViewControllerDidFinishWithResult: (
+          msgController: MFMessageComposeViewController,
+          _msgResult: MessageComposeResult
+        ) => {
+          msgController.dismissViewControllerAnimatedCompletion(true, null);
+          this.messageComposeDelegate = null;
+        },
+      },
+      {
+        protocols: [MFMessageComposeViewControllerDelegate],
+      }
+    );
+
+    this.messageComposeDelegate = MessageComposeDelegate.new();
+    controller.body = body;
+    controller.recipients = recipients as any;
+    controller.messageComposeDelegate = this.messageComposeDelegate;
+    (controller as any).__delegate = this.messageComposeDelegate;
+
+    const root = Application.ios?.rootController;
+    let presenter = root as UIViewController;
+    while (presenter?.presentedViewController) {
+      presenter = presenter.presentedViewController;
+    }
+    presenter?.presentViewControllerAnimatedCompletion(controller, true, null);
   }
 
   public itemStatusIcon(item: any): string {
