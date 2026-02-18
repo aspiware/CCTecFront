@@ -1,0 +1,69 @@
+.page {
+  padding: 16;
+}
+
+.container {
+  vertical-align: middle;
+}
+
+.plan-title {
+  font-size: 28;
+  font-weight: 700;
+}
+
+.price {
+  margin-top: 4;
+  font-size: 22;
+  font-weight: 600;
+}
+
+.trial {
+  margin-top: 4;
+  opacity: 0.85;
+}
+
+.card {
+  margin-top: 14;
+  padding: 14;
+  border-radius: 12;
+  background-color: rgba(126, 151, 185, 0.2);
+}
+
+.card-title {
+  font-size: 16;
+  font-weight: 700;
+}
+
+.line {
+  margin-top: 5;
+}
+
+.message {
+  margin-top: 14;
+  font-size: 13;
+  opacity: 0.9;
+}
+
+.actions {
+  margin-top: 16;
+  column-gap: 10;
+}
+
+.btn {
+  border-radius: 10;
+}
+
+.btn-primary {
+  background-color: #0a84ff;
+  color: #ffffff;
+}
+
+.btn-secondary {
+  background-color: #d1d1d6;
+  color: #111111;
+}
+
+.ns-dark .btn-secondary {
+  background-color: #3a3a3c;
+  color: #ffffff;
+}

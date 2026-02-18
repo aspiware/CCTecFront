@@ -5,6 +5,8 @@ import { JobsComponent } from './jobs/jobs.component';
 import { TodayComponent } from './today/today.component';
 import { SettingsComponent } from './settings/settings.component';
 import { CustomerConsentComponent } from './customer-consent/customer-consent.component';
+import { SubscriptionComponent } from './subscription/subscription.component';
+import { subscriptionGuard } from './subscription/subscription.guard';
 
 export const routes: Routes = [
   {
@@ -13,7 +15,12 @@ export const routes: Routes = [
     pathMatch: 'full',
   },
   {
+    path: 'subscription',
+    component: SubscriptionComponent,
+  },
+  {
     path: 'tabs',
+    canActivate: [subscriptionGuard],
     component: TabsContainerComponent,
     children: [
       {

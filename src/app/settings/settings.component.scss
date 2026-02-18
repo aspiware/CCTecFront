@@ -22,8 +22,20 @@
 .card-title {
   font-size: 16;
   font-weight: 700;
+  margin-bottom: 10;
 }
 
-.card-text {
-  margin-top: 6;
+.btn {
+  margin-top: 8;
+  border-radius: 10;
+}
+
+.btn-primary {
+  background-color: #0a84ff;
+  color: #ffffff;
+}
+
+.btn-danger {
+  background-color: #e53935;
+  color: #ffffff;
 }
