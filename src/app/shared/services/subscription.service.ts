@@ -53,6 +53,36 @@ export class SubscriptionService {
       );
   }
 
+  public validateApplePurchase(payload: {
+    receiptData: string;
+    productId?: string;
+    transactionId?: string;
+    environment?: string;
+  }): Observable<boolean> {
+    const userId = Number(this.usersService.getUser()?.userId || 0);
+    if (!userId || !payload?.receiptData) {
+      this.setLocalStatus(false);
+      return of(false);
+    }
+
+    return this.httpClient
+      .post<any>(`${this.configService.getUrlBase()}/subscriptions/apple/validate`, {
+        userId,
+        receiptData: payload.receiptData,
+        productId: payload.productId,
+        transactionId: payload.transactionId,
+        environment: payload.environment,
+      })
+      .pipe(
+        map((res) => Boolean(res?.isActive)),
+        tap((isActive) => this.setLocalStatus(isActive)),
+        catchError(() => {
+          this.setLocalStatus(false);
+          return of(false);
+        })
+      );
+  }
+
   public activateTrial(): Observable<boolean> {
     // UI-first placeholder until purchase flow is connected.
     this.setLocalStatus(true);
