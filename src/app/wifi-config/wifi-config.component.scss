@@ -14,9 +14,17 @@
   padding: 10;
   margin: 15;
   border-radius: 12;
-  background-color: var(--background, #281d1d);
+  background-color: #281d1d;
   vertical-align: middle;
   horizontal-align: center;
+}
+
+.ns-light .modal-card {
+  background-color: rgb(140, 148, 159);
+}
+
+.ns-dark .modal-card {
+  background-color: #1C1C1E;
 }
 
 .header {
@@ -26,6 +34,16 @@
 .title {
   font-size: 18;
   font-weight: 600;
+}
+
+.modal-title-text,
+.band-title {
+  color: #ffffff;
+}
+
+.ns-light .modal-title-text,
+.ns-light .band-title {
+  color: #000000;
 }
 
 .close-btn {
@@ -82,12 +100,27 @@
   // margin-top: 200px;
 }
 
-TextField.custom-tf-code {
-  background-color: rgba(128, 128, 128, 0.219);
-  color: white;
-  margin-top: 50px;
-  margin-bottom: 0;
-  border-radius: 10;
-  font-size: 30;
-  width: 430px;
+TextField.custom-tf {
+  height: 44;
+  font-size: 17;
+  padding-left: 12;
+  padding-right: 12;
+  border-radius: 50%;
+  border-width: 1;
+  margin-top: 6;
+  margin-bottom: 6;
+}
+
+.ns-light TextField.custom-tf {
+  background-color: #f2f2f7;
+  border-color: #d1d1d6;
+  color: #000000;
+  placeholder-color: #8e8e93;
+}
+
+.ns-dark TextField.custom-tf {
+  background-color: #1C1C1E;
+  border-color: #3a3a3c;
+  color: #ffffff;
+  placeholder-color: #8e8e93;
 }

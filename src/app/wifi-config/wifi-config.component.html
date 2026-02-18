@@ -4,7 +4,7 @@
 
     <GridLayout row="0" col="0" rows="auto,*" class="modal-card">
       <GridLayout row="0" columns="*,auto" class="header">
-        <Label col="0" text="WiFi Config" class="title"></Label>
+        <Label col="0" text="WiFi Config" class="title modal-title-text"></Label>
 
         <StackLayout col="1" style="">
           <MenuButton [useSFIcon]="true" style="background-color: transparent; height: 24; width: 35;"
@@ -29,12 +29,12 @@
                   [sfIconName]="'lock.shield'" [options]="securityMenuOptions(0)"
                   (selected)="onSecuritySelected(0, $event)">
                 </MenuButton>
-                <Label [text]="bandTitle(0)" style="font-size: 16;"></Label>
+                <Label [text]="bandTitle(0)" class="band-title" style="font-size: 16;"></Label>
               </StackLayout>
               
             <!-- </GridLayout> -->
-            <TextField formControlName="name" hint="Name" class="-border custom-tf"></TextField>
-            <TextField formControlName="password" hint="Password" class="-border custom-tf"></TextField>
+          <TextField formControlName="name" hint="Name" class="custom-tf"></TextField>
+          <TextField formControlName="password" hint="Password" class="custom-tf"></TextField>
           </StackLayout>
 
           <!-- Bandas adicionales -->
@@ -48,10 +48,10 @@
                     (selected)="onSecuritySelected(i, $event)">
                   </MenuButton>
                 </StackLayout>
-                <Label col="1" verticalAlignment="middle" [text]="bandTitle(i)" style="font-size: 16;"></Label>
+                <Label col="1" verticalAlignment="middle" [text]="bandTitle(i)" class="band-title" style="font-size: 16;"></Label>
               </GridLayout>
-                <TextField formControlName="name" hint="Name" class="-border custom-tf"></TextField>
-                <TextField formControlName="password" hint="Password" class="-border custom-tf"></TextField>
+              <TextField formControlName="name" hint="Name" class="custom-tf"></TextField>
+              <TextField formControlName="password" hint="Password" class="custom-tf"></TextField>
               </StackLayout>
             </ng-container>
           </StackLayout>
