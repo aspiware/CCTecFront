@@ -22,7 +22,7 @@
         </StackLayout>
 
         <StackLayout [formGroup]="wifiConfigForm">
-          <StackLayout formGroupName="primary">
+          <StackLayout *ngIf="useSameForAll" formGroupName="primary">
             <!-- <GridLayout rows="auto" columns="400, *" style="margin-bottom: 8;"> -->
               <StackLayout orientation="horizontal">
                 <MenuButton [useSFIcon]="true" style="background-color: transparent; height: 35; width: 40;"
@@ -37,24 +37,25 @@
           <TextField formControlName="password" hint="Password" class="custom-tf"></TextField>
           </StackLayout>
 
-          <!-- Bandas adicionales -->
-          <StackLayout *ngIf="!useSameForAll && bandsControls.length > 1" formArrayName="bands" style="margin-top: 10;">
-            <ng-container *ngFor="let band of bandsControls; let i = index">
-              <StackLayout *ngIf="i > 0" [formGroupName]="i" style="margin-bottom: 10;">
-                <!-- <GridLayout rows="auto" columns="40, *" style="margin-bottom: -10; margin-top: 10;"> -->
-                <StackLayout orientation="horizontal">
-                  <MenuButton [useSFIcon]="true" style="background-color: transparent; height: 35; width: 40;"
-                    [sfIconName]="'lock.shield'" [options]="securityMenuOptions(i)"
-                    (selected)="onSecuritySelected(i, $event)">
-                  </MenuButton>
-                  <Label col="1" [text]="bandTitle(i)" class="band-title" style="font-size: 16;"></Label>
-                </StackLayout>
-                
-              <!-- </GridLayout> -->
+          <StackLayout *ngIf="!useSameForAll && bandsControls.length > 0" style="margin-top: 10;">
+            <SegmentedBar
+              [items]="bandSegments"
+              [selectedIndex]="selectedBandIndex"
+              (selectedIndexChange)="onBandSegmentChanged($event)" style="margin-left: 15">
+            </SegmentedBar>
+
+            <StackLayout *ngIf="selectedBandGroup as group" [formGroup]="group" style="margin-top: 10;">
+              <StackLayout orientation="horizontal">
+                <MenuButton [useSFIcon]="true" style="background-color: transparent; height: 35; width: 40;"
+                  [sfIconName]="'lock.shield'" [options]="securityMenuOptions(selectedBandIndex)"
+                  (selected)="onSecuritySelected(selectedBandIndex, $event)">
+                </MenuButton>
+                <Label [text]="bandTitle(selectedBandIndex)" class="band-title" style="font-size: 16;"></Label>
+              </StackLayout>
+
               <TextField formControlName="name" hint="Name" class="custom-tf"></TextField>
               <TextField formControlName="password" hint="Password" class="custom-tf"></TextField>
-              </StackLayout>
-            </ng-container>
+            </StackLayout>
           </StackLayout>
 
           <GridLayout columns="auto,12,*" class="use-same-row">

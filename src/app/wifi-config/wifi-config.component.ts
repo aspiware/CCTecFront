@@ -3,6 +3,7 @@ import { ModalDialogParams, NativeScriptCommonModule, NativeScriptFormsModule } 
 import { Item } from '../shared/components/menu-button/item';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { getNumber } from '@nativescript/core/application-settings';
+import { SegmentedBarItem } from '@nativescript/core';
 import { MenuButtonAction, MenuEvent } from '../shared/components/menu-button';
 import { WifiConfigService } from './wifi-config.service';
 
@@ -34,6 +35,8 @@ export class WifiConfigComponent implements OnInit {
   public viewReady = false;
   public useSameForAll: boolean = true;
   public wifiBands: Array<{ label: string }> = [];
+  public bandSegments: SegmentedBarItem[] = [];
+  public selectedBandIndex = 0;
   public securityOptions: string[][] = [];
   mainMenu: Item =
     {
@@ -191,6 +194,18 @@ export class WifiConfigComponent implements OnInit {
 
   public get bandsControls() {
     return this.bandsArray.controls;
+  }
+
+  public get selectedBandGroup(): FormGroup | null {
+    if (!this.bandsArray?.length) {
+      return null;
+    }
+    return this.bandsArray.at(this.selectedBandIndex) as FormGroup;
+  }
+
+  public onBandSegmentChanged(event: any): void {
+    const nextIndex = event?.newIndex ?? event?.value ?? event?.selectedIndex ?? 0;
+    this.selectedBandIndex = Math.max(0, Math.min(nextIndex, Math.max(0, this.bandsArray.length - 1)));
   }
 
   private get bandsArray(): FormArray {
@@ -400,6 +415,12 @@ export class WifiConfigComponent implements OnInit {
         this.wifiBands = bands.map((band, index) => ({
           label: band.band || this.getBandLabel(band, index),
         }));
+        this.bandSegments = this.wifiBands.map((band, index) => {
+          const item = new SegmentedBarItem();
+          item.title = band.label || `Band ${index + 1}`;
+          return item;
+        });
+        this.selectedBandIndex = 0;
         this.setBandsForm(bands);
         this.wifiConfigForm.patchValue({
           primary: {
