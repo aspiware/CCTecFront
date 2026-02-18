@@ -15,9 +15,9 @@
       </GridLayout>
 
       <StackLayout row="1" class="content">
-        <StackLayout orientation="horizontal">
+        <StackLayout orientation="horizontal" verticalAlignment="center" horizontalAlignment="center" >
           <ListPicker #devicePicker [items]="deviceLabels" [selectedIndex]="selectedIndex"
-            (selectedIndexChange)="onchange($event)" [height]="70" width="100%">
+            (selectedIndexChange)="onchange($event)" [height]="70" width="70%">
           </ListPicker>
         </StackLayout>
 
