@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnInit } from '@angular/core';
-import { ModalDialogParams, NativeScriptCommonModule } from '@nativescript/angular';
+import { ModalDialogParams, NativeScriptCommonModule, NativeScriptFormsModule } from '@nativescript/angular';
 import { Item } from '../shared/components/menu-button/item';
-import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { getNumber } from '@nativescript/core/application-settings';
 import { MenuButtonAction, MenuEvent } from '../shared/components/menu-button';
 import { WifiConfigService } from './wifi-config.service';
@@ -9,7 +9,7 @@ import { WifiConfigService } from './wifi-config.service';
 @Component({
   standalone: true,
   selector: 'app-wifi-config',
-  imports: [NativeScriptCommonModule],
+  imports: [NativeScriptCommonModule, NativeScriptFormsModule, ReactiveFormsModule],
   schemas: [NO_ERRORS_SCHEMA],
   templateUrl: './wifi-config.component.html',
   styleUrl: './wifi-config.component.scss',
@@ -395,6 +395,7 @@ export class WifiConfigComponent implements OnInit {
 
         const extracted = this.extractBands(res);
         const bands = extracted.bands;
+        console.log('BANDS >', bands)
         this.securityOptions = extracted.securityOptions;
         this.wifiBands = bands.map((band, index) => ({
           label: band.band || this.getBandLabel(band, index),
