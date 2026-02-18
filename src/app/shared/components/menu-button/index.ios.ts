@@ -31,22 +31,24 @@ export class MenuButton extends MenuButtonBase {
       return;
     }
     const iosButton = this.ios as UIButton;
+    const tintColor = this.getAdaptiveTintColor();
     const regularActions: UIMenuElement[] = [];
     const destructiveActions: UIMenuElement[] = [];
 
     if (this.showSpinner) {
       iosButton.setImageForState(null, UIControlState.Normal);
-      iosButton.tintColor = UIColor.whiteColor;
+      iosButton.tintColor = tintColor;
       let spinner = iosButton.viewWithTag(9999) as UIActivityIndicatorView;
       if (!spinner) {
         spinner = UIActivityIndicatorView.alloc().initWithActivityIndicatorStyle(UIActivityIndicatorViewStyle.Medium);
         spinner.tag = 9999;
-        spinner.color = UIColor.whiteColor;
+        spinner.color = tintColor;
         spinner.translatesAutoresizingMaskIntoConstraints = false;
         iosButton.addSubview(spinner);
         spinner.centerXAnchor.constraintEqualToAnchorConstant(iosButton.centerXAnchor, -10).active = true;
         spinner.centerYAnchor.constraintEqualToAnchorConstant(iosButton.centerYAnchor, -6).active = true;
       }
+      spinner.color = tintColor;
       iosButton.setNeedsLayout();
       iosButton.layoutIfNeeded();
       spinner.startAnimating();
@@ -67,7 +69,7 @@ export class MenuButton extends MenuButtonBase {
       const sfName = this.sfIconName || "ellipsis.circle";
       const image = UIImage.systemImageNamedWithConfiguration(sfName, config);
       iosButton.setImageForState(image, UIControlState.Normal);
-      iosButton.tintColor = UIColor.whiteColor;
+      iosButton.tintColor = tintColor;
       iosButton.translatesAutoresizingMaskIntoConstraints = false;
       iosButton.widthAnchor.constraintEqualToConstant(56).active = true;
       iosButton.heightAnchor.constraintEqualToConstant(48).active = true;
@@ -85,7 +87,7 @@ export class MenuButton extends MenuButtonBase {
       const sfName = this.sfIconName || "ellipsis.circle";
       const image = UIImage.systemImageNamedWithConfiguration(sfName, config);
       iosButton.setImageForState(image, UIControlState.Normal);
-      iosButton.tintColor = UIColor.whiteColor;
+      iosButton.tintColor = tintColor;
       // iosButton.translatesAutoresizingMaskIntoConstraints = false;
 
       iosButton.contentEdgeInsets = { top: 0, left: 0, bottom: 0, right: 0 };
@@ -170,6 +172,13 @@ export class MenuButton extends MenuButtonBase {
       );
     }
     iosButton.showsMenuAsPrimaryAction = true;
+  }
+
+  private getAdaptiveTintColor(): UIColor {
+    if (UIColor.labelColor) {
+      return UIColor.labelColor;
+    }
+    return UIColor.blackColor;
   }
 
   private showConfirmSheet(iosButton: UIButton, option: MenuButtonAction, index: number) {
