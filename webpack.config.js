@@ -9,6 +9,8 @@ module.exports = (env) => {
 	const prodBaseUrl = "https://cctec.aspiware.com/v1";
 	const devBaseUrl = "http://10.0.0.237:3000/v1";
 	const isProduction = !!(env && env.production);
+	const subscriptionBypass = !!(env && (env.subscriptionBypass || env.subscription_bypass));
+	const enforceSubscription = !!(env && (env.enforceSubscription || env.enforce_subscription));
 	const isDevRun = !!(env && (env.hmr || env.watch));
 	const defaultBaseUrl = isProduction ? prodBaseUrl : (isDevRun ? devBaseUrl : prodBaseUrl);
 	const apiBaseUrl =
@@ -20,6 +22,9 @@ module.exports = (env) => {
 		config.plugin("DefinePlugin").tap((args) => {
 			args[0]["globalThis.AppVersion"] = JSON.stringify(packageJson.version);
 			args[0]["globalThis.API_BASE_URL"] = JSON.stringify(apiBaseUrl);
+			args[0]["globalThis.IS_PRODUCTION"] = JSON.stringify(isProduction);
+			args[0]["globalThis.SUBSCRIPTION_BYPASS"] = JSON.stringify(subscriptionBypass);
+			args[0]["globalThis.ENFORCE_SUBSCRIPTION"] = JSON.stringify(enforceSubscription);
 			return args;
 		});
 	});

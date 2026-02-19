@@ -9,6 +9,17 @@ export const subscriptionGuard: CanActivateFn = (_route, state): boolean | UrlTr
   const router = inject(Router);
   const routerExtensions = inject(RouterExtensions);
   const subscriptionService = inject(SubscriptionService);
+  const environment = { production: !!(globalThis as any).IS_PRODUCTION };
+  const subscriptionBypass = !!(globalThis as any).SUBSCRIPTION_BYPASS;
+  const enforceSubscription = !!(globalThis as any).ENFORCE_SUBSCRIPTION;
+
+  if (subscriptionBypass) {
+    return true;
+  }
+
+  if (!environment.production && !enforceSubscription) {
+    return true;
+  }
 
   const redirectTree = router.createUrlTree(['/subscription'], {
     queryParams: { redirect: state.url || '/tabs' },
