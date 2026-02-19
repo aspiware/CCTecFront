@@ -71,13 +71,13 @@ export class SubscriptionComponent implements OnInit {
     this.startApplePurchase(this.productId)
       .then((purchase) => {
         this.subscriptionService.validateApplePurchase(purchase).subscribe({
-          next: (isActive) => {
+          next: (result) => {
             this.isBusy = false;
-            if (isActive) {
+            if (result.isActive) {
               this.routerExtensions.navigate([this.redirectTo], { clearHistory: true });
               return;
             }
-            this.message = 'Subscription could not be activated.';
+            this.message = result.message || 'Subscription could not be activated.';
             this.cdr.detectChanges();
           },
           error: () => {
@@ -105,13 +105,13 @@ export class SubscriptionComponent implements OnInit {
     this.restoreApplePurchases()
       .then((restoreData) => {
         this.subscriptionService.validateApplePurchase(restoreData).subscribe({
-          next: (isActive) => {
+          next: (result) => {
             this.isBusy = false;
-            if (isActive) {
+            if (result.isActive) {
               this.routerExtensions.navigate([this.redirectTo], { clearHistory: true });
               return;
             }
-            this.message = 'No active subscription found for this account.';
+            this.message = result.message || 'No active subscription found for this account.';
             this.cdr.detectChanges();
           },
           error: () => {

@@ -58,11 +58,11 @@ export class SubscriptionService {
     productId?: string;
     transactionId?: string;
     environment?: string;
-  }): Observable<boolean> {
+  }): Observable<{ isActive: boolean; message?: string }> {
     const userId = Number(this.usersService.getUser()?.userId || 0);
     if (!userId || !payload?.receiptData) {
       this.setLocalStatus(false);
-      return of(false);
+      return of({ isActive: false, message: 'Missing user or receipt data.' });
     }
 
     return this.httpClient
@@ -74,11 +74,16 @@ export class SubscriptionService {
         environment: payload.environment,
       })
       .pipe(
-        map((res) => Boolean(res?.isActive)),
-        tap((isActive) => this.setLocalStatus(isActive)),
+        map((res) => {
+          const isActive = Boolean(res?.isActive);
+          const message = res?.message ? String(res.message) : undefined;
+          console.log('[Subscription] validate response', JSON.stringify({ isActive, message }));
+          return { isActive, message };
+        }),
+        tap((result) => this.setLocalStatus(result.isActive)),
         catchError(() => {
           this.setLocalStatus(false);
-          return of(false);
+          return of({ isActive: false, message: 'Subscription validation request failed.' });
         })
       );
   }
