@@ -16,8 +16,6 @@ import { WifiConfigService } from './wifi-config.service';
   styleUrl: './wifi-config.component.scss',
 })
 export class WifiConfigComponent implements OnInit {
-  private readonly testWifiSsid = 'N&A';
-  private readonly testWifiPassword = 'Nat281014!';
   public selectedIndex: number = -1;
   public expenseTypeId: number = 0;
   public code: number;
@@ -142,8 +140,9 @@ export class WifiConfigComponent implements OnInit {
       return;
     }
 
-    const ssid = this.testWifiSsid.trim();
-    const password = this.testWifiPassword.trim();
+    const primary = this.getPrimaryForMessage();
+    const ssid = String(primary?.ssid || '').trim();
+    const password = String(primary?.password || '').trim();
 
     if (!ssid) {
       console.log('[WiFi Config] Missing SSID, cannot connect phone automatically.');
@@ -537,15 +536,15 @@ export class WifiConfigComponent implements OnInit {
 
   private getPrimaryForMessage() {
     const payload = this.buildWifiPayload();
-    const first = payload?.wifiData?.[0]
-      || payload?.wifiDataV2?.[0]?.bandData?.find((item: any) => item?.name === 'ssid')
-      || {};
-    const password = payload?.wifiData?.[0]?.password
-      || payload?.wifiDataV2?.[0]?.bandData?.find((item: any) => item?.name === 'password')?.value
-      || '';
+    const bandIndex = Math.max(0, this.selectedBandIndex || 0);
+    const selectedLegacyBand = payload?.wifiData?.[bandIndex] || payload?.wifiData?.[0] || {};
+    const selectedV2Band = payload?.wifiDataV2?.[bandIndex] || payload?.wifiDataV2?.[0];
+    const selectedV2Ssid = selectedV2Band?.bandData?.find((item: any) => item?.name === 'ssid');
+    const selectedV2Password = selectedV2Band?.bandData?.find((item: any) => item?.name === 'password');
+
     return {
-      ssid: first.ssid || first.value || '',
-      password,
+      ssid: selectedLegacyBand?.ssid || selectedV2Ssid?.value || '',
+      password: selectedLegacyBand?.password || selectedV2Password?.value || '',
     };
   }
 
