@@ -376,7 +376,8 @@ export class WifiConfigComponent implements OnInit {
   public updateWifiConfig() {
     this.setLoading(true);
     const payload = this.buildWifiPayload();
-    this.wifiConfigService.updateWifiConfig(this.userId, this.job.accountNumber, this.job.workOrderNumber, this.device.serialNumber, payload).subscribe({
+    const serialNumber = this.device?.serialNumber || this.device?.deviceSerialNumber || '';
+    this.wifiConfigService.updateWifiConfig(this.userId, this.job.accountNumber, this.job.workOrderNumber, serialNumber, payload).subscribe({
       next: (res) => {
         console.log(res);
         this.setLoading(false);
