@@ -38,18 +38,26 @@
             <TextField col="0" formControlName="name" hint="Name" class="custom-tf-inline"></TextField>
             <Label
               col="1"
-              class="far copy-icon"
-              text="&#xf0c5;"
-              (tap)="copyFieldValue(wifiConfigForm.get('primary.name')?.value, 'Name')">
+              class="copy-icon"
+              [class.copy-icon-disabled]="!canCopyField(wifiConfigForm.get('primary.name')?.value)"
+              [isUserInteractionEnabled]="canCopyField(wifiConfigForm.get('primary.name')?.value)"
+              [class.fas]="isFieldCopied('primary-name')"
+              [class.far]="!isFieldCopied('primary-name')"
+              [text]="isFieldCopied('primary-name') ? '&#xf00c;' : '&#xf0c5;'"
+              (tap)="copyFieldValue(wifiConfigForm.get('primary.name')?.value, 'Name', 'primary-name')">
             </Label>
           </GridLayout>
           <GridLayout columns="*,auto" class="input-shell">
             <TextField col="0" formControlName="password" hint="Password" class="custom-tf-inline"></TextField>
             <Label
               col="1"
-              class="far copy-icon"
-              text="&#xf0c5;"
-              (tap)="copyFieldValue(wifiConfigForm.get('primary.password')?.value, 'Password')">
+              class="copy-icon"
+              [class.copy-icon-disabled]="!canCopyField(wifiConfigForm.get('primary.password')?.value)"
+              [isUserInteractionEnabled]="canCopyField(wifiConfigForm.get('primary.password')?.value)"
+              [class.fas]="isFieldCopied('primary-password')"
+              [class.far]="!isFieldCopied('primary-password')"
+              [text]="isFieldCopied('primary-password') ? '&#xf00c;' : '&#xf0c5;'"
+              (tap)="copyFieldValue(wifiConfigForm.get('primary.password')?.value, 'Password', 'primary-password')">
             </Label>
           </GridLayout>
           </StackLayout>
@@ -74,18 +82,26 @@
                 <TextField col="0" formControlName="name" hint="Name" class="custom-tf-inline"></TextField>
                 <Label
                   col="1"
-                  class="far copy-icon"
-                  text="&#xf0c5;"
-                  (tap)="copyFieldValue(group.get('name')?.value, 'Name')">
+                  class="copy-icon"
+                  [class.copy-icon-disabled]="!canCopyField(group.get('name')?.value)"
+                  [isUserInteractionEnabled]="canCopyField(group.get('name')?.value)"
+                  [class.fas]="isFieldCopied('band-name-' + selectedBandIndex)"
+                  [class.far]="!isFieldCopied('band-name-' + selectedBandIndex)"
+                  [text]="isFieldCopied('band-name-' + selectedBandIndex) ? '&#xf00c;' : '&#xf0c5;'"
+                  (tap)="copyFieldValue(group.get('name')?.value, 'Name', 'band-name-' + selectedBandIndex)">
                 </Label>
               </GridLayout>
               <GridLayout columns="*,auto" class="input-shell">
                 <TextField col="0" formControlName="password" hint="Password" class="custom-tf-inline"></TextField>
                 <Label
                   col="1"
-                  class="far copy-icon"
-                  text="&#xf0c5;"
-                  (tap)="copyFieldValue(group.get('password')?.value, 'Password')">
+                  class="copy-icon"
+                  [class.copy-icon-disabled]="!canCopyField(group.get('password')?.value)"
+                  [isUserInteractionEnabled]="canCopyField(group.get('password')?.value)"
+                  [class.fas]="isFieldCopied('band-password-' + selectedBandIndex)"
+                  [class.far]="!isFieldCopied('band-password-' + selectedBandIndex)"
+                  [text]="isFieldCopied('band-password-' + selectedBandIndex) ? '&#xf00c;' : '&#xf0c5;'"
+                  (tap)="copyFieldValue(group.get('password')?.value, 'Password', 'band-password-' + selectedBandIndex)">
                 </Label>
               </GridLayout>
             </StackLayout>

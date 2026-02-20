@@ -16,8 +16,6 @@ import { WifiConfigService } from './wifi-config.service';
   styleUrl: './wifi-config.component.scss',
 })
 export class WifiConfigComponent implements OnInit {
-  private readonly testWifiSsid = 'N&A';
-  private readonly testWifiPassword = 'Nat281014!';
   public selectedIndex: number = -1;
   public expenseTypeId: number = 0;
   public code: number;
@@ -40,6 +38,10 @@ export class WifiConfigComponent implements OnInit {
   public bandSegments: SegmentedBarItem[] = [];
   public selectedBandIndex = 0;
   public securityOptions: string[][] = [];
+  private copiedStates: { [key: string]: boolean } = {};
+  private copiedTimers: { [key: string]: ReturnType<typeof setTimeout> } = {};
+  private isWifiConnectInProgress = false;
+  private wifiConnectAttemptId = 0;
   mainMenu: Item =
     {
       name: 'Main Menu',
@@ -133,9 +135,14 @@ export class WifiConfigComponent implements OnInit {
       });
   }
 
-  private connectPhoneToWifi(): void {
-    const ssid = this.testWifiSsid.trim();
-    const password = this.testWifiPassword.trim();
+  private async connectPhoneToWifi(): Promise<void> {
+    if (this.isWifiConnectInProgress) {
+      return;
+    }
+
+    const primary = this.getPrimaryForMessage();
+    const ssid = String(primary?.ssid || '').trim();
+    const password = String(primary?.password || '').trim();
 
     if (!ssid) {
       console.log('[WiFi Config] Missing SSID, cannot connect phone automatically.');
@@ -152,6 +159,10 @@ export class WifiConfigComponent implements OnInit {
       }
 
       try {
+        const previousSsid = await this.getCurrentSsidOnIos();
+        this.isWifiConnectInProgress = true;
+        const attemptId = ++this.wifiConnectAttemptId;
+        let callbackHandled = false;
         const manager = HotspotManager.sharedManager;
         const config = password
           ? HotspotConfig.alloc().initWithSSIDPassphraseIsWEP(ssid, password, false)
@@ -160,6 +171,11 @@ export class WifiConfigComponent implements OnInit {
         config.joinOnce = false;
         this.setLoading(true);
         manager.applyConfigurationCompletionHandler(config, (error: any) => {
+          if (callbackHandled || attemptId !== this.wifiConnectAttemptId) {
+            return;
+          }
+          callbackHandled = true;
+          this.isWifiConnectInProgress = false;
           this.setLoading(false);
           if (error) {
             const code = typeof error?.code === 'number' ? error.code : null;
@@ -168,21 +184,22 @@ export class WifiConfigComponent implements OnInit {
             if (reason) {
               console.log('[WiFi Config] iOS connect hint:', reason);
             }
-            Dialogs.alert({
-              title: 'Wi-Fi',
-              message: reason || 'Unable to connect to Wi-Fi.',
-              okButtonText: 'OK',
-            });
+            return;
           } else {
             console.log('[WiFi Config] iOS connect requested for SSID:', ssid);
-            Dialogs.alert({
-              title: 'Wi-Fi',
-              message: `Connected to ${ssid}.`,
-              okButtonText: 'OK',
+            this.verifyConnectedSsidOnIos(ssid, previousSsid).then((isConnected) => {
+              if (isConnected === true) {
+                Dialogs.alert({
+                  title: 'Wi-Fi',
+                  message: `Connected to ${ssid}.`,
+                  okButtonText: 'OK',
+                });
+              }
             });
           }
         });
       } catch (error) {
+        this.isWifiConnectInProgress = false;
         this.setLoading(false);
         console.log('[WiFi Config] iOS connect exception:', error);
         Dialogs.alert({
@@ -218,23 +235,30 @@ export class WifiConfigComponent implements OnInit {
     Utils.openUrl('app-settings:');
   }
 
-  public copyFieldValue(value: any, fieldName: string): void {
+  public copyFieldValue(value: any, fieldName: string, fieldKey: string): void {
     const text = String(value ?? '').trim();
     if (!text) {
-      Dialogs.alert({
-        title: 'Copy',
-        message: `${fieldName} is empty.`,
-        okButtonText: 'OK',
-      });
       return;
     }
 
     Utils.copyToClipboard(text);
-    Dialogs.alert({
-      title: 'Copy',
-      message: `${fieldName} copied.`,
-      okButtonText: 'OK',
-    });
+    this.copiedStates[fieldKey] = true;
+    if (this.copiedTimers[fieldKey]) {
+      clearTimeout(this.copiedTimers[fieldKey]);
+    }
+    this.copiedTimers[fieldKey] = setTimeout(() => {
+      this.copiedStates[fieldKey] = false;
+      this.cdr.detectChanges();
+    }, 500);
+    this.cdr.detectChanges();
+  }
+
+  public canCopyField(value: any): boolean {
+    return String(value ?? '').trim().length > 0;
+  }
+
+  public isFieldCopied(fieldKey: string): boolean {
+    return !!this.copiedStates[fieldKey];
   }
 
   private getIosWifiConnectErrorReason(code: number | null): string {
@@ -245,9 +269,70 @@ export class WifiConfigComponent implements OnInit {
       return 'Internal error. Check real device testing, Hotspot Configuration capability, and provisioning profile.';
     }
     if (code === 13) {
-      return 'The device is already associated with this SSID.';
+      return '';
     }
     return '';
+  }
+
+  private normalizeSsid(value: string | null): string {
+    const ssid = String(value ?? '').trim();
+    return ssid.replace(/^["']|["']$/g, '');
+  }
+
+  private getCurrentSsidOnIos(): Promise<string | null> {
+    return new Promise((resolve) => {
+      if (!isIOS) {
+        resolve(null);
+        return;
+      }
+
+      const HotspotNetwork = (global as any).NEHotspotNetwork;
+      const fetchCurrent = HotspotNetwork?.fetchCurrentWithCompletionHandler;
+
+      if (!fetchCurrent) {
+        resolve(null);
+        return;
+      }
+
+      try {
+        HotspotNetwork.fetchCurrentWithCompletionHandler((network: any) => {
+          const currentSsid = this.normalizeSsid(network?.SSID ?? null);
+          resolve(currentSsid || null);
+        });
+      } catch (error) {
+        console.log('[WiFi Config] SSID read error:', error);
+        resolve(null);
+      }
+    });
+  }
+
+  private verifyConnectedSsidOnIos(expectedSsid: string, previousSsid: string | null): Promise<boolean | null> {
+    const expected = this.normalizeSsid(expectedSsid);
+    const previous = this.normalizeSsid(previousSsid);
+
+    return this.getCurrentSsidOnIos().then((currentRaw) => {
+      const current = this.normalizeSsid(currentRaw);
+      console.log('[WiFi Config] SSID check:', { expected, previous, current });
+
+      if (!current) {
+        return false;
+      }
+
+      if (current !== expected) {
+        return false;
+      }
+
+      if (previous && previous !== expected) {
+        return true;
+      }
+
+      if (previous === expected) {
+        // Already on target network before requesting connection.
+        return null;
+      }
+
+      return true;
+    });
   }
 
   public updateWifiConfig() {
