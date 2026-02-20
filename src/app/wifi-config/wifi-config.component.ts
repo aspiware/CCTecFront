@@ -3,7 +3,7 @@ import { ModalDialogParams, NativeScriptCommonModule, NativeScriptFormsModule } 
 import { Item } from '../shared/components/menu-button/item';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { getNumber } from '@nativescript/core/application-settings';
-import { SegmentedBarItem } from '@nativescript/core';
+import { Application, SegmentedBarItem, Utils, isAndroid, isIOS } from '@nativescript/core';
 import { MenuButtonAction, MenuEvent } from '../shared/components/menu-button';
 import { WifiConfigService } from './wifi-config.service';
 
@@ -43,6 +43,7 @@ export class WifiConfigComponent implements OnInit {
       name: 'Main Menu',
       options: [
         { name: 'Refresh Wi-Fi Info', icon: 'arrow.clockwise' },
+        { name: 'Connect to Wi-Fi', icon: 'wifi' },
         { name: 'Share Wi-Fi via SMS', icon: 'ellipsis.message' },
         {
           name: 'Save Wi-Fi Settings', icon: 'checkmark.circle', destructive: true, confirm: {
@@ -110,18 +111,98 @@ export class WifiConfigComponent implements OnInit {
   }
 
   gatewayStatus(mac: string) {
+    if (!mac) {
+      return;
+    }
+    this.setLoading(true);
     this.mac = mac;
     this.wifiConfigService.gatewayStatus(this.userId, mac,
       this.job.workOrderNumber,
       this.job.accountNumber,).subscribe({
         next: (res) => {
           console.log(res);
+          this.setLoading(false);
           this.mac = '';
         }, error: (error) => {
           console.log(error);
+          this.setLoading(false);
           this.mac = '';
         }
       });
+  }
+
+  private connectPhoneToWifi(): void {
+    const primary = this.getPrimaryForMessage();
+    const ssid = String(primary?.ssid || '').trim();
+    const password = String(primary?.password || '').trim();
+
+    if (!ssid) {
+      console.log('[WiFi Config] Missing SSID, cannot connect phone automatically.');
+      return;
+    }
+
+    if (isIOS) {
+      const HotspotManager = (global as any).NEHotspotConfigurationManager;
+      const HotspotConfig = (global as any).NEHotspotConfiguration;
+
+      if (!HotspotManager || !HotspotConfig) {
+        console.log('[WiFi Config] NEHotspotConfiguration API is not available on this iOS runtime.');
+        return;
+      }
+
+      try {
+        const manager = HotspotManager.sharedManager;
+        const config = password
+          ? HotspotConfig.alloc().initWithSSIDPassphraseIsWEP(ssid, password, false)
+          : HotspotConfig.alloc().initWithSSID(ssid);
+
+        config.joinOnce = false;
+        this.setLoading(true);
+        manager.applyConfigurationCompletionHandler(config, (error: any) => {
+          this.setLoading(false);
+          if (error) {
+            const code = typeof error?.code === 'number' ? error.code : null;
+            const reason = this.getIosWifiConnectErrorReason(code);
+            console.log('[WiFi Config] iOS connect error:', error);
+            if (reason) {
+              console.log('[WiFi Config] iOS connect hint:', reason);
+            }
+          } else {
+            console.log('[WiFi Config] iOS connect requested for SSID:', ssid);
+          }
+        });
+      } catch (error) {
+        this.setLoading(false);
+        console.log('[WiFi Config] iOS connect exception:', error);
+      }
+      return;
+    }
+
+    if (isAndroid) {
+      try {
+        const activity = Application.android.foregroundActivity || Application.android.startActivity;
+        const intent = new android.content.Intent(android.provider.Settings.ACTION_WIFI_SETTINGS);
+        activity?.startActivity(intent);
+      } catch (error) {
+        console.log('[WiFi Config] Android Wi-Fi settings open error:', error);
+      }
+      return;
+    }
+
+    Utils.openUrl('app-settings:');
+  }
+
+  private getIosWifiConnectErrorReason(code: number | null): string {
+    if (code === 7) {
+      return 'User denied Wi-Fi join request.';
+    }
+    if (code === 8) {
+      return 'Internal error. Check real device testing, Hotspot Configuration capability, and provisioning profile.';
+    }
+    if (code === 13) {
+      return 'The device is already associated with this SSID.';
+    }
+    return '';
   }
 
   public updateWifiConfig() {
@@ -459,9 +540,12 @@ export class WifiConfigComponent implements OnInit {
         this.onchange({ newIndex: this.selectedIndex });
         break;
       case 1:
-        this.sendWifiConfig();
+        this.connectPhoneToWifi();
         break;
       case 2:
+        this.sendWifiConfig();
+        break;
+      case 3:
         this.updateWifiConfig();
         break;
     }
