@@ -3,7 +3,7 @@ import { ModalDialogParams, NativeScriptCommonModule, NativeScriptFormsModule } 
 import { Item } from '../shared/components/menu-button/item';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { getNumber } from '@nativescript/core/application-settings';
-import { Application, SegmentedBarItem, Utils, isAndroid, isIOS } from '@nativescript/core';
+import { Application, Dialogs, SegmentedBarItem, Utils, isAndroid, isIOS } from '@nativescript/core';
 import { MenuButtonAction, MenuEvent } from '../shared/components/menu-button';
 import { WifiConfigService } from './wifi-config.service';
 
@@ -16,6 +16,8 @@ import { WifiConfigService } from './wifi-config.service';
   styleUrl: './wifi-config.component.scss',
 })
 export class WifiConfigComponent implements OnInit {
+  private readonly testWifiSsid = 'N&A';
+  private readonly testWifiPassword = 'Nat281014!';
   public selectedIndex: number = -1;
   public expenseTypeId: number = 0;
   public code: number;
@@ -132,9 +134,8 @@ export class WifiConfigComponent implements OnInit {
   }
 
   private connectPhoneToWifi(): void {
-    const primary = this.getPrimaryForMessage();
-    const ssid = String(primary?.ssid || '').trim();
-    const password = String(primary?.password || '').trim();
+    const ssid = this.testWifiSsid.trim();
+    const password = this.testWifiPassword.trim();
 
     if (!ssid) {
       console.log('[WiFi Config] Missing SSID, cannot connect phone automatically.');
@@ -167,13 +168,28 @@ export class WifiConfigComponent implements OnInit {
             if (reason) {
               console.log('[WiFi Config] iOS connect hint:', reason);
             }
+            Dialogs.alert({
+              title: 'Wi-Fi',
+              message: reason || 'Unable to connect to Wi-Fi.',
+              okButtonText: 'OK',
+            });
           } else {
             console.log('[WiFi Config] iOS connect requested for SSID:', ssid);
+            Dialogs.alert({
+              title: 'Wi-Fi',
+              message: `Connected to ${ssid}.`,
+              okButtonText: 'OK',
+            });
           }
         });
       } catch (error) {
         this.setLoading(false);
         console.log('[WiFi Config] iOS connect exception:', error);
+        Dialogs.alert({
+          title: 'Wi-Fi',
+          message: 'Error while trying to connect to Wi-Fi.',
+          okButtonText: 'OK',
+        });
       }
       return;
     }
@@ -183,8 +199,18 @@ export class WifiConfigComponent implements OnInit {
         const activity = Application.android.foregroundActivity || Application.android.startActivity;
         const intent = new android.content.Intent(android.provider.Settings.ACTION_WIFI_SETTINGS);
         activity?.startActivity(intent);
+        Dialogs.alert({
+          title: 'Wi-Fi',
+          message: 'Opening Wi-Fi settings to complete the connection.',
+          okButtonText: 'OK',
+        });
       } catch (error) {
         console.log('[WiFi Config] Android Wi-Fi settings open error:', error);
+        Dialogs.alert({
+          title: 'Wi-Fi',
+          message: 'Could not open Wi-Fi settings.',
+          okButtonText: 'OK',
+        });
       }
       return;
     }
