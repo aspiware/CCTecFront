@@ -38,6 +38,8 @@ export class WifiConfigComponent implements OnInit {
   public bandSegments: SegmentedBarItem[] = [];
   public selectedBandIndex = 0;
   public securityOptions: string[][] = [];
+  public hasWifiConfigData = false;
+  public hasWifiConfigLoaded = false;
   private copiedStates: { [key: string]: boolean } = {};
   private copiedTimers: { [key: string]: ReturnType<typeof setTimeout> } = {};
   private isWifiConnectInProgress = false;
@@ -59,6 +61,13 @@ export class WifiConfigComponent implements OnInit {
         },
       ],
     };
+
+  get mainMenuOptions(): MenuButtonAction[] {
+    return this.mainMenu.options.map((option, index) => {
+      const shouldDisable = !this.hasWifiConfigData && (index === 1 || index === 2 || index === 3);
+      return { ...option, disabled: shouldDisable };
+    });
+  }
 
   constructor(
     private wifiConfigService: WifiConfigService,
@@ -404,6 +413,11 @@ export class WifiConfigComponent implements OnInit {
   }
 
   public onUseSameChanged(event: any) {
+    if (!this.hasWifiConfigData) {
+      this.useSameForAll = true;
+      return;
+    }
+
     const checked = event?.value ?? event?.object?.checked ?? event?.checked ?? false;
     const wasSame = this.useSameForAll;
     this.useSameForAll = !!checked;
@@ -430,6 +444,30 @@ export class WifiConfigComponent implements OnInit {
         { emitEvent: false }
       );
     }
+  }
+
+  private setWifiFieldsEnabled(enabled: boolean): void {
+    const primary = this.wifiConfigForm.get('primary');
+    const bands = this.wifiConfigForm.get('bands');
+    if (enabled) {
+      primary?.enable({ emitEvent: false });
+      bands?.enable({ emitEvent: false });
+    } else {
+      primary?.disable({ emitEvent: false });
+      bands?.disable({ emitEvent: false });
+    }
+  }
+
+  private hasUsableWifiData(bands: any[]): boolean {
+    if (!Array.isArray(bands) || bands.length === 0) {
+      return false;
+    }
+    return bands.some((band) => {
+      const ssid = String(band?.ssid ?? '').trim();
+      const password = String(band?.password ?? '').trim();
+      const security = String(band?.security ?? '').trim();
+      return !!(ssid || password || security);
+    });
   }
 
   public get bandsControls() {
@@ -471,6 +509,9 @@ export class WifiConfigComponent implements OnInit {
   }
 
   public bandLabel(index: number): string {
+    if (this.hasWifiConfigLoaded && !this.hasWifiConfigData) {
+      return 'No Wi-Fi info for any band';
+    }
     if (this.wifiBands[index]?.label) {
       return this.wifiBands[index].label;
     }
@@ -478,6 +519,9 @@ export class WifiConfigComponent implements OnInit {
   }
 
   public bandTitle(index: number): string {
+    if (this.hasWifiConfigLoaded && !this.hasWifiConfigData) {
+      return this.bandLabel(index);
+    }
     const label = this.bandLabel(index);
     const security = this.getBandSecurityValue(index);
     return security ? `${label} - ${security}` : label;
@@ -641,6 +685,18 @@ export class WifiConfigComponent implements OnInit {
     console.log('device:', this.device);
     this.setLoading(true);
     this.useSameForAll = true;
+    this.hasWifiConfigData = false;
+    this.hasWifiConfigLoaded = false;
+    this.securityOptions = [];
+    this.wifiBands = [];
+    this.bandSegments = [];
+    this.selectedBandIndex = 0;
+    this.setBandsForm([]);
+    this.wifiConfigForm.get('primary')?.patchValue(
+      { name: null, password: null, security: null },
+      { emitEvent: false }
+    );
+    this.setWifiFieldsEnabled(false);
     this.wifiConfigService.getWifiConfig(this.userId, this.job.accountNumber, this.job.workOrderNumber, this.device.mac, this.device.serialNumber || this.device.deviceSerialNumber).subscribe({
       next: (res) => {
         console.log(res);
@@ -651,6 +707,10 @@ export class WifiConfigComponent implements OnInit {
         const extracted = this.extractBands(res);
         const bands = extracted.bands;
         console.log('BANDS >', bands)
+        this.hasWifiConfigData = this.hasUsableWifiData(bands);
+        if (!this.hasWifiConfigData) {
+          this.useSameForAll = true;
+        }
         this.securityOptions = extracted.securityOptions;
         this.wifiBands = bands.map((band, index) => ({
           label: band.band || this.getBandLabel(band, index),
@@ -669,6 +729,8 @@ export class WifiConfigComponent implements OnInit {
             security: bands[0]?.security || null,
           },
         });
+        this.hasWifiConfigLoaded = true;
+        this.setWifiFieldsEnabled(this.hasWifiConfigData);
 
         setTimeout(() => {
           this.wifiConfigForm.markAsPristine();
@@ -678,6 +740,10 @@ export class WifiConfigComponent implements OnInit {
 
       }, error: (error) => {
         console.log(error);
+        this.hasWifiConfigData = false;
+        this.hasWifiConfigLoaded = true;
+        this.useSameForAll = true;
+        this.setWifiFieldsEnabled(false);
         this.wifiConfigForm.reset();
         this.setLoading(false);
       }
@@ -693,6 +759,10 @@ export class WifiConfigComponent implements OnInit {
 
   onSelectedMainMenu(args: MenuEvent, menuStatus) {
     console.log('selected:', args.index);
+
+    if (!this.hasWifiConfigData && (args.index === 1 || args.index === 2 || args.index === 3)) {
+      return;
+    }
 
     switch (args.index) {
       case 0:

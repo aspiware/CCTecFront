@@ -8,7 +8,7 @@
 
         <StackLayout col="1" style="">
           <MenuButton [useSFIcon]="true" style="background-color: transparent; height: 24; width: 35;"
-            [sfIconName]="'ellipsis.circle'" [showSpinner]="viewReady && isLoading" #menuStatus [options]="mainMenu.options"
+            [sfIconName]="'ellipsis.circle'" [showSpinner]="viewReady && isLoading" #menuStatus [options]="mainMenuOptions"
             (selected)="onSelectedMainMenu($event, menuStatus)">
           </MenuButton>
         </StackLayout>
@@ -35,12 +35,12 @@
               
             <!-- </GridLayout> -->
           <GridLayout columns="*,auto" class="input-shell">
-            <TextField col="0" formControlName="name" hint="Name" class="custom-tf-inline"></TextField>
+            <TextField col="0" formControlName="name" hint="Name" class="custom-tf-inline" [isEnabled]="hasWifiConfigData"></TextField>
             <Label
               col="1"
               class="copy-icon"
-              [class.copy-icon-disabled]="!canCopyField(wifiConfigForm.get('primary.name')?.value)"
-              [isUserInteractionEnabled]="canCopyField(wifiConfigForm.get('primary.name')?.value)"
+              [class.copy-icon-disabled]="!hasWifiConfigData || !canCopyField(wifiConfigForm.get('primary.name')?.value)"
+              [isUserInteractionEnabled]="hasWifiConfigData && canCopyField(wifiConfigForm.get('primary.name')?.value)"
               [class.fas]="isFieldCopied('primary-name')"
               [class.far]="!isFieldCopied('primary-name')"
               [text]="isFieldCopied('primary-name') ? '&#xf00c;' : '&#xf0c5;'"
@@ -48,12 +48,12 @@
             </Label>
           </GridLayout>
           <GridLayout columns="*,auto" class="input-shell">
-            <TextField col="0" formControlName="password" hint="Password" class="custom-tf-inline"></TextField>
+            <TextField col="0" formControlName="password" hint="Password" class="custom-tf-inline" [isEnabled]="hasWifiConfigData"></TextField>
             <Label
               col="1"
               class="copy-icon"
-              [class.copy-icon-disabled]="!canCopyField(wifiConfigForm.get('primary.password')?.value)"
-              [isUserInteractionEnabled]="canCopyField(wifiConfigForm.get('primary.password')?.value)"
+              [class.copy-icon-disabled]="!hasWifiConfigData || !canCopyField(wifiConfigForm.get('primary.password')?.value)"
+              [isUserInteractionEnabled]="hasWifiConfigData && canCopyField(wifiConfigForm.get('primary.password')?.value)"
               [class.fas]="isFieldCopied('primary-password')"
               [class.far]="!isFieldCopied('primary-password')"
               [text]="isFieldCopied('primary-password') ? '&#xf00c;' : '&#xf0c5;'"
@@ -79,12 +79,12 @@
               </StackLayout>
 
               <GridLayout columns="*,auto" class="input-shell">
-                <TextField col="0" formControlName="name" hint="Name" class="custom-tf-inline"></TextField>
+                <TextField col="0" formControlName="name" hint="Name" class="custom-tf-inline" [isEnabled]="hasWifiConfigData"></TextField>
                 <Label
                   col="1"
                   class="copy-icon"
-                  [class.copy-icon-disabled]="!canCopyField(group.get('name')?.value)"
-                  [isUserInteractionEnabled]="canCopyField(group.get('name')?.value)"
+                  [class.copy-icon-disabled]="!hasWifiConfigData || !canCopyField(group.get('name')?.value)"
+                  [isUserInteractionEnabled]="hasWifiConfigData && canCopyField(group.get('name')?.value)"
                   [class.fas]="isFieldCopied('band-name-' + selectedBandIndex)"
                   [class.far]="!isFieldCopied('band-name-' + selectedBandIndex)"
                   [text]="isFieldCopied('band-name-' + selectedBandIndex) ? '&#xf00c;' : '&#xf0c5;'"
@@ -92,12 +92,12 @@
                 </Label>
               </GridLayout>
               <GridLayout columns="*,auto" class="input-shell">
-                <TextField col="0" formControlName="password" hint="Password" class="custom-tf-inline"></TextField>
+                <TextField col="0" formControlName="password" hint="Password" class="custom-tf-inline" [isEnabled]="hasWifiConfigData"></TextField>
                 <Label
                   col="1"
                   class="copy-icon"
-                  [class.copy-icon-disabled]="!canCopyField(group.get('password')?.value)"
-                  [isUserInteractionEnabled]="canCopyField(group.get('password')?.value)"
+                  [class.copy-icon-disabled]="!hasWifiConfigData || !canCopyField(group.get('password')?.value)"
+                  [isUserInteractionEnabled]="hasWifiConfigData && canCopyField(group.get('password')?.value)"
                   [class.fas]="isFieldCopied('band-password-' + selectedBandIndex)"
                   [class.far]="!isFieldCopied('band-password-' + selectedBandIndex)"
                   [text]="isFieldCopied('band-password-' + selectedBandIndex) ? '&#xf00c;' : '&#xf0c5;'"
@@ -108,7 +108,13 @@
           </StackLayout>
 
           <GridLayout columns="auto,12,*" class="use-same-row">
-            <Switch col="0" class="use-same-switch" [checked]="useSameForAll" (checkedChange)="onUseSameChanged($event)"></Switch>
+            <Switch
+              col="0"
+              class="use-same-switch"
+              [checked]="useSameForAll"
+              [isEnabled]="hasWifiConfigData"
+              (checkedChange)="onUseSameChanged($event)">
+            </Switch>
             <Label col="2" class="use-same-label" text="Use same credentials for all bands"></Label>
           </GridLayout>
         </StackLayout>

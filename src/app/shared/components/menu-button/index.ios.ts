@@ -123,13 +123,18 @@ export class MenuButton extends MenuButtonBase {
         }
       );
 
-      // Verificar si la propiedad 'disabled' existe y es verdadera
+      let attributes = 0 as UIMenuElementAttributes;
       if (option.disabled) {
-        action.attributes = UIMenuElementAttributes.Disabled;
+        attributes = (attributes | UIMenuElementAttributes.Disabled) as UIMenuElementAttributes;
+      }
+      if (option.destructive) {
+        attributes = (attributes | UIMenuElementAttributes.Destructive) as UIMenuElementAttributes;
+      }
+      if (attributes) {
+        action.attributes = attributes;
       }
 
       if (option.destructive) {
-        action.attributes = UIMenuElementAttributes.Destructive;
         destructiveActions.push(action);
       } else {
         regularActions.push(action);
