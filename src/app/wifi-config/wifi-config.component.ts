@@ -16,6 +16,8 @@ import { WifiConfigService } from './wifi-config.service';
   styleUrl: './wifi-config.component.scss',
 })
 export class WifiConfigComponent implements OnInit {
+  private readonly testWifiSsid = 'N&A';
+  private readonly testWifiPassword = 'Nat281014!';
   public selectedIndex: number = -1;
   public expenseTypeId: number = 0;
   public code: number;
@@ -140,9 +142,8 @@ export class WifiConfigComponent implements OnInit {
       return;
     }
 
-    const primary = this.getPrimaryForMessage();
-    const ssid = String(primary?.ssid || '').trim();
-    const password = String(primary?.password || '').trim();
+    const ssid = this.testWifiSsid.trim();
+    const password = this.testWifiPassword.trim();
 
     if (!ssid) {
       console.log('[WiFi Config] Missing SSID, cannot connect phone automatically.');
@@ -184,17 +185,26 @@ export class WifiConfigComponent implements OnInit {
             if (reason) {
               console.log('[WiFi Config] iOS connect hint:', reason);
             }
+            if (code === 13) {
+              Dialogs.alert({
+                title: 'Wi-Fi',
+                message: `Already connected to ${ssid}.`,
+                okButtonText: 'OK',
+              });
+            }
             return;
           } else {
             console.log('[WiFi Config] iOS connect requested for SSID:', ssid);
             this.verifyConnectedSsidOnIos(ssid, previousSsid).then((isConnected) => {
-              if (isConnected === true) {
+              if (isConnected === 'matched') {
                 Dialogs.alert({
                   title: 'Wi-Fi',
                   message: `Connected to ${ssid}.`,
                   okButtonText: 'OK',
                 });
+                return;
               }
+              console.log('[WiFi Config] Connection not confirmed by SSID verification.', isConnected);
             });
           }
         });
@@ -279,6 +289,28 @@ export class WifiConfigComponent implements OnInit {
     return ssid.replace(/^["']|["']$/g, '');
   }
 
+  private canonicalizeSsid(value: string | null): string {
+    const base = this.normalizeSsid(value)
+      .normalize('NFKC')
+      .replace(/[\u0000-\u001F\u007F-\u009F\u200B-\u200D\uFEFF]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+
+    return base;
+  }
+
+  private ssidMatches(expected: string | null, current: string | null): boolean {
+    const expectedCanonical = this.canonicalizeSsid(expected);
+    const currentCanonical = this.canonicalizeSsid(current);
+
+    if (!expectedCanonical || !currentCanonical) {
+      return false;
+    }
+
+    return expectedCanonical === currentCanonical;
+  }
+
   private getCurrentSsidOnIos(): Promise<string | null> {
     return new Promise((resolve) => {
       if (!isIOS) {
@@ -306,32 +338,30 @@ export class WifiConfigComponent implements OnInit {
     });
   }
 
-  private verifyConnectedSsidOnIos(expectedSsid: string, previousSsid: string | null): Promise<boolean | null> {
+  private verifyConnectedSsidOnIos(expectedSsid: string, previousSsid: string | null): Promise<'matched' | 'unmatched' | 'unknown'> {
     const expected = this.normalizeSsid(expectedSsid);
     const previous = this.normalizeSsid(previousSsid);
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        this.getCurrentSsidOnIos().then((currentRaw) => {
+          const current = this.normalizeSsid(currentRaw);
+          console.log('[WiFi Config] SSID check:', {
+            expected,
+            previous,
+            current,
+            expectedCanonical: this.canonicalizeSsid(expected),
+            currentCanonical: this.canonicalizeSsid(current),
+            attempt: 1,
+          });
 
-    return this.getCurrentSsidOnIos().then((currentRaw) => {
-      const current = this.normalizeSsid(currentRaw);
-      console.log('[WiFi Config] SSID check:', { expected, previous, current });
+          if (this.ssidMatches(expected, current)) {
+            resolve('matched');
+            return;
+          }
 
-      if (!current) {
-        return false;
-      }
-
-      if (current !== expected) {
-        return false;
-      }
-
-      if (previous && previous !== expected) {
-        return true;
-      }
-
-      if (previous === expected) {
-        // Already on target network before requesting connection.
-        return null;
-      }
-
-      return true;
+          resolve(current ? 'unmatched' : 'unknown');
+        });
+      }, 300);
     });
   }
 
