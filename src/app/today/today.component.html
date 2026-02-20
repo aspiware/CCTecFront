@@ -1,4 +1,4 @@
-<ActionBar class="action-bar" [title]="`Today's Job List (${jobList.length})`">
+<ActionBar class="action-bar" title="Today's Job List">
   <ActionItem
     ios.position="right"
     ios.systemIcon="13"
@@ -97,7 +97,7 @@
       <Switch id="userStatus" (checkedChange)="toggleStarredView($event)" style="margin-left: 5; margin-right: 5;"></Switch>
       <StackLayout orientation="horizontal">
         <Label class="fas" text="&#xf005;" style="font-size: 20px; margin-right: 5;"></Label>
-        <Label text="Starred" style="font-size: 17;"></Label>
+        <Label [text]="starredCount > 0 ? ('Starred (' + starredCount + ')') : 'Starred'" style="font-size: 17;"></Label>
       </StackLayout>
     </StackLayout>
 

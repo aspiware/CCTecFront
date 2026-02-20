@@ -11,6 +11,7 @@ import { map } from 'rxjs';
 import { ConfigService } from '../shared/services/config.service';
 import { Router } from '@angular/router';
 import { WifiConfigComponent } from '../wifi-config/wifi-config.component';
+import { TodayJobsCountService } from '../shared/services/today-jobs-count.service';
 
 @Component({
   standalone: true,
@@ -28,6 +29,7 @@ export class TodayComponent implements OnInit {
   public todayTotal = 0;
   public units = 0;
   public weeklyTotal = 0;
+  public starredCount = 0;
   public mainMenuIconName = 'ellipsis.circle';
   public item: any;
   scansMenu: Item =
@@ -110,6 +112,7 @@ export class TodayComponent implements OnInit {
     private usersService: UsersService,
     private todayService: TodayService,
     private configService: ConfigService,
+    private todayJobsCountService: TodayJobsCountService,
     private cdr: ChangeDetectorRef,
     private router: Router,
     private modalService: ModalDialogService,
@@ -170,6 +173,7 @@ export class TodayComponent implements OnInit {
         console.log('ORDERS1', res);
 
         this.originalJobList = new ObservableArray(res);
+        this.todayJobsCountService.setCount(this.originalJobList.length);
         if (!this.starredJobList) {
           this.starredJobList = new ObservableArray([]);
         }
@@ -189,6 +193,7 @@ export class TodayComponent implements OnInit {
         onDone();
       }, error: (error) => {
         console.log(error);
+        this.todayJobsCountService.setCount(0);
         onDone()
 
         // new Toasty({ text: error })
@@ -253,6 +258,8 @@ export class TodayComponent implements OnInit {
     if (starredJobs.length) {
       this.starredJobList.push(...starredJobs);
     }
+
+    this.starredCount = this.starredJobList.length;
   }
 
   toggleStarredView(event: any) {

@@ -3,7 +3,7 @@ import { ModalDialogParams, NativeScriptCommonModule, NativeScriptFormsModule } 
 import { Item } from '../shared/components/menu-button/item';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { getNumber } from '@nativescript/core/application-settings';
-import { SegmentedBarItem } from '@nativescript/core';
+import { Application, Dialogs, SegmentedBarItem, Utils, isAndroid, isIOS } from '@nativescript/core';
 import { MenuButtonAction, MenuEvent } from '../shared/components/menu-button';
 import { WifiConfigService } from './wifi-config.service';
 
@@ -38,11 +38,18 @@ export class WifiConfigComponent implements OnInit {
   public bandSegments: SegmentedBarItem[] = [];
   public selectedBandIndex = 0;
   public securityOptions: string[][] = [];
+  public hasWifiConfigData = false;
+  public hasWifiConfigLoaded = false;
+  private copiedStates: { [key: string]: boolean } = {};
+  private copiedTimers: { [key: string]: ReturnType<typeof setTimeout> } = {};
+  private isWifiConnectInProgress = false;
+  private wifiConnectAttemptId = 0;
   mainMenu: Item =
     {
       name: 'Main Menu',
       options: [
         { name: 'Refresh Wi-Fi Info', icon: 'arrow.clockwise' },
+        { name: 'Connect to Wi-Fi', icon: 'wifi' },
         { name: 'Share Wi-Fi via SMS', icon: 'ellipsis.message' },
         {
           name: 'Save Wi-Fi Settings', icon: 'checkmark.circle', destructive: true, confirm: {
@@ -54,6 +61,13 @@ export class WifiConfigComponent implements OnInit {
         },
       ],
     };
+
+  get mainMenuOptions(): MenuButtonAction[] {
+    return this.mainMenu.options.map((option, index) => {
+      const shouldDisable = !this.hasWifiConfigData && (index === 1 || index === 2 || index === 3);
+      return { ...option, disabled: shouldDisable };
+    });
+  }
 
   constructor(
     private wifiConfigService: WifiConfigService,
@@ -110,24 +124,260 @@ export class WifiConfigComponent implements OnInit {
   }
 
   gatewayStatus(mac: string) {
+    if (!mac) {
+      return;
+    }
+    this.setLoading(true);
     this.mac = mac;
     this.wifiConfigService.gatewayStatus(this.userId, mac,
       this.job.workOrderNumber,
       this.job.accountNumber,).subscribe({
         next: (res) => {
           console.log(res);
+          this.setLoading(false);
           this.mac = '';
         }, error: (error) => {
           console.log(error);
+          this.setLoading(false);
           this.mac = '';
         }
       });
   }
 
+  private async connectPhoneToWifi(): Promise<void> {
+    if (this.isWifiConnectInProgress) {
+      return;
+    }
+
+    const primary = this.getPrimaryForMessage();
+    const ssid = String(primary?.ssid || '').trim();
+    const password = String(primary?.password || '').trim();
+
+    if (!ssid) {
+      console.log('[WiFi Config] Missing SSID, cannot connect phone automatically.');
+      return;
+    }
+
+    if (isIOS) {
+      const HotspotManager = (global as any).NEHotspotConfigurationManager;
+      const HotspotConfig = (global as any).NEHotspotConfiguration;
+
+      if (!HotspotManager || !HotspotConfig) {
+        console.log('[WiFi Config] NEHotspotConfiguration API is not available on this iOS runtime.');
+        return;
+      }
+
+      try {
+        const previousSsid = await this.getCurrentSsidOnIos();
+        this.isWifiConnectInProgress = true;
+        const attemptId = ++this.wifiConnectAttemptId;
+        let callbackHandled = false;
+        const manager = HotspotManager.sharedManager;
+        const config = password
+          ? HotspotConfig.alloc().initWithSSIDPassphraseIsWEP(ssid, password, false)
+          : HotspotConfig.alloc().initWithSSID(ssid);
+
+        config.joinOnce = false;
+        this.setLoading(true);
+        manager.applyConfigurationCompletionHandler(config, (error: any) => {
+          if (callbackHandled || attemptId !== this.wifiConnectAttemptId) {
+            return;
+          }
+          callbackHandled = true;
+          this.isWifiConnectInProgress = false;
+          this.setLoading(false);
+          if (error) {
+            const code = typeof error?.code === 'number' ? error.code : null;
+            const reason = this.getIosWifiConnectErrorReason(code);
+            console.log('[WiFi Config] iOS connect error:', error);
+            if (reason) {
+              console.log('[WiFi Config] iOS connect hint:', reason);
+            }
+            if (code === 13) {
+              Dialogs.alert({
+                title: 'Wi-Fi',
+                message: `Already connected to ${ssid}.`,
+                okButtonText: 'OK',
+              });
+            }
+            return;
+          } else {
+            console.log('[WiFi Config] iOS connect requested for SSID:', ssid);
+            this.verifyConnectedSsidOnIos(ssid, previousSsid).then((isConnected) => {
+              if (isConnected === 'matched') {
+                Dialogs.alert({
+                  title: 'Wi-Fi',
+                  message: `Connected to ${ssid}.`,
+                  okButtonText: 'OK',
+                });
+                return;
+              }
+              console.log('[WiFi Config] Connection not confirmed by SSID verification.', isConnected);
+            });
+          }
+        });
+      } catch (error) {
+        this.isWifiConnectInProgress = false;
+        this.setLoading(false);
+        console.log('[WiFi Config] iOS connect exception:', error);
+        Dialogs.alert({
+          title: 'Wi-Fi',
+          message: 'Error while trying to connect to Wi-Fi.',
+          okButtonText: 'OK',
+        });
+      }
+      return;
+    }
+
+    if (isAndroid) {
+      try {
+        const activity = Application.android.foregroundActivity || Application.android.startActivity;
+        const intent = new android.content.Intent(android.provider.Settings.ACTION_WIFI_SETTINGS);
+        activity?.startActivity(intent);
+        Dialogs.alert({
+          title: 'Wi-Fi',
+          message: 'Opening Wi-Fi settings to complete the connection.',
+          okButtonText: 'OK',
+        });
+      } catch (error) {
+        console.log('[WiFi Config] Android Wi-Fi settings open error:', error);
+        Dialogs.alert({
+          title: 'Wi-Fi',
+          message: 'Could not open Wi-Fi settings.',
+          okButtonText: 'OK',
+        });
+      }
+      return;
+    }
+
+    Utils.openUrl('app-settings:');
+  }
+
+  public copyFieldValue(value: any, fieldName: string, fieldKey: string): void {
+    const text = String(value ?? '').trim();
+    if (!text) {
+      return;
+    }
+
+    Utils.copyToClipboard(text);
+    this.copiedStates[fieldKey] = true;
+    if (this.copiedTimers[fieldKey]) {
+      clearTimeout(this.copiedTimers[fieldKey]);
+    }
+    this.copiedTimers[fieldKey] = setTimeout(() => {
+      this.copiedStates[fieldKey] = false;
+      this.cdr.detectChanges();
+    }, 500);
+    this.cdr.detectChanges();
+  }
+
+  public canCopyField(value: any): boolean {
+    return String(value ?? '').trim().length > 0;
+  }
+
+  public isFieldCopied(fieldKey: string): boolean {
+    return !!this.copiedStates[fieldKey];
+  }
+
+  private getIosWifiConnectErrorReason(code: number | null): string {
+    if (code === 7) {
+      return 'User denied Wi-Fi join request.';
+    }
+    if (code === 8) {
+      return 'Internal error. Check real device testing, Hotspot Configuration capability, and provisioning profile.';
+    }
+    if (code === 13) {
+      return '';
+    }
+    return '';
+  }
+
+  private normalizeSsid(value: string | null): string {
+    const ssid = String(value ?? '').trim();
+    return ssid.replace(/^["']|["']$/g, '');
+  }
+
+  private canonicalizeSsid(value: string | null): string {
+    const base = this.normalizeSsid(value)
+      .normalize('NFKC')
+      .replace(/[\u0000-\u001F\u007F-\u009F\u200B-\u200D\uFEFF]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+
+    return base;
+  }
+
+  private ssidMatches(expected: string | null, current: string | null): boolean {
+    const expectedCanonical = this.canonicalizeSsid(expected);
+    const currentCanonical = this.canonicalizeSsid(current);
+
+    if (!expectedCanonical || !currentCanonical) {
+      return false;
+    }
+
+    return expectedCanonical === currentCanonical;
+  }
+
+  private getCurrentSsidOnIos(): Promise<string | null> {
+    return new Promise((resolve) => {
+      if (!isIOS) {
+        resolve(null);
+        return;
+      }
+
+      const HotspotNetwork = (global as any).NEHotspotNetwork;
+      const fetchCurrent = HotspotNetwork?.fetchCurrentWithCompletionHandler;
+
+      if (!fetchCurrent) {
+        resolve(null);
+        return;
+      }
+
+      try {
+        HotspotNetwork.fetchCurrentWithCompletionHandler((network: any) => {
+          const currentSsid = this.normalizeSsid(network?.SSID ?? null);
+          resolve(currentSsid || null);
+        });
+      } catch (error) {
+        console.log('[WiFi Config] SSID read error:', error);
+        resolve(null);
+      }
+    });
+  }
+
+  private verifyConnectedSsidOnIos(expectedSsid: string, previousSsid: string | null): Promise<'matched' | 'unmatched' | 'unknown'> {
+    const expected = this.normalizeSsid(expectedSsid);
+    const previous = this.normalizeSsid(previousSsid);
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        this.getCurrentSsidOnIos().then((currentRaw) => {
+          const current = this.normalizeSsid(currentRaw);
+          console.log('[WiFi Config] SSID check:', {
+            expected,
+            previous,
+            current,
+            expectedCanonical: this.canonicalizeSsid(expected),
+            currentCanonical: this.canonicalizeSsid(current),
+            attempt: 1,
+          });
+
+          if (this.ssidMatches(expected, current)) {
+            resolve('matched');
+            return;
+          }
+
+          resolve(current ? 'unmatched' : 'unknown');
+        });
+      }, 300);
+    });
+  }
+
   public updateWifiConfig() {
     this.setLoading(true);
     const payload = this.buildWifiPayload();
-    this.wifiConfigService.updateWifiConfig(this.userId, this.job.accountNumber, this.job.workOrderNumber, this.device.serialNumber, payload).subscribe({
+    const serialNumber = this.device?.serialNumber || this.device?.deviceSerialNumber || '';
+    this.wifiConfigService.updateWifiConfig(this.userId, this.job.accountNumber, this.job.workOrderNumber, serialNumber, payload).subscribe({
       next: (res) => {
         console.log(res);
         this.setLoading(false);
@@ -164,6 +414,11 @@ export class WifiConfigComponent implements OnInit {
   }
 
   public onUseSameChanged(event: any) {
+    if (!this.hasWifiConfigData) {
+      this.useSameForAll = true;
+      return;
+    }
+
     const checked = event?.value ?? event?.object?.checked ?? event?.checked ?? false;
     const wasSame = this.useSameForAll;
     this.useSameForAll = !!checked;
@@ -190,6 +445,30 @@ export class WifiConfigComponent implements OnInit {
         { emitEvent: false }
       );
     }
+  }
+
+  private setWifiFieldsEnabled(enabled: boolean): void {
+    const primary = this.wifiConfigForm.get('primary');
+    const bands = this.wifiConfigForm.get('bands');
+    if (enabled) {
+      primary?.enable({ emitEvent: false });
+      bands?.enable({ emitEvent: false });
+    } else {
+      primary?.disable({ emitEvent: false });
+      bands?.disable({ emitEvent: false });
+    }
+  }
+
+  private hasUsableWifiData(bands: any[]): boolean {
+    if (!Array.isArray(bands) || bands.length === 0) {
+      return false;
+    }
+    return bands.some((band) => {
+      const ssid = String(band?.ssid ?? '').trim();
+      const password = String(band?.password ?? '').trim();
+      const security = String(band?.security ?? '').trim();
+      return !!(ssid || password || security);
+    });
   }
 
   public get bandsControls() {
@@ -231,6 +510,9 @@ export class WifiConfigComponent implements OnInit {
   }
 
   public bandLabel(index: number): string {
+    if (this.hasWifiConfigLoaded && !this.hasWifiConfigData) {
+      return 'No Wi-Fi info for any band';
+    }
     if (this.wifiBands[index]?.label) {
       return this.wifiBands[index].label;
     }
@@ -238,6 +520,9 @@ export class WifiConfigComponent implements OnInit {
   }
 
   public bandTitle(index: number): string {
+    if (this.hasWifiConfigLoaded && !this.hasWifiConfigData) {
+      return this.bandLabel(index);
+    }
     const label = this.bandLabel(index);
     const security = this.getBandSecurityValue(index);
     return security ? `${label} - ${security}` : label;
@@ -296,15 +581,15 @@ export class WifiConfigComponent implements OnInit {
 
   private getPrimaryForMessage() {
     const payload = this.buildWifiPayload();
-    const first = payload?.wifiData?.[0]
-      || payload?.wifiDataV2?.[0]?.bandData?.find((item: any) => item?.name === 'ssid')
-      || {};
-    const password = payload?.wifiData?.[0]?.password
-      || payload?.wifiDataV2?.[0]?.bandData?.find((item: any) => item?.name === 'password')?.value
-      || '';
+    const bandIndex = Math.max(0, this.selectedBandIndex || 0);
+    const selectedLegacyBand = payload?.wifiData?.[bandIndex] || payload?.wifiData?.[0] || {};
+    const selectedV2Band = payload?.wifiDataV2?.[bandIndex] || payload?.wifiDataV2?.[0];
+    const selectedV2Ssid = selectedV2Band?.bandData?.find((item: any) => item?.name === 'ssid');
+    const selectedV2Password = selectedV2Band?.bandData?.find((item: any) => item?.name === 'password');
+
     return {
-      ssid: first.ssid || first.value || '',
-      password,
+      ssid: selectedLegacyBand?.ssid || selectedV2Ssid?.value || '',
+      password: selectedLegacyBand?.password || selectedV2Password?.value || '',
     };
   }
 
@@ -401,6 +686,18 @@ export class WifiConfigComponent implements OnInit {
     console.log('device:', this.device);
     this.setLoading(true);
     this.useSameForAll = true;
+    this.hasWifiConfigData = false;
+    this.hasWifiConfigLoaded = false;
+    this.securityOptions = [];
+    this.wifiBands = [];
+    this.bandSegments = [];
+    this.selectedBandIndex = 0;
+    this.setBandsForm([]);
+    this.wifiConfigForm.get('primary')?.patchValue(
+      { name: null, password: null, security: null },
+      { emitEvent: false }
+    );
+    this.setWifiFieldsEnabled(false);
     this.wifiConfigService.getWifiConfig(this.userId, this.job.accountNumber, this.job.workOrderNumber, this.device.mac, this.device.serialNumber || this.device.deviceSerialNumber).subscribe({
       next: (res) => {
         console.log(res);
@@ -411,6 +708,10 @@ export class WifiConfigComponent implements OnInit {
         const extracted = this.extractBands(res);
         const bands = extracted.bands;
         console.log('BANDS >', bands)
+        this.hasWifiConfigData = this.hasUsableWifiData(bands);
+        if (!this.hasWifiConfigData) {
+          this.useSameForAll = true;
+        }
         this.securityOptions = extracted.securityOptions;
         this.wifiBands = bands.map((band, index) => ({
           label: band.band || this.getBandLabel(band, index),
@@ -429,6 +730,8 @@ export class WifiConfigComponent implements OnInit {
             security: bands[0]?.security || null,
           },
         });
+        this.hasWifiConfigLoaded = true;
+        this.setWifiFieldsEnabled(this.hasWifiConfigData);
 
         setTimeout(() => {
           this.wifiConfigForm.markAsPristine();
@@ -438,6 +741,10 @@ export class WifiConfigComponent implements OnInit {
 
       }, error: (error) => {
         console.log(error);
+        this.hasWifiConfigData = false;
+        this.hasWifiConfigLoaded = true;
+        this.useSameForAll = true;
+        this.setWifiFieldsEnabled(false);
         this.wifiConfigForm.reset();
         this.setLoading(false);
       }
@@ -454,14 +761,21 @@ export class WifiConfigComponent implements OnInit {
   onSelectedMainMenu(args: MenuEvent, menuStatus) {
     console.log('selected:', args.index);
 
+    if (!this.hasWifiConfigData && (args.index === 1 || args.index === 2 || args.index === 3)) {
+      return;
+    }
+
     switch (args.index) {
       case 0:
         this.onchange({ newIndex: this.selectedIndex });
         break;
       case 1:
-        this.sendWifiConfig();
+        this.connectPhoneToWifi();
         break;
       case 2:
+        this.sendWifiConfig();
+        break;
+      case 3:
         this.updateWifiConfig();
         break;
     }

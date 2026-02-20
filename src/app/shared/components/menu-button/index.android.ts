@@ -17,11 +17,18 @@ export class MenuButton extends MenuButtonBase {
     if (this.options) {
       for (let i = 0; i < this.options.length; i++) {
         const option = this.options[i];
-        popupMenu.getMenu().add(option.name);
+        const item = popupMenu.getMenu().add(option.name);
+        if (option.disabled) {
+          item.setEnabled(false);
+        }
       }
       popupMenu.setOnMenuItemClickListener(
         new android.widget.PopupMenu.OnMenuItemClickListener({
           onMenuItemClick: (item): boolean => {
+            const selected = this.options.find((o) => o.name === item.getTitle());
+            if (selected?.disabled) {
+              return false;
+            }
             this.notify({
               eventName: "selected",
               object: this,
