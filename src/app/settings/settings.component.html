@@ -1,11 +1,14 @@
 <ActionBar class="action-bar" title="Settings"></ActionBar>
 
-<GridLayout rows="auto, auto, *" class="container">
-  <Label row="0" text="Settings base screen migrated" class="title"></Label>
-  <Label row="1" text="Next step: migrate settings options and logout flow." class="subtitle"></Label>
+<GridLayout rows="auto,auto,*" class="container">
+  <Label row="0" [text]="'Subscription: ' + (isSubscribed ? 'Active' : 'Inactive')" class="title"></Label>
+  <Label row="1" text="UI flow enabled. Backend validation will be connected next." class="subtitle"></Label>
 
   <StackLayout row="2" class="card">
-    <Label text="Settings Menu" class="card-title"></Label>
-    <Label text="Placeholder for settings items" class="card-text"></Label>
+    <Label text="Subscription Controls" class="card-title"></Label>
+
+    <Button text="Open Subscription Screen" class="btn btn-primary" (tap)="openSubscription()"></Button>
+    <Button text="Simulate Active" class="btn" (tap)="simulateActive()"></Button>
+    <Button text="Simulate Inactive" class="btn btn-danger" (tap)="simulateInactive()"></Button>
   </StackLayout>
 </GridLayout>

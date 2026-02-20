@@ -1,0 +1,35 @@
+<ActionBar class="action-bar" title="Subscription"></ActionBar>
+
+<GridLayout rows="*,auto" class="page">
+  <StackLayout row="0" class="container">
+    <Label text="Basic Plan" class="plan-title"></Label>
+    <Label text="$4.99 / month" class="price"></Label>
+    <Label text="7-day free trial, then monthly billing." class="trial"></Label>
+
+    <StackLayout class="card">
+      <Label text="Includes:" class="card-title"></Label>
+      <Label text="• Access to core app workflows" class="line"></Label>
+      <Label text="• Daily jobs and Wi-Fi config tools" class="line"></Label>
+      <Label text="• Standard support" class="line"></Label>
+    </StackLayout>
+
+    <Label [text]="message" class="message"></Label>
+  </StackLayout>
+
+  <GridLayout row="1" columns="*,*" class="actions">
+    <Button
+      col="0"
+      text="Restore"
+      class="btn btn-secondary"
+      [isEnabled]="!isBusy"
+      (tap)="onRestore()">
+    </Button>
+    <Button
+      col="1"
+      [text]="isBusy ? 'Please wait...' : 'Subscribe'"
+      class="btn btn-primary"
+      [isEnabled]="!isBusy"
+      (tap)="onSubscribe()">
+    </Button>
+  </GridLayout>
+</GridLayout>
