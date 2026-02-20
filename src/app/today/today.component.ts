@@ -515,7 +515,7 @@ export class TodayComponent implements OnInit {
           case 'LOFF':
             this.mainMenuIconName = this.mainMenu.options[5]?.icon || this.mainMenuIconName;
             break;
-          case 'ONROUTE':
+          case 'ENROUTE':
             this.mainMenuIconName = 'car';
             break;
           case 'ONJOB':
