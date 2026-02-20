@@ -218,6 +218,25 @@ export class WifiConfigComponent implements OnInit {
     Utils.openUrl('app-settings:');
   }
 
+  public copyFieldValue(value: any, fieldName: string): void {
+    const text = String(value ?? '').trim();
+    if (!text) {
+      Dialogs.alert({
+        title: 'Copy',
+        message: `${fieldName} is empty.`,
+        okButtonText: 'OK',
+      });
+      return;
+    }
+
+    Utils.copyToClipboard(text);
+    Dialogs.alert({
+      title: 'Copy',
+      message: `${fieldName} copied.`,
+      okButtonText: 'OK',
+    });
+  }
+
   private getIosWifiConnectErrorReason(code: number | null): string {
     if (code === 7) {
       return 'User denied Wi-Fi join request.';

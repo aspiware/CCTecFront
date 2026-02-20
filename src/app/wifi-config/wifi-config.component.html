@@ -34,8 +34,24 @@
               </StackLayout>
               
             <!-- </GridLayout> -->
-          <TextField formControlName="name" hint="Name" class="custom-tf"></TextField>
-          <TextField formControlName="password" hint="Password" class="custom-tf"></TextField>
+          <GridLayout columns="*,auto" class="input-shell">
+            <TextField col="0" formControlName="name" hint="Name" class="custom-tf-inline"></TextField>
+            <Label
+              col="1"
+              class="far copy-icon"
+              text="&#xf0c5;"
+              (tap)="copyFieldValue(wifiConfigForm.get('primary.name')?.value, 'Name')">
+            </Label>
+          </GridLayout>
+          <GridLayout columns="*,auto" class="input-shell">
+            <TextField col="0" formControlName="password" hint="Password" class="custom-tf-inline"></TextField>
+            <Label
+              col="1"
+              class="far copy-icon"
+              text="&#xf0c5;"
+              (tap)="copyFieldValue(wifiConfigForm.get('primary.password')?.value, 'Password')">
+            </Label>
+          </GridLayout>
           </StackLayout>
 
           <StackLayout *ngIf="!useSameForAll && bandsControls.length > 0" style="margin-top: 10;">
@@ -54,8 +70,24 @@
                 <Label [text]="bandTitle(selectedBandIndex)" class="band-title" style="font-size: 16;"></Label>
               </StackLayout>
 
-              <TextField formControlName="name" hint="Name" class="custom-tf"></TextField>
-              <TextField formControlName="password" hint="Password" class="custom-tf"></TextField>
+              <GridLayout columns="*,auto" class="input-shell">
+                <TextField col="0" formControlName="name" hint="Name" class="custom-tf-inline"></TextField>
+                <Label
+                  col="1"
+                  class="far copy-icon"
+                  text="&#xf0c5;"
+                  (tap)="copyFieldValue(group.get('name')?.value, 'Name')">
+                </Label>
+              </GridLayout>
+              <GridLayout columns="*,auto" class="input-shell">
+                <TextField col="0" formControlName="password" hint="Password" class="custom-tf-inline"></TextField>
+                <Label
+                  col="1"
+                  class="far copy-icon"
+                  text="&#xf0c5;"
+                  (tap)="copyFieldValue(group.get('password')?.value, 'Password')">
+                </Label>
+              </GridLayout>
             </StackLayout>
           </StackLayout>
 
