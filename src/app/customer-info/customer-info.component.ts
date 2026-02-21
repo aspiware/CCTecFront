@@ -1,10 +1,12 @@
-import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
+import { Component, NO_ERRORS_SCHEMA, OnInit } from '@angular/core';
 import { TitleCasePipe } from '@angular/common';
 import { ModalDialogParams, NativeScriptCommonModule } from '@nativescript/angular';
 import { Item } from '../shared/components/menu-button/item';
 import { MenuEvent } from '../shared/components/menu-button';
 import { Application, Utils } from '@nativescript/core';
 import { PhonePipe } from '../shared/pipes/phone.pipe';
+import { SettingsService } from '../settings/settings.service';
+import { UsersService } from '../shared/services/users.service';
 
 @Component({
   standalone: true,
@@ -14,8 +16,10 @@ import { PhonePipe } from '../shared/pipes/phone.pipe';
   templateUrl: './customer-info.component.html',
   styleUrl: './customer-info.component.scss',
 })
-export class CustomerInfoComponent {
+export class CustomerInfoComponent implements OnInit {
   job: any;
+  private userId = 0;
+  private settings: any = {};
   private isCopyMenuOpen = false;
   private lastCopyMenuTs = 0;
   mainMenu: Item =
@@ -27,8 +31,26 @@ export class CustomerInfoComponent {
       ],
     };
 
-  constructor(private modalParams: ModalDialogParams) {
+  constructor(
+    private modalParams: ModalDialogParams,
+    private settingsService: SettingsService,
+    private usersService: UsersService
+  ) {
     this.job = this.modalParams.context;
+  }
+
+  ngOnInit(): void {
+    this.userId = Number(this.usersService.getUser()?.userId || 0);
+    if (!this.userId) {
+      return;
+    }
+
+    this.settingsService.findByUser(this.userId).subscribe({
+      next: (res) => {
+        this.settings = res || {};
+      },
+      error: () => {},
+    });
   }
 
   public onSelectedMainMenu(event: MenuEvent): void {
@@ -221,7 +243,10 @@ export class CustomerInfoComponent {
       'English',
       UIAlertActionStyle.Default,
       () => {
-        this.openSmsComposer(recipientsList, 'Hi, are you available for your appointment?');
+        this.openSmsComposer(
+          recipientsList,
+          this.settings?.englishAvailabilityText || 'Hi, are you available for your appointment?'
+        );
         this.isCopyMenuOpen = false;
       }
     );
@@ -232,7 +257,10 @@ export class CustomerInfoComponent {
       'Spanish',
       UIAlertActionStyle.Default,
       () => {
-        this.openSmsComposer(recipientsList, 'Hola, esta disponible para su cita?');
+        this.openSmsComposer(
+          recipientsList,
+          this.settings?.spanishAvailabilityText || 'Hola, esta disponible para su cita?'
+        );
         this.isCopyMenuOpen = false;
       }
     );
@@ -297,7 +325,10 @@ export class CustomerInfoComponent {
       'English Survey',
       UIAlertActionStyle.Default,
       () => {
-        this.openSmsComposer(recipientsList, 'English Survey');
+        this.openSmsComposer(
+          recipientsList,
+          this.settings?.englishSurveyText || 'English Survey'
+        );
         this.isCopyMenuOpen = false;
       }
     );
@@ -308,7 +339,10 @@ export class CustomerInfoComponent {
       'Spanish Survey',
       UIAlertActionStyle.Default,
       () => {
-        this.openSmsComposer(recipientsList, 'Spanish Survey');
+        this.openSmsComposer(
+          recipientsList,
+          this.settings?.spanishSurveyText || 'Spanish Survey'
+        );
         this.isCopyMenuOpen = false;
       }
     );
