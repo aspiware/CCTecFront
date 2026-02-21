@@ -1,4 +1,4 @@
-<ScrollView>
+<ScrollView keyboardDismissMode="onDrag">
   <StackLayout verticalAlignment="center" class="form" [formGroup]="loginForm">
     <label horizontalAlignment="left" text="Sign in" class="logo"></label>
 
@@ -24,7 +24,7 @@
       text="{{loginForm.controls.username.errors?.required ? 'Please enter the BP Username' : ''}}">
     </Label>
 
-    <GridLayout rows="auto" columns="*" style="margin-right: 30;">
+    <GridLayout rows="auto" columns="*" style="margin-right: 30; margin-top: 20;">
       <GridLayout columns="*,auto" class="input-shell" width="100%">
         <TextField
           col="0"
@@ -51,10 +51,9 @@
     </Label>
 
     <Button
-      isEnabled="{{loginForm.valid ? true : false}}"
+      [isEnabled]="loginForm.valid && !isBusy"
       text="Log in"
-      class="custom-btn"
-      style="margin-top: 200px;"
+      class="ios-login-btn"
       (tap)="login()">
     </Button>
   </StackLayout>
