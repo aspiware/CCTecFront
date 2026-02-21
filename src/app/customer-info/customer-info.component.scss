@@ -38,6 +38,10 @@
   margin-bottom: 8;
 }
 
+.header-fixed {
+  height: 50;
+}
+
 .title {
   font-size: 18;
   font-weight: 600;
@@ -49,4 +53,30 @@
 
 .ns-light .modal-title-text {
   color: #000000;
+}
+
+.card {
+  padding: 14;
+  border-radius: 8;
+  background-color: rgba(126, 151, 185, 0.2);
+}
+
+.line-row {
+  margin-top: 10;
+  padding-top: 10;
+  border-top-width: 1;
+  border-top-color: rgba(128, 128, 128, 0.24);
+}
+
+.label-key,
+.label-value {
+  font-size: 14;
+}
+
+.name-inline {
+  horizontal-align: right;
+}
+
+.name-subvalue {
+  margin-left: 4;
 }

@@ -2,8 +2,8 @@
   <GridLayout rows="*" columns="*">
     <StackLayout row="0" col="0" class="backdrop" (tap)="closeModal()"></StackLayout>
 
-    <GridLayout row="0" col="0" rows="auto" class="modal-card">
-      <GridLayout row="0" columns="*,auto" class="header">
+    <GridLayout row="0" col="0" rows="auto,auto" class="modal-card">
+      <GridLayout row="0" columns="*,auto" class="header header-fixed">
         <Label col="0" text="Customer Info" class="title modal-title-text"></Label>
 
         <StackLayout col="1">
@@ -16,6 +16,96 @@
           </MenuButton>
         </StackLayout>
       </GridLayout>
+
+      <StackLayout row="1" class="card">
+        <GridLayout columns="*, auto">
+          <Label col="0" text="Name" class="label-key"></Label>
+          <GridLayout
+            col="1"
+            columns="auto,auto"
+            class="name-inline">
+            <Label
+              col="0"
+              [text]="(job?.customer?.firstName || '-') | titlecase"
+              class="label-value name-subvalue"
+              (longPress)="showMenu($event, $event.object.text)">
+            </Label>
+
+            <Label
+              col="1"
+              [text]="(job?.customer?.lastName || '-') | titlecase"
+              class="label-value name-subvalue"
+              (longPress)="showMenu($event, $event.object.text)">
+            </Label>
+          </GridLayout>
+        </GridLayout>
+
+        <GridLayout columns="*, auto" class="line-row">
+          <Label col="0" text="Primary Number" class="label-key"></Label>
+          <Label
+            col="1"
+            [text]="(job?.customer?.homePhoneNumber | phone) || '-'"
+            class="label-value"
+            (longPress)="showMenu($event, $event.object.text, job?.customer?.homePhoneNumber, true)"
+            textAlignment="right">
+          </Label>
+        </GridLayout>
+
+        <GridLayout columns="*, auto" class="line-row">
+          <Label col="0" text="Call First Number" class="label-key"></Label>
+          <Label
+            col="1"
+            [text]="(job?.customer?.callFirstPhoneNumber | phone) || '-'"
+            class="label-value"
+            (longPress)="showMenu($event, $event.object.text, job?.customer?.callFirstPhoneNumber, true)"
+            textAlignment="right">
+          </Label>
+        </GridLayout>
+
+        <GridLayout columns="*, auto" class="line-row">
+          <Label col="0" text="Work Number" class="label-key"></Label>
+          <Label
+            col="1"
+            [text]="(job?.customer?.workPhoneNumber | phone) || '-'"
+            class="label-value"
+            (longPress)="showMenu($event, $event.object.text, job?.customer?.workPhoneNumber, true)"
+            textAlignment="right">
+          </Label>
+        </GridLayout>
+
+        <GridLayout columns="*, auto" class="line-row">
+          <Label col="0" text="Survey Number" class="label-key"></Label>
+          <Label
+            col="1"
+            [text]="(job?.customer?.surveyPhoneNumber | phone) || '-'"
+            class="label-value"
+            (longPress)="showMenu($event, $event.object.text, job?.customer?.surveyPhoneNumber, true)"
+            textAlignment="right">
+          </Label>
+        </GridLayout>
+
+        <GridLayout columns="*, auto" class="line-row">
+          <Label col="0" text="Xfinity App Username" class="label-key"></Label>
+          <Label
+            col="1"
+            [text]="job?.customer?.xfinityAppUsername || '-'"
+            class="label-value"
+            (longPress)="showMenu($event, $event.object.text)"
+            textAlignment="right">
+          </Label>
+        </GridLayout>
+
+        <GridLayout columns="*, auto" class="line-row">
+          <Label col="0" text="Email" class="label-key"></Label>
+          <Label
+            col="1"
+            [text]="(job?.customer?.email || '-') | lowercase"
+            class="label-value"
+            (longPress)="showMenu($event, $event.object.text)"
+            textAlignment="right">
+          </Label>
+        </GridLayout>
+      </StackLayout>
     </GridLayout>
   </GridLayout>
 </ModalStack>
