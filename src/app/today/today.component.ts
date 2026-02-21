@@ -293,7 +293,7 @@ export class TodayComponent implements OnInit {
     }
   }
 
-  public markJobActionTap(item: any, action: string, autoClearMs = 220): void {
+  public markJobActionTap(item: any, action: string, autoClearMs = 140): void {
     const key = `${item?.number || 'unknown'}:${action}`;
     this.actionTapStates[key] = true;
     this.cdr.detectChanges();
