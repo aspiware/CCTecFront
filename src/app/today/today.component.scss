@@ -134,3 +134,24 @@
   color: white;
   font-size: 20;
 }
+
+.job-action-tapped {
+  background-color: rgba(128, 128, 128, 0.219) !important;
+  border-radius: 8;
+  border-width: 3;
+  border-color: rgba(255, 255, 255, 0.9);
+  color: #ffffff !important;
+  opacity: 1;
+  transform: scale(0.92);
+  shadow-color: #8e8e93;
+  shadow-offset: 0 2;
+  shadow-opacity: 0.45;
+  shadow-radius: 6;
+}
+
+.job-action-button {
+  border-width: 1;
+  border-color: rgba(142, 142, 147, 0.55);
+  border-radius: 8;
+  margin-right: 6 !important;
+}

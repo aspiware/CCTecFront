@@ -12,6 +12,7 @@ import { ConfigService } from '../shared/services/config.service';
 import { Router } from '@angular/router';
 import { WifiConfigComponent } from '../wifi-config/wifi-config.component';
 import { TodayJobsCountService } from '../shared/services/today-jobs-count.service';
+import { CustomerInfoComponent } from '../customer-info/customer-info.component';
 
 @Component({
   standalone: true,
@@ -107,6 +108,8 @@ export class TodayComponent implements OnInit {
   private isCopyMenuOpen = false;
   private lastCopyMenuTs = 0;
   private messageComposeDelegate: any;
+  private actionTapStates: { [key: string]: boolean } = {};
+  private actionTapTimers: { [key: string]: ReturnType<typeof setTimeout> } = {};
 
   constructor(
     private usersService: UsersService,
@@ -290,6 +293,38 @@ export class TodayComponent implements OnInit {
     }
   }
 
+  public markJobActionTap(item: any, action: string, autoClearMs = 140): void {
+    const key = `${item?.number || 'unknown'}:${action}`;
+    this.actionTapStates[key] = true;
+    this.cdr.detectChanges();
+
+    if (this.actionTapTimers[key]) {
+      clearTimeout(this.actionTapTimers[key]);
+    }
+
+    if (autoClearMs > 0) {
+      this.actionTapTimers[key] = setTimeout(() => {
+        this.actionTapStates[key] = false;
+        this.cdr.detectChanges();
+      }, autoClearMs);
+    }
+  }
+
+  public isJobActionTapped(item: any, action: string): boolean {
+    const key = `${item?.number || 'unknown'}:${action}`;
+    return !!this.actionTapStates[key];
+  }
+
+  public clearJobActionTap(item: any, action: string): void {
+    const key = `${item?.number || 'unknown'}:${action}`;
+    if (this.actionTapTimers[key]) {
+      clearTimeout(this.actionTapTimers[key]);
+      delete this.actionTapTimers[key];
+    }
+    this.actionTapStates[key] = false;
+    this.cdr.detectChanges();
+  }
+
   public onSelectedMainMenuR(event: MenuEvent): void {
     console.log('[Today] mainMenuR selected', event?.index);
 
@@ -372,6 +407,8 @@ export class TodayComponent implements OnInit {
     };
 
     this.modalService.showModal(WifiConfigComponent, options).then((result) => {
+      this.clearJobActionTap(job, 'wifi');
+
       if (!result) {
         return;
       }
@@ -390,6 +427,34 @@ export class TodayComponent implements OnInit {
       const body = String(result?.wifiData || '');
       // Wait one run-loop so Wifi modal is fully dismissed before presenting SMS composer.
       setTimeout(() => this.presentSmsComposer(recipients, body), 150);
+    });
+  }
+
+  public showCustomerInfo(job: any): void {
+    if (!job) {
+      return;
+    }
+
+    const modalWidth = Math.min(380, Math.max(300, Screen.mainScreen.widthDIPs - 32));
+    const modalHeight = Math.min(620, Math.max(420, Screen.mainScreen.heightDIPs - 120));
+
+    const options: any = {
+      context: job,
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: false,
+      stretched: false,
+      cancelable: true,
+      dismissEnabled: true,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.Custom,
+        // width: modalWidth,
+        // height: modalHeight,
+      },
+    };
+
+    this.modalService.showModal(CustomerInfoComponent, options).then(() => {
+      this.clearJobActionTap(job, 'customer');
     });
   }
 
@@ -515,7 +580,7 @@ export class TodayComponent implements OnInit {
           case 'LOFF':
             this.mainMenuIconName = this.mainMenu.options[5]?.icon || this.mainMenuIconName;
             break;
-          case 'ONROUTE':
+          case 'ENROUTE':
             this.mainMenuIconName = 'car';
             break;
           case 'ONJOB':

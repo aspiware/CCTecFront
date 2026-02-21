@@ -36,7 +36,10 @@
     <Label text="Current Week Average" class="section-title"></Label>
 
     <StackLayout class="card">
-      <GridLayout *ngFor="let totalPerDay of weekAverage.totalsPerDay" columns="*, auto" class="">
+      <GridLayout
+        *ngFor="let totalPerDay of weekAverage.totalsPerDay; let i = index"
+        columns="*, auto"
+        [class.line-row]="i > 0">
         <Label col="0" [text]="totalPerDay.date | date: 'EEEE'"></Label>
         <Label col="1" [text]="totalPerDay.total | currency" textAlignment="right"></Label>
       </GridLayout>
