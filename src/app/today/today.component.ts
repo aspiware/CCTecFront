@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnInit, ViewContainerRef } from '@angular/core';
-import { ModalDialogService, NativeScriptCommonModule } from '@nativescript/angular';
+import { ModalDialogService, NativeScriptCommonModule, RouterExtensions } from '@nativescript/angular';
 import { Application, ObservableArray, Screen, Utils } from '@nativescript/core';
 import { NativeScriptUIListViewModule } from 'nativescript-ui-listview/angular';
 import { MenuEvent } from '~/app/shared/components/menu-button/common';
@@ -118,6 +118,7 @@ export class TodayComponent implements OnInit {
     private todayJobsCountService: TodayJobsCountService,
     private cdr: ChangeDetectorRef,
     private router: Router,
+    private routerExtensions: RouterExtensions,
     private modalService: ModalDialogService,
     private vcRef: ViewContainerRef
   ) { }
@@ -331,6 +332,11 @@ export class TodayComponent implements OnInit {
     switch (event?.index) {
       case 2:
         this.router.navigate(['/tabs', { outlets: { todayListTab: ['customer-consent'] } }]);
+        break;
+      case 4:
+        this.configService.logout();
+        this.todayJobsCountService.setCount(0);
+        this.routerExtensions.navigate(['/login'], { clearHistory: true });
         break;
       default:
         break;

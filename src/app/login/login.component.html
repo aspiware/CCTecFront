@@ -1,14 +1,61 @@
-<ActionBar class="action-bar" title="Login"></ActionBar>
+<ScrollView>
+  <StackLayout verticalAlignment="center" class="form" [formGroup]="loginForm">
+    <label horizontalAlignment="left" text="Sign in" class="logo"></label>
 
-<GridLayout rows="*" class="container">
-  <StackLayout class="card">
-    <Label text="Welcome Back" class="title"></Label>
-    <Label text="Sign in to continue" class="subtitle"></Label>
+    <GridLayout rows="auto" columns="*" style="margin-top: 50px; margin-right: 30;">
+      <GridLayout columns="*,auto" class="input-shell" width="100%">
+        <TextField
+          col="0"
+          formControlName="username"
+          required
+          hint="bp-username"
+          returnKeyType="next"
+          (returnPress)="focusPassword()"
+          autocapitalizationType="none"
+          autocorrect="false"
+          class="custom-tf-inline">
+        </TextField>
+        <Label col="1" text="@cable.comcast.com" class="suffix-label"></Label>
+      </GridLayout>
+    </GridLayout>
 
-    <TextField hint="Username" class="input"></TextField>
-    <TextField hint="Password" secure="true" class="input"></TextField>
+    <Label
+      class="required-label"
+      text="{{loginForm.controls.username.errors?.required ? 'Please enter the BP Username' : ''}}">
+    </Label>
 
-    <Button text="Sign In" class="btn btn-primary"></Button>
+    <GridLayout rows="auto" columns="*" style="margin-right: 30;">
+      <GridLayout columns="*,auto" class="input-shell" width="100%">
+        <TextField
+          col="0"
+          secure="{{showPass ? false : true}}"
+          formControlName="password"
+          returnKeyType="go"
+          (returnPress)="loginForm.valid ? login() : null"
+          required
+          hint="password"
+          autocapitalizationType="none"
+          autocorrect="false"
+          class="custom-tf-inline">
+        </TextField>
+        <StackLayout col="1" width="34" height="42" horizontalAlignment="right" orientation="horizontal" (tap)="showHidePass()">
+        <Label *ngIf="showPass" width="30" text="&#xf06e;" style="font-size: 17; margin-bottom: 2;" class="fas"></Label>
+        <Label *ngIf="!showPass" width="30" text="&#xf070;" style="font-size: 17; margin-bottom: 2;" class="fas"></Label>
+        </StackLayout>
+      </GridLayout>
+    </GridLayout>
+
+    <Label
+      class="required-label"
+      text="{{loginForm.controls.password.errors?.required ? 'Please enter the password' : ''}}">
+    </Label>
+
+    <Button
+      isEnabled="{{loginForm.valid ? true : false}}"
+      text="Log in"
+      class="custom-btn"
+      style="margin-top: 200px;"
+      (tap)="login()">
+    </Button>
   </StackLayout>
-</GridLayout>
-
+</ScrollView>

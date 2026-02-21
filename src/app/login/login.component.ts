@@ -1,15 +1,90 @@
-import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
-import { NativeScriptCommonModule } from '@nativescript/angular';
+import { Component, NO_ERRORS_SCHEMA, OnInit } from '@angular/core';
+import { NativeScriptCommonModule, NativeScriptFormsModule, RouterExtensions } from '@nativescript/angular';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { LoginService } from './login.service';
+import { getString, setBoolean, setNumber, setString } from '@nativescript/core/application-settings';
+import { Page, alert } from '@nativescript/core';
+import { UsersService } from '../shared/services/users.service';
+import { UserModel } from '../shared/models/user.model';
+import { ConfigService } from '../shared/services/config.service';
 
 @Component({
   standalone: true,
   selector: 'app-login',
-  imports: [NativeScriptCommonModule],
+  imports: [NativeScriptCommonModule, NativeScriptFormsModule, ReactiveFormsModule],
   schemas: [NO_ERRORS_SCHEMA],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })
-export class LoginComponent {
-  constructor(private loginService: LoginService) {}
+export class LoginComponent implements OnInit {
+  public showPass = false;
+  public loginForm = new FormGroup({
+    username: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    password: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    authMethodId: new FormControl(false, { nonNullable: true }),
+  });
+  public isBusy = false;
+
+  constructor(
+    private loginService: LoginService,
+    private usersService: UsersService,
+    private configService: ConfigService,
+    private routerExtensions: RouterExtensions,
+    private page: Page
+  ) {}
+
+  ngOnInit(): void {
+    this.page.backgroundImage = 'res://login_bg';
+    this.page.style.backgroundSize = 'cover';
+    this.page.style.backgroundRepeat = 'no-repeat';
+  }
+
+  public showHidePass(): void {
+    this.showPass = !this.showPass;
+  }
+
+  public focusPassword(): void {
+    // Reserved for input focus behavior.
+  }
+
+  public login(): void {
+    if (this.isBusy) {
+      return;
+    }
+
+    if (!this.loginForm.valid) {
+      this.loginForm.markAllAsTouched();
+      return;
+    }
+
+    const username = this.loginForm.controls.username.value.trim().toLowerCase();
+    const password = this.loginForm.controls.password.value;
+    this.isBusy = true;
+
+    this.loginService.login(username, password).subscribe({
+      next: (response: any) => {
+        const data = response?.data || response;
+        setString('token', String(data?.token || ''));
+        setString('user', JSON.stringify(data || {}));
+        this.usersService.setUser(<UserModel>JSON.parse(getString('user', '{}')));
+        setNumber('userId', Number(data?.userId || 0));
+        setNumber('roleId', Number(data?.roleId || 0));
+        setNumber('settingId', Number(data?.settingId || 0));
+        setString('bp', String(data?.bp || ''));
+        setBoolean('isLoggedIn', true);
+        this.configService.login();
+        this.isBusy = false;
+        this.routerExtensions.navigate(['/tabs'], { clearHistory: true });
+      },
+      error: async (error) => {
+        this.isBusy = false;
+        const message = error?.error?.message || error?.message || 'Login failed.';
+        await alert({
+          title: 'Login',
+          message,
+          okButtonText: 'OK',
+        });
+      },
+    });
+  }
 }
