@@ -22,17 +22,8 @@ export class CustomerInfoComponent {
     {
       name: 'Main Menu',
       options: [
-        { name: 'Refresh Wi-Fi Info', icon: 'arrow.clockwise' },
-        { name: 'Connect to Wi-Fi', icon: 'wifi' },
-        { name: 'Share Wi-Fi via SMS', icon: 'ellipsis.message' },
-        {
-          name: 'Save Wi-Fi Settings', icon: 'checkmark.circle', destructive: true, confirm: {
-            title: 'Do you want to save the new Wi-Fi settings?',
-            confirmText: 'Yes',
-            cancelText: 'Cancel',
-            presentation: 'anchor'
-          }
-        },
+        { name: 'Availability SMS', icon: 'message.badge' },
+        { name: 'Survey SMS', icon: 'ellipsis.message' },
       ],
     };
 
@@ -41,7 +32,21 @@ export class CustomerInfoComponent {
   }
 
   public onSelectedMainMenu(event: MenuEvent): void {
-    console.log('[CustomerInfo] menu selected', event?.index);
+    const recipients = this.getUniqueCustomerPhoneDigits();
+    if (!recipients.length) {
+      return;
+    }
+
+    switch (event?.index) {
+      case 0:
+        this.showAvailabilityLanguageMenu((event as any)?.object?.ios as UIView | undefined, recipients);
+        break;
+      case 1:
+        this.showSurveyLanguageMenu((event as any)?.object?.ios as UIView | undefined, recipients);
+        break;
+      default:
+        break;
+    }
   }
 
   public closeModal(): void {
@@ -135,7 +140,7 @@ export class CustomerInfoComponent {
           'Availability',
           UIAlertActionStyle.Default,
           () => {
-            this.openSmsComposer(phoneDigits, 'Hi, are you available for your appointment?');
+            this.showAvailabilityLanguageMenu(sourceView, phoneDigits);
             this.isCopyMenuOpen = false;
           }
         );
@@ -181,8 +186,12 @@ export class CustomerInfoComponent {
     Utils.copyToClipboard(textToCopy);
   }
 
-  private showSurveyLanguageMenu(sourceView: UIView | undefined, phoneDigits: string): void {
-    if (!__IOS__ || !phoneDigits) {
+  private showAvailabilityLanguageMenu(
+    sourceView: UIView | undefined,
+    recipients: string | string[]
+  ): void {
+    const recipientsList = Array.isArray(recipients) ? recipients : [recipients];
+    if (!__IOS__ || !recipientsList.length) {
       return;
     }
 
@@ -203,16 +212,16 @@ export class CustomerInfoComponent {
     }
 
     const alert = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
-      'Send Message',
-      'Choose survey language',
+      'Availability SMS',
+      'Choose language',
       UIAlertControllerStyle.ActionSheet
     );
 
     const englishAction = UIAlertAction.actionWithTitleStyleHandler(
-      'English Survey',
+      'English',
       UIAlertActionStyle.Default,
       () => {
-        this.openSmsComposer(phoneDigits, 'English Survey');
+        this.openSmsComposer(recipientsList, 'Hi, are you available for your appointment?');
         this.isCopyMenuOpen = false;
       }
     );
@@ -220,10 +229,10 @@ export class CustomerInfoComponent {
     alert.addAction(englishAction);
 
     const spanishAction = UIAlertAction.actionWithTitleStyleHandler(
-      'Spanish Survey',
+      'Spanish',
       UIAlertActionStyle.Default,
       () => {
-        this.openSmsComposer(phoneDigits, 'Spanish Survey');
+        this.openSmsComposer(recipientsList, 'Hola, esta disponible para su cita?');
         this.isCopyMenuOpen = false;
       }
     );
@@ -253,8 +262,94 @@ export class CustomerInfoComponent {
     viewController.presentViewControllerAnimatedCompletion(alert, true, null);
   }
 
-  private openSmsComposer(phoneDigits: string, messageBody: string): void {
-    const safeNumber = encodeURIComponent(phoneDigits);
+  private showSurveyLanguageMenu(
+    sourceView: UIView | undefined,
+    recipients: string | string[]
+  ): void {
+    const recipientsList = Array.isArray(recipients) ? recipients : [recipients];
+    if (!__IOS__ || !recipientsList.length) {
+      return;
+    }
+
+    this.isCopyMenuOpen = true;
+    this.lastCopyMenuTs = Date.now();
+
+    let viewController = Application.ios?.rootController;
+    while (
+      viewController &&
+      viewController.presentedViewController &&
+      !viewController.presentedViewController.beingDismissed
+    ) {
+      viewController = viewController.presentedViewController;
+    }
+    if (!viewController?.view) {
+      this.isCopyMenuOpen = false;
+      return;
+    }
+
+    const alert = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
+      'Send Message',
+      'Choose survey language',
+      UIAlertControllerStyle.ActionSheet
+    );
+
+    const englishAction = UIAlertAction.actionWithTitleStyleHandler(
+      'English Survey',
+      UIAlertActionStyle.Default,
+      () => {
+        this.openSmsComposer(recipientsList, 'English Survey');
+        this.isCopyMenuOpen = false;
+      }
+    );
+    englishAction.setValueForKey(UIImage.systemImageNamed('message'), 'image');
+    alert.addAction(englishAction);
+
+    const spanishAction = UIAlertAction.actionWithTitleStyleHandler(
+      'Spanish Survey',
+      UIAlertActionStyle.Default,
+      () => {
+        this.openSmsComposer(recipientsList, 'Spanish Survey');
+        this.isCopyMenuOpen = false;
+      }
+    );
+    spanishAction.setValueForKey(UIImage.systemImageNamed('message'), 'image');
+    alert.addAction(spanishAction);
+
+    alert.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, () => {
+        this.isCopyMenuOpen = false;
+      })
+    );
+
+    const popover = alert.popoverPresentationController;
+    if (popover) {
+      popover.sourceView = sourceView || viewController.view;
+      popover.sourceRect = sourceView
+        ? sourceView.bounds
+        : CGRectMake(
+          viewController.view.bounds.size.width / 2,
+          viewController.view.bounds.size.height / 2,
+          1,
+          1
+        );
+      popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
+    }
+
+    viewController.presentViewControllerAnimatedCompletion(alert, true, null);
+  }
+
+  private openSmsComposer(recipients: string | string[], messageBody: string): void {
+    const recipientsList = Array.isArray(recipients) ? recipients : [recipients];
+    const numbers = recipientsList
+      .map((n) => String(n ?? '').replace(/\D+/g, ''))
+      .filter((n) => !!n);
+    if (!numbers.length) {
+      return;
+    }
+
+    const separator = __ANDROID__ ? ';' : ',';
+    const joinedRecipients = numbers.join(separator);
+    const safeNumber = encodeURIComponent(joinedRecipients);
     const safeBody = encodeURIComponent(messageBody);
     const primary = `sms:${safeNumber}&body=${safeBody}`;
     const secondary = `sms:${safeNumber}?body=${safeBody}`;
@@ -262,5 +357,25 @@ export class CustomerInfoComponent {
     if (!opened) {
       Utils.openUrl(secondary);
     }
+  }
+
+  private getUniqueCustomerPhoneDigits(): string[] {
+    const customer = this.job?.customer || {};
+    const rawPhones = [
+      customer.homePhoneNumber,
+      customer.callFirstPhoneNumber,
+      customer.workPhoneNumber,
+      customer.surveyPhoneNumber,
+    ];
+
+    const unique = new Set<string>();
+    for (const raw of rawPhones) {
+      const digits = String(raw ?? '').replace(/\D+/g, '');
+      if (!digits) {
+        continue;
+      }
+      unique.add(digits);
+    }
+    return Array.from(unique);
   }
 }
