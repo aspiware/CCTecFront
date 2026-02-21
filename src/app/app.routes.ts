@@ -7,6 +7,7 @@ import { SettingsComponent } from './settings/settings.component';
 import { CustomerConsentComponent } from './customer-consent/customer-consent.component';
 import { SubscriptionComponent } from './subscription/subscription.component';
 import { subscriptionGuard } from './subscription/subscription.guard';
+import { LoginComponent } from './login/login.component';
 
 export const routes: Routes = [
   {
@@ -17,6 +18,10 @@ export const routes: Routes = [
   {
     path: 'subscription',
     component: SubscriptionComponent,
+  },
+  {
+    path: 'login',
+    component: LoginComponent,
   },
   {
     path: 'tabs',
