@@ -59,7 +59,7 @@
 
     <!-- <StackLayout horizontalAlignment="left" orientation="horizontal">
       <MenuButton class="fas"
-        style="background-color: transparent; font-size: 18px; height: 70px; width: 100px; margin: 0" text="&#xf560;"
+        style="background-color: transparent; font-size: 18px; height: 70px; width: 100px; margin-right: 6" text="&#xf560;"
         [options]="jobMenu.options" (selected)="onSelectedJobMenu($event, item)">
       </MenuButton>
     </StackLayout> -->
@@ -210,53 +210,55 @@
                 </MDRipple> -->
 
                 <!-- <MDRipple rippleColor="blue" elevation="1" style="border-radius: 5; margin-right: 20px"> -->
-                  <Label class="far"
-                    [class.far]="!item.isStarred"
-                    [class.fas]="item.isStarred"
-                    text="&#xf005;"
-                    (tap)="setStarred(item)"
-                    style="font-size: 16px; margin-right: 5;"></Label>
+                <MenuButton
+                  class="job-action-button"
+                  [class.far]="!item.isStarred"
+                  [class.fas]="item.isStarred"
+                  style="background-color: transparent; font-size: 16px; height: 70px; width: 100px; margin-right: 6"
+                  text="&#xf005;"
+                  (tap)="setStarred(item)">
+                </MenuButton>
                 <!-- </MDRipple>s -->
 
-                <MenuButton class="fas"
+                <MenuButton class="fas job-action-button"
                   [class.job-action-tapped]="isJobActionTapped(item, 'wifi')"
-                  style="background-color: transparent; font-size: 14px; height: 70px; width: 100px; margin: 0"
+                  style="background-color: transparent; font-size: 14px; height: 70px; width: 100px; margin-right: 6"
                   text="&#xf1eb;" (tap)="markJobActionTap(item, 'wifi', 0); wifiConfig(item)">
                 </MenuButton>
 
-                <MenuButton *ngIf="item.status == 'CLOSED'" class="fas"
+                <MenuButton *ngIf="item.status == 'CLOSED'" class="fas job-action-button"
                   [class.job-action-tapped]="isJobActionTapped(item, 'edit')"
-                  style="background-color: transparent; font-size: 14px; height: 70px; width: 100px; margin: 0"
+                  style="background-color: transparent; font-size: 14px; height: 70px; width: 100px; margin-right: 6"
                   text="&#xf044;" (tap)="markJobActionTap(item, 'edit'); showEditJob(item)">
                 </MenuButton>
 
-                <MenuButton class="fas"
+                <MenuButton class="fas job-action-button"
                   [class.job-action-tapped]="isJobActionTapped(item, 'customer')"
-                  style="background-color: transparent; font-size: 14px; height: 70px; width: 100px; margin: 0"
+                  style="background-color: transparent; font-size: 14px; height: 70px; width: 100px; margin-right: 6"
                   text="&#xf007;" (tap)="markJobActionTap(item, 'customer', 0); showCustomerInfo(item)">
                 </MenuButton>
 
-                <MenuButton class="fas"
+                <MenuButton class="fas job-action-button"
                   [class.job-action-tapped]="isJobActionTapped(item, 'history')"
-                  style="background-color: transparent; font-size: 16px; height: 70px; width: 100px; margin: 0"
+                  style="background-color: transparent; font-size: 16px; height: 70px; width: 100px; margin-right: 6"
                   text="&#xff682;" (tap)="markJobActionTap(item, 'history'); showJobHistory(item)">
                 </MenuButton>
 
-                <MenuButton class="fas"
+                <MenuButton class="fas job-action-button"
                   [class.job-action-tapped]="isJobActionTapped(item, 'add-devices')"
-                  style="background-color: transparent; font-size: 14px; height: 70px; width: 100px; margin: 0"
+                  style="background-color: transparent; font-size: 14px; height: 70px; width: 100px; margin-right: 6"
                   text="&#xf26c;" (tap)="markJobActionTap(item, 'add-devices'); showAddDevicesModal(item)">
                 </MenuButton>
 
-                <MenuButton class="fas"
+                <MenuButton class="fas job-action-button"
                   [class.job-action-tapped]="isJobActionTapped(item, 'activate-service')"
-                  style="background-color: transparent; font-size: 16px; height: 70px; width: 100px; margin: 0"
+                  style="background-color: transparent; font-size: 16px; height: 70px; width: 100px; margin-right: 6"
                   text="&#xe012;" (tap)="markJobActionTap(item, 'activate-service'); goToActivateService(item)">
                 </MenuButton>
 
-                <MenuButton *ngIf="(item.status == 'OPEN' && item.isCurrent) && roleId == 2" class="fas"
+                <MenuButton *ngIf="(item.status == 'OPEN' && item.isCurrent) && roleId == 2" class="fas job-action-button"
                   [class.job-action-tapped]="isJobActionTapped(item, 'remove-devices')"
-                  style="background-color: transparent; font-size: 14px; height: 70px; width: 100px; margin: 0"
+                  style="background-color: transparent; font-size: 14px; height: 70px; width: 100px; margin-right: 6"
                   text="&#xf2ed;" (tap)="markJobActionTap(item, 'remove-devices'); showRemoveDevicesModal(item)">
                 </MenuButton>
 
@@ -280,15 +282,15 @@
                   <Label class="fas" text="&#xe473;" (tap)="goPHTScans(item)" style="font-size: 17px"></Label>
                 </MDRipple> -->
 
-                <MenuButton *ngIf="roleId == 2" class="fas"
+                <MenuButton *ngIf="roleId == 2" class="fas job-action-button"
                   [class.job-action-tapped]="isJobActionTapped(item, 'scans')"
-                  style="background-color: transparent; font-size: 16px; height: 70px; width: 100px; margin: 0"
+                  style="background-color: transparent; font-size: 16px; height: 70px; width: 100px; margin-right: 6"
                   text="&#xf0ee;" [options]="scansMenu.options" (tap)="markJobActionTap(item, 'scans')" (selected)="selected($event, item)">
                 </MenuButton>
 
-                <MenuButton *ngIf="item.status != 'CLOSED' && roleId == 2" class="fas"
+                <MenuButton *ngIf="item.status != 'CLOSED' && roleId == 2" class="fas job-action-button"
                   [class.job-action-tapped]="isJobActionTapped(item, 'job-menu')"
-                  style="background-color: transparent; font-size: 16px; height: 70px; width: 100px; margin: 0"
+                  style="background-color: transparent; font-size: 16px; height: 70px; width: 100px; margin-right: 6"
                   text="&#xf560;" [options]="jobMenu.options" (tap)="markJobActionTap(item, 'job-menu')" (selected)="onSelectedJobMenu($event, item)">
                 </MenuButton>
               </StackLayout>
