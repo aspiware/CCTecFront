@@ -1,0 +1,21 @@
+<ModalStack dismissEnabled="true" class="modal-root">
+  <GridLayout rows="*" columns="*">
+    <StackLayout row="0" col="0" class="backdrop" (tap)="closeModal()"></StackLayout>
+
+    <GridLayout row="0" col="0" rows="auto" class="modal-card">
+      <GridLayout row="0" columns="*,auto" class="header">
+        <Label col="0" text="Customer Info" class="title modal-title-text"></Label>
+
+        <StackLayout col="1">
+          <MenuButton
+            [useSFIcon]="true"
+            style="background-color: transparent; height: 24; width: 35;"
+            [sfIconName]="'ellipsis.circle'"
+            [options]="mainMenu.options"
+            (selected)="onSelectedMainMenu($event)">
+          </MenuButton>
+        </StackLayout>
+      </GridLayout>
+    </GridLayout>
+  </GridLayout>
+</ModalStack>

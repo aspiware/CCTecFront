@@ -12,6 +12,7 @@ import { ConfigService } from '../shared/services/config.service';
 import { Router } from '@angular/router';
 import { WifiConfigComponent } from '../wifi-config/wifi-config.component';
 import { TodayJobsCountService } from '../shared/services/today-jobs-count.service';
+import { CustomerInfoComponent } from '../customer-info/customer-info.component';
 
 @Component({
   standalone: true,
@@ -391,6 +392,32 @@ export class TodayComponent implements OnInit {
       // Wait one run-loop so Wifi modal is fully dismissed before presenting SMS composer.
       setTimeout(() => this.presentSmsComposer(recipients, body), 150);
     });
+  }
+
+  public showCustomerInfo(job: any): void {
+    if (!job) {
+      return;
+    }
+
+    const modalWidth = Math.min(380, Math.max(300, Screen.mainScreen.widthDIPs - 32));
+    const modalHeight = Math.min(620, Math.max(420, Screen.mainScreen.heightDIPs - 120));
+
+    const options: any = {
+      context: job,
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: false,
+      stretched: false,
+      cancelable: true,
+      dismissEnabled: true,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.Custom,
+        // width: modalWidth,
+        // height: modalHeight,
+      },
+    };
+
+    this.modalService.showModal(CustomerInfoComponent, options);
   }
 
   private presentSmsComposer(recipients: string[], body: string): void {
