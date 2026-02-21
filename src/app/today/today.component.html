@@ -221,7 +221,7 @@
                 <MenuButton class="fas"
                   [class.job-action-tapped]="isJobActionTapped(item, 'wifi')"
                   style="background-color: transparent; font-size: 14px; height: 70px; width: 100px; margin: 0"
-                  text="&#xf1eb;" (tap)="markJobActionTap(item, 'wifi'); wifiConfig(item)">
+                  text="&#xf1eb;" (tap)="markJobActionTap(item, 'wifi', 0); wifiConfig(item)">
                 </MenuButton>
 
                 <MenuButton *ngIf="item.status == 'CLOSED'" class="fas"
@@ -233,7 +233,7 @@
                 <MenuButton class="fas"
                   [class.job-action-tapped]="isJobActionTapped(item, 'customer')"
                   style="background-color: transparent; font-size: 14px; height: 70px; width: 100px; margin: 0"
-                  text="&#xf007;" (tap)="markJobActionTap(item, 'customer'); showCustomerInfo(item)">
+                  text="&#xf007;" (tap)="markJobActionTap(item, 'customer', 0); showCustomerInfo(item)">
                 </MenuButton>
 
                 <MenuButton class="fas"

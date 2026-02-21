@@ -293,22 +293,36 @@ export class TodayComponent implements OnInit {
     }
   }
 
-  public markJobActionTap(item: any, action: string): void {
+  public markJobActionTap(item: any, action: string, autoClearMs = 220): void {
     const key = `${item?.number || 'unknown'}:${action}`;
     this.actionTapStates[key] = true;
+    this.cdr.detectChanges();
 
     if (this.actionTapTimers[key]) {
       clearTimeout(this.actionTapTimers[key]);
     }
 
-    this.actionTapTimers[key] = setTimeout(() => {
-      this.actionTapStates[key] = false;
-    }, 220);
+    if (autoClearMs > 0) {
+      this.actionTapTimers[key] = setTimeout(() => {
+        this.actionTapStates[key] = false;
+        this.cdr.detectChanges();
+      }, autoClearMs);
+    }
   }
 
   public isJobActionTapped(item: any, action: string): boolean {
     const key = `${item?.number || 'unknown'}:${action}`;
     return !!this.actionTapStates[key];
+  }
+
+  public clearJobActionTap(item: any, action: string): void {
+    const key = `${item?.number || 'unknown'}:${action}`;
+    if (this.actionTapTimers[key]) {
+      clearTimeout(this.actionTapTimers[key]);
+      delete this.actionTapTimers[key];
+    }
+    this.actionTapStates[key] = false;
+    this.cdr.detectChanges();
   }
 
   public onSelectedMainMenuR(event: MenuEvent): void {
@@ -393,6 +407,8 @@ export class TodayComponent implements OnInit {
     };
 
     this.modalService.showModal(WifiConfigComponent, options).then((result) => {
+      this.clearJobActionTap(job, 'wifi');
+
       if (!result) {
         return;
       }
@@ -437,7 +453,9 @@ export class TodayComponent implements OnInit {
       },
     };
 
-    this.modalService.showModal(CustomerInfoComponent, options);
+    this.modalService.showModal(CustomerInfoComponent, options).then(() => {
+      this.clearJobActionTap(job, 'customer');
+    });
   }
 
   private presentSmsComposer(recipients: string[], body: string): void {
