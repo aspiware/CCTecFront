@@ -22,6 +22,7 @@ export class CustomerInfoComponent implements OnInit {
   private settings: any = {};
   private isCopyMenuOpen = false;
   private lastCopyMenuTs = 0;
+  private messageComposeDelegate: any;
   mainMenu: Item =
     {
       name: 'Main Menu',
@@ -381,6 +382,15 @@ export class CustomerInfoComponent implements OnInit {
       return;
     }
 
+    if (__IOS__) {
+      if (typeof MFMessageComposeViewController === 'undefined' || !MFMessageComposeViewController.canSendText()) {
+        return;
+      }
+
+      this.presentInAppSmsComposer(numbers, messageBody);
+      return;
+    }
+
     const separator = __ANDROID__ ? ';' : ',';
     const joinedRecipients = numbers.join(separator);
     const safeNumber = encodeURIComponent(joinedRecipients);
@@ -391,6 +401,36 @@ export class CustomerInfoComponent implements OnInit {
     if (!opened) {
       Utils.openUrl(secondary);
     }
+  }
+
+  private presentInAppSmsComposer(recipients: string[], body: string): void {
+    const controller = MFMessageComposeViewController.new();
+    const MessageComposeDelegate = (NSObject as any).extend(
+      {
+        messageComposeViewControllerDidFinishWithResult: (
+          msgController: MFMessageComposeViewController,
+          _msgResult: MessageComposeResult
+        ) => {
+          msgController.dismissViewControllerAnimatedCompletion(true, null);
+          this.messageComposeDelegate = null;
+        },
+      },
+      {
+        protocols: [MFMessageComposeViewControllerDelegate],
+      }
+    );
+
+    this.messageComposeDelegate = MessageComposeDelegate.new();
+    controller.body = String(body || '');
+    controller.recipients = recipients as any;
+    controller.messageComposeDelegate = this.messageComposeDelegate;
+    (controller as any).__delegate = this.messageComposeDelegate;
+
+    let presenter = Application.ios?.rootController as UIViewController;
+    while (presenter?.presentedViewController) {
+      presenter = presenter.presentedViewController;
+    }
+    presenter?.presentViewControllerAnimatedCompletion(controller, true, null);
   }
 
   private getUniqueCustomerPhoneDigits(): string[] {
