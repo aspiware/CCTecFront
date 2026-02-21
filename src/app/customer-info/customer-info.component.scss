@@ -62,10 +62,15 @@
 }
 
 .line-row {
+  width: 100%;
   margin-top: 10;
   padding-top: 10;
   border-top-width: 1;
   border-top-color: rgba(128, 128, 128, 0.24);
+}
+
+.data-row {
+  width: 100%;
 }
 
 .label-key,

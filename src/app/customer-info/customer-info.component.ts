@@ -48,7 +48,14 @@ export class CustomerInfoComponent {
     this.modalParams.closeCallback();
   }
 
-  public showMenu(args: any, value: any, copyValue?: any, digitsOnly = false): void {
+  public showMenu(
+    args: any,
+    value: any,
+    copyValue?: any,
+    digitsOnly = false,
+    allowCall = false,
+    allowMessage = false
+  ): void {
     if (args && typeof args.cancel === 'boolean') {
       args.cancel = true;
     }
@@ -68,6 +75,12 @@ export class CustomerInfoComponent {
       const digits = textToCopy.replace(/\D+/g, '');
       textToCopy = digits || textToCopy;
     }
+
+    if (!textToCopy || textToCopy === '-') {
+      return;
+    }
+
+    const phoneDigits = String(copyValue ?? value ?? '').replace(/\D+/g, '');
 
     if (__IOS__) {
       this.isCopyMenuOpen = true;
@@ -104,6 +117,43 @@ export class CustomerInfoComponent {
       copyAction.setValueForKey(UIImage.systemImageNamed('doc.on.doc'), 'image');
       alert.addAction(copyAction);
 
+      if (allowCall && phoneDigits) {
+        const callAction = UIAlertAction.actionWithTitleStyleHandler(
+          'Call',
+          UIAlertActionStyle.Default,
+          () => {
+            Utils.openUrl(`tel://${phoneDigits}`);
+            this.isCopyMenuOpen = false;
+          }
+        );
+        callAction.setValueForKey(UIImage.systemImageNamed('phone.fill'), 'image');
+        alert.addAction(callAction);
+      }
+
+      if (allowMessage && phoneDigits) {
+        const availabilityAction = UIAlertAction.actionWithTitleStyleHandler(
+          'Availability',
+          UIAlertActionStyle.Default,
+          () => {
+            this.openSmsComposer(phoneDigits, 'Hi, are you available for your appointment?');
+            this.isCopyMenuOpen = false;
+          }
+        );
+        availabilityAction.setValueForKey(UIImage.systemImageNamed('message.badge'), 'image');
+        alert.addAction(availabilityAction);
+
+        const messageAction = UIAlertAction.actionWithTitleStyleHandler(
+          'Send Survey',
+          UIAlertActionStyle.Default,
+          () => {
+            this.isCopyMenuOpen = false;
+            this.showSurveyLanguageMenu(sourceView, phoneDigits);
+          }
+        );
+        messageAction.setValueForKey(UIImage.systemImageNamed('ellipsis.message'), 'image');
+        alert.addAction(messageAction);
+      }
+
       alert.addAction(
         UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, () => {
           this.isCopyMenuOpen = false;
@@ -129,5 +179,88 @@ export class CustomerInfoComponent {
     }
 
     Utils.copyToClipboard(textToCopy);
+  }
+
+  private showSurveyLanguageMenu(sourceView: UIView | undefined, phoneDigits: string): void {
+    if (!__IOS__ || !phoneDigits) {
+      return;
+    }
+
+    this.isCopyMenuOpen = true;
+    this.lastCopyMenuTs = Date.now();
+
+    let viewController = Application.ios?.rootController;
+    while (
+      viewController &&
+      viewController.presentedViewController &&
+      !viewController.presentedViewController.beingDismissed
+    ) {
+      viewController = viewController.presentedViewController;
+    }
+    if (!viewController?.view) {
+      this.isCopyMenuOpen = false;
+      return;
+    }
+
+    const alert = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
+      'Send Message',
+      'Choose survey language',
+      UIAlertControllerStyle.ActionSheet
+    );
+
+    const englishAction = UIAlertAction.actionWithTitleStyleHandler(
+      'English Survey',
+      UIAlertActionStyle.Default,
+      () => {
+        this.openSmsComposer(phoneDigits, 'English Survey');
+        this.isCopyMenuOpen = false;
+      }
+    );
+    englishAction.setValueForKey(UIImage.systemImageNamed('message'), 'image');
+    alert.addAction(englishAction);
+
+    const spanishAction = UIAlertAction.actionWithTitleStyleHandler(
+      'Spanish Survey',
+      UIAlertActionStyle.Default,
+      () => {
+        this.openSmsComposer(phoneDigits, 'Spanish Survey');
+        this.isCopyMenuOpen = false;
+      }
+    );
+    spanishAction.setValueForKey(UIImage.systemImageNamed('message'), 'image');
+    alert.addAction(spanishAction);
+
+    alert.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, () => {
+        this.isCopyMenuOpen = false;
+      })
+    );
+
+    const popover = alert.popoverPresentationController;
+    if (popover) {
+      popover.sourceView = sourceView || viewController.view;
+      popover.sourceRect = sourceView
+        ? sourceView.bounds
+        : CGRectMake(
+          viewController.view.bounds.size.width / 2,
+          viewController.view.bounds.size.height / 2,
+          1,
+          1
+        );
+      popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
+    }
+
+    viewController.presentViewControllerAnimatedCompletion(alert, true, null);
+  }
+
+  private openSmsComposer(phoneDigits: string, messageBody: string): void {
+    const safeNumber = encodeURIComponent(phoneDigits);
+    const safeBody = encodeURIComponent(messageBody);
+    const primary = `sms:${safeNumber}&body=${safeBody}`;
+    const secondary = `sms:${safeNumber}?body=${safeBody}`;
+    const opened = Utils.openUrl(primary);
+    if (!opened) {
+      Utils.openUrl(secondary);
+    }
   }
 }
