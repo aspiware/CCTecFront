@@ -134,3 +134,11 @@
   color: white;
   font-size: 20;
 }
+
+.job-action-tapped {
+  background-color: rgba(90, 144, 214, 0.35) !important;
+  border-radius: 8;
+  border-width: 1;
+  border-color: rgba(90, 144, 214, 0.8);
+  opacity: 0.7;
+}

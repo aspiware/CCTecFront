@@ -108,6 +108,8 @@ export class TodayComponent implements OnInit {
   private isCopyMenuOpen = false;
   private lastCopyMenuTs = 0;
   private messageComposeDelegate: any;
+  private actionTapStates: { [key: string]: boolean } = {};
+  private actionTapTimers: { [key: string]: ReturnType<typeof setTimeout> } = {};
 
   constructor(
     private usersService: UsersService,
@@ -289,6 +291,24 @@ export class TodayComponent implements OnInit {
       this.jobList.splice(0);
       this.jobList.push(...this.starredJobList);
     }
+  }
+
+  public markJobActionTap(item: any, action: string): void {
+    const key = `${item?.number || 'unknown'}:${action}`;
+    this.actionTapStates[key] = true;
+
+    if (this.actionTapTimers[key]) {
+      clearTimeout(this.actionTapTimers[key]);
+    }
+
+    this.actionTapTimers[key] = setTimeout(() => {
+      this.actionTapStates[key] = false;
+    }, 220);
+  }
+
+  public isJobActionTapped(item: any, action: string): boolean {
+    const key = `${item?.number || 'unknown'}:${action}`;
+    return !!this.actionTapStates[key];
   }
 
   public onSelectedMainMenuR(event: MenuEvent): void {
