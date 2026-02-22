@@ -131,14 +131,6 @@
   padding: 0;
 }
 
-.required-label {
-  margin-left: 16;
-  margin-right: 16;
-  color: #bd3636;
-  font-size: 12;
-  min-height: 16;
-}
-
 .actions-row {
   margin-top: 18;
   column-gap: 8;
@@ -157,6 +149,11 @@
 .btn-primary {
   background-color: #0a84ff;
   color: #ffffff;
+}
+
+.btn-primary:disabled {
+  background-color: rgba(10, 132, 255, 0.38);
+  color: rgba(255, 255, 255, 0.95);
 }
 
 .btn-secondary {

@@ -32,14 +32,15 @@
           (textChange)="onHiddenCodeTextChange($event)">
         </TextField>
 
-        <Label
-          class="required-label"
-          text="{{ codeTouched && codeText.length < 6 ? 'Code is required.' : '' }}">
-        </Label>
-
         <GridLayout columns="*,12,*" class="actions-row">
           <Button col="0" text="Cancel" class="btn-secondary" (tap)="close()"></Button>
-          <Button col="2" text="Verify" class="btn-primary" (tap)="verify()"></Button>
+          <Button
+            col="2"
+            text="Verify"
+            class="btn-primary"
+            [isEnabled]="codeText.length === 6"
+            (tap)="verify()">
+          </Button>
         </GridLayout>
       </StackLayout>
     </GridLayout>
