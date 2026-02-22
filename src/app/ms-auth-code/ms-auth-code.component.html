@@ -10,26 +10,31 @@
       <StackLayout row="1" class="content" [formGroup]="form">
         <Label text="Enter the verification code" class="subtitle"></Label>
 
-        <FlexboxLayout class="digits-row">
-          <TextField
+        <FlexboxLayout class="digits-row" (tap)="focusCodeInput()">
+          <Label
             *ngFor="let i of digitIndexes"
-            [text]="codeDigits[i]"
-            hint=""
-            keyboardType="number"
-            maxLength="1"
-            autocorrect="false"
-            autocapitalizationType="none"
-            textAlignment="center"
-            class="code-digit"
-            (loaded)="onDigitLoaded(i, $event)"
-            (textChange)="onDigitTextChange(i, $event)"
-            (returnPress)="onDigitReturn(i)">
-          </TextField>
+            [text]="getDigitDisplay(i)"
+            class="code-digit-box"
+            [class.code-digit-active]="isActiveDigit(i)"
+            textAlignment="center">
+          </Label>
         </FlexboxLayout>
+        <TextField
+          class="hidden-code-input"
+          [text]="codeText"
+          keyboardType="number"
+          maxLength="6"
+          autocorrect="false"
+          autocapitalizationType="none"
+          (loaded)="onHiddenCodeLoaded($event)"
+          (focus)="onHiddenCodeFocus()"
+          (blur)="onHiddenCodeBlur()"
+          (textChange)="onHiddenCodeTextChange($event)">
+        </TextField>
 
         <Label
           class="required-label"
-          text="{{ codeTouched && codeValue.length < 6 ? 'Code is required.' : '' }}">
+          text="{{ codeTouched && codeText.length < 6 ? 'Code is required.' : '' }}">
         </Label>
 
         <GridLayout columns="*,12,*" class="actions-row">

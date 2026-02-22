@@ -13,17 +13,14 @@ import { LoginService } from '../login/login.service';
 })
 export class MsAuthCodeComponent {
   public readonly digitIndexes = [0, 1, 2, 3, 4, 5];
-  public codeDigits = ['', '', '', '', '', ''];
   public codeTouched = false;
+  public codeText = '';
+  public isCodeFocused = false;
   public form = new FormGroup({
     code: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
   });
-  private digitFields: any[] = [];
-  private originalIosShouldChange = new Map<any, (textField: UITextField, range: NSRange, replacementString: string) => boolean>();
-
-  public get codeValue(): string {
-    return this.codeDigits.join('');
-  }
+  private hiddenCodeField: any;
+  private originalIosShouldChange?: (textField: UITextField, range: NSRange, replacementString: string) => boolean;
 
   constructor(private modalParams: ModalDialogParams, private loginService: LoginService) { }
 
@@ -33,7 +30,7 @@ export class MsAuthCodeComponent {
 
   public verify(): void {
     this.codeTouched = true;
-    const code = this.codeValue.replace(/\D+/g, '').slice(0, 6);
+    const code = String(this.codeText || '').replace(/\D+/g, '').slice(0, 6);
     this.form.controls.code.setValue(code, { emitEvent: false });
 
     if (code.length !== 6) {
@@ -50,40 +47,48 @@ export class MsAuthCodeComponent {
     });
   }
 
-  public onDigitLoaded(index: number, args: any): void {
-    this.digitFields[index] = args?.object;
-    this.attachIosDigitFilter(args?.object);
+  public getDigit(index: number): string {
+    return this.codeText[index] || '';
   }
 
-  public onDigitTextChange(index: number, args: any): void {
+  public getDigitDisplay(index: number): string {
+    return this.getDigit(index);
+  }
+
+  public isActiveDigit(index: number): boolean {
+    if (!this.isCodeFocused) {
+      return false;
+    }
+
+    const activeIndex = Math.min(this.codeText.length, this.digitIndexes.length - 1);
+    return index === activeIndex;
+  }
+
+  public focusCodeInput(): void {
+    this.hiddenCodeField?.focus?.();
+  }
+
+  public onHiddenCodeLoaded(args: any): void {
+    this.hiddenCodeField = args?.object;
+    this.attachIosDigitFilter(this.hiddenCodeField);
+  }
+
+  public onHiddenCodeFocus(): void {
+    this.isCodeFocused = true;
+  }
+
+  public onHiddenCodeBlur(): void {
+    this.isCodeFocused = false;
+  }
+
+  public onHiddenCodeTextChange(args: any): void {
     const raw = String(args?.object?.text ?? args?.value ?? '');
-    const digitsOnly = raw.replace(/\D+/g, '');
-    const digit = digitsOnly ? digitsOnly.charAt(digitsOnly.length - 1) : '';
-
-    if (args?.object && String(args.object.text ?? '') !== digit) {
-      args.object.text = digit;
+    const digitsOnly = raw.replace(/\D+/g, '').slice(0, 6);
+    if (args?.object && String(args.object.text ?? '') !== digitsOnly) {
+      args.object.text = digitsOnly;
     }
-
-    if (this.codeDigits[index] !== digit) {
-      this.codeDigits[index] = digit;
-      this.form.controls.code.setValue(this.codeValue, { emitEvent: false });
-    }
-
-    if (digit && index < this.digitIndexes.length - 1) {
-      setTimeout(() => this.focusDigit(index + 1), 0);
-    }
-  }
-
-  public onDigitReturn(index: number): void {
-    if (index < this.digitIndexes.length - 1) {
-      this.focusDigit(index + 1);
-      return;
-    }
-    this.verify();
-  }
-
-  private focusDigit(index: number): void {
-    this.digitFields[index]?.focus?.();
+    this.codeText = digitsOnly;
+    this.form.controls.code.setValue(this.codeText, { emitEvent: false });
   }
 
   private attachIosDigitFilter(field: any): void {
@@ -91,11 +96,8 @@ export class MsAuthCodeComponent {
       return;
     }
 
-    if (!this.originalIosShouldChange.has(field)) {
-      this.originalIosShouldChange.set(
-        field,
-        field.textFieldShouldChangeCharactersInRangeReplacementString.bind(field)
-      );
+    if (!this.originalIosShouldChange) {
+      this.originalIosShouldChange = field.textFieldShouldChangeCharactersInRangeReplacementString.bind(field);
     }
 
     field.textFieldShouldChangeCharactersInRangeReplacementString = (
@@ -108,12 +110,14 @@ export class MsAuthCodeComponent {
       const nextText = String(
         nsCurrent.stringByReplacingCharactersInRangeWithString(range, replacementString || '')
       );
-      if (!/^\d{0,1}$/.test(nextText)) {
+
+      if (!/^\d{0,6}$/.test(nextText)) {
         return false;
       }
 
-      const original = this.originalIosShouldChange.get(field);
-      return original ? original(textField, range, replacementString) : true;
+      return this.originalIosShouldChange
+        ? this.originalIosShouldChange(textField, range, replacementString)
+        : true;
     };
   }
 

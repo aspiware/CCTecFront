@@ -94,7 +94,7 @@
   justify-content: space-between;
 }
 
-TextField.code-digit {
+.code-digit-box {
   width: 44;
   height: 44;
   border-radius: 12;
@@ -102,19 +102,33 @@ TextField.code-digit {
   font-size: 20;
   font-weight: 600;
   margin: 0;
-  padding: 0;
+  padding-top: 10;
+  vertical-align: middle;
 }
 
-.ns-light TextField.code-digit {
+.code-digit-active {
+  border-color: #0a84ff;
+  border-width: 2;
+}
+
+.ns-light .code-digit-box {
   background-color: #ffffff;
   border-color: #d1d1d6;
   color: #000000;
 }
 
-.ns-dark TextField.code-digit {
+.ns-dark .code-digit-box {
   background-color: #2c2c2e;
   border-color: #48484a;
   color: #ffffff;
+}
+
+.hidden-code-input {
+  width: 1;
+  height: 1;
+  opacity: 0;
+  margin: 0;
+  padding: 0;
 }
 
 .required-label {
