@@ -1,4 +1,7 @@
-<ScrollView keyboardDismissMode="onDrag" class="form-scroll">
+<ScrollView
+  keyboardDismissMode="onDrag"
+  [class]="'form-scroll ' + (isDarkTheme ? 'theme-dark' : 'theme-light')"
+  (loaded)="onRootLoaded()">
   <StackLayout verticalAlignment="center" class="form" [formGroup]="loginForm">
     <Label text="Welcome back" class="logo"></Label>
     <Label text="Sign in to continue" class="subtitle"></Label>
