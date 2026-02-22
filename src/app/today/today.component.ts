@@ -7,7 +7,7 @@ import { Item } from '~/app/shared/components/menu-button/item';
 import { UserModel } from '../shared/models/user.model';
 import { UsersService } from '../shared/services/users.service';
 import { TodayService } from './today.service';
-import { map } from 'rxjs';
+import { concat, map } from 'rxjs';
 import { ConfigService } from '../shared/services/config.service';
 import { Router } from '@angular/router';
 import { WifiConfigComponent } from '../wifi-config/wifi-config.component';
@@ -140,26 +140,14 @@ export class TodayComponent implements OnInit {
     this.cdr.detectChanges();
 
     const userId = this.user?.userId || 0;
-    let pending = 2;
-    const onDone = () => {
-      pending -= 1;
-      if (pending <= 0) {
-        this.isSyncing = false;
-        onFinished?.();
-      }
-      this.cdr.detectChanges();
-    };
 
     this.hasLunch();
     this.getTechStatus();
 
-    // starred jobs implemented
-    // getWorkOrder implemented
-    this.todayService.getWorkOrders(userId).pipe(
-      map(res => {
-        return res.map(job => {
+    const workOrders$ = this.todayService.getWorkOrders(userId).pipe(
+      map((res) =>
+        res.map((job) => {
           const surveySent = this.configService.getSurveySent(job.number);
-          // console.log('SURVEYSENT OF EACH JOB', surveySent)
 
           const isStarred = this.configService.isJobStarred(job.number);
           if (isStarred) {
@@ -168,37 +156,57 @@ export class TodayComponent implements OnInit {
           return {
             ...job,
             sms_survey_sent: surveySent ? true : false,
-            isStarred
+            isStarred,
           };
-        });
-      })
-    ).subscribe({
-      next: (res) => {
-        console.log('ORDERS1', res);
+        })
+      ),
+      map((jobs) => ({ kind: 'workOrders' as const, payload: jobs }))
+    );
 
-        this.originalJobList = new ObservableArray(res);
-        this.todayJobsCountService.setCount(this.originalJobList.length);
-        if (!this.starredJobList) {
-          this.starredJobList = new ObservableArray([]);
+    const weeklyTotal$ = this.todayService
+      .getTotalCurrentWeek(userId)
+      .pipe(map((weekly) => ({ kind: 'weeklyTotal' as const, payload: weekly })));
+
+    concat(workOrders$, weeklyTotal$).subscribe({
+      next: (result) => {
+        switch (result.kind) {
+          case 'workOrders':
+            this.originalJobList = new ObservableArray(result.payload);
+            this.todayJobsCountService.setCount(this.originalJobList.length);
+            if (!this.starredJobList) {
+              this.starredJobList = new ObservableArray([]);
+            }
+
+            this.rebuildStarredList();
+            this.jobList.splice(0);
+            const listToShow = this.showStarred ? this.starredJobList : this.originalJobList;
+            this.jobList.push(...listToShow);
+
+            this.todayTotal = result.payload
+              .filter((job) => job?.status === 'CLOSED')
+              .reduce((total, job) => total + Number(job?.amount || 0), 0);
+            this.units = result.payload.reduce((total, job) => total + Number(job?.jobUnits || 0), 0);
+            break;
+          case 'weeklyTotal':
+            this.weeklyTotal = Number(result.payload?.total || result.payload || 0);
+            break;
+          default:
+            break;
         }
-
-        this.rebuildStarredList();
-        // Inicializa como ObservableArray
-        this.jobList.splice(0);     // limpia
-        const listToShow = this.showStarred ? this.starredJobList : this.originalJobList;
-        this.jobList.push(...listToShow);  // agrega nuevos elementos
-
-        // const jobs = Array.isArray(res?.jobs) ? res.jobs : (Array.isArray(res) ? res : []);
-        // this.jobList = new ObservableArray(jobs);
-        this.todayTotal = res
-          .filter((job) => job?.status === 'CLOSED')
-          .reduce((total, job) => total + Number(job?.amount || 0), 0);
-        this.units = res.reduce((total, job) => total + Number(job?.jobUnits || 0), 0);
-        onDone();
-      }, error: (error) => {
+      },
+      complete: () => {
+        this.isSyncing = false;
+        onFinished?.();
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
         console.log(error);
         this.todayJobsCountService.setCount(0);
-        onDone()
+        this.isSyncing = false;
+        onFinished?.();
+        this.cdr.detectChanges();
+      },
+    });
 
         // new Toasty({ text: error })
         //   .setToastDuration(ToastDuration.LONG)
@@ -206,9 +214,6 @@ export class TodayComponent implements OnInit {
         //   .setTextColor(new Color("white"))
         //   .setBackgroundColor(new Color("gray"))
         //   .show();
-      }
-    })
-
     // this.todayService.findTodayByUser(userId).subscribe({
     //   next: (res) => {
     //     console.log(res.jobs);
@@ -224,13 +229,6 @@ export class TodayComponent implements OnInit {
     //   error: () => onDone(),
     // });
 
-    this.todayService.getTotalCurrentWeek(userId).subscribe({
-      next: (res) => {
-        this.weeklyTotal = Number(res?.total || res || 0);
-        onDone();
-      },
-      error: () => onDone(),
-    });
   }
 
   private rebuildStarredList() {
@@ -591,6 +589,9 @@ export class TodayComponent implements OnInit {
             break;
           case 'ONJOB':
             this.mainMenuIconName = 'wrench.adjustable.fill';
+            break;
+          case 'WRAPUP':
+            this.mainMenuIconName = 'flag.fill';
             break;
         }
         this.cdr.detectChanges();
