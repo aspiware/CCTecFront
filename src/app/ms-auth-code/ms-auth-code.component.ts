@@ -12,21 +12,18 @@ import { LoginService } from '../login/login.service';
   styleUrl: './ms-auth-code.component.scss',
 })
 export class MsAuthCodeComponent {
-  private _codeText = '';
-  public get codeText(): string {
-    return this._codeText;
-  }
-  public set codeText(value: string) {
-    const digitsOnly = String(value ?? '').replace(/\D+/g, '').slice(0, 6);
-    this._codeText = digitsOnly;
-    if (String(this.form.controls.code.value ?? '') !== digitsOnly) {
-      this.form.controls.code.setValue(digitsOnly, { emitEvent: false });
-    }
-  }
+  public readonly digitIndexes = [0, 1, 2, 3, 4, 5];
+  public codeDigits = ['', '', '', '', '', ''];
+  public codeTouched = false;
   public form = new FormGroup({
     code: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
   });
-  private originalIosShouldChange?: (textField: UITextField, range: NSRange, replacementString: string) => boolean;
+  private digitFields: any[] = [];
+  private originalIosShouldChange = new Map<any, (textField: UITextField, range: NSRange, replacementString: string) => boolean>();
+
+  public get codeValue(): string {
+    return this.codeDigits.join('');
+  }
 
   constructor(private modalParams: ModalDialogParams, private loginService: LoginService) { }
 
@@ -35,18 +32,13 @@ export class MsAuthCodeComponent {
   }
 
   public verify(): void {
-    const sanitized = String(this.codeText ?? '').replace(/\D+/g, '').slice(0, 6);
-    if (sanitized !== this.form.controls.code.value) {
-      this.form.controls.code.setValue(sanitized);
-    }
-    this.codeText = sanitized;
+    this.codeTouched = true;
+    const code = this.codeValue.replace(/\D+/g, '').slice(0, 6);
+    this.form.controls.code.setValue(code, { emitEvent: false });
 
-    if (!this.form.valid || !sanitized) {
-      this.form.markAllAsTouched();
+    if (code.length !== 6) {
       return;
     }
-
-    const code = sanitized.trim();
 
     this.loginService.validateCode(this.modalParams.context.data, code).subscribe({
       next: res => {
@@ -58,14 +50,52 @@ export class MsAuthCodeComponent {
     });
   }
 
-  public onCodeFieldLoaded(args: any): void {
-    const field = args?.object as any;
+  public onDigitLoaded(index: number, args: any): void {
+    this.digitFields[index] = args?.object;
+    this.attachIosDigitFilter(args?.object);
+  }
+
+  public onDigitTextChange(index: number, args: any): void {
+    const raw = String(args?.object?.text ?? args?.value ?? '');
+    const digitsOnly = raw.replace(/\D+/g, '');
+    const digit = digitsOnly ? digitsOnly.charAt(digitsOnly.length - 1) : '';
+
+    if (args?.object && String(args.object.text ?? '') !== digit) {
+      args.object.text = digit;
+    }
+
+    if (this.codeDigits[index] !== digit) {
+      this.codeDigits[index] = digit;
+      this.form.controls.code.setValue(this.codeValue, { emitEvent: false });
+    }
+
+    if (digit && index < this.digitIndexes.length - 1) {
+      setTimeout(() => this.focusDigit(index + 1), 0);
+    }
+  }
+
+  public onDigitReturn(index: number): void {
+    if (index < this.digitIndexes.length - 1) {
+      this.focusDigit(index + 1);
+      return;
+    }
+    this.verify();
+  }
+
+  private focusDigit(index: number): void {
+    this.digitFields[index]?.focus?.();
+  }
+
+  private attachIosDigitFilter(field: any): void {
     if (!field || !field.ios || typeof field.textFieldShouldChangeCharactersInRangeReplacementString !== 'function') {
       return;
     }
 
-    if (!this.originalIosShouldChange) {
-      this.originalIosShouldChange = field.textFieldShouldChangeCharactersInRangeReplacementString.bind(field);
+    if (!this.originalIosShouldChange.has(field)) {
+      this.originalIosShouldChange.set(
+        field,
+        field.textFieldShouldChangeCharactersInRangeReplacementString.bind(field)
+      );
     }
 
     field.textFieldShouldChangeCharactersInRangeReplacementString = (
@@ -78,13 +108,12 @@ export class MsAuthCodeComponent {
       const nextText = String(
         nsCurrent.stringByReplacingCharactersInRangeWithString(range, replacementString || '')
       );
-      if (!/^\d{0,6}$/.test(nextText)) {
+      if (!/^\d{0,1}$/.test(nextText)) {
         return false;
       }
 
-      return this.originalIosShouldChange
-        ? this.originalIosShouldChange(textField, range, replacementString)
-        : true;
+      const original = this.originalIosShouldChange.get(field);
+      return original ? original(textField, range, replacementString) : true;
     };
   }
 

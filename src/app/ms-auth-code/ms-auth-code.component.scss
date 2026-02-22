@@ -85,44 +85,36 @@
   color: #f2f2f79a;
 }
 
-.input-shell {
+.digits-row {
   margin-left: 15;
   margin-right: 15;
   margin-top: 8;
   margin-bottom: 6;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+TextField.code-digit {
+  width: 44;
   height: 44;
-  border-radius: 50%;
+  border-radius: 12;
   border-width: 1;
-}
-
-TextField.custom-tf-inline {
-  height: 44;
-  font-size: 17;
-  padding-left: 12;
-  padding-right: 12;
+  font-size: 20;
+  font-weight: 600;
   margin: 0;
-  border-width: 0;
-  background-color: transparent;
+  padding: 0;
 }
 
-.ns-light .input-shell {
+.ns-light TextField.code-digit {
   background-color: #ffffff;
   border-color: #d1d1d6;
+  color: #000000;
 }
 
-.ns-dark .input-shell {
+.ns-dark TextField.code-digit {
   background-color: #2c2c2e;
   border-color: #48484a;
-}
-
-.ns-light TextField.custom-tf-inline {
-  color: #000000;
-  placeholder-color: #8e8e93;
-}
-
-.ns-dark TextField.custom-tf-inline {
   color: #ffffff;
-  placeholder-color: #aeaeb2;
 }
 
 .required-label {
