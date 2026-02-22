@@ -128,6 +128,18 @@ image {
   color: white;
 }
 
+.ns-light .logo {
+  font-size: 40;
+  text-shadow: 0 4px 4px rgba(0, 0, 0, 0.603);
+  color: rgb(0, 0, 0);
+}
+
+.ns-dark .logo {
+  font-size: 40;
+  text-shadow: 0 4px 4px rgba(0, 0, 0, 0.603);
+  color: white;
+}
+
 .logo:active {
   font-size: 40;
   text-shadow: 0 4px 4px rgba(0, 0, 0, 0.603);
