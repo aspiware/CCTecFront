@@ -1,4 +1,4 @@
-import { Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit, ViewContainerRef } from '@angular/core';
+import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit, ViewContainerRef } from '@angular/core';
 import { ModalDialogService, NativeScriptCommonModule, NativeScriptFormsModule, RouterExtensions } from '@nativescript/angular';
 import { ActivatedRoute } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -42,7 +42,8 @@ export class LoginComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private page: Page,
     private vcRef: ViewContainerRef,
-    private modalService: ModalDialogService
+    private modalService: ModalDialogService,
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
@@ -174,7 +175,13 @@ export class LoginComponent implements OnInit, OnDestroy {
             console.log(error);
           }
         });
+      } else {
+        this.isBusy = false;
+        this.cdr.detectChanges();
       }
+    }).catch(() => {
+      this.isBusy = false;
+      this.cdr.detectChanges();
     });
   }
 
