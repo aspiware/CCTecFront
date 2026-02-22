@@ -1,7 +1,8 @@
-import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
+import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ModalDialogParams, NativeScriptCommonModule, NativeScriptFormsModule } from '@nativescript/angular';
-import { Application, isAndroid, isIOS } from '@nativescript/core';
+import { Application, alert, isAndroid, isIOS } from '@nativescript/core';
+import { finalize } from 'rxjs/operators';
 import { LoginService } from '../login/login.service';
 
 @Component({
@@ -17,19 +18,28 @@ export class MsAuthCodeComponent {
   public codeTouched = false;
   public codeText = '';
   public isCodeFocused = false;
+  public isVerifying = false;
   public form = new FormGroup({
     code: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
   });
   private hiddenCodeField: any;
   private originalIosShouldChange?: (textField: UITextField, range: NSRange, replacementString: string) => boolean;
 
-  constructor(private modalParams: ModalDialogParams, private loginService: LoginService) { }
+  constructor(
+    private modalParams: ModalDialogParams,
+    private loginService: LoginService,
+    private cdr: ChangeDetectorRef
+  ) { }
 
   public close(): void {
     this.modalParams.closeCallback(null);
   }
 
   public verify(): void {
+    if (this.isVerifying) {
+      return;
+    }
+
     this.codeTouched = true;
     const code = String(this.codeText || '').replace(/\D+/g, '').slice(0, 6);
     this.form.controls.code.setValue(code, { emitEvent: false });
@@ -38,14 +48,33 @@ export class MsAuthCodeComponent {
       return;
     }
 
-    this.loginService.validateCode(this.modalParams.context.data, code).subscribe({
-      next: res => {
-        console.log(res);
-      },
-      error: error => {
-        console.log(error);
-      }
-    });
+    this.isVerifying = true;
+    this.loginService
+      .validateCode(this.modalParams.context.data, code)
+      .pipe(
+        finalize(() => {
+          this.isVerifying = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (res) => {
+          console.log(res);
+        },
+        error: async (error) => {
+          console.log('validateCode-ERROR', error);
+          const message =
+            error?.error?.response ||
+            error?.error?.message ||
+            error?.message ||
+            'Invalid verification code.';
+          await alert({
+            title: 'Verification',
+            message: String(message),
+            okButtonText: 'OK',
+          });
+        },
+      });
   }
 
   public getDigit(index: number): string {
