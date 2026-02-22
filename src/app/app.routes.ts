@@ -8,6 +8,7 @@ import { CustomerConsentComponent } from './customer-consent/customer-consent.co
 import { SubscriptionComponent } from './subscription/subscription.component';
 import { subscriptionGuard } from './subscription/subscription.guard';
 import { LoginComponent } from './login/login.component';
+import { authGuard } from './login/auth.guard';
 
 export const routes: Routes = [
   {
@@ -25,7 +26,7 @@ export const routes: Routes = [
   },
   {
     path: 'tabs',
-    canActivate: [subscriptionGuard],
+    canActivate: [authGuard, subscriptionGuard],
     component: TabsContainerComponent,
     children: [
       {

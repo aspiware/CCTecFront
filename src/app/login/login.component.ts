@@ -1,5 +1,6 @@
 import { Component, NO_ERRORS_SCHEMA, OnInit } from '@angular/core';
 import { NativeScriptCommonModule, NativeScriptFormsModule, RouterExtensions } from '@nativescript/angular';
+import { ActivatedRoute } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { LoginService } from './login.service';
 import { getString, setBoolean, setNumber, setString } from '@nativescript/core/application-settings';
@@ -24,16 +25,19 @@ export class LoginComponent implements OnInit {
     authMethodId: new FormControl(false, { nonNullable: true }),
   });
   public isBusy = false;
+  private redirectTo = '/tabs';
 
   constructor(
     private loginService: LoginService,
     private usersService: UsersService,
     private configService: ConfigService,
     private routerExtensions: RouterExtensions,
+    private route: ActivatedRoute,
     private page: Page
   ) {}
 
   ngOnInit(): void {
+    this.redirectTo = this.route.snapshot.queryParamMap.get('redirect') || '/tabs';
     this.page.backgroundImage = 'res://login_bg';
     this.page.style.backgroundSize = 'cover';
     this.page.style.backgroundRepeat = 'no-repeat';
@@ -74,7 +78,7 @@ export class LoginComponent implements OnInit {
         setBoolean('isLoggedIn', true);
         this.configService.login();
         this.isBusy = false;
-        this.routerExtensions.navigate(['/tabs'], { clearHistory: true });
+        this.routerExtensions.navigate([this.redirectTo], { clearHistory: true });
       },
       error: async (error) => {
         this.isBusy = false;
