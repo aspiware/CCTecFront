@@ -3,10 +3,10 @@
     <StackLayout row="0" col="0" class="backdrop" (tap)="closeModal()"></StackLayout>
 
     <GridLayout row="0" col="0" rows="auto,*" class="modal-card">
-      <GridLayout row="0" columns="*,auto" class="header">
+      <GridLayout row="0" columns="*,auto" class="header header-fixed">
         <Label col="0" text="WiFi Config" class="title modal-title-text"></Label>
 
-        <StackLayout col="1" style="">
+        <StackLayout col="1">
           <MenuButton [useSFIcon]="true" style="background-color: transparent; height: 24; width: 35;"
             [sfIconName]="'ellipsis.circle'" [showSpinner]="viewReady && isLoading" #menuStatus [options]="mainMenuOptions"
             (selected)="onSelectedMainMenu($event, menuStatus)">
