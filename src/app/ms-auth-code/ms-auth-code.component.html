@@ -34,13 +34,19 @@
 
         <GridLayout columns="*,12,*" class="actions-row">
           <Button col="0" text="Cancel" class="btn-secondary" (tap)="close()"></Button>
-          <Button
-            col="2"
-            text="Verify"
-            class="btn-primary"
-            [isEnabled]="codeText.length === 6"
-            (tap)="verify()">
-          </Button>
+          <GridLayout col="2" class="verify-btn-wrap">
+            <Button
+              [text]="isVerifying ? '' : 'Verify'"
+              class="btn-primary"
+              [isEnabled]="codeText.length === 6 && !isVerifying"
+              (tap)="verify()">
+            </Button>
+            <ActivityIndicator
+              [busy]="isVerifying"
+              [visibility]="isVerifying ? 'visible' : 'collapsed'"
+              class="verify-spinner-overlay">
+            </ActivityIndicator>
+          </GridLayout>
         </GridLayout>
       </StackLayout>
     </GridLayout>

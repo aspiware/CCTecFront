@@ -41,7 +41,6 @@ export class LoginService {
   }
 
   public validateCode(response, code): Observable<any> {
-    console.log('CODEEE', code)
     return this.httpClient.post<void>(
       `${this.configService.getUrlBase()}/auth/validateCode`,
       { ...response, code }
@@ -49,7 +48,6 @@ export class LoginService {
   }
 
   public validateCodeXM(response, code): Observable<any> {
-    console.log('CODEEE', code)
     return this.httpClient.post<void>(
       `${this.configService.getUrlBase()}/auth/validateCodeXM`,
       { ...response, code }

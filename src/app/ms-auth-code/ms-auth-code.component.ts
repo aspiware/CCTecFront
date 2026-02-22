@@ -60,9 +60,10 @@ export class MsAuthCodeComponent {
       .subscribe({
         next: (res) => {
           console.log(res);
+          this.modalParams.closeCallback(res);
         },
         error: async (error) => {
-          console.log('validateCode-ERROR', error);
+          console.log('validateCode-ERROR > ' + code, error);
           const message =
             error?.error?.response ||
             error?.error?.message ||
