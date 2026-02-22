@@ -1,0 +1,23 @@
+<StackLayout class="code-modal" [formGroup]="form">
+  <Label text="Microsoft Authenticator" class="title"></Label>
+  <Label text="Enter the verification code" class="subtitle"></Label>
+
+  <TextField
+    class="code-input"
+    formControlName="code"
+    hint="6-digit code"
+    keyboardType="number"
+    autocorrect="false"
+    autocapitalizationType="none">
+  </TextField>
+
+  <Label
+    class="error"
+    text="{{ form.controls.code.errors?.required ? 'Code is required.' : '' }}">
+  </Label>
+
+  <GridLayout columns="*,*" class="actions">
+    <Button col="0" text="Cancel" class="btn btn-secondary" (tap)="close()"></Button>
+    <Button col="1" text="Verify" class="btn btn-primary" (tap)="verify()"></Button>
+  </GridLayout>
+</StackLayout>

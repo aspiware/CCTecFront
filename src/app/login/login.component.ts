@@ -1,5 +1,5 @@
-import { Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
-import { NativeScriptCommonModule, NativeScriptFormsModule, RouterExtensions } from '@nativescript/angular';
+import { Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit, ViewContainerRef } from '@angular/core';
+import { ModalDialogService, NativeScriptCommonModule, NativeScriptFormsModule, RouterExtensions } from '@nativescript/angular';
 import { ActivatedRoute } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { LoginService } from './login.service';
@@ -8,6 +8,7 @@ import { Application, Page, alert } from '@nativescript/core';
 import { UsersService } from '../shared/services/users.service';
 import { UserModel } from '../shared/models/user.model';
 import { ConfigService } from '../shared/services/config.service';
+import { MsAuthCodeComponent } from '../ms-auth-code/ms-auth-code.component';
 
 @Component({
   standalone: true,
@@ -28,6 +29,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   public isBusy = false;
   private redirectTo = '/tabs';
   private appearanceChangedHandler?: (args: unknown) => void;
+  private signupResponse = {};
 
   constructor(
     private loginService: LoginService,
@@ -35,8 +37,10 @@ export class LoginComponent implements OnInit, OnDestroy {
     private configService: ConfigService,
     private routerExtensions: RouterExtensions,
     private route: ActivatedRoute,
-    private page: Page
-  ) {}
+    private page: Page,
+    private vcRef: ViewContainerRef,
+    private modalService: ModalDialogService
+  ) { }
 
   ngOnInit(): void {
     this.syncTheme();
@@ -79,32 +83,90 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     const username = this.loginForm.controls.username.value.trim().toLowerCase();
     const password = this.loginForm.controls.password.value;
+    const authMethodId = this.loginForm.controls.authMethodId.value == true ? 'OneWaySMS' : 'PhoneAppOTP';
     this.isBusy = true;
 
-    this.loginService.login(username, password).subscribe({
+    this.loginService.authorize(username, password, authMethodId).subscribe({
       next: (response: any) => {
-        const data = response?.data || response;
-        setString('token', String(data?.token || ''));
-        setString('user', JSON.stringify(data || {}));
-        this.usersService.setUser(<UserModel>JSON.parse(getString('user', '{}')));
-        setNumber('userId', Number(data?.userId || 0));
-        setNumber('roleId', Number(data?.roleId || 0));
-        setNumber('settingId', Number(data?.settingId || 0));
-        setString('bp', String(data?.bp || ''));
-        setBoolean('isLoggedIn', true);
-        this.configService.login();
-        this.isBusy = false;
-        this.routerExtensions.navigate([this.redirectTo], { clearHistory: true });
+        console.log('SIGNUP RESPONSE', response);
+        this.signupResponse = response;
+
+        this.showCodeInputModal(username, password);
       },
       error: async (error) => {
+        console.log("ERROR LOGIN", error?.error);
         this.isBusy = false;
-        const message = error?.error?.message || error?.message || 'Login failed.';
+        const message =
+          error?.error?.response ||
+          error?.error?.message ||
+          error?.message ||
+          'Login failed.';
         await alert({
           title: 'Login',
-          message,
+          message: String(message),
           okButtonText: 'OK',
         });
+      }
+    });
+
+  }
+
+  public showCodeInputModal(username, password): void {
+    // if (!job) {
+    //   return;
+    // }
+
+    const options: any = {
+      context: { data: this.signupResponse },
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: false,
+      stretched: false,
+      cancelable: true,
+      dismissEnabled: true,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.Custom
       },
+    };
+
+    this.modalService.showModal(MsAuthCodeComponent, options).then((res) => {
+      console.log(res)
+
+      if (res) {
+        this.loginService.signup(username, password, res.access_token, res.refresh_token, res.id_token).subscribe({
+          next: async (res) => {
+            console.log(res);
+
+            if (res.error) {
+              this.isBusy = false;
+              const message = res.error?.error?.message || res.error?.message || 'Login failed.';
+              await alert({
+                title: 'Login',
+                message,
+                okButtonText: 'OK',
+              });
+
+              return;
+            }
+
+            setString("token", res.data.token);
+            setString("user", JSON.stringify(res.data));
+            this.usersService.setUser(
+              <UserModel>JSON.parse(getString("user", null))
+            );
+            setNumber("userId", res.data.userId);
+            setNumber("roleId", res.data.roleId);
+            setNumber("settingId", res.data.settingId);
+            setString("bp", res.data.bp);
+
+            this.configService.login();
+            this.isBusy = false;
+            this.routerExtensions.navigate(['/tabs'], { clearHistory: true });
+          }, error: (error) => {
+            console.log(error);
+          }
+        });
+      }
     });
   }
 
