@@ -140,8 +140,12 @@ TextField.custom-tf-inline {
 
 .btn-primary,
 .btn-secondary {
-  height: 40;
-  border-radius: 10;
+  height: 44;
+  border-radius: 22;
+  font-size: 17;
+  font-weight: 600;
+  text-transform: none;
+  border-width: 0;
 }
 
 .btn-primary {
@@ -152,9 +156,11 @@ TextField.custom-tf-inline {
 .btn-secondary {
   background-color: #e9e9ee;
   color: #1f1f21;
+  opacity: 1;
 }
 
 .ns-dark .btn-secondary {
   background-color: #3a3a3c;
   color: #f2f2f7;
+  opacity: 1;
 }

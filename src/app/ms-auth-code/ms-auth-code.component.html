@@ -3,9 +3,8 @@
     <StackLayout row="0" col="0" class="backdrop" (tap)="close()"></StackLayout>
 
     <GridLayout row="0" col="0" rows="auto,auto" class="modal-card">
-      <GridLayout row="0" columns="*,auto" class="header header-fixed">
+      <GridLayout row="0" columns="*" class="header header-fixed">
         <Label col="0" text="Microsoft Authenticator" class="title modal-title-text"></Label>
-        <Button col="1" text="Close" class="close-btn" (tap)="close()"></Button>
       </GridLayout>
 
       <StackLayout row="1" class="content" [formGroup]="form">
@@ -28,9 +27,9 @@
           text="{{ form.controls.code.errors?.required ? 'Code is required.' : '' }}">
         </Label>
 
-        <GridLayout columns="*,*" class="actions-row">
+        <GridLayout columns="*,12,*" class="actions-row">
           <Button col="0" text="Cancel" class="btn-secondary" (tap)="close()"></Button>
-          <Button col="1" text="Verify" class="btn-primary" (tap)="verify()"></Button>
+          <Button col="2" text="Verify" class="btn-primary" (tap)="verify()"></Button>
         </GridLayout>
       </StackLayout>
     </GridLayout>
