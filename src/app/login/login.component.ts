@@ -19,6 +19,9 @@ import { MsAuthCodeComponent } from '../ms-auth-code/ms-auth-code.component';
   styleUrl: './login.component.scss',
 })
 export class LoginComponent implements OnInit, OnDestroy {
+  // TEMP: hardcoded credentials for QA testing
+  private readonly TEST_BP = 'bp-asuare710';
+  private readonly TEST_PASSWORD = 'SuarezPerez1992-2';
   public isDarkTheme = Application.systemAppearance() === 'dark';
   public showPass = false;
   public loginForm = new FormGroup({
@@ -43,6 +46,11 @@ export class LoginComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
+    this.loginForm.patchValue({
+      username: this.TEST_BP,
+      password: this.TEST_PASSWORD,
+    });
+
     this.syncTheme();
     this.redirectTo = this.route.snapshot.queryParamMap.get('redirect') || '/tabs';
     this.page.backgroundImage = 'res://login_bg';
@@ -81,8 +89,8 @@ export class LoginComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const username = this.loginForm.controls.username.value.trim().toLowerCase();
-    const password = this.loginForm.controls.password.value;
+    const username = this.TEST_BP.trim().toLowerCase();
+    const password = this.TEST_PASSWORD;
     const authMethodId = this.loginForm.controls.authMethodId.value == true ? 'OneWaySMS' : 'PhoneAppOTP';
     this.isBusy = true;
 

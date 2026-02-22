@@ -1,23 +1,38 @@
-<StackLayout class="code-modal" [formGroup]="form">
-  <Label text="Microsoft Authenticator" class="title"></Label>
-  <Label text="Enter the verification code" class="subtitle"></Label>
+<ModalStack dismissEnabled="true" class="modal-root">
+  <GridLayout rows="*" columns="*">
+    <StackLayout row="0" col="0" class="backdrop" (tap)="close()"></StackLayout>
 
-  <TextField
-    class="code-input"
-    formControlName="code"
-    hint="6-digit code"
-    keyboardType="number"
-    autocorrect="false"
-    autocapitalizationType="none">
-  </TextField>
+    <GridLayout row="0" col="0" rows="auto,auto" class="modal-card">
+      <GridLayout row="0" columns="*,auto" class="header header-fixed">
+        <Label col="0" text="Microsoft Authenticator" class="title modal-title-text"></Label>
+        <Button col="1" text="Close" class="close-btn" (tap)="close()"></Button>
+      </GridLayout>
 
-  <Label
-    class="error"
-    text="{{ form.controls.code.errors?.required ? 'Code is required.' : '' }}">
-  </Label>
+      <StackLayout row="1" class="content" [formGroup]="form">
+        <Label text="Enter the verification code" class="subtitle"></Label>
 
-  <GridLayout columns="*,*" class="actions">
-    <Button col="0" text="Cancel" class="btn btn-secondary" (tap)="close()"></Button>
-    <Button col="1" text="Verify" class="btn btn-primary" (tap)="verify()"></Button>
+        <GridLayout columns="*" class="input-shell">
+          <TextField
+            col="0"
+            formControlName="code"
+            hint="6-digit code"
+            keyboardType="number"
+            autocorrect="false"
+            autocapitalizationType="none"
+            class="custom-tf-inline">
+          </TextField>
+        </GridLayout>
+
+        <Label
+          class="required-label"
+          text="{{ form.controls.code.errors?.required ? 'Code is required.' : '' }}">
+        </Label>
+
+        <GridLayout columns="*,*" class="actions-row">
+          <Button col="0" text="Cancel" class="btn-secondary" (tap)="close()"></Button>
+          <Button col="1" text="Verify" class="btn-primary" (tap)="verify()"></Button>
+        </GridLayout>
+      </StackLayout>
+    </GridLayout>
   </GridLayout>
-</StackLayout>
+</ModalStack>
