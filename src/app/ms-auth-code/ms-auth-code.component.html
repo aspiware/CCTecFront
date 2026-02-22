@@ -10,7 +10,7 @@
       <StackLayout row="1" class="content" [formGroup]="form">
         <Label text="Enter the verification code" class="subtitle"></Label>
 
-        <FlexboxLayout class="digits-row" (tap)="focusCodeInput()">
+        <FlexboxLayout class="digits-row" (tap)="focusCodeInput()" (longPress)="pasteCodeFromClipboard()">
           <Label
             *ngFor="let i of digitIndexes"
             [text]="getDigitDisplay(i)"

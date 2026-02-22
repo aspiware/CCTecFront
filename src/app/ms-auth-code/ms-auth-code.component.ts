@@ -1,6 +1,7 @@
 import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ModalDialogParams, NativeScriptCommonModule, NativeScriptFormsModule } from '@nativescript/angular';
+import { Application, isAndroid, isIOS } from '@nativescript/core';
 import { LoginService } from '../login/login.service';
 
 @Component({
@@ -66,6 +67,46 @@ export class MsAuthCodeComponent {
 
   public focusCodeInput(): void {
     this.hiddenCodeField?.focus?.();
+  }
+
+  public async pasteCodeFromClipboard(): Promise<void> {
+    try {
+      const clipboardText = this.readClipboardText();
+      const digitsOnly = String(clipboardText ?? '').replace(/\D+/g, '').slice(0, 6);
+      if (!digitsOnly) {
+        return;
+      }
+
+      this.codeText = digitsOnly;
+      this.form.controls.code.setValue(this.codeText, { emitEvent: false });
+      this.codeTouched = true;
+      this.hiddenCodeField?.focus?.();
+    } catch (error) {
+      console.log('[MsAuthCode] Clipboard paste error:', error);
+    }
+  }
+
+  private readClipboardText(): string {
+    if (isIOS) {
+      return String(UIPasteboard.generalPasteboard.string || '');
+    }
+
+    if (isAndroid) {
+      const context = Application.android.context;
+      const clipboard = context?.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager;
+      if (!clipboard?.hasPrimaryClip()) {
+        return '';
+      }
+
+      const clip = clipboard.getPrimaryClip();
+      if (!clip || clip.getItemCount() < 1) {
+        return '';
+      }
+
+      return String(clip.getItemAt(0).coerceToText(context) || '');
+    }
+
+    return '';
   }
 
   public onHiddenCodeLoaded(args: any): void {
