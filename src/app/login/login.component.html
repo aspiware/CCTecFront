@@ -54,12 +54,19 @@
       text="{{loginForm.controls.password.errors?.required ? 'Please enter the password' : ''}}">
     </Label>
 
-    <Button
-      [isEnabled]="loginForm.valid && !isBusy"
-      text="Log in"
-      class="ios-login-btn"
-      [class.login-btn-disabled]="!(loginForm.valid && !isBusy)"
-      (tap)="login()">
-    </Button>
+    <GridLayout class="login-btn-wrap">
+      <Button
+        [isEnabled]="loginForm.valid && !isBusy"
+        [text]="isBusy ? '' : 'Log in'"
+        class="ios-login-btn"
+        [class.login-btn-disabled]="!(loginForm.valid && !isBusy)"
+        (tap)="login()">
+      </Button>
+      <ActivityIndicator
+        [busy]="isBusy"
+        [visibility]="isBusy ? 'visible' : 'collapsed'"
+        class="login-spinner-overlay">
+      </ActivityIndicator>
+    </GridLayout>
   </StackLayout>
 </ScrollView>

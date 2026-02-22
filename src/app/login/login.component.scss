@@ -103,11 +103,19 @@ TextField.custom-tf-inline {
   font-size: 12;
 }
 
-.ios-login-btn {
+.login-btn-wrap {
   margin-top: 24;
-  height: 44;
   width: 65%;
+  height: 44;
   horizontal-align: center;
+}
+
+.ios-login-btn {
+  margin-top: 0;
+  height: 44;
+  width: 100%;
+  horizontal-align: center;
+  vertical-align: middle;
   border-radius: 22;
   border-width: 0;
   background-color: #0a84ff;
@@ -115,6 +123,8 @@ TextField.custom-tf-inline {
   font-size: 17;
   font-weight: 600;
   text-transform: none;
+  padding-left: 14;
+  padding-right: 14;
 }
 
 .ios-login-btn.login-btn-disabled {
@@ -135,6 +145,14 @@ TextField.custom-tf-inline {
 .ns-ios .ios-login-btn:disabled {
   background-color: rgba(10, 132, 255, 0.38);
   color: rgba(255, 255, 255, 0.95);
+}
+
+.login-spinner-overlay {
+  width: 16;
+  height: 16;
+  color: #ffffff;
+  horizontal-align: center;
+  vertical-align: middle;
 }
 
 .signup-label {
