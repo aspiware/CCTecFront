@@ -41,7 +41,7 @@ export class CustomerInfoComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.userId = Number(this.usersService.getUser()?.userId || 0);
+    this.userId = Number(this.usersService.getUser()?.userId || 15);
     if (!this.userId) {
       return;
     }
@@ -246,7 +246,7 @@ export class CustomerInfoComponent implements OnInit {
       () => {
         this.openSmsComposer(
           recipientsList,
-          this.settings?.englishAvailabilityText || 'Hi, are you available for your appointment?'
+          this.settings?.englishAvailabilityText || 'Hi, this is Xfinity tech, are you available for your appointment?'
         );
         this.isCopyMenuOpen = false;
       }
@@ -260,7 +260,7 @@ export class CustomerInfoComponent implements OnInit {
       () => {
         this.openSmsComposer(
           recipientsList,
-          this.settings?.spanishAvailabilityText || 'Hola, esta disponible para su cita?'
+          this.settings?.spanishAvailabilityText || 'Hola, soy el tecnico de Xfinity, esta disponible para su cita?'
         );
         this.isCopyMenuOpen = false;
       }
