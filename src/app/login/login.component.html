@@ -58,6 +58,7 @@
       [isEnabled]="loginForm.valid && !isBusy"
       text="Log in"
       class="ios-login-btn"
+      [class.login-btn-disabled]="!(loginForm.valid && !isBusy)"
       (tap)="login()">
     </Button>
   </StackLayout>
