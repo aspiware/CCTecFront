@@ -13,11 +13,14 @@
         <GridLayout columns="*" class="input-shell">
           <TextField
             col="0"
-            formControlName="code"
+            [(ngModel)]="codeText"
+            [ngModelOptions]="{ standalone: true }"
             hint="6-digit code"
             keyboardType="number"
+            maxLength="6"
             autocorrect="false"
             autocapitalizationType="none"
+            (loaded)="onCodeFieldLoaded($event)"
             class="custom-tf-inline">
           </TextField>
         </GridLayout>
