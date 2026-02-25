@@ -15,6 +15,7 @@ import { TodayService } from '../today/today.service';
 export class EditJobComponent implements OnInit {
   public job: any;
   public notes = '';
+  public isKeyboardOpen = false;
   public isLoadingTypes = false;
   public emptyMessage = '';
   public jobTypes: any[] = [];
@@ -56,6 +57,16 @@ export class EditJobComponent implements OnInit {
 
   public onNotesChanged(value: string): void {
     this.notes = value || '';
+  }
+
+  public onNotesFocus(): void {
+    this.isKeyboardOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  public onNotesBlur(): void {
+    this.isKeyboardOpen = false;
+    this.cdr.detectChanges();
   }
 
   private loadJobTypes(): void {
