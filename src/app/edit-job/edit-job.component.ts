@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnInit } from '@angular/core';
 import { ModalDialogParams, NativeScriptCommonModule } from '@nativescript/angular';
 import { Dialogs } from '@nativescript/core';
+import { SegmentedBarItem } from '@nativescript/core';
 import { Item } from '../shared/components/menu-button/item';
 import { MenuEvent } from '../shared/components/menu-button';
 import { TodayService } from '../today/today.service';
@@ -24,6 +25,8 @@ export class EditJobComponent implements OnInit {
   public jobTypes: any[] = [];
   public jobTypeLabels: string[] = ['Loading job types...'];
   public selectedTypeIndex = 0;
+  public segmentItems: SegmentedBarItem[] = [];
+  public selectedSegmentIndex = 0;
   public mainMenu: Item = {
     name: 'Main Menu',
     options: [
@@ -48,6 +51,11 @@ export class EditJobComponent implements OnInit {
   ) {
     this.job = this.modalParams.context;
     this.notes = this.job?.notes || '';
+    this.segmentItems = ['Residential', 'XH', 'Business'].map((label) => {
+      const item = new SegmentedBarItem();
+      item.title = label;
+      return item;
+    });
   }
 
   ngOnInit(): void {
@@ -80,6 +88,14 @@ export class EditJobComponent implements OnInit {
     this.selectedTypeIndex = index;
   }
 
+  public onSegmentChanged(event: any): void {
+    const index = Number(event?.value);
+    if (Number.isNaN(index) || index < 0 || index > 2) {
+      return;
+    }
+    this.selectedSegmentIndex = index;
+  }
+
   public onNotesChanged(value: string): void {
     this.notes = value || '';
   }
@@ -94,13 +110,18 @@ export class EditJobComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
+  public get isCustomJobTypeSelected(): boolean {
+    const selected = this.jobTypes[this.selectedTypeIndex];
+    return Number(selected?.id) === 17;
+  }
+
   private loadJobTypes(): void {
     this.isLoadingTypes = true;
     this.setLoading(true);
     this.emptyMessage = '';
     this.jobTypeLabels = ['Loading job types...'];
     this.selectedTypeIndex = 0;
-    this.todayService.findJobTypes(true).subscribe({
+    this.todayService.findJobTypes(false).subscribe({
       next: (res: any) => {
         console.log('[EditJob] findJobTypes response:', res);
         const list = this.extractJobTypes(res);

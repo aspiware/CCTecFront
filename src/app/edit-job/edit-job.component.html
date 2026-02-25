@@ -33,6 +33,14 @@
           class="empty-message">
         </Label>
 
+        <SegmentedBar
+          [items]="segmentItems"
+          [selectedIndex]="selectedSegmentIndex"
+          (selectedIndexChange)="onSegmentChanged($event)"
+          [visibility]="isCustomJobTypeSelected ? 'visible' : 'collapse'"
+          class="job-segment">
+        </SegmentedBar>
+
         <ListPicker
           [items]="jobTypeLabels"
           [selectedIndex]="selectedTypeIndex"
