@@ -23,7 +23,19 @@ export class EditJobComponent implements OnInit {
   public selectedTypeIndex = 0;
   public mainMenu: Item = {
     name: 'Main Menu',
-    options: [{ name: 'Options', icon: 'ellipsis.circle' }],
+    options: [
+      {
+        name: 'Save',
+        icon: 'checkmark.circle',
+        destructive: true,
+        confirm: {
+          title: 'Save job changes?',
+          confirmText: 'Save',
+          cancelText: 'Cancel',
+          presentation: 'anchor',
+        },
+      },
+    ],
   };
 
   constructor(
