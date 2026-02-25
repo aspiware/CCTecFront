@@ -1045,7 +1045,10 @@ export class TodayComponent implements OnInit {
       },
     };
 
-    this.modalService.showModal(EditJobComponent, options).then(() => {
+    this.modalService.showModal(EditJobComponent, options).then((result) => {
+      if (result) {
+        this.getWorkOrders();
+      }
       this.clearJobActionTap(job, 'edit');
     });
   }
