@@ -2,7 +2,7 @@
   <GridLayout rows="*" columns="*">
     <StackLayout row="0" col="0" class="backdrop" (tap)="closeModal()"></StackLayout>
 
-    <GridLayout row="0" col="0" rows="auto,*" class="modal-card" [class.keyboard-open]="isKeyboardOpen">
+    <GridLayout row="0" col="0" rows="auto,*" class="modal-card">
       <GridLayout row="0" columns="*,auto" class="header header-fixed">
         <Label col="0" text="Edit Job" class="title modal-title-text"></Label>
 
@@ -19,8 +19,8 @@
         </StackLayout>
       </GridLayout>
 
-      <ScrollView row="1">
-      <StackLayout>
+      <ScrollView row="1" class="form-scroll">
+      <StackLayout class="content">
         <ActivityIndicator
           [busy]="isLoadingTypes"
           [visibility]="isLoadingTypes ? 'visible' : 'collapse'"

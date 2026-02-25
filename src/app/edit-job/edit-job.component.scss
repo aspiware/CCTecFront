@@ -24,6 +24,16 @@
   horizontal-align: center;
 }
 
+.content {
+  // margin-top: 6;
+  padding-bottom: 180;
+}
+
+.form-scroll {
+  width: 100%;
+  height: 40%;
+}
+
 .modal-card.keyboard-open {
   vertical-align: middle;
   margin-top: 12;
@@ -103,13 +113,13 @@
 }
 
 .notes-input {
-  margin-top: 10;
+  // margin-top: 10;
   height: 100;
   font-size: 16;
   padding-top: 10;
   padding-left: 12;
   padding-right: 12;
-  padding-bottom: 10;
+  // padding-bottom: 10;
   border-radius: 12;
   border-width: 1;
   text-align: left;
