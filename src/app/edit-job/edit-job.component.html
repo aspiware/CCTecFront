@@ -11,8 +11,10 @@
             [useSFIcon]="true"
             style="background-color: transparent; height: 24; width: 35;"
             [sfIconName]="'ellipsis.circle'"
+            [showSpinner]="viewReady && isLoading"
+            #menuStatus
             [options]="mainMenu.options"
-            (selected)="onSelectedMainMenu($event)">
+            (selected)="onSelectedMainMenu($event, menuStatus)">
           </MenuButton>
         </StackLayout>
       </GridLayout>

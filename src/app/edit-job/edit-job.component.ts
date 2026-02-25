@@ -1,5 +1,6 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnInit } from '@angular/core';
 import { ModalDialogParams, NativeScriptCommonModule } from '@nativescript/angular';
+import { Dialogs } from '@nativescript/core';
 import { Item } from '../shared/components/menu-button/item';
 import { MenuEvent } from '../shared/components/menu-button';
 import { TodayService } from '../today/today.service';
@@ -16,6 +17,8 @@ export class EditJobComponent implements OnInit {
   public job: any;
   public notes = '';
   public isKeyboardOpen = false;
+  public isLoading = false;
+  public viewReady = false;
   public isLoadingTypes = false;
   public emptyMessage = '';
   public jobTypes: any[] = [];
@@ -48,11 +51,21 @@ export class EditJobComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadJobTypes();
+    setTimeout(() => {
+      this.viewReady = true;
+      this.loadJobTypes();
+      this.cdr.detectChanges();
+    }, 0);
   }
 
-  public onSelectedMainMenu(_event: MenuEvent): void {
-    // Placeholder: menu actions will be added later.
+  public onSelectedMainMenu(event: MenuEvent, _menuStatus?: any): void {
+    switch (event?.index) {
+      case 0:
+        this.saveJobChanges();
+        break;
+      default:
+        break;
+    }
   }
 
   public closeModal(): void {
@@ -83,6 +96,7 @@ export class EditJobComponent implements OnInit {
 
   private loadJobTypes(): void {
     this.isLoadingTypes = true;
+    this.setLoading(true);
     this.emptyMessage = '';
     this.jobTypeLabels = ['Loading job types...'];
     this.selectedTypeIndex = 0;
@@ -103,6 +117,7 @@ export class EditJobComponent implements OnInit {
             this.emptyMessage = 'No job types available.';
           }
           this.isLoadingTypes = false;
+          this.setLoading(false);
         });
       },
       error: (error) => {
@@ -113,6 +128,52 @@ export class EditJobComponent implements OnInit {
           this.selectedTypeIndex = 0;
           this.emptyMessage = 'Unable to load job types.';
           this.isLoadingTypes = false;
+          this.setLoading(false);
+        });
+      },
+    });
+  }
+
+  private setLoading(value: boolean): void {
+    setTimeout(() => {
+      this.isLoading = value;
+      this.cdr.detectChanges();
+    }, 0);
+  }
+
+  private saveJobChanges(): void {
+    if (this.isLoading || !this.job) {
+      return;
+    }
+
+    const selectedType = this.jobTypes[this.selectedTypeIndex];
+    const nextJobTypeId = Number(
+      selectedType?.id || this.job?.jobTypeId || this.job?.jobType?.id || 0
+    );
+
+    const payload = [
+      this.job?.id,
+      nextJobTypeId || this.job?.jobTypeId,
+      this.notes || null,
+    ];
+
+    this.setLoading(true);
+    this.todayService.update(payload).subscribe({
+      next: () => {
+        this.setLoading(false);
+        this.modalParams.closeCallback({
+          ...this.job,
+          jobTypeId: nextJobTypeId || this.job?.jobTypeId,
+          notes: this.notes || null,
+        });
+      },
+      error: (error) => {
+        console.log('[EditJob] update error', error);
+        this.setLoading(false);
+        Dialogs.alert({
+          title: 'Update',
+          message: 'Unable to save job changes.',
+          okButtonText: 'OK',
         });
       },
     });
