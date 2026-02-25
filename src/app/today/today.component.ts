@@ -13,6 +13,7 @@ import { Router } from '@angular/router';
 import { WifiConfigComponent } from '../wifi-config/wifi-config.component';
 import { TodayJobsCountService } from '../shared/services/today-jobs-count.service';
 import { CustomerInfoComponent } from '../customer-info/customer-info.component';
+import { EditJobComponent } from '../edit-job/edit-job.component';
 
 @Component({
   standalone: true,
@@ -1023,6 +1024,29 @@ export class TodayComponent implements OnInit {
 
     this.modalService.showModal(CustomerInfoComponent, options).then(() => {
       this.clearJobActionTap(job, 'customer');
+    });
+  }
+
+  public showEditJob(job: any): void {
+    if (!job) {
+      return;
+    }
+
+    const options: any = {
+      context: job,
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: false,
+      stretched: false,
+      cancelable: true,
+      dismissEnabled: true,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.Custom,
+      },
+    };
+
+    this.modalService.showModal(EditJobComponent, options).then(() => {
+      this.clearJobActionTap(job, 'edit');
     });
   }
 
