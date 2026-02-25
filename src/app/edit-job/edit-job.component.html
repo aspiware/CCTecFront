@@ -16,7 +16,27 @@
           </MenuButton>
         </StackLayout>
       </GridLayout>
+
+      <StackLayout row="1" class="">
+        <ActivityIndicator
+          [busy]="isLoadingTypes"
+          [visibility]="isLoadingTypes ? 'visible' : 'collapse'"
+          class="loading-indicator">
+        </ActivityIndicator>
+
+        <Label
+          [text]="emptyMessage"
+          [visibility]="(!isLoadingTypes && emptyMessage) ? 'visible' : 'collapse'"
+          class="empty-message">
+        </Label>
+
+        <ListPicker
+          [items]="jobTypeLabels"
+          [selectedIndex]="selectedTypeIndex"
+          (selectedIndexChange)="onTypeChanged($event)"
+          class="job-type-picker">
+        </ListPicker>
+      </StackLayout>
     </GridLayout>
   </GridLayout>
 </ModalStack>
-

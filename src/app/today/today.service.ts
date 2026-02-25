@@ -137,10 +137,16 @@ export class TodayService {
     );
   }
 
-    public getWorkOrders(userId: number): Observable<any> {
+  public getWorkOrders(userId: number): Observable<any> {
     return this.httpClient.post<void>(
       this.configService.getUrlBase() + "/jobs/c/getWorkOrders",
       { userId }
+    );
+  }
+
+  public findJobTypes(active?: boolean): Observable<any[]> {
+    return this.httpClient.get<any[]>(
+      `${this.configService.getUrlBase()}/jobs/findJobTypes/${active}`
     );
   }
   
