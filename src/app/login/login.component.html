@@ -1,0 +1,72 @@
+<ScrollView
+  keyboardDismissMode="onDrag"
+  [class]="'form-scroll ' + (isDarkTheme ? 'theme-dark' : 'theme-light')"
+  (loaded)="onRootLoaded()">
+  <StackLayout verticalAlignment="center" class="form" [formGroup]="loginForm">
+    <Label text="Welcome back" class="logo"></Label>
+    <Label text="Sign in to continue" class="subtitle"></Label>
+
+    <GridLayout rows="auto" columns="*" style="margin-top: 50px;">
+      <GridLayout columns="*,auto" class="input-shell" width="100%">
+        <TextField
+          col="0"
+          formControlName="username"
+          required
+          hint="bp-username"
+          returnKeyType="next"
+          (returnPress)="focusPassword()"
+          autocapitalizationType="none"
+          autocorrect="false"
+          class="custom-tf-inline">
+        </TextField>
+        <Label col="1" text="@cable.comcast.com" class="suffix-label"></Label>
+      </GridLayout>
+    </GridLayout>
+
+    <Label
+      class="required-label"
+      text="{{loginForm.controls.username.errors?.required ? 'Please enter the BP Username' : ''}}">
+    </Label>
+
+    <GridLayout rows="auto" columns="*" style="margin-top: 20;">
+      <GridLayout columns="*,auto" class="input-shell" width="100%">
+        <TextField
+          col="0"
+          secure="{{showPass ? false : true}}"
+          formControlName="password"
+          returnKeyType="go"
+          (returnPress)="loginForm.valid ? login() : null"
+          required
+          hint="password"
+          autocapitalizationType="none"
+          autocorrect="false"
+          class="custom-tf-inline">
+        </TextField>
+        <StackLayout col="1" width="34" height="42" horizontalAlignment="right" orientation="horizontal" (tap)="showHidePass()">
+        <Label *ngIf="showPass" width="30" text="&#xf06e;" style="font-size: 17; margin-bottom: 2;" class="fas"></Label>
+        <Label *ngIf="!showPass" width="30" text="&#xf070;" style="font-size: 17; margin-bottom: 2;" class="fas"></Label>
+        </StackLayout>
+      </GridLayout>
+    </GridLayout>
+
+    <Label
+      class="required-label"
+      text="{{loginForm.controls.password.errors?.required ? 'Please enter the password' : ''}}">
+    </Label>
+
+    <GridLayout class="login-btn-wrap">
+      <Button
+        [isEnabled]="loginForm.valid && !isBusy"
+        [text]="isBusy ? '' : 'Log in'"
+        class="ios-login-btn"
+        [class.login-btn-disabled]="!(loginForm.valid && !isBusy)"
+        (tap)="login()">
+      </Button>
+      <ActivityIndicator
+        [busy]="isBusy"
+        [visibility]="isBusy ? 'visible' : 'collapsed'"
+        class="login-spinner-overlay">
+      </ActivityIndicator>
+    </GridLayout>
+  </StackLayout>
+</ScrollView>

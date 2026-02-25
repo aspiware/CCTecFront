@@ -58,7 +58,7 @@ export class ConfigService {
   }
 
   logout() {
-    // setBoolean("isLoggedIn", false);
+    ApplicationSettings.clear();
     this._isLoggedIn.next(false);
   }
 
