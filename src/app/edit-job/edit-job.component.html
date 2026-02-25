@@ -17,7 +17,7 @@
         </StackLayout>
       </GridLayout>
 
-      <StackLayout row="1" class="">
+      <StackLayout row="1">
         <ActivityIndicator
           [busy]="isLoadingTypes"
           [visibility]="isLoadingTypes ? 'visible' : 'collapse'"
@@ -36,6 +36,13 @@
           (selectedIndexChange)="onTypeChanged($event)"
           class="job-type-picker">
         </ListPicker>
+
+        <TextView
+          hint="Notes"
+          [text]="notes"
+          (textChange)="onNotesChanged($event.value)"
+          class="notes-input">
+        </TextView>
       </StackLayout>
     </GridLayout>
   </GridLayout>

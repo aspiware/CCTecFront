@@ -14,6 +14,7 @@ import { TodayService } from '../today/today.service';
 })
 export class EditJobComponent implements OnInit {
   public job: any;
+  public notes = '';
   public isLoadingTypes = false;
   public emptyMessage = '';
   public jobTypes: any[] = [];
@@ -30,6 +31,7 @@ export class EditJobComponent implements OnInit {
     private cdr: ChangeDetectorRef
   ) {
     this.job = this.modalParams.context;
+    this.notes = this.job?.notes || '';
   }
 
   ngOnInit(): void {
@@ -50,6 +52,10 @@ export class EditJobComponent implements OnInit {
       return;
     }
     this.selectedTypeIndex = index;
+  }
+
+  public onNotesChanged(value: string): void {
+    this.notes = value || '';
   }
 
   private loadJobTypes(): void {
