@@ -1,6 +1,6 @@
-import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, NO_ERRORS_SCHEMA, OnInit, ViewChild } from '@angular/core';
 import { ModalDialogParams, NativeScriptCommonModule } from '@nativescript/angular';
-import { Dialogs } from '@nativescript/core';
+import { Dialogs, ScrollView } from '@nativescript/core';
 import { getNumber } from '@nativescript/core/application-settings';
 import { SegmentedBarItem } from '@nativescript/core';
 import { ObservableArray } from '@nativescript/core';
@@ -23,7 +23,7 @@ export class EditJobComponent implements OnInit {
   public job: any;
   private userId = 0;
   public notes = '';
-  public isKeyboardOpen = false;
+  public isNotesFocused = false;
   public isLoading = false;
   public viewReady = false;
   public isLoadingTypes = false;
@@ -41,6 +41,8 @@ export class EditJobComponent implements OnInit {
   public customTypeEmptyMessage = '';
   @ViewChild('listView', { static: false, read: RadListViewComponent })
   public listViewRef?: RadListViewComponent;
+  @ViewChild('bodyScroll', { static: false })
+  public bodyScrollRef?: ElementRef<ScrollView>;
   public mainMenu: Item = {
     name: 'Main Menu',
     options: [
@@ -150,12 +152,16 @@ export class EditJobComponent implements OnInit {
   }
 
   public onNotesFocus(): void {
-    this.isKeyboardOpen = true;
+    this.isNotesFocused = true;
     this.cdr.detectChanges();
+    setTimeout(() => {
+      const scroll = this.bodyScrollRef?.nativeElement;
+      scroll?.scrollToVerticalOffset?.(10000, true);
+    }, 80);
   }
 
   public onNotesBlur(): void {
-    this.isKeyboardOpen = false;
+    this.isNotesFocused = false;
     this.cdr.detectChanges();
   }
 

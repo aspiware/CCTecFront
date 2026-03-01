@@ -19,8 +19,8 @@
         </StackLayout>
       </GridLayout>
 
-      <ScrollView row="1" class="form-scroll">
-      <StackLayout class="content">
+      <ScrollView #bodyScroll row="1" class="form-scroll">
+      <StackLayout class="content" [class.content-notes-focused]="isNotesFocused">
         <ActivityIndicator
           [busy]="isLoadingTypes"
           [visibility]="isLoadingTypes ? 'visible' : 'collapse'"
