@@ -1,10 +1,11 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { NativeScriptCommonModule } from '@nativescript/angular';
+import { Component, EventEmitter, Input, NO_ERRORS_SCHEMA, Output } from '@angular/core';
+import { NativeScriptCommonModule, NativeScriptFormsModule } from '@nativescript/angular';
 
 @Component({
   standalone: true,
   selector: 'app-quantity-stepper',
-  imports: [NativeScriptCommonModule],
+  imports: [NativeScriptCommonModule, NativeScriptFormsModule],
+  schemas: [NO_ERRORS_SCHEMA],
   templateUrl: './quantity-stepper.component.html',
   styleUrl: './quantity-stepper.component.scss',
 })
