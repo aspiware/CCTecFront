@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, ElementRef, NO_ERRORS_SCHEMA, OnInit, ViewChild } from '@angular/core';
 import { ModalDialogParams, NativeScriptCommonModule } from '@nativescript/angular';
-import { Dialogs, ScrollView } from '@nativescript/core';
+import { Dialogs, ScrollView, Utils } from '@nativescript/core';
 import { getNumber } from '@nativescript/core/application-settings';
 import { SegmentedBarItem } from '@nativescript/core';
 import { ObservableArray } from '@nativescript/core';
@@ -161,6 +161,15 @@ export class EditJobComponent implements OnInit {
   }
 
   public onNotesBlur(): void {
+    this.isNotesFocused = false;
+    this.cdr.detectChanges();
+  }
+
+  public dismissNotesKeyboard(): void {
+    if (!this.isNotesFocused) {
+      return;
+    }
+    Utils.dismissKeyboard();
     this.isNotesFocused = false;
     this.cdr.detectChanges();
   }

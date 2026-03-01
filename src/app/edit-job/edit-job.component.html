@@ -2,7 +2,7 @@
   <GridLayout rows="*" columns="*">
     <StackLayout row="0" col="0" class="backdrop" (tap)="closeModal()"></StackLayout>
 
-    <GridLayout row="0" col="0" rows="auto,*" class="modal-card">
+    <GridLayout row="0" col="0" rows="auto,*" class="modal-card" (tap)="dismissNotesKeyboard()">
       <GridLayout row="0" columns="*,auto" class="header header-fixed">
         <Label col="0" text="Edit Job" class="title modal-title-text"></Label>
 
@@ -19,7 +19,7 @@
         </StackLayout>
       </GridLayout>
 
-      <ScrollView #bodyScroll row="1" class="form-scroll">
+      <ScrollView #bodyScroll row="1" class="form-scroll" (tap)="dismissNotesKeyboard()">
       <StackLayout class="content" [class.content-notes-focused]="isNotesFocused">
         <ActivityIndicator
           [busy]="isLoadingTypes"
