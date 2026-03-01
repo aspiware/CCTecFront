@@ -54,9 +54,9 @@
           (loaded)="onListLoaded()"
           (itemSelected)="onItemSelected($event)"
           (itemDeselected)="onItemDeselected($event)"
-          height="30%"
+          height="220"
           [items]="jobUserTypesList"
-          [visibility]="(isCustomJobTypeSelected && jobUserTypesList.length) ? 'visible' : 'collapse'"
+          [visibility]="isCustomJobTypeSelected ? 'visible' : 'collapse'"
           selectionBehavior="LongPress"
           multipleSelection="true"
           style="margin-top: 20;">
@@ -76,6 +76,7 @@
           [items]="jobTypeLabels"
           [selectedIndex]="selectedTypeIndex"
           (selectedIndexChange)="onTypeChanged($event)"
+          [visibility]="isCustomJobTypeSelected ? 'collapse' : 'visible'"
           class="job-type-picker">
         </ListPicker>
 

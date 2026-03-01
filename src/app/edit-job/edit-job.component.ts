@@ -370,11 +370,13 @@ export class EditJobComponent implements OnInit {
         this.jobUserTypesList.splice(0);
         this.jobUserTypesList.push(...list);
         this.customTypeEmptyMessage = list.length ? '' : 'No custom job types for this segment.';
+        this.cdr.detectChanges();
       },
       error: (error) => {
         console.log('[EditJob] getJobPricesByUser error', error);
         this.jobUserTypesList.splice(0);
         this.customTypeEmptyMessage = 'Unable to load custom job types.';
+        this.cdr.detectChanges();
       },
     });
   }
