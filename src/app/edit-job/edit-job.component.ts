@@ -354,6 +354,27 @@ export class EditJobComponent implements OnInit {
           updatedJob.notes,
         ]);
 
+    console.log(
+      '[EditJob] save endpoint:',
+      this.isCustomJobTypeSelected ? 'updateCustomJob' : 'update'
+    );
+    console.log(
+      '[EditJob] save payload:',
+      this.isCustomJobTypeSelected
+        ? [
+            updatedJob.id,
+            17,
+            updatedJob.notes,
+            JSON.stringify(updatedJob.customJob?.jobTypesIds || []),
+            Number(updatedJob.customJob?.sensors || 0),
+            Number(updatedJob.customJob?.cameras || 0),
+            Number(updatedJob.customJob?.tvBoxes || 0),
+            Number(updatedJob.customJob?.modems || 0),
+            Boolean(updatedJob.customJob?.hasPanel),
+          ]
+        : [updatedJob.id, updatedJob.jobTypeId, updatedJob.notes]
+    );
+
     this.setLoading(true);
     save$.subscribe({
       next: () => {
