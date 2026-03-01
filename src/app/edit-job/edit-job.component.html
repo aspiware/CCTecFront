@@ -3,10 +3,16 @@
     <StackLayout row="0" col="0" class="backdrop" (tap)="closeModal()"></StackLayout>
 
     <GridLayout row="0" col="0" rows="auto,*" class="modal-card" (tap)="dismissNotesKeyboard()">
-      <GridLayout row="0" columns="*,auto" class="header header-fixed">
+      <GridLayout row="0" columns="*,auto,auto" class="header header-fixed">
         <Label col="0" text="Edit Job" class="title modal-title-text"></Label>
+        <Label
+          col="1"
+          [text]="customTotalPriceText"
+          [visibility]="isCustomJobTypeSelected ? 'visible' : 'collapse'"
+          class="title modal-title-text price-title">
+        </Label>
 
-        <StackLayout col="1">
+        <StackLayout col="2">
           <MenuButton
             [useSFIcon]="true"
             style="background-color: transparent; height: 24; width: 35;"

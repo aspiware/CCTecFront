@@ -9,6 +9,7 @@ import { NativeScriptUIListViewModule, RadListViewComponent } from 'nativescript
 import { Item } from '../shared/components/menu-button/item';
 import { MenuEvent } from '../shared/components/menu-button';
 import { QuantityStepperComponent } from '../shared/components/quantity-stepper/quantity-stepper.component';
+import { SettingsService } from '../settings/settings.service';
 import { TodayService } from '../today/today.service';
 
 @Component({
@@ -42,7 +43,10 @@ export class EditJobComponent implements OnInit {
   public jobUserTypesList = new ObservableArray<any>([]);
   public selectedJobType: any[] = [];
   public selectedCustomTypeIds = new Set<number>();
+  public selectedCustomTypeMap = new Map<number, any>();
   public customTypeEmptyMessage = '';
+  public settings: any;
+  public customTotalPrice = 0;
   @ViewChild('listView', { static: false, read: RadListViewComponent })
   public listViewRef?: RadListViewComponent;
   @ViewChild('bodyScroll', { static: false })
@@ -81,6 +85,7 @@ export class EditJobComponent implements OnInit {
   constructor(
     private modalParams: ModalDialogParams,
     private todayService: TodayService,
+    private settingsService: SettingsService,
     private cdr: ChangeDetectorRef
   ) {
     this.job = this.modalParams.context;
@@ -105,6 +110,7 @@ export class EditJobComponent implements OnInit {
     this.userId = getNumber('userId', 15);
     setTimeout(() => {
       this.viewReady = true;
+      this.loadSettings();
       this.loadJobTypes();
       this.cdr.detectChanges();
     }, 0);
@@ -142,7 +148,9 @@ export class EditJobComponent implements OnInit {
     this.jobUserTypesList.splice(0);
     this.selectedJobType = [];
     this.selectedCustomTypeIds.clear();
+    this.selectedCustomTypeMap.clear();
     this.customTypeEmptyMessage = '';
+    this.recalculateCustomTotal();
   }
 
   public onSegmentChanged(event: any): void {
@@ -184,22 +192,27 @@ export class EditJobComponent implements OnInit {
 
   public onModemsChanged(value: number): void {
     this.modemsQty = Number(value || 0);
+    this.recalculateCustomTotal();
   }
 
   public onTvBoxesChanged(value: number): void {
     this.tvBoxesQty = Number(value || 0);
+    this.recalculateCustomTotal();
   }
 
   public onCamerasChanged(value: number): void {
     this.camerasQty = Number(value || 0);
+    this.recalculateCustomTotal();
   }
 
   public onSensorsChanged(value: number): void {
     this.sensorsQty = Number(value || 0);
+    this.recalculateCustomTotal();
   }
 
   public onIncludePanelChanged(event: any): void {
     this.includePanel = Boolean(event?.value ?? event?.object?.checked ?? false);
+    this.recalculateCustomTotal();
   }
 
   public get isCustomJobTypeSelected(): boolean {
@@ -223,6 +236,8 @@ export class EditJobComponent implements OnInit {
     if (!this.selectedCustomTypeIds.has(id)) {
       this.selectedCustomTypeIds.add(id);
       this.selectedJobType.push(item);
+      this.selectedCustomTypeMap.set(id, item);
+      this.recalculateCustomTotal();
     }
   }
 
@@ -234,6 +249,8 @@ export class EditJobComponent implements OnInit {
     }
     this.selectedCustomTypeIds.delete(id);
     this.selectedJobType = this.selectedJobType.filter((entry) => Number(entry?.jobTypeId || entry?.id) !== id);
+    this.selectedCustomTypeMap.delete(id);
+    this.recalculateCustomTotal();
   }
 
   private loadJobTypes(): void {
@@ -256,6 +273,7 @@ export class EditJobComponent implements OnInit {
             this.emptyMessage = '';
             this.loadPickerJobsBySegment();
             this.loadCustomTypesBySegment();
+            this.recalculateCustomTotal();
           } else {
             this.jobTypeLabels = ['No job types available'];
             this.selectedTypeIndex = 0;
@@ -310,6 +328,21 @@ export class EditJobComponent implements OnInit {
           ...this.job,
           jobTypeId: nextJobTypeId || this.job?.jobTypeId,
           modems: String(this.modemsQty),
+          tvBoxes: String(this.tvBoxesQty),
+          cameras: String(this.camerasQty),
+          sensors: String(this.sensorsQty),
+          customJob: this.isCustomJobTypeSelected
+            ? {
+                ...(this.job?.customJob || {}),
+                modems: this.modemsQty,
+                tvBoxes: this.tvBoxesQty,
+                cameras: this.camerasQty,
+                sensors: this.sensorsQty,
+                hasPanel: this.includePanel,
+                jobTypesIds: Array.from(this.selectedCustomTypeIds),
+                totalPrice: this.customTotalPrice,
+              }
+            : this.job?.customJob,
           notes: this.notes || null,
         });
       },
@@ -409,6 +442,7 @@ export class EditJobComponent implements OnInit {
         this.jobUserTypesList.splice(0);
         this.jobUserTypesList.push(...list);
         this.customTypeEmptyMessage = list.length ? '' : 'No custom job types for this segment.';
+        setTimeout(() => this.restoreSegmentSelection(), 0);
         this.cdr.detectChanges();
       },
       error: (error) => {
@@ -423,8 +457,10 @@ export class EditJobComponent implements OnInit {
   private toggleCustomJob(): void {
     this.isCustomChecked = !this.isCustomChecked;
     if (this.isCustomChecked) {
+      this.resetEditFormState();
       this.selectedTypeIndex = -1;
       this.loadCustomTypesBySegment();
+      this.recalculateCustomTotal();
       this.cdr.detectChanges();
       return;
     }
@@ -434,8 +470,83 @@ export class EditJobComponent implements OnInit {
     this.customTypeEmptyMessage = '';
     this.jobUserTypesList.splice(0);
     this.selectedCustomTypeIds.clear();
+    this.selectedCustomTypeMap.clear();
     this.selectedJobType = [];
+    this.recalculateCustomTotal();
     this.cdr.detectChanges();
+  }
+
+  private resetEditFormState(): void {
+    this.notes = '';
+    this.modemsQty = 0;
+    this.tvBoxesQty = 0;
+    this.camerasQty = 0;
+    this.sensorsQty = 0;
+    this.includePanel = false;
+    this.selectedSegmentIndex = 0;
+    this.jobUserTypesList.splice(0);
+    this.selectedCustomTypeIds.clear();
+    this.selectedCustomTypeMap.clear();
+    this.selectedJobType = [];
+    this.customTypeEmptyMessage = '';
+  }
+
+  public get customTotalPriceText(): string {
+    return `$${this.customTotalPrice.toFixed(2)}`;
+  }
+
+  private loadSettings(): void {
+    this.settingsService.findByUser(this.userId).subscribe({
+      next: (res) => {
+        this.settings = res || {};
+        this.recalculateCustomTotal();
+      },
+      error: () => {
+        this.settings = {};
+        this.recalculateCustomTotal();
+      },
+    });
+  }
+
+  private restoreSegmentSelection(): void {
+    const listView = this.listViewRef?.listView;
+    if (!listView || !this.jobUserTypesList?.length) {
+      return;
+    }
+    for (let i = 0; i < this.jobUserTypesList.length; i++) {
+      const item = this.jobUserTypesList.getItem(i);
+      const id = Number(item?.jobTypeId || item?.id);
+      if (this.selectedCustomTypeIds.has(id)) {
+        listView.selectItemAt(i);
+      }
+    }
+  }
+
+  private recalculateCustomTotal(): void {
+    if (!this.isCustomJobTypeSelected) {
+      this.customTotalPrice = 0;
+      return;
+    }
+
+    let selectedJobsTotal = 0;
+    this.selectedCustomTypeMap.forEach((item) => {
+      selectedJobsTotal += Number(item?.price || 0);
+    });
+
+    const modemPrice = Number(this.settings?.modemPrice || 0);
+    const boxPrice = Number(this.settings?.boxPrice || 0);
+    const cameraPrice = Number(this.settings?.cameraPrice || 0);
+    const sensorPrice = Number(this.settings?.sensorPrice || 0);
+    const panelPrice = Number(this.settings?.xhPanelPrice || 0);
+
+    const devicesTotal =
+      (this.modemsQty * modemPrice) +
+      (this.tvBoxesQty * boxPrice) +
+      (this.camerasQty * cameraPrice) +
+      (this.sensorsQty * sensorPrice) +
+      (this.includePanel ? panelPrice : 0);
+
+    this.customTotalPrice = Number((selectedJobsTotal + devicesTotal).toFixed(2));
   }
 
   private getSelectedSegmentCategory(): string {
