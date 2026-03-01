@@ -82,15 +82,75 @@
           class="job-type-picker">
         </ListPicker>
 
-        <app-quantity-stepper
-          label="Modems"
-          [value]="modemsQty"
-          [min]="0"
-          [max]="20"
-          [step]="1"
-          (valueChange)="onModemsChanged($event)"
-          class="modems-stepper">
-        </app-quantity-stepper>
+        <GridLayout
+          columns="*,*"
+          class="stepper-row"
+          [visibility]="isCustomJobTypeSelected ? 'visible' : 'collapse'">
+          <app-quantity-stepper
+            col="0"
+            label="Modems"
+            [value]="modemsQty"
+            [min]="0"
+            [max]="20"
+            [step]="1"
+            (valueChange)="onModemsChanged($event)"
+            class="modems-stepper">
+          </app-quantity-stepper>
+
+          <app-quantity-stepper
+            col="1"
+            label="TV Boxes"
+            [value]="tvBoxesQty"
+            [min]="0"
+            [max]="50"
+            [step]="1"
+            (valueChange)="onTvBoxesChanged($event)"
+            class="tv-boxes-stepper">
+          </app-quantity-stepper>
+        </GridLayout>
+
+        <GridLayout
+          columns="*,*"
+          class="stepper-row"
+          [visibility]="(isCustomJobTypeSelected && selectedSegmentIndex === 1) ? 'visible' : 'collapse'">
+          <app-quantity-stepper
+            col="0"
+            label="Cameras"
+            [value]="camerasQty"
+            [min]="0"
+            [max]="50"
+            [step]="1"
+            (valueChange)="onCamerasChanged($event)"
+            class="modems-stepper">
+          </app-quantity-stepper>
+
+          <app-quantity-stepper
+            col="1"
+            label="Sensors"
+            [value]="sensorsQty"
+            [min]="0"
+            [max]="50"
+            [step]="1"
+            (valueChange)="onSensorsChanged($event)"
+            class="tv-boxes-stepper">
+          </app-quantity-stepper>
+        </GridLayout>
+
+        <GridLayout
+          columns="auto,*"
+          class="include-panel-row"
+          [visibility]="(isCustomJobTypeSelected && selectedSegmentIndex === 1) ? 'visible' : 'collapse'">
+          <Switch
+            col="0"
+            [checked]="includePanel"
+            (checkedChange)="onIncludePanelChanged($event)">
+          </Switch>
+          <Label
+            col="1"
+            text="Include Panel"
+            class="include-panel-label">
+          </Label>
+        </GridLayout>
 
         <TextView
           hint="Notes"

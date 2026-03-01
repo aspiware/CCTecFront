@@ -155,6 +155,28 @@
 
 .modems-stepper {
   margin-top: 10;
+  margin-right: 6;
+}
+
+.tv-boxes-stepper {
+  margin-top: 10;
+  margin-left: 6;
+}
+
+.stepper-row {
+  margin-top: 8;
+}
+
+.include-panel-row {
+  margin-top: 8;
+  margin-bottom: 8;
+  vertical-align: middle;
+}
+
+.include-panel-label {
+  margin-left: 8;
+  font-size: 14;
+  vertical-align: middle;
 }
 
 .notes-input {
@@ -190,6 +212,10 @@
   color: #1c1c1e;
 }
 
+.ns-light .include-panel-label {
+  color: #1c1c1e;
+}
+
 .ns-light .custom-type-row {
   background-color: #ffffff;
   border-color: rgba(60, 60, 67, 0.20);
@@ -202,6 +228,10 @@
 
 .ns-dark .section-title,
 .ns-dark .empty-message {
+  color: #f2f2f7;
+}
+
+.ns-dark .include-panel-label {
   color: #f2f2f7;
 }
 

@@ -32,6 +32,10 @@ export class EditJobComponent implements OnInit {
   public jobTypeLabels: string[] = ['Loading job types...'];
   public selectedTypeIndex = 0;
   public modemsQty = 0;
+  public tvBoxesQty = 0;
+  public camerasQty = 0;
+  public sensorsQty = 0;
+  public includePanel = false;
   public segmentItems: SegmentedBarItem[] = [];
   public selectedSegmentIndex = 0;
   public isCustomChecked = false;
@@ -81,7 +85,11 @@ export class EditJobComponent implements OnInit {
   ) {
     this.job = this.modalParams.context;
     this.notes = this.job?.notes || '';
-    this.modemsQty = Number(this.job?.modems || 0);
+    this.modemsQty = Number(this.job?.customJob?.modems ?? this.job?.modems ?? 0);
+    this.tvBoxesQty = Number(this.job?.customJob?.tvBoxes ?? this.job?.tvBoxes ?? 0);
+    this.camerasQty = Number(this.job?.customJob?.cameras ?? this.job?.cameras ?? 0);
+    this.sensorsQty = Number(this.job?.customJob?.sensors ?? this.job?.sensors ?? 0);
+    this.includePanel = Boolean(this.job?.customJob?.hasPanel ?? false);
     const initialCustomIds = Array.isArray(this.job?.customJob?.jobTypesIds)
       ? this.job.customJob.jobTypesIds
       : [];
@@ -176,6 +184,22 @@ export class EditJobComponent implements OnInit {
 
   public onModemsChanged(value: number): void {
     this.modemsQty = Number(value || 0);
+  }
+
+  public onTvBoxesChanged(value: number): void {
+    this.tvBoxesQty = Number(value || 0);
+  }
+
+  public onCamerasChanged(value: number): void {
+    this.camerasQty = Number(value || 0);
+  }
+
+  public onSensorsChanged(value: number): void {
+    this.sensorsQty = Number(value || 0);
+  }
+
+  public onIncludePanelChanged(event: any): void {
+    this.includePanel = Boolean(event?.value ?? event?.object?.checked ?? false);
   }
 
   public get isCustomJobTypeSelected(): boolean {
