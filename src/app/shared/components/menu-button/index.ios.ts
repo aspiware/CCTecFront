@@ -133,6 +133,9 @@ export class MenuButton extends MenuButtonBase {
       if (attributes) {
         action.attributes = attributes;
       }
+      if (option.toggle) {
+        action.state = option.checked ? UIMenuElementState.On : UIMenuElementState.Off;
+      }
 
       if (option.destructive) {
         destructiveActions.push(action);

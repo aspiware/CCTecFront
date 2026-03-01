@@ -34,6 +34,7 @@ export class EditJobComponent implements OnInit {
   public modemsQty = 0;
   public segmentItems: SegmentedBarItem[] = [];
   public selectedSegmentIndex = 0;
+  public isCustomChecked = false;
   public jobUserTypesList = new ObservableArray<any>([]);
   public selectedJobType: any[] = [];
   public selectedCustomTypeIds = new Set<number>();
@@ -54,8 +55,22 @@ export class EditJobComponent implements OnInit {
           presentation: 'anchor',
         },
       },
+      {
+        name: 'Custom Job',
+        icon: 'wrench.and.screwdriver',
+        toggle: true,
+      },
     ],
   };
+
+  get mainMenuOptions() {
+    return this.mainMenu.options.map((option) => {
+      if (option.name === 'Custom Job') {
+        return { ...option, checked: this.isCustomChecked };
+      }
+      return option;
+    });
+  }
 
   constructor(
     private modalParams: ModalDialogParams,
@@ -90,6 +105,9 @@ export class EditJobComponent implements OnInit {
       case 0:
         this.saveJobChanges();
         break;
+      case 1:
+        this.toggleCustomJob();
+        break;
       default:
         break;
     }
@@ -105,6 +123,8 @@ export class EditJobComponent implements OnInit {
       return;
     }
     this.selectedTypeIndex = index;
+    const selected = this.jobTypes[this.selectedTypeIndex];
+    this.isCustomChecked = Number(selected?.id) === 17;
     if (this.isCustomJobTypeSelected) {
       this.loadCustomTypesBySegment();
       return;
@@ -144,6 +164,9 @@ export class EditJobComponent implements OnInit {
   }
 
   public get isCustomJobTypeSelected(): boolean {
+    if (this.isCustomChecked) {
+      return true;
+    }
     const selected = this.jobTypes[this.selectedTypeIndex];
     return Number(selected?.id) === 17;
   }
@@ -190,6 +213,7 @@ export class EditJobComponent implements OnInit {
           if (list.length) {
             this.jobTypeLabels = list.map((item) => item?.name || item?.description || `Type #${item?.id}`);
             this.selectedTypeIndex = this.findInitialIndex(list);
+            this.isCustomChecked = Number(list[this.selectedTypeIndex]?.id) === 17;
             this.emptyMessage = '';
             this.loadPickerJobsBySegment();
             this.loadCustomTypesBySegment();
@@ -229,9 +253,9 @@ export class EditJobComponent implements OnInit {
     }
 
     const selectedType = this.jobTypes[this.selectedTypeIndex];
-    const nextJobTypeId = Number(
-      selectedType?.id || this.job?.jobTypeId || this.job?.jobType?.id || 0
-    );
+    const nextJobTypeId = this.isCustomChecked
+      ? 17
+      : Number(selectedType?.id || this.job?.jobTypeId || this.job?.jobType?.id || 0);
 
     const payload = [
       this.job?.id,
@@ -353,6 +377,24 @@ export class EditJobComponent implements OnInit {
         this.customTypeEmptyMessage = 'Unable to load custom job types.';
       },
     });
+  }
+
+  private toggleCustomJob(): void {
+    this.isCustomChecked = !this.isCustomChecked;
+    if (this.isCustomChecked) {
+      this.selectedTypeIndex = -1;
+      this.loadCustomTypesBySegment();
+      this.cdr.detectChanges();
+      return;
+    }
+    if (this.selectedTypeIndex < 0 && this.jobTypes.length) {
+      this.selectedTypeIndex = 0;
+    }
+    this.customTypeEmptyMessage = '';
+    this.jobUserTypesList.splice(0);
+    this.selectedCustomTypeIds.clear();
+    this.selectedJobType = [];
+    this.cdr.detectChanges();
   }
 
   private getSelectedSegmentCategory(): string {

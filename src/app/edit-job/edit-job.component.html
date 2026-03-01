@@ -13,7 +13,7 @@
             [sfIconName]="'ellipsis.circle'"
             [showSpinner]="viewReady && isLoading"
             #menuStatus
-            [options]="mainMenu.options"
+            [options]="mainMenuOptions"
             (selected)="onSelectedMainMenu($event, menuStatus)">
           </MenuButton>
         </StackLayout>
@@ -33,12 +33,15 @@
           class="empty-message">
         </Label>
 
-        <SegmentedBar
-          [items]="segmentItems"
-          [selectedIndex]="selectedSegmentIndex"
-          (selectedIndexChange)="onSegmentChanged($event)"
-          class="job-segment">
-        </SegmentedBar>
+        <GridLayout columns="*" class="segment-row">
+          <SegmentedBar
+            col="0"
+            [items]="segmentItems"
+            [selectedIndex]="selectedSegmentIndex"
+            (selectedIndexChange)="onSegmentChanged($event)"
+            class="job-segment">
+          </SegmentedBar>
+        </GridLayout>
 
         <Label
           class="empty-message"

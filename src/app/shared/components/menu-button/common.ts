@@ -6,6 +6,8 @@ export type MenuButtonAction = {
   icon?: string;
   disabled?: boolean;
   destructive?: boolean;
+  toggle?: boolean;
+  checked?: boolean;
   confirm?: boolean | {
     title?: string;
     confirmText?: string;
