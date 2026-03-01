@@ -4,12 +4,13 @@ import { Dialogs } from '@nativescript/core';
 import { SegmentedBarItem } from '@nativescript/core';
 import { Item } from '../shared/components/menu-button/item';
 import { MenuEvent } from '../shared/components/menu-button';
+import { QuantityStepperComponent } from '../shared/components/quantity-stepper/quantity-stepper.component';
 import { TodayService } from '../today/today.service';
 
 @Component({
   standalone: true,
   selector: 'app-edit-job',
-  imports: [NativeScriptCommonModule],
+  imports: [NativeScriptCommonModule, QuantityStepperComponent],
   schemas: [NO_ERRORS_SCHEMA],
   templateUrl: './edit-job.component.html',
   styleUrl: './edit-job.component.scss',
@@ -25,6 +26,7 @@ export class EditJobComponent implements OnInit {
   public jobTypes: any[] = [];
   public jobTypeLabels: string[] = ['Loading job types...'];
   public selectedTypeIndex = 0;
+  public modemsQty = 0;
   public segmentItems: SegmentedBarItem[] = [];
   public selectedSegmentIndex = 0;
   public mainMenu: Item = {
@@ -51,6 +53,7 @@ export class EditJobComponent implements OnInit {
   ) {
     this.job = this.modalParams.context;
     this.notes = this.job?.notes || '';
+    this.modemsQty = Number(this.job?.modems || 0);
     this.segmentItems = ['Residential', 'XH', 'Business'].map((label) => {
       const item = new SegmentedBarItem();
       item.title = label;
@@ -108,6 +111,10 @@ export class EditJobComponent implements OnInit {
   public onNotesBlur(): void {
     this.isKeyboardOpen = false;
     this.cdr.detectChanges();
+  }
+
+  public onModemsChanged(value: number): void {
+    this.modemsQty = Number(value || 0);
   }
 
   public get isCustomJobTypeSelected(): boolean {
@@ -185,6 +192,7 @@ export class EditJobComponent implements OnInit {
         this.modalParams.closeCallback({
           ...this.job,
           jobTypeId: nextJobTypeId || this.job?.jobTypeId,
+          modems: String(this.modemsQty),
           notes: this.notes || null,
         });
       },

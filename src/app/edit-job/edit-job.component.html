@@ -48,6 +48,16 @@
           class="job-type-picker">
         </ListPicker>
 
+        <app-quantity-stepper
+          label="Modems"
+          [value]="modemsQty"
+          [min]="0"
+          [max]="20"
+          [step]="1"
+          (valueChange)="onModemsChanged($event)"
+          class="modems-stepper">
+        </app-quantity-stepper>
+
         <TextView
           hint="Notes"
           [text]="notes"

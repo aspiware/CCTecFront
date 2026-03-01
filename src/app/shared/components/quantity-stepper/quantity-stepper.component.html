@@ -1,0 +1,31 @@
+<StackLayout class="stepper-root">
+  <Label *ngIf="label" [text]="label" class="stepper-label"></Label>
+
+  <GridLayout columns="56,*,56" class="stepper-row">
+    <Button
+      col="0"
+      text="-"
+      class="stepper-btn"
+      [isEnabled]="!disabled"
+      (tap)="decrement()">
+    </Button>
+
+    <TextField
+      col="1"
+      [text]="value + ''"
+      keyboardType="number"
+      textAlignment="center"
+      class="stepper-input"
+      [isEnabled]="!disabled"
+      (textChange)="onTextChange($event.value)">
+    </TextField>
+
+    <Button
+      col="2"
+      text="+"
+      class="stepper-btn"
+      [isEnabled]="!disabled"
+      (tap)="increment()">
+    </Button>
+  </GridLayout>
+</StackLayout>
