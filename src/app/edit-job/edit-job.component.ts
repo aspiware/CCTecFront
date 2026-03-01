@@ -1,10 +1,11 @@
-import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnInit, ViewChild } from '@angular/core';
 import { ModalDialogParams, NativeScriptCommonModule } from '@nativescript/angular';
 import { Dialogs } from '@nativescript/core';
 import { getNumber } from '@nativescript/core/application-settings';
 import { SegmentedBarItem } from '@nativescript/core';
 import { ObservableArray } from '@nativescript/core';
-import { NativeScriptUIListViewModule } from 'nativescript-ui-listview/angular';
+import { ListViewEventData } from 'nativescript-ui-listview';
+import { NativeScriptUIListViewModule, RadListViewComponent } from 'nativescript-ui-listview/angular';
 import { Item } from '../shared/components/menu-button/item';
 import { MenuEvent } from '../shared/components/menu-button';
 import { QuantityStepperComponent } from '../shared/components/quantity-stepper/quantity-stepper.component';
@@ -33,9 +34,12 @@ export class EditJobComponent implements OnInit {
   public modemsQty = 0;
   public segmentItems: SegmentedBarItem[] = [];
   public selectedSegmentIndex = 0;
-  public customTypeList = new ObservableArray<any>([]);
+  public jobUserTypesList = new ObservableArray<any>([]);
+  public selectedJobType: any[] = [];
   public selectedCustomTypeIds = new Set<number>();
   public customTypeEmptyMessage = '';
+  @ViewChild('listView', { static: false, read: RadListViewComponent })
+  public listViewRef?: RadListViewComponent;
   public mainMenu: Item = {
     name: 'Main Menu',
     options: [
@@ -105,7 +109,8 @@ export class EditJobComponent implements OnInit {
       this.loadCustomTypesBySegment();
       return;
     }
-    this.customTypeList.splice(0);
+    this.jobUserTypesList.splice(0);
+    this.selectedJobType = [];
     this.selectedCustomTypeIds.clear();
     this.customTypeEmptyMessage = '';
   }
@@ -144,22 +149,30 @@ export class EditJobComponent implements OnInit {
     return Number(selected?.id) === 17;
   }
 
-  public onCustomTypeTap(event: any): void {
-    const item = this.customTypeList.getItem(event?.index);
+  public onListLoaded(): void {
+    // kept for parity with old implementation
+  }
+
+  public onItemSelected(args: ListViewEventData): void {
+    const item = this.jobUserTypesList.getItem(args?.index);
     const id = Number(item?.jobTypeId || item?.id);
     if (!id) {
       return;
     }
-    if (this.selectedCustomTypeIds.has(id)) {
-      this.selectedCustomTypeIds.delete(id);
-    } else {
+    if (!this.selectedCustomTypeIds.has(id)) {
       this.selectedCustomTypeIds.add(id);
+      this.selectedJobType.push(item);
     }
   }
 
-  public isCustomTypeSelected(item: any): boolean {
+  public onItemDeselected(args: ListViewEventData): void {
+    const item = this.jobUserTypesList.getItem(args?.index);
     const id = Number(item?.jobTypeId || item?.id);
-    return this.selectedCustomTypeIds.has(id);
+    if (!id) {
+      return;
+    }
+    this.selectedCustomTypeIds.delete(id);
+    this.selectedJobType = this.selectedJobType.filter((entry) => Number(entry?.jobTypeId || entry?.id) !== id);
   }
 
   private loadJobTypes(): void {
@@ -296,7 +309,7 @@ export class EditJobComponent implements OnInit {
 
   private loadCustomTypesBySegment(): void {
     if (!this.userId) {
-      this.customTypeList.splice(0);
+      this.jobUserTypesList.splice(0);
       this.customTypeEmptyMessage = 'Unable to load custom job types.';
       return;
     }
@@ -306,13 +319,13 @@ export class EditJobComponent implements OnInit {
     this.todayService.getJobPricesByUser(this.userId, category, true).subscribe({
       next: (res: any) => {
         const list = Array.isArray(res) ? res : [];
-        this.customTypeList.splice(0);
-        this.customTypeList.push(...list);
+        this.jobUserTypesList.splice(0);
+        this.jobUserTypesList.push(...list);
         this.customTypeEmptyMessage = list.length ? '' : 'No custom job types for this segment.';
       },
       error: (error) => {
         console.log('[EditJob] getJobPricesByUser error', error);
-        this.customTypeList.splice(0);
+        this.jobUserTypesList.splice(0);
         this.customTypeEmptyMessage = 'Unable to load custom job types.';
       },
     });

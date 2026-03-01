@@ -44,27 +44,28 @@
         <Label
           class="empty-message"
           [text]="customTypeEmptyMessage"
-          [visibility]="(isCustomJobTypeSelected && !customTypeList.length) ? 'visible' : 'collapse'">
+          [visibility]="(isCustomJobTypeSelected && !jobUserTypesList.length) ? 'visible' : 'collapse'">
         </Label>
 
         <RadListView
-          [items]="customTypeList"
-          [visibility]="(isCustomJobTypeSelected && customTypeList.length) ? 'visible' : 'collapse'"
-          class="custom-types-list"
-          selectionBehavior="None"
-          (itemTap)="onCustomTypeTap($event)">
+          #listView
+          (loaded)="onListLoaded()"
+          (itemSelected)="onItemSelected($event)"
+          (itemDeselected)="onItemDeselected($event)"
+          height="30%"
+          [items]="jobUserTypesList"
+          [visibility]="(isCustomJobTypeSelected && jobUserTypesList.length) ? 'visible' : 'collapse'"
+          selectionBehavior="LongPress"
+          multipleSelection="true"
+          style="margin-top: 20;">
           <ng-template tkListItemTemplate let-item="item">
-            <GridLayout columns="*,auto" class="custom-type-row" [class.custom-type-row-selected]="isCustomTypeSelected(item)">
-              <Label
-                col="0"
-                [text]="(item?.name || item?.description || '-') + '  $' + (item?.price || 0)"
-                class="custom-type-name">
-              </Label>
-              <Label
-                col="1"
-                class="fas custom-type-check"
-                [text]="isCustomTypeSelected(item) ? '&#xf14a;' : '&#xf096;'">
-              </Label>
+            <GridLayout rows="auto" columns="*, auto" style="margin-left: 40; margin-right: 20; margin-top: 6; margin-bottom: 6;">
+              <GridLayout orientation="horizontal" class="item-bag" col="0" columns="*, auto">
+                <StackLayout orientation="horizontal" col="0">
+                  <Label [text]="item.name"></Label>
+                  <Label [text]="item.price | currency"></Label>
+                </StackLayout>
+              </GridLayout>
             </GridLayout>
           </ng-template>
         </RadListView>
