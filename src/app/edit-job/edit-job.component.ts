@@ -314,37 +314,51 @@ export class EditJobComponent implements OnInit {
       ? 17
       : Number(selectedType?.id || this.job?.jobTypeId || this.job?.jobType?.id || 0);
 
-    const payload = [
-      this.job?.id,
-      nextJobTypeId || this.job?.jobTypeId,
-      this.notes || null,
-    ];
+    const updatedJob = {
+      ...this.job,
+      jobTypeId: nextJobTypeId || this.job?.jobTypeId,
+      modems: String(this.modemsQty),
+      tvBoxes: String(this.tvBoxesQty),
+      cameras: String(this.camerasQty),
+      sensors: String(this.sensorsQty),
+      customJob: this.isCustomJobTypeSelected
+        ? {
+            ...(this.job?.customJob || {}),
+            modems: this.modemsQty,
+            tvBoxes: this.tvBoxesQty,
+            cameras: this.camerasQty,
+            sensors: this.sensorsQty,
+            hasPanel: this.includePanel,
+            jobTypesIds: Array.from(this.selectedCustomTypeIds),
+            totalPrice: this.customTotalPrice,
+          }
+        : this.job?.customJob,
+      notes: this.notes || null,
+    };
+
+    const save$ = this.isCustomJobTypeSelected
+      ? this.todayService.updateCustomJob([
+          updatedJob.id,
+          17,
+          updatedJob.notes,
+          JSON.stringify(updatedJob.customJob?.jobTypesIds || []),
+          Number(updatedJob.customJob?.sensors || 0),
+          Number(updatedJob.customJob?.cameras || 0),
+          Number(updatedJob.customJob?.tvBoxes || 0),
+          Number(updatedJob.customJob?.modems || 0),
+          Boolean(updatedJob.customJob?.hasPanel),
+        ])
+      : this.todayService.update([
+          updatedJob.id,
+          updatedJob.jobTypeId,
+          updatedJob.notes,
+        ]);
 
     this.setLoading(true);
-    this.todayService.update(payload).subscribe({
+    save$.subscribe({
       next: () => {
         this.setLoading(false);
-        this.modalParams.closeCallback({
-          ...this.job,
-          jobTypeId: nextJobTypeId || this.job?.jobTypeId,
-          modems: String(this.modemsQty),
-          tvBoxes: String(this.tvBoxesQty),
-          cameras: String(this.camerasQty),
-          sensors: String(this.sensorsQty),
-          customJob: this.isCustomJobTypeSelected
-            ? {
-                ...(this.job?.customJob || {}),
-                modems: this.modemsQty,
-                tvBoxes: this.tvBoxesQty,
-                cameras: this.camerasQty,
-                sensors: this.sensorsQty,
-                hasPanel: this.includePanel,
-                jobTypesIds: Array.from(this.selectedCustomTypeIds),
-                totalPrice: this.customTotalPrice,
-              }
-            : this.job?.customJob,
-          notes: this.notes || null,
-        });
+        this.modalParams.closeCallback(updatedJob);
       },
       error: (error) => {
         console.log('[EditJob] update error', error);
