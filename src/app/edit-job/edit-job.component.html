@@ -41,6 +41,34 @@
           class="job-segment">
         </SegmentedBar>
 
+        <Label
+          class="empty-message"
+          [text]="customTypeEmptyMessage"
+          [visibility]="(isCustomJobTypeSelected && !customTypeList.length) ? 'visible' : 'collapse'">
+        </Label>
+
+        <RadListView
+          [items]="customTypeList"
+          [visibility]="(isCustomJobTypeSelected && customTypeList.length) ? 'visible' : 'collapse'"
+          class="custom-types-list"
+          selectionBehavior="None"
+          (itemTap)="onCustomTypeTap($event)">
+          <ng-template tkListItemTemplate let-item="item">
+            <GridLayout columns="*,auto" class="custom-type-row" [class.custom-type-row-selected]="isCustomTypeSelected(item)">
+              <Label
+                col="0"
+                [text]="(item?.name || item?.description || '-') + '  $' + (item?.price || 0)"
+                class="custom-type-name">
+              </Label>
+              <Label
+                col="1"
+                class="fas custom-type-check"
+                [text]="isCustomTypeSelected(item) ? '&#xf14a;' : '&#xf096;'">
+              </Label>
+            </GridLayout>
+          </ng-template>
+        </RadListView>
+
         <ListPicker
           [items]="jobTypeLabels"
           [selectedIndex]="selectedTypeIndex"

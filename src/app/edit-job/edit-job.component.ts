@@ -1,7 +1,10 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnInit } from '@angular/core';
 import { ModalDialogParams, NativeScriptCommonModule } from '@nativescript/angular';
 import { Dialogs } from '@nativescript/core';
+import { getNumber } from '@nativescript/core/application-settings';
 import { SegmentedBarItem } from '@nativescript/core';
+import { ObservableArray } from '@nativescript/core';
+import { NativeScriptUIListViewModule } from 'nativescript-ui-listview/angular';
 import { Item } from '../shared/components/menu-button/item';
 import { MenuEvent } from '../shared/components/menu-button';
 import { QuantityStepperComponent } from '../shared/components/quantity-stepper/quantity-stepper.component';
@@ -10,13 +13,14 @@ import { TodayService } from '../today/today.service';
 @Component({
   standalone: true,
   selector: 'app-edit-job',
-  imports: [NativeScriptCommonModule, QuantityStepperComponent],
+  imports: [NativeScriptCommonModule, NativeScriptUIListViewModule, QuantityStepperComponent],
   schemas: [NO_ERRORS_SCHEMA],
   templateUrl: './edit-job.component.html',
   styleUrl: './edit-job.component.scss',
 })
 export class EditJobComponent implements OnInit {
   public job: any;
+  private userId = 0;
   public notes = '';
   public isKeyboardOpen = false;
   public isLoading = false;
@@ -29,6 +33,9 @@ export class EditJobComponent implements OnInit {
   public modemsQty = 0;
   public segmentItems: SegmentedBarItem[] = [];
   public selectedSegmentIndex = 0;
+  public customTypeList = new ObservableArray<any>([]);
+  public selectedCustomTypeIds = new Set<number>();
+  public customTypeEmptyMessage = '';
   public mainMenu: Item = {
     name: 'Main Menu',
     options: [
@@ -54,7 +61,11 @@ export class EditJobComponent implements OnInit {
     this.job = this.modalParams.context;
     this.notes = this.job?.notes || '';
     this.modemsQty = Number(this.job?.modems || 0);
-    this.segmentItems = ['Residential', 'XH', 'Business'].map((label) => {
+    const initialCustomIds = Array.isArray(this.job?.customJob?.jobTypesIds)
+      ? this.job.customJob.jobTypesIds
+      : [];
+    this.selectedCustomTypeIds = new Set(initialCustomIds.map((id: any) => Number(id)).filter((id: number) => !!id));
+    this.segmentItems = ['Residential', 'XH', 'Business', 'Fiber'].map((label) => {
       const item = new SegmentedBarItem();
       item.title = label;
       return item;
@@ -62,6 +73,7 @@ export class EditJobComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.userId = getNumber('userId', 15);
     setTimeout(() => {
       this.viewReady = true;
       this.loadJobTypes();
@@ -89,14 +101,24 @@ export class EditJobComponent implements OnInit {
       return;
     }
     this.selectedTypeIndex = index;
+    if (this.isCustomJobTypeSelected) {
+      this.loadCustomTypesBySegment();
+      return;
+    }
+    this.customTypeList.splice(0);
+    this.selectedCustomTypeIds.clear();
+    this.customTypeEmptyMessage = '';
   }
 
   public onSegmentChanged(event: any): void {
     const index = Number(event?.value);
-    if (Number.isNaN(index) || index < 0 || index > 2) {
+    if (Number.isNaN(index) || index < 0 || index > 3) {
       return;
     }
     this.selectedSegmentIndex = index;
+    if (this.isCustomJobTypeSelected) {
+      this.loadCustomTypesBySegment();
+    }
   }
 
   public onNotesChanged(value: string): void {
@@ -122,6 +144,24 @@ export class EditJobComponent implements OnInit {
     return Number(selected?.id) === 17;
   }
 
+  public onCustomTypeTap(event: any): void {
+    const item = this.customTypeList.getItem(event?.index);
+    const id = Number(item?.jobTypeId || item?.id);
+    if (!id) {
+      return;
+    }
+    if (this.selectedCustomTypeIds.has(id)) {
+      this.selectedCustomTypeIds.delete(id);
+    } else {
+      this.selectedCustomTypeIds.add(id);
+    }
+  }
+
+  public isCustomTypeSelected(item: any): boolean {
+    const id = Number(item?.jobTypeId || item?.id);
+    return this.selectedCustomTypeIds.has(id);
+  }
+
   private loadJobTypes(): void {
     this.isLoadingTypes = true;
     this.setLoading(true);
@@ -139,6 +179,9 @@ export class EditJobComponent implements OnInit {
             this.jobTypeLabels = list.map((item) => item?.name || item?.description || `Type #${item?.id}`);
             this.selectedTypeIndex = this.findInitialIndex(list);
             this.emptyMessage = '';
+            if (this.isCustomJobTypeSelected) {
+              this.loadCustomTypesBySegment();
+            }
           } else {
             this.jobTypeLabels = ['No job types available'];
             this.selectedTypeIndex = 0;
@@ -249,5 +292,44 @@ export class EditJobComponent implements OnInit {
       }
     }
     return [];
+  }
+
+  private loadCustomTypesBySegment(): void {
+    if (!this.userId) {
+      this.customTypeList.splice(0);
+      this.customTypeEmptyMessage = 'Unable to load custom job types.';
+      return;
+    }
+
+    const category = this.getSelectedSegmentCategory();
+    this.customTypeEmptyMessage = '';
+    this.todayService.getJobPricesByUser(this.userId, category, true).subscribe({
+      next: (res: any) => {
+        const list = Array.isArray(res) ? res : [];
+        this.customTypeList.splice(0);
+        this.customTypeList.push(...list);
+        this.customTypeEmptyMessage = list.length ? '' : 'No custom job types for this segment.';
+      },
+      error: (error) => {
+        console.log('[EditJob] getJobPricesByUser error', error);
+        this.customTypeList.splice(0);
+        this.customTypeEmptyMessage = 'Unable to load custom job types.';
+      },
+    });
+  }
+
+  private getSelectedSegmentCategory(): string {
+    switch (this.selectedSegmentIndex) {
+      case 0:
+        return 'Residential';
+      case 1:
+        return 'XH';
+      case 2:
+        return 'Business';
+      case 3:
+        return 'Fiber';
+      default:
+        return 'Residential';
+    }
   }
 }

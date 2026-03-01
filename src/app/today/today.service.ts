@@ -149,5 +149,15 @@ export class TodayService {
       `${this.configService.getUrlBase()}/jobs/findJobTypes/${active}`
     );
   }
+
+  public getJobPricesByUser(
+    userId: number,
+    category: string,
+    activeOnly = true
+  ): Observable<any[]> {
+    return this.httpClient.get<any[]>(
+      `${this.configService.getUrlBase()}/jobs/getJobPricesByUser/${userId}/${category}/${activeOnly}`
+    );
+  }
   
 }

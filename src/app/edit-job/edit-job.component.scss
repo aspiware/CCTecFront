@@ -105,6 +105,31 @@
   margin-bottom: 8;
 }
 
+.custom-types-list {
+  height: 170;
+  margin-top: 6;
+  margin-bottom: 8;
+}
+
+.custom-type-row {
+  padding: 10;
+  border-radius: 10;
+  border-width: 1;
+  margin-top: 6;
+}
+
+.custom-type-row-selected {
+  border-color: #0a84ff;
+}
+
+.custom-type-name {
+  font-size: 14;
+}
+
+.custom-type-check {
+  font-size: 16;
+}
+
 .job-type-picker {
   margin-top: 8;
   margin-bottom: 4;
@@ -149,7 +174,27 @@
   color: #1c1c1e;
 }
 
+.ns-light .custom-type-row {
+  background-color: #ffffff;
+  border-color: rgba(60, 60, 67, 0.20);
+}
+
+.ns-light .custom-type-name,
+.ns-light .custom-type-check {
+  color: #1c1c1e;
+}
+
 .ns-dark .section-title,
 .ns-dark .empty-message {
+  color: #f2f2f7;
+}
+
+.ns-dark .custom-type-row {
+  background-color: #2c2c2e;
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.ns-dark .custom-type-name,
+.ns-dark .custom-type-check {
   color: #f2f2f7;
 }
