@@ -121,9 +121,8 @@ export class EditJobComponent implements OnInit {
       return;
     }
     this.selectedSegmentIndex = index;
-    if (this.isCustomJobTypeSelected) {
-      this.loadCustomTypesBySegment();
-    }
+    this.loadPickerJobsBySegment();
+    this.loadCustomTypesBySegment();
   }
 
   public onNotesChanged(value: string): void {
@@ -192,9 +191,8 @@ export class EditJobComponent implements OnInit {
             this.jobTypeLabels = list.map((item) => item?.name || item?.description || `Type #${item?.id}`);
             this.selectedTypeIndex = this.findInitialIndex(list);
             this.emptyMessage = '';
-            if (this.isCustomJobTypeSelected) {
-              this.loadCustomTypesBySegment();
-            }
+            this.loadPickerJobsBySegment();
+            this.loadCustomTypesBySegment();
           } else {
             this.jobTypeLabels = ['No job types available'];
             this.selectedTypeIndex = 0;
@@ -305,6 +303,32 @@ export class EditJobComponent implements OnInit {
       }
     }
     return [];
+  }
+
+  private loadPickerJobsBySegment(): void {
+    if (!this.userId) {
+      return;
+    }
+    const category = this.getSelectedSegmentCategory();
+    this.todayService.getJobPricesByUser(this.userId, category, true).subscribe({
+      next: (res: any) => {
+        const list = Array.isArray(res) ? res : [];
+        if (!list.length) {
+          return;
+        }
+        const normalized = list.map((item: any) => ({
+          id: Number(item?.jobTypeId || item?.id),
+          name: item?.name || item?.description || '-',
+        }));
+        this.jobTypes = normalized;
+        this.jobTypeLabels = normalized.map((item: any) => item.name);
+        this.selectedTypeIndex = 0;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.log('[EditJob] loadPickerJobsBySegment error', error);
+      },
+    });
   }
 
   private loadCustomTypesBySegment(): void {

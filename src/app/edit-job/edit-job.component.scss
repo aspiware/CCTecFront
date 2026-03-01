@@ -31,7 +31,7 @@
 
 .form-scroll {
   width: 100%;
-  height: 40%;
+  height: 80%;
 }
 
 .modal-card.keyboard-open {
@@ -103,6 +103,14 @@
 .job-segment {
   margin-top: 8;
   margin-bottom: 8;
+}
+
+.item-bag {
+  background-color: rgba(126, 151, 185, 0.2);
+  border-radius: 8;
+  padding: 12;
+  border-width: 1;
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 .custom-types-list {
