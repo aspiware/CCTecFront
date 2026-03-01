@@ -49,28 +49,30 @@
           [visibility]="(isCustomJobTypeSelected && !jobUserTypesList.length) ? 'visible' : 'collapse'">
         </Label>
 
-        <RadListView
-          #listView
-          (loaded)="onListLoaded()"
-          (itemSelected)="onItemSelected($event)"
-          (itemDeselected)="onItemDeselected($event)"
-          height="220"
-          [items]="jobUserTypesList"
-          [visibility]="isCustomJobTypeSelected ? 'visible' : 'collapse'"
-          selectionBehavior="LongPress"
-          multipleSelection="true"
-          style="margin-top: 20;">
-          <ng-template tkListItemTemplate let-item="item">
-            <GridLayout rows="auto" columns="*, auto" style="margin-left: 40; margin-right: 20; margin-top: 6; margin-bottom: 6;">
-              <GridLayout orientation="horizontal" class="item-bag" col="0" columns="*, auto">
-                <StackLayout orientation="horizontal" col="0">
-                  <Label [text]="item.name"></Label>
-                  <Label [text]="item.price | currency"></Label>
-                </StackLayout>
+        <GridLayout
+          class="custom-list-wrap"
+          [visibility]="isCustomJobTypeSelected ? 'visible' : 'collapse'">
+          <RadListView
+            #listView
+            (loaded)="onListLoaded()"
+            (itemSelected)="onItemSelected($event)"
+            (itemDeselected)="onItemDeselected($event)"
+            [items]="jobUserTypesList"
+            selectionBehavior="LongPress"
+            multipleSelection="true"
+            class="custom-types-list">
+            <ng-template tkListItemTemplate let-item="item">
+              <GridLayout rows="auto" columns="*, auto" style="margin-left: 40; margin-right: 20; margin-top: 6; margin-bottom: 6;">
+                <GridLayout orientation="horizontal" class="item-bag" col="0" columns="*, auto">
+                  <StackLayout orientation="horizontal" col="0">
+                    <Label [text]="item.name"></Label>
+                    <Label [text]="item.price | currency"></Label>
+                  </StackLayout>
+                </GridLayout>
               </GridLayout>
-            </GridLayout>
-          </ng-template>
-        </RadListView>
+            </ng-template>
+          </RadListView>
+        </GridLayout>
 
         <ListPicker
           [items]="jobTypeLabels"
