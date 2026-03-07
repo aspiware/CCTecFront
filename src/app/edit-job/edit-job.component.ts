@@ -500,7 +500,6 @@ export class EditJobComponent implements OnInit {
     this.isCustomChecked = !this.isCustomChecked;
     if (this.isCustomChecked) {
       this.resetEditFormState();
-      this.selectedTypeIndex = -1;
       this.loadCustomTypesBySegment();
       this.recalculateCustomTotal();
       this.cdr.detectChanges();
