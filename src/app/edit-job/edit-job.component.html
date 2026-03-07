@@ -25,7 +25,12 @@
         </StackLayout>
       </GridLayout>
 
-      <ScrollView #bodyScroll row="1" class="form-scroll" (tap)="dismissNotesKeyboard()">
+      <ScrollView
+        #bodyScroll
+        row="1"
+        class="form-scroll"
+        [class.form-scroll-custom]="isCustomJobTypeSelected"
+        (tap)="dismissNotesKeyboard()">
       <StackLayout class="content" [class.content-notes-focused]="isNotesFocused">
         <ActivityIndicator
           [busy]="isLoadingTypes"
