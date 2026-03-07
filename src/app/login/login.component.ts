@@ -95,6 +95,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     const password = String(this.loginForm.controls.password.value || '');
     const authMethodId = this.loginForm.controls.authMethodId.value;
     this.isBusy = true;
+    this.cdr.detectChanges();
 
     this.loginService.authorize(username, password, authMethodId).subscribe({
       next: (response: any) => {
@@ -110,13 +111,14 @@ export class LoginComponent implements OnInit, OnDestroy {
       error: async (error) => {
         console.log("ERROR LOGIN", error?.error);
         this.isBusy = false;
+        this.cdr.detectChanges();
         const message =
           error?.error?.response ||
           error?.error?.message ||
           error?.message ||
           'Login failed.';
         await alert({
-          title: 'Login',
+          title: 'Login failed',
           message: String(message),
           okButtonText: 'OK',
         });
@@ -209,6 +211,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
         if (res.error) {
           this.isBusy = false;
+          this.cdr.detectChanges();
           const message = res.error?.error?.message || res.error?.message || 'Login failed.';
           await alert({
             title: 'Login',
