@@ -47,16 +47,17 @@ export class MsAuthPushComponent {
             case 'AuthenticationPending':
               await alert({
                 title: 'Verification',
-                message: 'You dont enter number on authenticator app.',
+                message: 'Please confirm the number in the Authenticator app.',
                 okButtonText: 'OK',
               });
               break;
             case 'PhoneAppEntropyIncorrect':
               await alert({
                 title: 'Verification',
-                message: 'The number you entered on Authenticator app did not match.',
+                message: 'The number entered in the Authenticator app did not match. Please try again.',
                 okButtonText: 'OK',
               });
+              this.modalParams.closeCallback();
               break;
             case 'PhoneAppDenied':
               await alert({
@@ -64,13 +65,15 @@ export class MsAuthPushComponent {
                 message: 'The request was denied. Please try again.',
                 okButtonText: 'OK',
               });
+              this.modalParams.closeCallback();
               break;
             default:
                await alert({
                 title: 'Verification',
-                message: 'cierra ventana y da login de nuevo.',
+                message: 'An error occurred while generating the number. Try again.',
                 okButtonText: 'OK',
               });
+              this.modalParams.closeCallback();
               break;
           }
 
