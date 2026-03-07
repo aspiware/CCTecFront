@@ -1,4 +1,7 @@
-<ScrollView row="1" class="form-scroll">
+<ScrollView
+  row="1"
+  [class]="'form-scroll ' + (isDarkTheme ? 'theme-dark' : 'theme-light')"
+  (loaded)="onRootLoaded()">
   <StackLayout class="form1">
   <StackLayout verticalAlignment="center" class="form" [formGroup]="loginForm">
     <Label text="Welcome back" class="logo"></Label>
