@@ -51,7 +51,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.syncTheme();
-    this.authMethodItems = ['Authenticator', 'Push', 'SMS'].map((label) => {
+    this.authMethodItems = ['OTP Code', 'Push', 'SMS'].map((label) => {
       const item = new SegmentedBarItem();
       item.title = label;
       return item;
