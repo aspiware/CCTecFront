@@ -35,7 +35,7 @@ export class SummaryComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.user = { userId: 0 };
+    this.user = this.usersService.getUser();
 
     this.syncSummary();
   }
@@ -56,7 +56,7 @@ export class SummaryComponent implements OnInit {
       this.cdr.detectChanges();
     };
 
-    this.summaryService.getNextPayment(this.user.userId || 0).subscribe({
+    this.summaryService.getNextPayment(this.user.userId).subscribe({
       next: (res) => {
         this.summaryAmount = res;
         onDone();
@@ -66,7 +66,7 @@ export class SummaryComponent implements OnInit {
       },
     });
 
-    this.summaryService.getWeekAverage(this.user.userId || 0).subscribe({
+    this.summaryService.getWeekAverage(this.user.userId).subscribe({
       next: (res) => {
         this.weekAverage = res;
         const list = Array.isArray(res?.totalsPerDay) ? res.totalsPerDay : [];
