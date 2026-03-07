@@ -159,5 +159,15 @@ export class TodayService {
       `${this.configService.getUrlBase()}/jobs/getJobPricesByUser/${userId}/${category}/${activeOnly}`
     );
   }
+
+  public getActivationLink(
+    userId: number,
+    accountNumber: string,
+    workOrderNumber: number | string
+  ): Observable<any> {
+    return this.httpClient.get<any>(
+      `${this.configService.getUrlBase()}/jobs/c/getActivationLink/${userId}/${accountNumber}/${workOrderNumber}`
+    );
+  }
   
 }

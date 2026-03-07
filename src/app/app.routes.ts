@@ -9,6 +9,7 @@ import { SubscriptionComponent } from './subscription/subscription.component';
 import { subscriptionGuard } from './subscription/subscription.guard';
 import { LoginComponent } from './login/login.component';
 import { authGuard } from './login/auth.guard';
+import { ActivateServiceComponent } from './activate-service/activate-service.component';
 
 export const routes: Routes = [
   {
@@ -48,6 +49,11 @@ export const routes: Routes = [
         path: 'customer-consent',
         outlet: 'todayListTab',
         component: CustomerConsentComponent,
+      },
+      {
+        path: 'activate-service',
+        outlet: 'todayListTab',
+        component: ActivateServiceComponent,
       },
       {
         path: 'settings',

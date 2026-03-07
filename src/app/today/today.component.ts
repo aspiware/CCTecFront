@@ -9,7 +9,7 @@ import { UsersService } from '../shared/services/users.service';
 import { TodayService } from './today.service';
 import { concat, map } from 'rxjs';
 import { ConfigService } from '../shared/services/config.service';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { WifiConfigComponent } from '../wifi-config/wifi-config.component';
 import { TodayJobsCountService } from '../shared/services/today-jobs-count.service';
 import { CustomerInfoComponent } from '../customer-info/customer-info.component';
@@ -652,6 +652,7 @@ export class TodayComponent implements OnInit {
     private todayJobsCountService: TodayJobsCountService,
     private cdr: ChangeDetectorRef,
     private router: Router,
+    private activatedRoute: ActivatedRoute,
     private routerExtensions: RouterExtensions,
     private modalService: ModalDialogService,
     private vcRef: ViewContainerRef
@@ -1050,6 +1051,13 @@ export class TodayComponent implements OnInit {
         this.getWorkOrders();
       }
       this.clearJobActionTap(job, 'edit');
+    });
+  }
+
+  public goToActivateService(job?: any): void {
+    this.router.navigate(['../activate-service'], {
+      queryParams: job,
+      relativeTo: this.activatedRoute,
     });
   }
 
