@@ -159,7 +159,9 @@ export class EditJobComponent implements OnInit {
       return;
     }
     this.selectedSegmentIndex = index;
-    this.loadPickerJobsBySegment();
+    if (!this.isCustomJobTypeSelected) {
+      this.loadPickerJobsBySegment();
+    }
     this.loadCustomTypesBySegment();
   }
 
