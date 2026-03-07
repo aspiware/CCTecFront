@@ -440,6 +440,12 @@ export class EditJobComponent implements OnInit {
     if (!this.userId) {
       return;
     }
+    const currentTypeId = Number(
+      this.jobTypes[this.selectedTypeIndex]?.id ||
+      this.job?.jobTypeId ||
+      this.job?.jobType?.id ||
+      0
+    );
     const category = this.getSelectedSegmentCategory();
     this.todayService.getJobPricesByUser(this.userId, category, true).subscribe({
       next: (res: any) => {
@@ -453,7 +459,8 @@ export class EditJobComponent implements OnInit {
         }));
         this.jobTypes = normalized;
         this.jobTypeLabels = normalized.map((item: any) => item.name);
-        this.selectedTypeIndex = 0;
+        const nextIndex = normalized.findIndex((item: any) => Number(item?.id) === currentTypeId);
+        this.selectedTypeIndex = nextIndex >= 0 ? nextIndex : 0;
         this.cdr.detectChanges();
       },
       error: (error) => {
