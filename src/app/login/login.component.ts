@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit, ViewContainerRef } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, NO_ERRORS_SCHEMA, OnDestroy, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
 import { ModalDialogService, NativeScriptCommonModule, NativeScriptFormsModule, RouterExtensions } from '@nativescript/angular';
 import { ActivatedRoute } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -31,6 +31,8 @@ export class LoginComponent implements OnInit, OnDestroy {
     authMethodId: new FormControl('PhoneAppOTP', { nonNullable: true }),
   });
   public isBusy = false;
+  @ViewChild('passwordInput', { static: false })
+  private passwordInputRef?: ElementRef;
   private redirectTo = '/tabs';
   private appearanceChangedHandler?: (args: unknown) => void;
   private signupResponse = {};
@@ -78,7 +80,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   public focusPassword(): void {
-    // Reserved for input focus behavior.
+    this.passwordInputRef?.nativeElement?.focus?.();
   }
 
   public login(): void {
