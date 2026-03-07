@@ -7,7 +7,7 @@ import { Item } from '~/app/shared/components/menu-button/item';
 import { UserModel } from '../shared/models/user.model';
 import { UsersService } from '../shared/services/users.service';
 import { TodayService } from './today.service';
-import { concat, map } from 'rxjs';
+import { concat, map, Subscription } from 'rxjs';
 import { ConfigService } from '../shared/services/config.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { WifiConfigComponent } from '../wifi-config/wifi-config.component';
@@ -644,6 +644,7 @@ export class TodayComponent implements OnInit {
   private messageComposeDelegate: any;
   private actionTapStates: { [key: string]: boolean } = {};
   private actionTapTimers: { [key: string]: ReturnType<typeof setTimeout> } = {};
+  private dataSubscription?: Subscription;
 
   constructor(
     private usersService: UsersService,
@@ -662,6 +663,11 @@ export class TodayComponent implements OnInit {
     this.jobList = new ObservableArray([]);
     this.user = this.usersService.getUser() || { userId: 0 };
     this.mainMenuIconName = 'questionmark';
+    this.dataSubscription = this.configService.data$.subscribe((event: any) => {
+      if (event?.type === 'surveySent' && event?.jobNumber) {
+        this.applySurveySentFlag(String(event.jobNumber));
+      }
+    });
 
     if (this.isDemoUser()) {
       this.applyJobsForDisplay(this.demoJobs.map((job) => ({ ...job })));
@@ -1062,6 +1068,23 @@ export class TodayComponent implements OnInit {
       queryParams: job,
       relativeTo: this.activatedRoute,
     });
+  }
+
+  ngOnDestroy(): void {
+    this.dataSubscription?.unsubscribe();
+  }
+
+  private applySurveySentFlag(jobNumber: string): void {
+    if (!this.jobList?.length) {
+      return;
+    }
+    for (let i = 0; i < this.jobList.length; i++) {
+      const item = this.jobList.getItem(i);
+      if (String(item?.number || '') === jobNumber) {
+        item.sms_survey_sent = true;
+      }
+    }
+    this.cdr.detectChanges();
   }
 
   private presentSmsComposer(recipients: string[], body: string): void {

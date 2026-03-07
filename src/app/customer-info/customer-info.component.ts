@@ -446,6 +446,7 @@ export class CustomerInfoComponent implements OnInit {
       return;
     }
     this.configService.setSurveySent(jobNumber);
+    this.configService.sendData({ type: 'surveySent', jobNumber });
     this.job.sms_survey_sent = true;
   }
 
