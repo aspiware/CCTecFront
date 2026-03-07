@@ -21,9 +21,6 @@ import { MsAuthPushComponent } from '../ms-auth-push/ms-auth-push.component';
   styleUrl: './login.component.scss',
 })
 export class LoginComponent implements OnInit, OnDestroy {
-  // TEMP: hardcoded credentials for QA testing
-  private readonly TEST_BP = 'bp-asuare710';
-  private readonly TEST_PASSWORD = 'SuarezPerez1992-2';
   public isDarkTheme = Application.systemAppearance() === 'dark';
   public showPass = false;
   public authMethodItems: SegmentedBarItem[] = [];
@@ -51,11 +48,6 @@ export class LoginComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    this.loginForm.patchValue({
-      username: this.TEST_BP,
-      password: this.TEST_PASSWORD,
-    });
-
     this.syncTheme();
     this.authMethodItems = ['Authenticator', 'Push', 'SMS'].map((label) => {
       const item = new SegmentedBarItem();
@@ -99,8 +91,8 @@ export class LoginComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const username = this.TEST_BP.trim().toLowerCase();
-    const password = this.TEST_PASSWORD;
+    const username = String(this.loginForm.controls.username.value || '').trim().toLowerCase();
+    const password = String(this.loginForm.controls.password.value || '');
     const authMethodId = this.loginForm.controls.authMethodId.value;
     this.isBusy = true;
 
