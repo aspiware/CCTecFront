@@ -1024,6 +1024,9 @@ export class TodayComponent implements OnInit {
     };
 
     this.modalService.showModal(CustomerInfoComponent, options).then(() => {
+      const surveySent = this.configService.getSurveySent(job?.number);
+      job.sms_survey_sent = !!surveySent;
+      this.cdr.detectChanges();
       this.clearJobActionTap(job, 'customer');
     });
   }
