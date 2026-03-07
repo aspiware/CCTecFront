@@ -90,14 +90,26 @@ export class EditJobComponent implements OnInit {
   ) {
     this.job = this.modalParams.context;
     this.notes = this.job?.notes || '';
+    this.isCustomChecked = Number(this.job?.jobTypeId || this.job?.jobType?.id) === 17;
     this.modemsQty = Number(this.job?.customJob?.modems ?? this.job?.modems ?? 0);
     this.tvBoxesQty = Number(this.job?.customJob?.tvBoxes ?? this.job?.tvBoxes ?? 0);
     this.camerasQty = Number(this.job?.customJob?.cameras ?? this.job?.cameras ?? 0);
     this.sensorsQty = Number(this.job?.customJob?.sensors ?? this.job?.sensors ?? 0);
     this.includePanel = Boolean(this.job?.customJob?.hasPanel ?? false);
-    const initialCustomIds = Array.isArray(this.job?.customJob?.jobTypesIds)
-      ? this.job.customJob.jobTypesIds
-      : [];
+    const initialCustomIdsRaw = this.job?.customJob?.jobTypesIds;
+    const initialCustomIds = Array.isArray(initialCustomIdsRaw)
+      ? initialCustomIdsRaw
+      : (() => {
+          if (typeof initialCustomIdsRaw !== 'string') {
+            return [];
+          }
+          try {
+            const parsed = JSON.parse(initialCustomIdsRaw);
+            return Array.isArray(parsed) ? parsed : [];
+          } catch {
+            return [];
+          }
+        })();
     this.selectedCustomTypeIds = new Set(initialCustomIds.map((id: any) => Number(id)).filter((id: number) => !!id));
     this.segmentItems = ['Residential', 'XH', 'Business', 'Fiber'].map((label) => {
       const item = new SegmentedBarItem();
@@ -273,7 +285,9 @@ export class EditJobComponent implements OnInit {
             this.selectedTypeIndex = this.findInitialIndex(list);
             this.isCustomChecked = Number(list[this.selectedTypeIndex]?.id) === 17;
             this.emptyMessage = '';
-            this.loadPickerJobsBySegment();
+            if (!this.isCustomChecked) {
+              this.loadPickerJobsBySegment();
+            }
             this.loadCustomTypesBySegment();
             this.recalculateCustomTotal();
           } else {
