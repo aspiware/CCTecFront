@@ -89,28 +89,25 @@ export class EditJobComponent implements OnInit {
     private cdr: ChangeDetectorRef
   ) {
     this.job = this.modalParams.context;
+    const normalizedCustomJob = this.normalizeCustomJob(this.job?.customJob);
     this.notes = this.job?.notes || '';
     this.isCustomChecked = Number(this.job?.jobTypeId || this.job?.jobType?.id) === 17;
-    this.modemsQty = Number(this.job?.customJob?.modems ?? this.job?.modems ?? 0);
-    this.tvBoxesQty = Number(this.job?.customJob?.tvBoxes ?? this.job?.tvBoxes ?? 0);
-    this.camerasQty = Number(this.job?.customJob?.cameras ?? this.job?.cameras ?? 0);
-    this.sensorsQty = Number(this.job?.customJob?.sensors ?? this.job?.sensors ?? 0);
-    this.includePanel = Boolean(this.job?.customJob?.hasPanel ?? false);
-    const initialCustomIdsRaw = this.job?.customJob?.jobTypesIds;
-    const initialCustomIds = Array.isArray(initialCustomIdsRaw)
-      ? initialCustomIdsRaw
-      : (() => {
-          if (typeof initialCustomIdsRaw !== 'string') {
-            return [];
-          }
-          try {
-            const parsed = JSON.parse(initialCustomIdsRaw);
-            return Array.isArray(parsed) ? parsed : [];
-          } catch {
-            return [];
-          }
-        })();
+    this.modemsQty = Number(normalizedCustomJob?.modems ?? this.job?.modems ?? 0);
+    this.tvBoxesQty = Number(normalizedCustomJob?.tvBoxes ?? this.job?.tvBoxes ?? 0);
+    this.camerasQty = Number(normalizedCustomJob?.cameras ?? this.job?.cameras ?? 0);
+    this.sensorsQty = Number(normalizedCustomJob?.sensors ?? this.job?.sensors ?? 0);
+    this.includePanel = this.toBoolean(normalizedCustomJob?.hasPanel ?? false);
+    const initialCustomIds = this.parseCustomTypeIds(normalizedCustomJob?.jobTypesIds);
     this.selectedCustomTypeIds = new Set(initialCustomIds.map((id: any) => Number(id)).filter((id: number) => !!id));
+    const initialCustomTypeItems = Array.isArray(normalizedCustomJob?.jobTypes)
+      ? normalizedCustomJob.jobTypes
+      : [];
+    initialCustomTypeItems.forEach((item: any) => {
+      const id = Number(item?.jobTypeId || item?.id);
+      if (id) {
+        this.selectedCustomTypeMap.set(id, item);
+      }
+    });
     this.segmentItems = ['Residential', 'XH', 'Business', 'Fiber'].map((label) => {
       const item = new SegmentedBarItem();
       item.title = label;
@@ -119,7 +116,7 @@ export class EditJobComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.userId = getNumber('userId', 15);
+    this.userId = getNumber('userId', 0);
     setTimeout(() => {
       this.viewReady = true;
       this.loadSettings();
@@ -225,7 +222,7 @@ export class EditJobComponent implements OnInit {
   }
 
   public onIncludePanelChanged(event: any): void {
-    this.includePanel = Boolean(event?.value ?? event?.object?.checked ?? false);
+    this.includePanel = this.toBoolean(event?.value ?? event?.object?.checked ?? false);
     this.recalculateCustomTotal();
   }
 
@@ -238,7 +235,7 @@ export class EditJobComponent implements OnInit {
   }
 
   public onListLoaded(): void {
-    // kept for parity with old implementation
+    this.tryRestoreSegmentSelection();
   }
 
   public onItemSelected(args: ListViewEventData): void {
@@ -499,8 +496,10 @@ export class EditJobComponent implements OnInit {
         const list = Array.isArray(res) ? res : [];
         this.jobUserTypesList.splice(0);
         this.jobUserTypesList.push(...list);
+        this.hydrateSelectedCustomItemsFromCurrentList();
         this.customTypeEmptyMessage = list.length ? '' : 'No custom job types for this segment.';
-        setTimeout(() => this.restoreSegmentSelection(), 0);
+        this.tryRestoreSegmentSelection();
+        this.recalculateCustomTotal();
         this.cdr.detectChanges();
       },
       error: (error) => {
@@ -579,6 +578,27 @@ export class EditJobComponent implements OnInit {
     }
   }
 
+  private tryRestoreSegmentSelection(attempt = 0): void {
+    this.restoreSegmentSelection();
+    if (this.listViewRef?.listView || attempt >= 20) {
+      return;
+    }
+    setTimeout(() => this.tryRestoreSegmentSelection(attempt + 1), 100);
+  }
+
+  private hydrateSelectedCustomItemsFromCurrentList(): void {
+    if (!this.jobUserTypesList?.length || !this.selectedCustomTypeIds.size) {
+      return;
+    }
+    for (let i = 0; i < this.jobUserTypesList.length; i++) {
+      const item = this.jobUserTypesList.getItem(i);
+      const id = Number(item?.jobTypeId || item?.id);
+      if (id && this.selectedCustomTypeIds.has(id)) {
+        this.selectedCustomTypeMap.set(id, item);
+      }
+    }
+  }
+
   private recalculateCustomTotal(): void {
     if (!this.isCustomJobTypeSelected) {
       this.customTotalPrice = 0;
@@ -619,5 +639,68 @@ export class EditJobComponent implements OnInit {
       default:
         return 'Residential';
     }
+  }
+
+  private toBoolean(value: any): boolean {
+    if (typeof value === 'boolean') {
+      return value;
+    }
+    if (typeof value === 'string') {
+      return value.trim().toLowerCase() === 'true';
+    }
+    if (typeof value === 'number') {
+      return value === 1;
+    }
+    return false;
+  }
+
+  private normalizeCustomJob(raw: any): any {
+    if (!raw) {
+      return {};
+    }
+    if (typeof raw === 'string') {
+      try {
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === 'object' ? parsed : {};
+      } catch {
+        return {};
+      }
+    }
+    return typeof raw === 'object' ? raw : {};
+  }
+
+  private parseCustomTypeIds(raw: any): number[] {
+    if (Array.isArray(raw)) {
+      return raw.map((id) => Number(id)).filter((id) => Number.isFinite(id) && id > 0);
+    }
+    if (typeof raw === 'number') {
+      return raw > 0 ? [raw] : [];
+    }
+    if (typeof raw !== 'string') {
+      return [];
+    }
+
+    const value = raw.trim();
+    if (!value) {
+      return [];
+    }
+
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) {
+        return parsed.map((id) => Number(id)).filter((id) => Number.isFinite(id) && id > 0);
+      }
+      if (typeof parsed === 'number') {
+        return parsed > 0 ? [parsed] : [];
+      }
+    } catch {
+      // continue with csv/simple fallback
+    }
+
+    return value
+      .replace(/^\[|\]$/g, '')
+      .split(',')
+      .map((part) => Number(String(part).replace(/"/g, '').trim()))
+      .filter((id) => Number.isFinite(id) && id > 0);
   }
 }
