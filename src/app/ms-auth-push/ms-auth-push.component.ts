@@ -43,6 +43,11 @@ export class MsAuthPushComponent {
         next: async (res) => {
           console.log(res);
 
+          if(res?.access_token){
+            this.modalParams.closeCallback(res);
+            return;
+          }
+
           switch (res?.ResultValue) {
             case 'AuthenticationPending':
               await alert({
@@ -76,8 +81,6 @@ export class MsAuthPushComponent {
               this.modalParams.closeCallback();
               break;
           }
-
-          // this.modalParams.closeCallback(res)
         },
         error: async (error) => {
           const message =

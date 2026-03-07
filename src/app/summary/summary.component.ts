@@ -35,7 +35,7 @@ export class SummaryComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.user = { userId: 15 };
+    this.user = { userId: 0 };
 
     this.syncSummary();
   }

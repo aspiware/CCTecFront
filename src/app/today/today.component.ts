@@ -659,7 +659,7 @@ export class TodayComponent implements OnInit {
 
   ngOnInit(): void {
     this.jobList = new ObservableArray([]);
-    this.user = this.usersService.getUser() || { userId: 15 };
+    this.user = this.usersService.getUser() || { userId: 0 };
     this.mainMenuIconName = 'questionmark';
 
     if (this.isDemoUser()) {

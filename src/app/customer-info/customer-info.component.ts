@@ -41,7 +41,7 @@ export class CustomerInfoComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.userId = Number(this.usersService.getUser()?.userId || 15);
+    this.userId = Number(this.usersService.getUser()?.userId || 0);
     if (!this.userId) {
       return;
     }
