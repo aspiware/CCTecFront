@@ -103,6 +103,27 @@ TextField.custom-tf-inline {
   font-size: 12;
 }
 
+.auth-method-wrap {
+  margin-top: 10;
+  margin-left: 6;
+  margin-right: 6;
+}
+
+.auth-method-label {
+  font-size: 13;
+  margin-bottom: 6;
+}
+
+.ns-light .auth-method-label,
+.form-scroll.theme-light .auth-method-label {
+  color: #3a3a3ca9;
+}
+
+.ns-dark .auth-method-label,
+.form-scroll.theme-dark .auth-method-label {
+  color: #f2f2f79a;
+}
+
 .login-btn-wrap {
   margin-top: 24;
   width: 65%;

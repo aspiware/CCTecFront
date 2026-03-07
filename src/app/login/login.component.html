@@ -54,6 +54,15 @@
       text="{{loginForm.controls.password.errors?.required ? 'Please enter the password' : ''}}">
     </Label>
 
+    <StackLayout class="auth-method-wrap">
+      <Label text="Verification method" class="auth-method-label"></Label>
+      <SegmentedBar
+        [items]="authMethodItems"
+        [selectedIndex]="selectedAuthMethodIndex"
+        (selectedIndexChange)="onAuthMethodChanged($event)">
+      </SegmentedBar>
+    </StackLayout>
+
     <GridLayout class="login-btn-wrap">
       <Button
         [isEnabled]="loginForm.valid && !isBusy"

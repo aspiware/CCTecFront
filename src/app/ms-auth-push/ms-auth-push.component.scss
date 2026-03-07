@@ -1,0 +1,98 @@
+.modal-backdrop {
+  width: 100%;
+  height: 100%;
+  horizontal-align: center;
+  vertical-align: center;
+}
+
+.modal-card {
+  width: 86%;
+  max-width: 420;
+  border-radius: 14;
+  background-color: #ffffff;
+  border-width: 1;
+  border-color: #e5e5ea;
+  padding: 16;
+  vertical-align: middle;
+}
+
+.modal-header {
+  margin-bottom: 8;
+}
+
+.modal-title {
+  font-size: 20;
+  font-weight: 700;
+  color: #000000;
+}
+
+.modal-body {
+  margin-top: 8;
+  margin-bottom: 12;
+}
+
+.entropy-label {
+  font-size: 14;
+  color: #6b7280;
+}
+
+.entropy-value {
+  margin-top: 8;
+  font-size: 40;
+  font-weight: 700;
+  color: #0a84ff;
+  text-align: center;
+}
+
+.verify-btn-wrap {
+  margin-top: 8;
+  width: 65%;
+  height: 44;
+  horizontal-align: center;
+}
+
+.ios-login-btn {
+  margin-top: 0;
+  height: 44;
+  width: 100%;
+  horizontal-align: center;
+  vertical-align: middle;
+  border-radius: 22;
+  border-width: 0;
+  background-color: #0a84ff;
+  color: #ffffff;
+  font-size: 17;
+  font-weight: 600;
+  text-transform: none;
+}
+
+.ns-ios .ios-login-btn:highlighted {
+  background-color: #006fe0;
+}
+
+.ns-ios .ios-login-btn:disabled {
+  background-color: rgba(10, 132, 255, 0.38);
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.verify-spinner-overlay {
+  width: 16;
+  height: 16;
+  color: #ffffff;
+  horizontal-align: center;
+  vertical-align: middle;
+}
+
+.ns-dark .modal-card {
+  background-color: #1c1c1e;
+  border-color: #3a3a3c;
+}
+
+.ns-dark .modal-title {
+  color: #ffffff;
+}
+
+.ns-dark .entropy-label {
+  color: #aeaeb2;
+}
+

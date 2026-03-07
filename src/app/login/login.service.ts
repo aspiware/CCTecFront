@@ -47,6 +47,13 @@ export class LoginService {
     );
   }
 
+  public validatePush(response, number): Observable<any> {
+    return this.httpClient.post<void>(
+      `${this.configService.getUrlBase()}/auth/validatePush`,
+      { ...response, number }
+    );
+  }
+
   public validateCodeXM(response, code): Observable<any> {
     return this.httpClient.post<void>(
       `${this.configService.getUrlBase()}/auth/validateCodeXM`,
