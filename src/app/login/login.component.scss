@@ -1,12 +1,15 @@
 .form {
   margin-left: 15;
   margin-right: 15;
-  padding-bottom: 100;
   padding-left: 15;
   padding-right: 15;
-  //padding-bottom: 180;
   border-radius: 30;
+  padding-bottom: 30;
   background-color: rgba(126, 151, 185, 0.2);
+}
+
+.form1 {
+  padding-bottom: 150;
 }
 
 .content {
@@ -16,7 +19,7 @@
 
 .form-scroll {
   width: 100%;
-  height: 100%;
+  height: 60%;
 }
 
 .ns-dark .form-scroll,

@@ -1,7 +1,5 @@
-<ScrollView
-  keyboardDismissMode="onDrag"
-  [class]="'form-scroll ' + (isDarkTheme ? 'theme-dark' : 'theme-light')"
-  (loaded)="onRootLoaded()">
+<ScrollView row="1" class="form-scroll">
+  <StackLayout class="form1">
   <StackLayout verticalAlignment="center" class="form" [formGroup]="loginForm">
     <Label text="Welcome back" class="logo"></Label>
     <Label text="Sign in to continue" class="subtitle"></Label>
@@ -77,5 +75,6 @@
         class="login-spinner-overlay">
       </ActivityIndicator>
     </GridLayout>
+  </StackLayout>
   </StackLayout>
 </ScrollView>
