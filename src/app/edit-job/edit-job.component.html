@@ -29,7 +29,7 @@
         #bodyScroll
         row="1"
         class="form-scroll"
-        [class.form-scroll-custom]="isCustomJobTypeSelected"
+        [class.form-scroll-custom]="isCustomJobTypeSelected || isUpdateJobTypeSelected"
         (tap)="dismissNotesKeyboard()">
       <StackLayout class="content" [class.content-notes-focused]="isNotesFocused">
         <ActivityIndicator
@@ -93,28 +93,35 @@
           class="job-type-picker">
         </ListPicker>
 
-        <Button
-          text="Select Changed Devices"
-          class="devices-selector-btn"
-          [visibility]="isUpdateJobTypeSelected ? 'visible' : 'collapse'"
-          (tap)="toggleUpdateDevicesSelector()">
-        </Button>
+        <Label
+          text="Changed Devices"
+          class="section-title"
+          [visibility]="isUpdateJobTypeSelected ? 'visible' : 'collapse'">
+        </Label>
 
-        <StackLayout
-          class="update-devices-wrap"
-          [visibility]="(isUpdateJobTypeSelected && showUpdateDevicesSelector) ? 'visible' : 'collapse'">
-          <GridLayout
-            columns="*,auto"
-            class="update-device-row"
-            *ngFor="let device of updateDeviceItems; let i = index">
-            <Label col="0" [text]="device.label" class="update-device-label"></Label>
-            <Switch
-              col="1"
-              [checked]="device.selected"
-              (checkedChange)="onUpdateDeviceCheckedChange(i, $event)">
-            </Switch>
-          </GridLayout>
-        </StackLayout>
+        <GridLayout
+          class="update-devices-list-wrap"
+          [visibility]="isUpdateJobTypeSelected ? 'visible' : 'collapse'">
+          <RadListView
+            #upgradeDevicesListView
+            (loaded)="onUpgradeDevicesListLoaded()"
+            (itemSelected)="onUpgradeDeviceSelected($event)"
+            (itemDeselected)="onUpgradeDeviceDeselected($event)"
+            [items]="updateDeviceItems"
+            selectionBehavior="LongPress"
+            multipleSelection="true"
+            class="custom-types-list">
+            <ng-template tkListItemTemplate let-item="item">
+              <GridLayout rows="auto" columns="*, auto" style="margin-left: 40; margin-right: 20; margin-top: 6; margin-bottom: 6;">
+                <GridLayout orientation="horizontal" class="item-bag" col="0" columns="*, auto">
+                  <StackLayout orientation="horizontal" col="0">
+                    <Label [text]="item.label"></Label>
+                  </StackLayout>
+                </GridLayout>
+              </GridLayout>
+            </ng-template>
+          </RadListView>
+        </GridLayout>
 
         <GridLayout
           columns="*,16,*"

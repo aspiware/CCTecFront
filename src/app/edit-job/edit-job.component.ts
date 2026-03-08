@@ -45,12 +45,13 @@ export class EditJobComponent implements OnInit {
   public selectedCustomTypeIds = new Set<number>();
   public selectedCustomTypeMap = new Map<number, any>();
   public customTypeEmptyMessage = '';
-  public showUpdateDevicesSelector = false;
   public updateDeviceItems: Array<{ label: string; selected: boolean; raw: any }> = [];
   public settings: any;
   public customTotalPrice = 0;
   @ViewChild('listView', { static: false, read: RadListViewComponent })
   public listViewRef?: RadListViewComponent;
+  @ViewChild('upgradeDevicesListView', { static: false, read: RadListViewComponent })
+  public upgradeDevicesListViewRef?: RadListViewComponent;
   @ViewChild('bodyScroll', { static: false })
   public bodyScrollRef?: ElementRef<ScrollView>;
   public mainMenu: Item = {
@@ -153,7 +154,6 @@ export class EditJobComponent implements OnInit {
     this.selectedTypeIndex = index;
     const selected = this.jobTypes[this.selectedTypeIndex];
     this.isCustomChecked = Number(selected?.id) === 17;
-    this.showUpdateDevicesSelector = false;
     if (this.isCustomJobTypeSelected) {
       this.loadCustomTypesBySegment();
       return;
@@ -248,28 +248,16 @@ export class EditJobComponent implements OnInit {
     return selectedName.includes('upgrade') || currentName.includes('upgrade');
   }
 
-  public toggleUpdateDevicesSelector(): void {
-    this.showUpdateDevicesSelector = !this.showUpdateDevicesSelector;
+  public onUpgradeDevicesListLoaded(): void {
+    this.tryRestoreUpgradeDevicesSelection();
   }
 
-  public onUpdateDeviceCheckedChange(index: number, event: any): void {
-    if (index < 0 || index >= this.updateDeviceItems.length) {
-      return;
-    }
-    const checked = this.toBoolean(event?.value ?? event?.object?.checked ?? false);
-    this.updateDeviceItems[index].selected = checked;
-    const serial = this.updateDeviceItems[index]?.raw?.serialNumber || this.updateDeviceItems[index]?.raw?.deviceSerialNumber;
-    const devices = Array.isArray(this.job?.devices) ? this.job.devices : [];
-    const deviceIndex = devices.findIndex((device: any) => {
-      const deviceSerial = device?.serialNumber || device?.deviceSerialNumber;
-      return deviceSerial === serial;
-    });
-    if (deviceIndex >= 0) {
-      devices[deviceIndex] = {
-        ...devices[deviceIndex],
-        wasChangedUpgrade: checked ? 1 : 0,
-      };
-    }
+  public onUpgradeDeviceSelected(args: ListViewEventData): void {
+    this.setUpgradeDeviceSelection(args?.index, true);
+  }
+
+  public onUpgradeDeviceDeselected(args: ListViewEventData): void {
+    this.setUpgradeDeviceSelection(args?.index, false);
   }
 
   public onListLoaded(): void {
@@ -553,7 +541,6 @@ export class EditJobComponent implements OnInit {
     this.isCustomChecked = !this.isCustomChecked;
     if (this.isCustomChecked) {
       this.resetEditFormState();
-      this.showUpdateDevicesSelector = false;
       this.loadCustomTypesBySegment();
       this.recalculateCustomTotal();
       this.cdr.detectChanges();
@@ -758,5 +745,46 @@ export class EditJobComponent implements OnInit {
         raw: device,
       };
     });
+  }
+
+  private setUpgradeDeviceSelection(index: number, selected: boolean): void {
+    if (index < 0 || index >= this.updateDeviceItems.length) {
+      return;
+    }
+    this.updateDeviceItems[index].selected = selected;
+    const raw = this.updateDeviceItems[index]?.raw;
+    raw.wasChangedUpgrade = selected ? 1 : 0;
+    const serial = raw?.serialNumber || raw?.deviceSerialNumber;
+    const devices = Array.isArray(this.job?.devices) ? this.job.devices : [];
+    const deviceIndex = devices.findIndex((device: any) => {
+      const deviceSerial = device?.serialNumber || device?.deviceSerialNumber;
+      return deviceSerial === serial;
+    });
+    if (deviceIndex >= 0) {
+      devices[deviceIndex] = {
+        ...devices[deviceIndex],
+        wasChangedUpgrade: selected ? 1 : 0,
+      };
+    }
+  }
+
+  private restoreUpgradeDevicesSelection(): void {
+    const listView = this.upgradeDevicesListViewRef?.listView;
+    if (!listView || !this.updateDeviceItems?.length) {
+      return;
+    }
+    for (let i = 0; i < this.updateDeviceItems.length; i++) {
+      if (this.updateDeviceItems[i].selected) {
+        listView.selectItemAt(i);
+      }
+    }
+  }
+
+  private tryRestoreUpgradeDevicesSelection(attempt = 0): void {
+    this.restoreUpgradeDevicesSelection();
+    if (this.upgradeDevicesListViewRef?.listView || attempt >= 20) {
+      return;
+    }
+    setTimeout(() => this.tryRestoreUpgradeDevicesSelection(attempt + 1), 100);
   }
 }
