@@ -801,19 +801,6 @@ export class EditJobComponent implements OnInit {
     }
     this.updateDeviceItems[index].selected = selected;
     const raw = this.updateDeviceItems[index]?.raw;
-    raw.wasChangedUpgrade = selected ? 1 : 0;
-    const serial = raw?.serialNumber || raw?.deviceSerialNumber;
-    const devices = Array.isArray(this.job?.devices) ? this.job.devices : [];
-    const deviceIndex = devices.findIndex((device: any) => {
-      const deviceSerial = device?.serialNumber || device?.deviceSerialNumber;
-      return deviceSerial === serial;
-    });
-    if (deviceIndex >= 0) {
-      devices[deviceIndex] = {
-        ...devices[deviceIndex],
-        wasChangedUpgrade: selected ? 1 : 0,
-      };
-    }
     const key = this.getUpgradeDeviceKey(raw);
     if (key) {
       if (selected) {
