@@ -46,6 +46,7 @@ export class EditJobComponent implements OnInit {
   public selectedCustomTypeMap = new Map<number, any>();
   public customTypeEmptyMessage = '';
   public updateDeviceItems: Array<{ label: string; selected: boolean; raw: any }> = [];
+  public selectedUpgradeDeviceKeys = new Set<string>();
   public changedDeviceIds: number[] = [];
   public settings: any;
   public customTotalPrice = 0;
@@ -158,6 +159,9 @@ export class EditJobComponent implements OnInit {
     if (this.isCustomJobTypeSelected) {
       this.loadCustomTypesBySegment();
       return;
+    }
+    if (this.isUpdateJobTypeSelected) {
+      this.tryRestoreUpgradeDevicesSelection();
     }
     this.jobUserTypesList.splice(0);
     this.selectedJobType = [];
@@ -311,6 +315,9 @@ export class EditJobComponent implements OnInit {
             this.emptyMessage = '';
             if (!this.isCustomChecked) {
               this.loadPickerJobsBySegment();
+            }
+            if (this.isUpdateJobTypeSelected) {
+              this.tryRestoreUpgradeDevicesSelection();
             }
             this.loadCustomTypesBySegment();
             this.recalculateCustomTotal();
@@ -697,7 +704,8 @@ export class EditJobComponent implements OnInit {
       return value;
     }
     if (typeof value === 'string') {
-      return value.trim().toLowerCase() === 'true';
+      const normalized = value.trim().toLowerCase();
+      return normalized === 'true' || normalized === '1' || normalized === 'yes';
     }
     if (typeof value === 'number') {
       return value === 1;
@@ -757,6 +765,7 @@ export class EditJobComponent implements OnInit {
 
   private initUpdateDeviceItems(): void {
     const devices = Array.isArray(this.job?.devices) ? this.job.devices : [];
+    this.selectedUpgradeDeviceKeys.clear();
     this.updateDeviceItems = devices.map((device: any) => {
       const label =
         device?.serialNumber ||
@@ -764,9 +773,16 @@ export class EditJobComponent implements OnInit {
         device?.deviceModel ||
         device?.name ||
         'Device';
+      const selected = this.toBoolean(device?.wasChangedUpgrade);
+      if (selected) {
+        const key = this.getUpgradeDeviceKey(device);
+        if (key) {
+          this.selectedUpgradeDeviceKeys.add(key);
+        }
+      }
       return {
         label,
-        selected: Number(device?.wasChangedUpgrade || 0) === 1,
+        selected,
         raw: device,
       };
     });
@@ -792,6 +808,14 @@ export class EditJobComponent implements OnInit {
         wasChangedUpgrade: selected ? 1 : 0,
       };
     }
+    const key = this.getUpgradeDeviceKey(raw);
+    if (key) {
+      if (selected) {
+        this.selectedUpgradeDeviceKeys.add(key);
+      } else {
+        this.selectedUpgradeDeviceKeys.delete(key);
+      }
+    }
     this.syncChangedDeviceIds();
   }
 
@@ -808,7 +832,9 @@ export class EditJobComponent implements OnInit {
       return;
     }
     for (let i = 0; i < this.updateDeviceItems.length; i++) {
-      if (this.updateDeviceItems[i].selected) {
+      const item = this.updateDeviceItems[i];
+      const key = this.getUpgradeDeviceKey(item?.raw);
+      if (item?.selected || (!!key && this.selectedUpgradeDeviceKeys.has(key))) {
         listView.selectItemAt(i);
       }
     }
@@ -820,5 +846,17 @@ export class EditJobComponent implements OnInit {
       return;
     }
     setTimeout(() => this.tryRestoreUpgradeDevicesSelection(attempt + 1), 100);
+  }
+
+  private getUpgradeDeviceKey(device: any): string {
+    const id = Number(device?.id || device?.deviceId || device?.jobDeviceId || 0);
+    if (Number.isFinite(id) && id > 0) {
+      return `id:${id}`;
+    }
+    const serial = String(device?.serialNumber || device?.deviceSerialNumber || '').trim();
+    if (serial) {
+      return `sn:${serial}`;
+    }
+    return '';
   }
 }
