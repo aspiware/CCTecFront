@@ -578,8 +578,14 @@ export class EditJobComponent implements OnInit {
       this.cdr.detectChanges();
       return;
     }
-    if (this.selectedTypeIndex < 0 && this.jobTypes.length) {
-      this.selectedTypeIndex = 0;
+    if (this.jobTypes.length) {
+      const current = this.jobTypes[this.selectedTypeIndex];
+      const currentId = Number(current?.id || 0);
+      if (this.selectedTypeIndex < 0 || currentId === 17) {
+        const firstNonCustomIndex = this.jobTypes.findIndex((item) => Number(item?.id) !== 17);
+        this.selectedTypeIndex = firstNonCustomIndex >= 0 ? firstNonCustomIndex : 0;
+      }
+      this.loadPickerJobsBySegment();
     }
     this.customTypeEmptyMessage = '';
     this.jobUserTypesList.splice(0);
