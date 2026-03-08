@@ -93,6 +93,29 @@
           class="job-type-picker">
         </ListPicker>
 
+        <Button
+          text="Select Changed Devices"
+          class="devices-selector-btn"
+          [visibility]="isUpdateJobTypeSelected ? 'visible' : 'collapse'"
+          (tap)="toggleUpdateDevicesSelector()">
+        </Button>
+
+        <StackLayout
+          class="update-devices-wrap"
+          [visibility]="(isUpdateJobTypeSelected && showUpdateDevicesSelector) ? 'visible' : 'collapse'">
+          <GridLayout
+            columns="*,auto"
+            class="update-device-row"
+            *ngFor="let device of updateDeviceItems; let i = index">
+            <Label col="0" [text]="device.label" class="update-device-label"></Label>
+            <Switch
+              col="1"
+              [checked]="device.selected"
+              (checkedChange)="onUpdateDeviceCheckedChange(i, $event)">
+            </Switch>
+          </GridLayout>
+        </StackLayout>
+
         <GridLayout
           columns="*,16,*"
           class="stepper-row stepper-primary-row"

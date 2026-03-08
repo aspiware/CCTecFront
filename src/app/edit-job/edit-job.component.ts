@@ -45,6 +45,8 @@ export class EditJobComponent implements OnInit {
   public selectedCustomTypeIds = new Set<number>();
   public selectedCustomTypeMap = new Map<number, any>();
   public customTypeEmptyMessage = '';
+  public showUpdateDevicesSelector = false;
+  public updateDeviceItems: Array<{ label: string; selected: boolean; raw: any }> = [];
   public settings: any;
   public customTotalPrice = 0;
   @ViewChild('listView', { static: false, read: RadListViewComponent })
@@ -117,6 +119,7 @@ export class EditJobComponent implements OnInit {
 
   ngOnInit(): void {
     this.userId = getNumber('userId', 0);
+    this.initUpdateDeviceItems();
     setTimeout(() => {
       this.viewReady = true;
       this.loadSettings();
@@ -150,6 +153,7 @@ export class EditJobComponent implements OnInit {
     this.selectedTypeIndex = index;
     const selected = this.jobTypes[this.selectedTypeIndex];
     this.isCustomChecked = Number(selected?.id) === 17;
+    this.showUpdateDevicesSelector = false;
     if (this.isCustomJobTypeSelected) {
       this.loadCustomTypesBySegment();
       return;
@@ -232,6 +236,40 @@ export class EditJobComponent implements OnInit {
     }
     const selected = this.jobTypes[this.selectedTypeIndex];
     return Number(selected?.id) === 17;
+  }
+
+  public get isUpdateJobTypeSelected(): boolean {
+    if (this.isCustomJobTypeSelected) {
+      return false;
+    }
+    const selected = this.jobTypes[this.selectedTypeIndex];
+    const selectedName = String(selected?.name || selected?.description || '').trim().toLowerCase();
+    const currentName = String(this.job?.jobType?.name || this.job?.jobType?.description || '').trim().toLowerCase();
+    return selectedName.includes('upgrade') || currentName.includes('upgrade');
+  }
+
+  public toggleUpdateDevicesSelector(): void {
+    this.showUpdateDevicesSelector = !this.showUpdateDevicesSelector;
+  }
+
+  public onUpdateDeviceCheckedChange(index: number, event: any): void {
+    if (index < 0 || index >= this.updateDeviceItems.length) {
+      return;
+    }
+    const checked = this.toBoolean(event?.value ?? event?.object?.checked ?? false);
+    this.updateDeviceItems[index].selected = checked;
+    const serial = this.updateDeviceItems[index]?.raw?.serialNumber || this.updateDeviceItems[index]?.raw?.deviceSerialNumber;
+    const devices = Array.isArray(this.job?.devices) ? this.job.devices : [];
+    const deviceIndex = devices.findIndex((device: any) => {
+      const deviceSerial = device?.serialNumber || device?.deviceSerialNumber;
+      return deviceSerial === serial;
+    });
+    if (deviceIndex >= 0) {
+      devices[deviceIndex] = {
+        ...devices[deviceIndex],
+        wasChangedUpgrade: checked ? 1 : 0,
+      };
+    }
   }
 
   public onListLoaded(): void {
@@ -515,6 +553,7 @@ export class EditJobComponent implements OnInit {
     this.isCustomChecked = !this.isCustomChecked;
     if (this.isCustomChecked) {
       this.resetEditFormState();
+      this.showUpdateDevicesSelector = false;
       this.loadCustomTypesBySegment();
       this.recalculateCustomTotal();
       this.cdr.detectChanges();
@@ -702,5 +741,22 @@ export class EditJobComponent implements OnInit {
       .split(',')
       .map((part) => Number(String(part).replace(/"/g, '').trim()))
       .filter((id) => Number.isFinite(id) && id > 0);
+  }
+
+  private initUpdateDeviceItems(): void {
+    const devices = Array.isArray(this.job?.devices) ? this.job.devices : [];
+    this.updateDeviceItems = devices.map((device: any) => {
+      const label =
+        device?.serialNumber ||
+        device?.deviceSerialNumber ||
+        device?.deviceModel ||
+        device?.name ||
+        'Device';
+      return {
+        label,
+        selected: Number(device?.wasChangedUpgrade || 0) === 1,
+        raw: device,
+      };
+    });
   }
 }

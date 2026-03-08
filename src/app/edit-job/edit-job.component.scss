@@ -164,6 +164,25 @@
   width: 100%;
 }
 
+.devices-selector-btn {
+  margin-top: 10;
+  margin-bottom: 8;
+}
+
+.update-devices-wrap {
+  margin-bottom: 10;
+}
+
+.update-device-row {
+  padding: 8 0;
+  border-bottom-width: 1;
+}
+
+.update-device-label {
+  font-size: 14;
+  vertical-align: middle;
+}
+
 .modems-stepper {
   margin-top: 10;
   margin-right: 10;
@@ -231,6 +250,14 @@
   color: #1c1c1e;
 }
 
+.ns-light .update-device-row {
+  border-bottom-color: rgba(60, 60, 67, 0.2);
+}
+
+.ns-light .update-device-label {
+  color: #1c1c1e;
+}
+
 .ns-light .custom-type-row {
   background-color: #ffffff;
   border-color: rgba(60, 60, 67, 0.20);
@@ -247,6 +274,14 @@
 }
 
 .ns-dark .include-panel-label {
+  color: #f2f2f7;
+}
+
+.ns-dark .update-device-row {
+  border-bottom-color: rgba(255, 255, 255, 0.16);
+}
+
+.ns-dark .update-device-label {
   color: #f2f2f7;
 }
 
