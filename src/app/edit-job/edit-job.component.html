@@ -114,9 +114,30 @@
             <ng-template tkListItemTemplate let-item="item">
               <GridLayout rows="auto" columns="*, auto" style="margin-left: 40; margin-right: 20; margin-top: 6; margin-bottom: 6;">
                 <GridLayout orientation="horizontal" class="item-bag" col="0" columns="*, auto">
-                  <StackLayout orientation="horizontal" col="0">
-                    <Label [text]="item.label"></Label>
-                  </StackLayout>
+                  <GridLayout col="0" columns="60,*,*">
+                    <Label
+                      col="0"
+                      horizontalAlignment="left"
+                      style="font-size: 14;"
+                      [text]="item.raw?.type == 'STB' || item.raw?.type == 'IPSTB'
+                        ? 'VIDEO'
+                        : item.raw?.type == 'MTA' || item.raw?.type == 'HSI' || item.raw?.type == 'CM'
+                          ? 'MODEM'
+                          : item.raw?.type">
+                    </Label>
+                    <Label
+                      col="1"
+                      horizontalAlignment="left"
+                      style="font-size: 14;"
+                      [text]="item.raw?.name || item.raw?.deviceName">
+                    </Label>
+                    <Label
+                      col="2"
+                      horizontalAlignment="left"
+                      style="font-size: 14;"
+                      [text]="item.raw?.serialNumber || item.raw?.deviceSerialNumber">
+                    </Label>
+                  </GridLayout>
                 </GridLayout>
               </GridLayout>
             </ng-template>
