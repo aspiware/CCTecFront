@@ -44,6 +44,7 @@ export class WifiConfigComponent implements OnInit {
   private copiedTimers: { [key: string]: ReturnType<typeof setTimeout> } = {};
   private isWifiConnectInProgress = false;
   private wifiConnectAttemptId = 0;
+  private messageComposeDelegate: any;
   mainMenu: Item =
     {
       name: 'Main Menu',
@@ -392,7 +393,7 @@ export class WifiConfigComponent implements OnInit {
   }
 
   public sendWifiConfig() {
-    let numbers = [];
+    const numbers: string[] = [];
 
     if (this.job.customer?.homePhoneNumber) {
       numbers.push(this.job.customer.homePhoneNumber);
@@ -407,10 +408,58 @@ export class WifiConfigComponent implements OnInit {
     }
 
     const primary = this.getPrimaryForMessage();
-    this.modalParams.closeCallback({
-      numbers: [...new Set(numbers)],
-      wifiData: `Wifi Name: ${primary.ssid}\nWifi Password: ${primary.password}`,
-    });
+    const recipients = [...new Set(numbers)].filter((n) => !!String(n || '').trim());
+    const wifiData = `Wifi Name: ${primary.ssid}\nWifi Password: ${primary.password}`;
+
+    if (__IOS__) {
+      if (typeof MFMessageComposeViewController === 'undefined' || !MFMessageComposeViewController.canSendText()) {
+        return;
+      }
+      this.openSmsComposer(recipients, wifiData);
+      return;
+    }
+
+    if (isAndroid && recipients.length) {
+      const url = `sms:${recipients.join(',')}?body=${encodeURIComponent(wifiData)}`;
+      Utils.openUrl(url);
+      return;
+    }
+
+    Utils.copyToClipboard(wifiData);
+  }
+
+  private openSmsComposer(recipients: string[], body: string): void {
+    if (!__IOS__) {
+      return;
+    }
+    const controller = MFMessageComposeViewController.new();
+    const MessageComposeDelegate = (NSObject as any).extend(
+      {
+        messageComposeViewControllerDidFinishWithResult: (
+          msgController: MFMessageComposeViewController,
+          _msgResult: MessageComposeResult
+        ) => {
+          msgController.dismissViewControllerAnimatedCompletion(true, null);
+          this.messageComposeDelegate = null;
+        },
+      },
+      {
+        protocols: [MFMessageComposeViewControllerDelegate],
+      }
+    );
+
+    this.messageComposeDelegate = MessageComposeDelegate.new();
+    controller.body = body;
+    controller.recipients = recipients as any;
+    controller.messageComposeDelegate = this.messageComposeDelegate;
+    (controller as any).__delegate = this.messageComposeDelegate;
+
+    const root = Application.ios?.rootController;
+    let presenter = root as UIViewController;
+    while (presenter?.presentedViewController) {
+      presenter = presenter.presentedViewController;
+    }
+    presenter?.presentViewControllerAnimatedCompletion(controller, true, null);
   }
 
   public onUseSameChanged(event: any) {

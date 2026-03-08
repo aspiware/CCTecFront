@@ -7,12 +7,13 @@ import { Item } from '~/app/shared/components/menu-button/item';
 import { UserModel } from '../shared/models/user.model';
 import { UsersService } from '../shared/services/users.service';
 import { TodayService } from './today.service';
-import { concat, map } from 'rxjs';
+import { concat, map, Subscription } from 'rxjs';
 import { ConfigService } from '../shared/services/config.service';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { WifiConfigComponent } from '../wifi-config/wifi-config.component';
 import { TodayJobsCountService } from '../shared/services/today-jobs-count.service';
 import { CustomerInfoComponent } from '../customer-info/customer-info.component';
+import { EditJobComponent } from '../edit-job/edit-job.component';
 
 @Component({
   standalone: true,
@@ -643,6 +644,7 @@ export class TodayComponent implements OnInit {
   private messageComposeDelegate: any;
   private actionTapStates: { [key: string]: boolean } = {};
   private actionTapTimers: { [key: string]: ReturnType<typeof setTimeout> } = {};
+  private dataSubscription?: Subscription;
 
   constructor(
     private usersService: UsersService,
@@ -651,6 +653,7 @@ export class TodayComponent implements OnInit {
     private todayJobsCountService: TodayJobsCountService,
     private cdr: ChangeDetectorRef,
     private router: Router,
+    private activatedRoute: ActivatedRoute,
     private routerExtensions: RouterExtensions,
     private modalService: ModalDialogService,
     private vcRef: ViewContainerRef
@@ -658,8 +661,13 @@ export class TodayComponent implements OnInit {
 
   ngOnInit(): void {
     this.jobList = new ObservableArray([]);
-    this.user = this.usersService.getUser() || { userId: 15 };
+    this.user = this.usersService.getUser() || { userId: 0 };
     this.mainMenuIconName = 'questionmark';
+    this.dataSubscription = this.configService.data$.subscribe((event: any) => {
+      if (event?.type === 'surveySent' && event?.jobNumber) {
+        this.applySurveySentFlag(String(event.jobNumber));
+      }
+    });
 
     if (this.isDemoUser()) {
       this.applyJobsForDisplay(this.demoJobs.map((job) => ({ ...job })));
@@ -1022,8 +1030,61 @@ export class TodayComponent implements OnInit {
     };
 
     this.modalService.showModal(CustomerInfoComponent, options).then(() => {
+      const surveySent = this.configService.getSurveySent(job?.number);
+      job.sms_survey_sent = !!surveySent;
+      this.cdr.detectChanges();
       this.clearJobActionTap(job, 'customer');
     });
+  }
+
+  public showEditJob(job: any): void {
+    if (!job) {
+      return;
+    }
+
+    const options: any = {
+      context: job,
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: false,
+      stretched: false,
+      cancelable: true,
+      dismissEnabled: true,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.Custom,
+      },
+    };
+
+    this.modalService.showModal(EditJobComponent, options).then((result) => {
+      if (result) {
+        this.getWorkOrders();
+      }
+      this.clearJobActionTap(job, 'edit');
+    });
+  }
+
+  public goToActivateService(job?: any): void {
+    this.router.navigate(['../activate-service'], {
+      queryParams: job,
+      relativeTo: this.activatedRoute,
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.dataSubscription?.unsubscribe();
+  }
+
+  private applySurveySentFlag(jobNumber: string): void {
+    if (!this.jobList?.length) {
+      return;
+    }
+    for (let i = 0; i < this.jobList.length; i++) {
+      const item = this.jobList.getItem(i);
+      if (String(item?.number || '') === jobNumber) {
+        item.sms_survey_sent = true;
+      }
+    }
+    this.cdr.detectChanges();
   }
 
   private presentSmsComposer(recipients: string[], body: string): void {

@@ -7,6 +7,7 @@ import { Application, Utils } from '@nativescript/core';
 import { PhonePipe } from '../shared/pipes/phone.pipe';
 import { SettingsService } from '../settings/settings.service';
 import { UsersService } from '../shared/services/users.service';
+import { ConfigService } from '../shared/services/config.service';
 
 @Component({
   standalone: true,
@@ -35,13 +36,14 @@ export class CustomerInfoComponent implements OnInit {
   constructor(
     private modalParams: ModalDialogParams,
     private settingsService: SettingsService,
-    private usersService: UsersService
+    private usersService: UsersService,
+    private configService: ConfigService
   ) {
     this.job = this.modalParams.context;
   }
 
   ngOnInit(): void {
-    this.userId = Number(this.usersService.getUser()?.userId || 15);
+    this.userId = Number(this.usersService.getUser()?.userId || 0);
     if (!this.userId) {
       return;
     }
@@ -328,7 +330,8 @@ export class CustomerInfoComponent implements OnInit {
       () => {
         this.openSmsComposer(
           recipientsList,
-          this.settings?.englishSurveyText || 'English Survey'
+          this.settings?.englishSurveyText || 'English Survey',
+          true
         );
         this.isCopyMenuOpen = false;
       }
@@ -342,7 +345,8 @@ export class CustomerInfoComponent implements OnInit {
       () => {
         this.openSmsComposer(
           recipientsList,
-          this.settings?.spanishSurveyText || 'Spanish Survey'
+          this.settings?.spanishSurveyText || 'Spanish Survey',
+          true
         );
         this.isCopyMenuOpen = false;
       }
@@ -373,7 +377,7 @@ export class CustomerInfoComponent implements OnInit {
     viewController.presentViewControllerAnimatedCompletion(alert, true, null);
   }
 
-  private openSmsComposer(recipients: string | string[], messageBody: string): void {
+  private openSmsComposer(recipients: string | string[], messageBody: string, marksSurveySent = false): void {
     const recipientsList = Array.isArray(recipients) ? recipients : [recipients];
     const numbers = recipientsList
       .map((n) => String(n ?? '').replace(/\D+/g, ''))
@@ -387,7 +391,7 @@ export class CustomerInfoComponent implements OnInit {
         return;
       }
 
-      this.presentInAppSmsComposer(numbers, messageBody);
+      this.presentInAppSmsComposer(numbers, messageBody, marksSurveySent);
       return;
     }
 
@@ -403,14 +407,17 @@ export class CustomerInfoComponent implements OnInit {
     }
   }
 
-  private presentInAppSmsComposer(recipients: string[], body: string): void {
+  private presentInAppSmsComposer(recipients: string[], body: string, marksSurveySent = false): void {
     const controller = MFMessageComposeViewController.new();
     const MessageComposeDelegate = (NSObject as any).extend(
       {
         messageComposeViewControllerDidFinishWithResult: (
           msgController: MFMessageComposeViewController,
-          _msgResult: MessageComposeResult
+          msgResult: MessageComposeResult
         ) => {
+          if (marksSurveySent && Number(msgResult) === Number(MessageComposeResult.Sent)) {
+            this.markSurveySent();
+          }
           msgController.dismissViewControllerAnimatedCompletion(true, null);
           this.messageComposeDelegate = null;
         },
@@ -431,6 +438,16 @@ export class CustomerInfoComponent implements OnInit {
       presenter = presenter.presentedViewController;
     }
     presenter?.presentViewControllerAnimatedCompletion(controller, true, null);
+  }
+
+  private markSurveySent(): void {
+    const jobNumber = String(this.job?.number || '').trim();
+    if (!jobNumber) {
+      return;
+    }
+    this.configService.setSurveySent(jobNumber);
+    this.configService.sendData({ type: 'surveySent', jobNumber });
+    this.job.sms_survey_sent = true;
   }
 
   private getUniqueCustomerPhoneDigits(): string[] {

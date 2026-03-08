@@ -1,12 +1,15 @@
 .form {
   margin-left: 15;
   margin-right: 15;
-  padding-bottom: 100;
   padding-left: 15;
   padding-right: 15;
-  //padding-bottom: 180;
   border-radius: 30;
+  padding-bottom: 30;
   background-color: rgba(126, 151, 185, 0.2);
+}
+
+.form1 {
+  padding-bottom: 150;
 }
 
 .content {
@@ -16,16 +19,16 @@
 
 .form-scroll {
   width: 100%;
-  height: 100%;
+  height: 60%;
 }
 
-.ns-dark .form-scroll,
+.ns-dark .form-scroll .form1
 .form-scroll.theme-dark {
   background-color: #1C1C1E;
   border-color: rgba(255, 255, 255, 0.14);
 }
 
-.ns-light .form-scroll,
+.ns-light .form-scroll .form1
 .form-scroll.theme-light {
   background-color: #eef2f8;
   background-image: linear-gradient(180deg, #f2f4f7 0%, #e8edf5 100%);
@@ -101,6 +104,27 @@ TextField.custom-tf-inline {
   margin-left: 16;
   color: #bd3636;
   font-size: 12;
+}
+
+.auth-method-wrap {
+  margin-top: 20;
+  margin-left: 6;
+  margin-right: 6;
+}
+
+.auth-method-label {
+  font-size: 13;
+  margin-bottom: 6;
+}
+
+.ns-light .auth-method-label,
+.form-scroll.theme-light .auth-method-label {
+  color: #3a3a3ca9;
+}
+
+.ns-dark .auth-method-label,
+.form-scroll.theme-dark .auth-method-label {
+  color: #f2f2f79a;
 }
 
 .login-btn-wrap {

@@ -49,6 +49,13 @@ export class TodayService {
     );
   }
 
+  public changedDevices(jobId: number, devicesId: any[]): Observable<any> {
+    return this.httpClient.put<any>(
+      `${this.configService.getUrlBase()}/jobs/changedDevices/${jobId}`,
+      { devicesId }
+    );
+  }
+
   public delete(id: number): Observable<any> {
     return this.httpClient.delete<any>(
       `${this.configService.getUrlBase()}/jobs/delete/${id}`
@@ -137,10 +144,36 @@ export class TodayService {
     );
   }
 
-    public getWorkOrders(userId: number): Observable<any> {
+  public getWorkOrders(userId: number): Observable<any> {
     return this.httpClient.post<void>(
       this.configService.getUrlBase() + "/jobs/c/getWorkOrders",
       { userId }
+    );
+  }
+
+  public findJobTypes(active?: boolean): Observable<any[]> {
+    return this.httpClient.get<any[]>(
+      `${this.configService.getUrlBase()}/jobs/findJobTypes/${active}`
+    );
+  }
+
+  public getJobPricesByUser(
+    userId: number,
+    category: string,
+    activeOnly = true
+  ): Observable<any[]> {
+    return this.httpClient.get<any[]>(
+      `${this.configService.getUrlBase()}/jobs/getJobPricesByUser/${userId}/${category}/${activeOnly}`
+    );
+  }
+
+  public getActivationLink(
+    userId: number,
+    accountNumber: string,
+    workOrderNumber: number | string
+  ): Observable<any> {
+    return this.httpClient.get<any>(
+      `${this.configService.getUrlBase()}/jobs/c/getActivationLink/${userId}/${accountNumber}/${workOrderNumber}`
     );
   }
   

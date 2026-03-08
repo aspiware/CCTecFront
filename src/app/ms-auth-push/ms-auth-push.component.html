@@ -1,0 +1,30 @@
+<ModalStack dismissEnabled="true" class="modal-root">
+<GridLayout class="modal-backdrop" rows="*">
+  <StackLayout row="0" col="0" class="backdrop" (tap)="close()"></StackLayout>
+  <GridLayout row="0" class="modal-card" rows="auto,auto,auto">
+    <GridLayout row="0" class="modal-header" columns="*">
+      <Label col="0" text="Push Verification" class="modal-title"></Label>
+    </GridLayout>
+
+    <StackLayout row="1" class="modal-body">
+      <Label text="Type this number in Microsoft Authenticator:" class="entropy-label"></Label>
+      <Label [text]="entropyText" class="entropy-value"></Label>
+    </StackLayout>
+
+    <GridLayout row="2" class="verify-btn-wrap">
+      <Button
+        [isEnabled]="!isVerifying"
+        [text]="isVerifying ? '' : 'Validate'"
+        class="ios-login-btn"
+        (tap)="validate()">
+      </Button>
+      <ActivityIndicator
+        [busy]="isVerifying"
+        [visibility]="isVerifying ? 'visible' : 'collapsed'"
+        class="verify-spinner-overlay">
+      </ActivityIndicator>
+    </GridLayout>
+  </GridLayout>
+</GridLayout>
+</ModalStack>
+

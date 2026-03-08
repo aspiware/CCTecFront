@@ -1,0 +1,246 @@
+<ModalStack dismissEnabled="true" class="modal-root">
+  <GridLayout rows="*" columns="*">
+    <StackLayout row="0" col="0" class="backdrop" (tap)="closeModal()"></StackLayout>
+
+    <GridLayout row="0" col="0" rows="auto,*" class="modal-card" (tap)="dismissNotesKeyboard()">
+      <GridLayout row="0" columns="*,auto,auto" class="header header-fixed">
+        <Label col="0" text="Edit Job" class="title modal-title-text"></Label>
+        <Label
+          col="1"
+          [text]="customTotalPriceText"
+          [visibility]="isCustomJobTypeSelected ? 'visible' : 'collapse'"
+          class="title modal-title-text price-title">
+        </Label>
+
+        <StackLayout col="2">
+          <MenuButton
+            [useSFIcon]="true"
+            style="background-color: transparent; height: 24; width: 35;"
+            [sfIconName]="'ellipsis.circle'"
+            [showSpinner]="viewReady && isLoading"
+            #menuStatus
+            [options]="mainMenuOptions"
+            (selected)="onSelectedMainMenu($event, menuStatus)">
+          </MenuButton>
+        </StackLayout>
+      </GridLayout>
+
+      <ScrollView
+        #bodyScroll
+        row="1"
+        class="form-scroll"
+        [class.form-scroll-custom]="isCustomJobTypeSelected || isUpdateJobTypeSelected"
+        (tap)="dismissNotesKeyboard()">
+      <StackLayout class="content" [class.content-notes-focused]="isNotesFocused">
+        <ActivityIndicator
+          [busy]="isLoadingTypes"
+          [visibility]="isLoadingTypes ? 'visible' : 'collapse'"
+          class="loading-indicator">
+        </ActivityIndicator>
+
+        <Label
+          [text]="emptyMessage"
+          [visibility]="(!isLoadingTypes && emptyMessage) ? 'visible' : 'collapse'"
+          class="empty-message">
+        </Label>
+
+        <GridLayout columns="*" class="segment-row">
+          <SegmentedBar
+            col="0"
+            [items]="segmentItems"
+            [selectedIndex]="selectedSegmentIndex"
+            (selectedIndexChange)="onSegmentChanged($event)"
+            class="job-segment">
+          </SegmentedBar>
+        </GridLayout>
+
+        <Label
+          class="empty-message"
+          [text]="customTypeEmptyMessage"
+          [visibility]="(isCustomJobTypeSelected && !jobUserTypesList.length) ? 'visible' : 'collapse'">
+        </Label>
+
+        <GridLayout
+          class="custom-list-wrap"
+          [visibility]="isCustomJobTypeSelected ? 'visible' : 'collapse'">
+          <RadListView
+            #listView
+            (loaded)="onListLoaded()"
+            (itemSelected)="onItemSelected($event)"
+            (itemDeselected)="onItemDeselected($event)"
+            [items]="jobUserTypesList"
+            selectionBehavior="LongPress"
+            multipleSelection="true"
+            class="custom-types-list">
+            <ng-template tkListItemTemplate let-item="item">
+              <GridLayout rows="auto" columns="*, auto" style="margin-left: 40; margin-right: 20; margin-top: 6; margin-bottom: 6;">
+                <GridLayout orientation="horizontal" class="item-bag" col="0" columns="*, auto">
+                  <StackLayout orientation="horizontal" col="0">
+                    <Label [text]="item.name"></Label>
+                    <Label [text]="item.price | currency"></Label>
+                  </StackLayout>
+                </GridLayout>
+              </GridLayout>
+            </ng-template>
+          </RadListView>
+        </GridLayout>
+
+        <ListPicker
+          [items]="jobTypeLabels"
+          [selectedIndex]="selectedTypeIndex"
+          (selectedIndexChange)="onTypeChanged($event)"
+          [visibility]="isCustomJobTypeSelected ? 'collapse' : 'visible'"
+          class="job-type-picker">
+        </ListPicker>
+
+        <Label
+          text="Changed Devices"
+          class="section-title"
+          [visibility]="isUpdateJobTypeSelected ? 'visible' : 'collapse'">
+        </Label>
+
+        <GridLayout
+          class="update-devices-list-wrap"
+          [visibility]="isUpdateJobTypeSelected ? 'visible' : 'collapse'">
+          <RadListView
+            #upgradeDevicesListView
+            (loaded)="onUpgradeDevicesListLoaded()"
+            (itemSelected)="onUpgradeDeviceSelected($event)"
+            (itemDeselected)="onUpgradeDeviceDeselected($event)"
+            [items]="updateDeviceItems"
+            selectionBehavior="LongPress"
+            multipleSelection="true"
+            class="custom-types-list">
+            <ng-template tkListItemTemplate let-item="item">
+              <GridLayout rows="auto" columns="*, auto" style="margin-left: 40; margin-right: 20; margin-top: 6; margin-bottom: 6;">
+                <GridLayout orientation="horizontal" class="item-bag" col="0" columns="*, auto">
+                  <GridLayout col="0" columns="28,60,*,auto">
+                    <Label
+                      *ngIf="item.raw?.connectionStatus"
+                      col="0"
+                      class="fas"
+                      text="&#xf058;"
+                      style="font-size: 18; color: white; margin-right: 8;">
+                    </Label>
+                    <Label
+                      *ngIf="!item.raw?.connectionStatus"
+                      col="0"
+                      class="fas"
+                      text="&#xf05e;"
+                      style="font-size: 18; color: rgb(160, 160, 160); margin-right: 8;">
+                    </Label>
+                    <Label
+                      col="1"
+                      horizontalAlignment="left"
+                      style="font-size: 14;"
+                      [text]="item.raw?.type == 'STB' || item.raw?.type == 'IPSTB'
+                        ? 'VIDEO'
+                        : item.raw?.type == 'MTA' || item.raw?.type == 'HSI' || item.raw?.type == 'CM'
+                          ? 'MODEM'
+                          : item.raw?.type"
+                      [style.color]="!item.raw?.connectionStatus ? 'rgb(160, 160, 160)' : 'white'">
+                    </Label>
+                    <Label
+                      col="2"
+                      horizontalAlignment="left"
+                      style="font-size: 14;"
+                      [text]="item.raw?.name || item.raw?.deviceName"
+                      [style.color]="!item.raw?.connectionStatus ? 'rgb(160, 160, 160)' : 'white'">
+                    </Label>
+                    <Label
+                      col="3"
+                      horizontalAlignment="left"
+                      style="font-size: 14;"
+                      [text]="item.raw?.serialNumber || item.raw?.deviceSerialNumber"
+                      [style.color]="!item.raw?.connectionStatus ? 'rgb(160, 160, 160)' : 'white'">
+                    </Label>
+                  </GridLayout>
+                </GridLayout>
+              </GridLayout>
+            </ng-template>
+          </RadListView>
+        </GridLayout>
+
+        <GridLayout
+          columns="*,16,*"
+          class="stepper-row stepper-primary-row"
+          [visibility]="isCustomJobTypeSelected ? 'visible' : 'collapse'">
+          <app-quantity-stepper
+            col="0"
+            label="Modems"
+            [value]="modemsQty"
+            [min]="0"
+            [max]="20"
+            [step]="1"
+            (valueChange)="onModemsChanged($event)"
+            class="modems-stepper">
+          </app-quantity-stepper>
+
+          <app-quantity-stepper
+            col="2"
+            label="TV Boxes"
+            [value]="tvBoxesQty"
+            [min]="0"
+            [max]="50"
+            [step]="1"
+            (valueChange)="onTvBoxesChanged($event)"
+            class="tv-boxes-stepper">
+          </app-quantity-stepper>
+        </GridLayout>
+
+        <GridLayout
+          columns="*,16,*"
+          class="stepper-row"
+          [visibility]="(isCustomJobTypeSelected && selectedSegmentIndex === 1) ? 'visible' : 'collapse'">
+          <app-quantity-stepper
+            col="0"
+            label="Cameras"
+            [value]="camerasQty"
+            [min]="0"
+            [max]="50"
+            [step]="1"
+            (valueChange)="onCamerasChanged($event)"
+            class="modems-stepper">
+          </app-quantity-stepper>
+
+          <app-quantity-stepper
+            col="2"
+            label="Sensors"
+            [value]="sensorsQty"
+            [min]="0"
+            [max]="50"
+            [step]="1"
+            (valueChange)="onSensorsChanged($event)"
+            class="tv-boxes-stepper">
+          </app-quantity-stepper>
+        </GridLayout>
+
+        <GridLayout
+          columns="auto,*"
+          class="include-panel-row"
+          [visibility]="(isCustomJobTypeSelected && selectedSegmentIndex === 1) ? 'visible' : 'collapse'">
+          <Switch
+            col="0"
+            [checked]="includePanel"
+            (checkedChange)="onIncludePanelChanged($event)">
+          </Switch>
+          <Label
+            col="1"
+            text="Include Panel"
+            class="include-panel-label">
+          </Label>
+        </GridLayout>
+
+        <TextView
+          hint="Notes"
+          [text]="notes"
+          (textChange)="onNotesChanged($event.value)"
+          (focus)="onNotesFocus()"
+          (blur)="onNotesBlur()"
+          class="notes-input">
+        </TextView>
+      </StackLayout>
+      </ScrollView>
+    </GridLayout>
+  </GridLayout>
+</ModalStack>

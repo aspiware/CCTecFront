@@ -1,7 +1,8 @@
 <ScrollView
-  keyboardDismissMode="onDrag"
+  row="1"
   [class]="'form-scroll ' + (isDarkTheme ? 'theme-dark' : 'theme-light')"
   (loaded)="onRootLoaded()">
+  <StackLayout class="form1">
   <StackLayout verticalAlignment="center" class="form" [formGroup]="loginForm">
     <Label text="Welcome back" class="logo"></Label>
     <Label text="Sign in to continue" class="subtitle"></Label>
@@ -31,6 +32,7 @@
     <GridLayout rows="auto" columns="*" style="margin-top: 20;">
       <GridLayout columns="*,auto" class="input-shell" width="100%">
         <TextField
+          #passwordInput
           col="0"
           secure="{{showPass ? false : true}}"
           formControlName="password"
@@ -54,6 +56,15 @@
       text="{{loginForm.controls.password.errors?.required ? 'Please enter the password' : ''}}">
     </Label>
 
+    <StackLayout class="auth-method-wrap">
+      <Label text="Verification method" class="auth-method-label"></Label>
+      <SegmentedBar
+        [items]="authMethodItems"
+        [selectedIndex]="selectedAuthMethodIndex"
+        (selectedIndexChange)="onAuthMethodChanged($event)">
+      </SegmentedBar>
+    </StackLayout>
+
     <GridLayout class="login-btn-wrap">
       <Button
         [isEnabled]="loginForm.valid && !isBusy"
@@ -68,5 +79,6 @@
         class="login-spinner-overlay">
       </ActivityIndicator>
     </GridLayout>
+  </StackLayout>
   </StackLayout>
 </ScrollView>
