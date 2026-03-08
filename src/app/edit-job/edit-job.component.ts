@@ -46,6 +46,7 @@ export class EditJobComponent implements OnInit {
   public selectedCustomTypeMap = new Map<number, any>();
   public customTypeEmptyMessage = '';
   public updateDeviceItems: Array<{ label: string; selected: boolean; raw: any }> = [];
+  public changedDeviceIds: number[] = [];
   public settings: any;
   public customTotalPrice = 0;
   @ViewChild('listView', { static: false, read: RadListViewComponent })
@@ -356,6 +357,7 @@ export class EditJobComponent implements OnInit {
     const updatedJob = {
       ...this.job,
       jobTypeId: nextJobTypeId || this.job?.jobTypeId,
+      changedDeviceIds: [...this.changedDeviceIds],
       modems: String(this.modemsQty),
       tvBoxes: String(this.tvBoxesQty),
       cameras: String(this.camerasQty),
@@ -414,11 +416,34 @@ export class EditJobComponent implements OnInit {
         : [updatedJob.id, updatedJob.jobTypeId, updatedJob.notes]
     );
 
+    const shouldSyncChangedDevices = this.isUpdateJobTypeSelected && Number(updatedJob?.id || 0) > 0;
     this.setLoading(true);
     save$.subscribe({
       next: () => {
-        this.setLoading(false);
-        this.modalParams.closeCallback(updatedJob);
+        if (!shouldSyncChangedDevices) {
+          this.setLoading(false);
+          this.modalParams.closeCallback(updatedJob);
+          return;
+        }
+
+        const jobId = Number(updatedJob.id);
+        const devicesId = Array.isArray(updatedJob.changedDeviceIds) ? updatedJob.changedDeviceIds : [];
+        console.log('[EditJob] changedDevices payload:', { jobId, devicesId });
+        this.todayService.changedDevices(jobId, devicesId).subscribe({
+          next: () => {
+            this.setLoading(false);
+            this.modalParams.closeCallback(updatedJob);
+          },
+          error: (error) => {
+            console.log('[EditJob] changedDevices error', error);
+            this.setLoading(false);
+            Dialogs.alert({
+              title: 'Update',
+              message: 'Job was updated, but changed devices could not be saved.',
+              okButtonText: 'OK',
+            });
+          },
+        });
       },
       error: (error) => {
         console.log('[EditJob] update error', error);
@@ -745,6 +770,7 @@ export class EditJobComponent implements OnInit {
         raw: device,
       };
     });
+    this.syncChangedDeviceIds();
   }
 
   private setUpgradeDeviceSelection(index: number, selected: boolean): void {
@@ -766,6 +792,14 @@ export class EditJobComponent implements OnInit {
         wasChangedUpgrade: selected ? 1 : 0,
       };
     }
+    this.syncChangedDeviceIds();
+  }
+
+  private syncChangedDeviceIds(): void {
+    this.changedDeviceIds = this.updateDeviceItems
+      .filter((item) => item.selected)
+      .map((item) => Number(item?.raw?.id || item?.raw?.deviceId || item?.raw?.jobDeviceId || 0))
+      .filter((id) => Number.isFinite(id) && id > 0);
   }
 
   private restoreUpgradeDevicesSelection(): void {

@@ -49,6 +49,13 @@ export class TodayService {
     );
   }
 
+  public changedDevices(jobId: number, devicesId: any[]): Observable<any> {
+    return this.httpClient.put<any>(
+      `${this.configService.getUrlBase()}/jobs/changedDevices/${jobId}`,
+      { devicesId }
+    );
+  }
+
   public delete(id: number): Observable<any> {
     return this.httpClient.delete<any>(
       `${this.configService.getUrlBase()}/jobs/delete/${id}`
