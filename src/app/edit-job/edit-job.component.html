@@ -114,28 +114,45 @@
             <ng-template tkListItemTemplate let-item="item">
               <GridLayout rows="auto" columns="*, auto" style="margin-left: 40; margin-right: 20; margin-top: 6; margin-bottom: 6;">
                 <GridLayout orientation="horizontal" class="item-bag" col="0" columns="*, auto">
-                  <GridLayout col="0" columns="60,*,*">
+                  <GridLayout col="0" columns="28,60,*,auto">
                     <Label
+                      *ngIf="item.raw?.connectionStatus"
                       col="0"
+                      class="fas"
+                      text="&#xf058;"
+                      style="font-size: 18; color: white; margin-right: 8;">
+                    </Label>
+                    <Label
+                      *ngIf="!item.raw?.connectionStatus"
+                      col="0"
+                      class="fas"
+                      text="&#xf05e;"
+                      style="font-size: 18; color: rgb(160, 160, 160); margin-right: 8;">
+                    </Label>
+                    <Label
+                      col="1"
                       horizontalAlignment="left"
                       style="font-size: 14;"
                       [text]="item.raw?.type == 'STB' || item.raw?.type == 'IPSTB'
                         ? 'VIDEO'
                         : item.raw?.type == 'MTA' || item.raw?.type == 'HSI' || item.raw?.type == 'CM'
                           ? 'MODEM'
-                          : item.raw?.type">
-                    </Label>
-                    <Label
-                      col="1"
-                      horizontalAlignment="left"
-                      style="font-size: 14;"
-                      [text]="item.raw?.name || item.raw?.deviceName">
+                          : item.raw?.type"
+                      [style.color]="!item.raw?.connectionStatus ? 'rgb(160, 160, 160)' : 'white'">
                     </Label>
                     <Label
                       col="2"
                       horizontalAlignment="left"
                       style="font-size: 14;"
-                      [text]="item.raw?.serialNumber || item.raw?.deviceSerialNumber">
+                      [text]="item.raw?.name || item.raw?.deviceName"
+                      [style.color]="!item.raw?.connectionStatus ? 'rgb(160, 160, 160)' : 'white'">
+                    </Label>
+                    <Label
+                      col="3"
+                      horizontalAlignment="left"
+                      style="font-size: 14;"
+                      [text]="item.raw?.serialNumber || item.raw?.deviceSerialNumber"
+                      [style.color]="!item.raw?.connectionStatus ? 'rgb(160, 160, 160)' : 'white'">
                     </Label>
                   </GridLayout>
                 </GridLayout>
