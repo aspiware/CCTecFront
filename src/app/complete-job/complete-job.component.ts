@@ -1,5 +1,5 @@
-import { ChangeDetectorRef, Component, ElementRef, NO_ERRORS_SCHEMA, OnInit, ViewChild } from '@angular/core';
-import { ModalDialogParams, NativeScriptCommonModule } from '@nativescript/angular';
+import { ChangeDetectorRef, Component, ElementRef, NO_ERRORS_SCHEMA, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
+import { ModalDialogParams, ModalDialogService, NativeScriptCommonModule } from '@nativescript/angular';
 import { Dialogs, ScrollView, Utils } from '@nativescript/core';
 import { getNumber } from '@nativescript/core/application-settings';
 import { SegmentedBarItem } from '@nativescript/core';
@@ -11,6 +11,7 @@ import { MenuEvent } from '../shared/components/menu-button';
 import { SettingsService } from '../settings/settings.service';
 import { TodayService } from '../today/today.service';
 import { lastValueFrom } from 'rxjs';
+import { AddNoteComponent } from '../add-note/add-note.component';
 
 @Component({
   standalone: true,
@@ -85,6 +86,8 @@ export class CompleteJobComponent implements OnInit {
 
   constructor(
     private modalParams: ModalDialogParams,
+    private modalService: ModalDialogService,
+    private vcRef: ViewContainerRef,
     private todayService: TodayService,
     private settingsService: SettingsService,
     private cdr: ChangeDetectorRef
@@ -133,11 +136,37 @@ export class CompleteJobComponent implements OnInit {
         this.saveJobChanges();
         break;
       case 1:
-        this.onNotesFocus();
+        this.openAddNoteModal();
         break;
       default:
         break;
     }
+  }
+
+  public openAddNoteModal(): void {
+    const options = this.getModalOptions({ note: this.notes || '' });
+
+    this.modalService.showModal(AddNoteComponent, options).then((result) => {
+      if (typeof result === 'string') {
+        this.notes = result.trim();
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private getModalOptions(context: any): any {
+    return {
+      context,
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: false,
+      stretched: false,
+      cancelable: true,
+      dismissEnabled: true,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.Custom,
+      },
+    };
   }
 
   public closeModal(): void {
