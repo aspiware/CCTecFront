@@ -1472,13 +1472,10 @@ export class TodayComponent implements OnInit {
         console.log('Response', res);
       },
       complete: () => {
-        this.setJobMenuLoading(job, false);
-        this.isTechStatusLoading = false;
-        this.mainMenuIconName = 'car';
+        this.finishJobMenuAction(job, 'car');
       },
       error: (error) => {
-        this.setJobMenuLoading(job, false);
-        this.isTechStatusLoading = false;
+        this.finishJobMenuAction(job);
         console.error('Error en alguna de las validaciones:', error);
 
         alert({
@@ -1530,13 +1527,10 @@ export class TodayComponent implements OnInit {
         console.log('Response', res);
       },
       complete: () => {
-        this.setJobMenuLoading(job, false);
-        this.isTechStatusLoading = false;
-        this.mainMenuIconName = 'wrench.adjustable.fill';
+        this.finishJobMenuAction(job, 'wrench.adjustable.fill');
       },
       error: (error) => {
-        this.setJobMenuLoading(job, false);
-        this.isTechStatusLoading = false;
+        this.finishJobMenuAction(job);
         console.error('Error en alguna de las validaciones:', error);
         alert({
           title: 'Error',
@@ -1566,6 +1560,17 @@ export class TodayComponent implements OnInit {
       delete this.jobMenuLoadingStates[key];
     }
     this.cdr.detectChanges();
+  }
+
+  private finishJobMenuAction(job: any, iconName?: string): void {
+    setTimeout(() => {
+      this.setJobMenuLoading(job, false);
+      this.isTechStatusLoading = false;
+      if (iconName) {
+        this.mainMenuIconName = iconName;
+      }
+      this.cdr.detectChanges();
+    }, 0);
   }
 
   public isJobMenuLoading(item: any): boolean {
