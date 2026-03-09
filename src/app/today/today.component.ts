@@ -1443,6 +1443,12 @@ export class TodayComponent implements OnInit {
   }
 
   public async goEnroute(job: any) {
+    const key = this.getJobMenuKey(job);
+    if (!key || this.jobMenuLoadingStates[key]) {
+      return;
+    }
+
+    this.setJobMenuLoading(job, true);
     this.isTechStatusLoading = true;
 
     const selectJob$ = this.todayService.selectJob(
@@ -1466,10 +1472,13 @@ export class TodayComponent implements OnInit {
         console.log('Response', res);
       },
       complete: () => {
+        this.setJobMenuLoading(job, false);
         this.isTechStatusLoading = false;
         this.mainMenuIconName = 'car';
       },
       error: (error) => {
+        this.setJobMenuLoading(job, false);
+        this.isTechStatusLoading = false;
         console.error('Error en alguna de las validaciones:', error);
 
         alert({
@@ -1482,6 +1491,12 @@ export class TodayComponent implements OnInit {
   }
 
   public async goOnjob(job: any) {
+    const key = this.getJobMenuKey(job);
+    if (!key || this.jobMenuLoadingStates[key]) {
+      return;
+    }
+
+    this.setJobMenuLoading(job, true);
     this.isTechStatusLoading = true;
 
     const selectJob$ = this.todayService.selectJob(
@@ -1515,10 +1530,13 @@ export class TodayComponent implements OnInit {
         console.log('Response', res);
       },
       complete: () => {
+        this.setJobMenuLoading(job, false);
         this.isTechStatusLoading = false;
         this.mainMenuIconName = 'wrench.adjustable.fill';
       },
       error: (error) => {
+        this.setJobMenuLoading(job, false);
+        this.isTechStatusLoading = false;
         console.error('Error en alguna de las validaciones:', error);
         alert({
           title: 'Error',
@@ -1536,6 +1554,20 @@ export class TodayComponent implements OnInit {
     return String(job?.number || job?.workOrderNumber || job?.id || '');
   }
 
+  private setJobMenuLoading(job: any, isLoading: boolean): void {
+    const key = this.getJobMenuKey(job);
+    if (!key) {
+      return;
+    }
+
+    if (isLoading) {
+      this.jobMenuLoadingStates[key] = true;
+    } else {
+      delete this.jobMenuLoadingStates[key];
+    }
+    this.cdr.detectChanges();
+  }
+
   public isJobMenuLoading(item: any): boolean {
     const key = this.getJobMenuKey(item);
     return !!key && !!this.jobMenuLoadingStates[key];
@@ -1550,8 +1582,7 @@ export class TodayComponent implements OnInit {
     const latitude = job?.latitude;
     const longitude = job?.longitude;
 
-    this.jobMenuLoadingStates[key] = true;
-    this.cdr.detectChanges();
+    this.setJobMenuLoading(job, true);
     console.log(latitude, longitude)
 
     this.todayService.updateLocation(
@@ -1566,8 +1597,7 @@ export class TodayComponent implements OnInit {
       next: (res) => {
         console.log('updateLocation-RES', res);
       }, error: (error) => {
-        delete this.jobMenuLoadingStates[key];
-        this.cdr.detectChanges();
+        this.setJobMenuLoading(job, false);
         console.log(error);
 
         alert({
@@ -1577,8 +1607,7 @@ export class TodayComponent implements OnInit {
         });
       },
       complete: () => {
-        delete this.jobMenuLoadingStates[key];
-        this.cdr.detectChanges();
+        this.setJobMenuLoading(job, false);
       }
     });
   }
