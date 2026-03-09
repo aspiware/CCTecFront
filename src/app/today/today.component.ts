@@ -1612,7 +1612,7 @@ export class TodayComponent implements OnInit {
         });
       },
       complete: () => {
-        // this.setJobMenuLoading(job, false);
+        this.setJobMenuLoading(job, false);
       }
     });
   }
