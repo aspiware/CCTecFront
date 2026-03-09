@@ -69,6 +69,20 @@ export const imageInsetsProperty = new Property<
 >({
   name: 'imageInsets',
 });
+export const spinnerOffsetXProperty = new Property<
+  MenuButtonBase,
+  number | string
+>({
+  name: 'spinnerOffsetX',
+  defaultValue: -10,
+});
+export const spinnerOffsetYProperty = new Property<
+  MenuButtonBase,
+  number | string
+>({
+  name: 'spinnerOffsetY',
+  defaultValue: -6,
+});
 
 export class MenuButtonBase extends Button {
   options: Array<MenuButtonAction>;
@@ -78,6 +92,8 @@ export class MenuButtonBase extends Button {
   isRightSide: boolean;
   contentInsets: MenuButtonInsets | string;
   imageInsets: MenuButtonInsets | string;
+  spinnerOffsetX: number | string;
+  spinnerOffsetY: number | string;
 }
 
 optionsProperty.register(MenuButtonBase);
@@ -87,3 +103,5 @@ showSpinnerProperty.register(MenuButtonBase);
 isRightSideProperty.register(MenuButtonBase);
 contentInsetsProperty.register(MenuButtonBase);
 imageInsetsProperty.register(MenuButtonBase);
+spinnerOffsetXProperty.register(MenuButtonBase);
+spinnerOffsetYProperty.register(MenuButtonBase);

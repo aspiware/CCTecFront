@@ -9,7 +9,9 @@ import {
   showSpinnerProperty,
   isRightSideProperty,
   contentInsetsProperty,
-  imageInsetsProperty
+  imageInsetsProperty,
+  spinnerOffsetXProperty,
+  spinnerOffsetYProperty
 } from './common';
 
 export class MenuButton extends MenuButtonBase {
@@ -47,6 +49,16 @@ export class MenuButton extends MenuButtonBase {
     this.resetMenu();
   }
 
+  [spinnerOffsetXProperty.setNative](value: number | string) {
+    this.spinnerOffsetX = value;
+    this.resetMenu();
+  }
+
+  [spinnerOffsetYProperty.setNative](value: number | string) {
+    this.spinnerOffsetY = value;
+    this.resetMenu();
+  }
+
   resetMenu() {
     if (!this.options) {
       return;
@@ -59,16 +71,25 @@ export class MenuButton extends MenuButtonBase {
     if (this.showSpinner) {
       iosButton.setImageForState(null, UIControlState.Normal);
       iosButton.tintColor = tintColor;
-      let spinner = iosButton.viewWithTag(9999) as UIActivityIndicatorView;
-      if (!spinner) {
-        spinner = UIActivityIndicatorView.alloc().initWithActivityIndicatorStyle(UIActivityIndicatorViewStyle.Medium);
-        spinner.tag = 9999;
-        spinner.color = tintColor;
-        spinner.translatesAutoresizingMaskIntoConstraints = false;
-        iosButton.addSubview(spinner);
-        spinner.centerXAnchor.constraintEqualToAnchorConstant(iosButton.centerXAnchor, -10).active = true;
-        spinner.centerYAnchor.constraintEqualToAnchorConstant(iosButton.centerYAnchor, -6).active = true;
+      const existingSpinner = iosButton.viewWithTag(9999) as UIActivityIndicatorView;
+      if (existingSpinner) {
+        existingSpinner.stopAnimating();
+        existingSpinner.removeFromSuperview();
       }
+
+      const spinner = UIActivityIndicatorView.alloc().initWithActivityIndicatorStyle(UIActivityIndicatorViewStyle.Medium);
+      spinner.tag = 9999;
+      spinner.color = tintColor;
+      spinner.translatesAutoresizingMaskIntoConstraints = false;
+      iosButton.addSubview(spinner);
+      spinner.centerXAnchor.constraintEqualToAnchorConstant(
+        iosButton.centerXAnchor,
+        this.resolveNumber(this.spinnerOffsetX, -10)
+      ).active = true;
+      spinner.centerYAnchor.constraintEqualToAnchorConstant(
+        iosButton.centerYAnchor,
+        this.resolveNumber(this.spinnerOffsetY, -6)
+      ).active = true;
       spinner.color = tintColor;
       iosButton.setNeedsLayout();
       iosButton.layoutIfNeeded();
@@ -230,6 +251,19 @@ export class MenuButton extends MenuButtonBase {
       bottom: Number.isFinite(value.bottom) ? value.bottom : fallback.bottom,
       right: Number.isFinite(value.right) ? value.right : fallback.right,
     };
+  }
+
+  private resolveNumber(value: number | string | undefined, fallback: number): number {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value;
+    }
+    if (typeof value === 'string') {
+      const n = Number(value.trim());
+      if (Number.isFinite(n)) {
+        return n;
+      }
+    }
+    return fallback;
   }
 
   private getAdaptiveTintColor(): UIColor {
