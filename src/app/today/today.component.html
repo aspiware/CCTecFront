@@ -288,11 +288,14 @@
                   text="&#xf0ee;" [options]="scansMenu.options" (tap)="markJobActionTap(item, 'scans')" (selected)="selected($event, item)">
                 </MenuButton>
 
-                <MenuButton *ngIf="item.status != 'CLOSED'" class="fas job-action-button"
+                <StackLayout class="job-action-button" style="width: 100px; height: 70px;">
+                <MenuButton class="fas" 
                   [class.job-action-tapped]="isJobActionTapped(item, 'job-menu')"
-                  style="font-size: 16px; height: 70px; width: 100px; margin-right: 6"
+                  style="font-size: 16px; height: 70px; width: 100px;"
                   text="&#xf560;" [options]="jobMenu.options" (tap)="markJobActionTap(item, 'job-menu')" (selected)="onSelectedJobMenu($event, item)">
                 </MenuButton>
+              </StackLayout>
+
               </StackLayout>
             </GridLayout>
 

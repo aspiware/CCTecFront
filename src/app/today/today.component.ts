@@ -1532,6 +1532,8 @@ export class TodayComponent implements OnInit {
   }
 
   public updateLocation(latitude, longitude) {
+    console.log(latitude, longitude)
+
     this.todayService.updateLocation(
       this.user?.userId,
       {
@@ -1542,7 +1544,7 @@ export class TodayComponent implements OnInit {
       }
     ).subscribe({
       next: (res) => {
-        console.log(res);
+        console.log('updateLocation-RES', res);
       }, error: (error) => {
         console.log(error);
 
