@@ -1298,7 +1298,7 @@ export class TodayComponent implements OnInit {
 
       const sourceView = args?.object?.ios as UIView | undefined;
       const alert = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
-        type === 'address' ? 'Address' : 'Copy',
+        this.getCopyMenuTitle(type),
         textToCopy,
         UIAlertControllerStyle.ActionSheet
       );
@@ -1350,6 +1350,19 @@ export class TodayComponent implements OnInit {
       viewController.presentViewControllerAnimatedCompletion(alert, true, null);
       return;
     }
+  }
+
+  private getCopyMenuTitle(type?: string): string {
+    if (!type) {
+      return 'Copy';
+    }
+
+    const normalized = String(type).trim().toLowerCase();
+    if (!normalized) {
+      return 'Copy';
+    }
+
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
   }
 
   private showMapOptions(sourceView: UIView | undefined, address: string): void {
