@@ -637,6 +637,7 @@ export class TodayComponent implements OnInit {
   public isOnShift: boolean;
   public techStatus: boolean;
   public isTechStatusLoading = false;
+  public isJobMenuLoading = false;
   public lastKnownTechStatus = 'AVAIL';
   showStarred = false;
   private isCopyMenuOpen = false;
@@ -1532,6 +1533,12 @@ export class TodayComponent implements OnInit {
   }
 
   public updateLocation(latitude, longitude) {
+    if (this.isJobMenuLoading) {
+      return;
+    }
+
+    this.isJobMenuLoading = true;
+    this.cdr.detectChanges();
     console.log(latitude, longitude)
 
     this.todayService.updateLocation(
@@ -1546,6 +1553,8 @@ export class TodayComponent implements OnInit {
       next: (res) => {
         console.log('updateLocation-RES', res);
       }, error: (error) => {
+        // this.isJobMenuLoading = false;
+        this.cdr.detectChanges();
         console.log(error);
 
         alert({
@@ -1553,6 +1562,10 @@ export class TodayComponent implements OnInit {
           message: String(error.error.message),
           okButtonText: 'OK',
         });
+      },
+      complete: () => {
+        // this.isJobMenuLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }

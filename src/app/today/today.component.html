@@ -292,7 +292,11 @@
                 <MenuButton class="fas" 
                   [class.job-action-tapped]="isJobActionTapped(item, 'job-menu')"
                   style="font-size: 16px; height: 70px; width: 100px;"
-                  text="&#xf560;" [options]="jobMenu.options" (tap)="markJobActionTap(item, 'job-menu')" (selected)="onSelectedJobMenu($event, item)">
+                  [showSpinner]="isJobMenuLoading"
+                  [isRightSide]="true"
+                  [useSFIcon]="true"
+        [sfIconName]="'bolt.circle'"
+                   [options]="jobMenu.options" (tap)="markJobActionTap(item, 'job-menu')" (selected)="onSelectedJobMenu($event, item)">
                 </MenuButton>
               </StackLayout>
 
