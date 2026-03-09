@@ -1,0 +1,97 @@
+<ModalStack dismissEnabled="true" class="modal-root">
+  <GridLayout rows="*" columns="*">
+    <StackLayout row="0" col="0" class="backdrop" (tap)="closeModal()"></StackLayout>
+
+    <GridLayout row="0" col="0" rows="auto,*" class="modal-card">
+      <GridLayout row="0" columns="*,auto,auto" class="header header-fixed">
+        <Label col="0" text="Complete Job" class="title modal-title-text"></Label>
+        <Label
+          col="1"
+          [text]="customTotalPriceText"
+          [visibility]="isCustomJobTypeSelected ? 'visible' : 'collapse'"
+          class="title modal-title-text price-title">
+        </Label>
+
+        <StackLayout col="2">
+          <MenuButton
+            [useSFIcon]="true"
+            style="background-color: transparent; height: 24; width: 35;"
+            [sfIconName]="'ellipsis.circle'"
+            [showSpinner]="viewReady && isLoading"
+            #menuStatus
+            [options]="mainMenuOptions"
+            (selected)="onSelectedMainMenu($event, menuStatus)">
+          </MenuButton>
+        </StackLayout>
+      </GridLayout>
+
+      <ScrollView
+        #bodyScroll
+        row="1"
+        class="form-scroll form-scroll-custom">
+        <StackLayout class="content" [class.content-notes-focused]="isNotesFocused">
+          <ActivityIndicator
+            [busy]="isLoadingTypes"
+            [visibility]="isLoadingTypes ? 'visible' : 'collapse'"
+            class="loading-indicator">
+          </ActivityIndicator>
+
+          <Label
+            [text]="emptyMessage"
+            [visibility]="(!isLoadingTypes && emptyMessage) ? 'visible' : 'collapse'"
+            class="empty-message">
+          </Label>
+
+          <GridLayout columns="*" class="segment-row">
+            <GridLayout columns="*,auto" class="input-shell" width="100%">
+              <TextField
+                col="0"
+                hint="Search resolution codes"
+                [text]="resolutionSearch"
+                (textChange)="onResolutionSearchChange($event.value)"
+                class="custom-tf-inline">
+              </TextField>
+              <Label
+                col="1"
+                class="search-icon fas"
+                [text]="resolutionSearch?.trim() ? '&#xf057;' : '&#xf002;'"
+                [isUserInteractionEnabled]="!!resolutionSearch?.trim()"
+                (tap)="clearResolutionSearch()">
+              </Label>
+            </GridLayout>
+          </GridLayout>
+
+          <Label
+            class="empty-message"
+            [text]="customTypeEmptyMessage"
+            [visibility]="(!isLoadingTypes && !jobUserTypesList.length && customTypeEmptyMessage) ? 'visible' : 'collapse'">
+          </Label>
+
+          <GridLayout
+            class="custom-list-wrap">
+            <RadListView
+              #listView
+              (loaded)="onListLoaded()"
+              (itemSelected)="onItemSelected($event)"
+              (itemDeselected)="onItemDeselected($event)"
+              [items]="jobUserTypesList"
+              selectionBehavior="Press"
+              multipleSelection="true"
+              class="custom-types-list">
+              <ng-template tkListItemTemplate let-item="item">
+                <GridLayout rows="auto" columns="*, auto" style="margin-left: 40; margin-right: 20; margin-top: 6; margin-bottom: 6;">
+                  <GridLayout orientation="horizontal" class="item-bag" col="0" columns="*, auto">
+                    <StackLayout orientation="horizontal" col="0">
+                      <Label [text]="item.code"></Label>
+                      <Label [text]="item.description"></Label>
+                    </StackLayout>
+                  </GridLayout>
+                </GridLayout>
+              </ng-template>
+            </RadListView>
+          </GridLayout>
+        </StackLayout>
+      </ScrollView>
+    </GridLayout>
+  </GridLayout>
+</ModalStack>
