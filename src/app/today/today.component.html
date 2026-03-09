@@ -292,7 +292,7 @@
                 <MenuButton class="fas" 
                   [class.job-action-tapped]="isJobActionTapped(item, 'job-menu')"
                   style="font-size: 16px; height: 70px; width: 100px;"
-                  [showSpinner]="isJobMenuLoading"
+                  [showSpinner]="isJobMenuLoading(item)"
                   [isRightSide]="true"
                   [useSFIcon]="true"
         [sfIconName]="'bolt.circle'"

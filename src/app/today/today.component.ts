@@ -637,7 +637,7 @@ export class TodayComponent implements OnInit {
   public isOnShift: boolean;
   public techStatus: boolean;
   public isTechStatusLoading = false;
-  public isJobMenuLoading = false;
+  public jobMenuLoadingStates: { [key: string]: boolean } = {};
   public lastKnownTechStatus = 'AVAIL';
   showStarred = false;
   private isCopyMenuOpen = false;
@@ -1437,7 +1437,7 @@ export class TodayComponent implements OnInit {
         this.completeJob(job);
         break;
       case 3:
-        this.updateLocation(job.latitude, job.longitude);
+        this.updateLocation(job);
         break;
     }
   }
@@ -1532,12 +1532,25 @@ export class TodayComponent implements OnInit {
   public async completeJob(job: any) {
   }
 
-  public updateLocation(latitude, longitude) {
-    if (this.isJobMenuLoading) {
+  private getJobMenuKey(job: any): string {
+    return String(job?.number || job?.workOrderNumber || job?.id || '');
+  }
+
+  public isJobMenuLoading(item: any): boolean {
+    const key = this.getJobMenuKey(item);
+    return !!key && !!this.jobMenuLoadingStates[key];
+  }
+
+  public updateLocation(job: any) {
+    const key = this.getJobMenuKey(job);
+    if (!key || this.jobMenuLoadingStates[key]) {
       return;
     }
 
-    this.isJobMenuLoading = true;
+    const latitude = job?.latitude;
+    const longitude = job?.longitude;
+
+    this.jobMenuLoadingStates[key] = true;
     this.cdr.detectChanges();
     console.log(latitude, longitude)
 
@@ -1553,7 +1566,7 @@ export class TodayComponent implements OnInit {
       next: (res) => {
         console.log('updateLocation-RES', res);
       }, error: (error) => {
-        this.isJobMenuLoading = false;
+        delete this.jobMenuLoadingStates[key];
         this.cdr.detectChanges();
         console.log(error);
 
@@ -1564,7 +1577,7 @@ export class TodayComponent implements OnInit {
         });
       },
       complete: () => {
-        this.isJobMenuLoading = false;
+        delete this.jobMenuLoadingStates[key];
         this.cdr.detectChanges();
       }
     });
