@@ -28,14 +28,14 @@
               col="0"
               [text]="(job?.customer?.firstName || '-') | titlecase"
               class="label-value name-subvalue"
-              (longPress)="showMenu($event, $event.object.text)"
+              (longPress)="showMenu($event, $event.object.text, undefined, false, false, false, 'Name')"
               textAlignment="right">
             </Label>
             <Label
               col="1"
               [text]="(job?.customer?.lastName || '-') | titlecase"
               class="label-value name-subvalue"
-              (longPress)="showMenu($event, $event.object.text)"
+              (longPress)="showMenu($event, $event.object.text, undefined, false, false, false, 'Lastname')"
               textAlignment="right">
             </Label>
           </GridLayout>
@@ -47,7 +47,7 @@
             col="1"
             [text]="(job?.customer?.homePhoneNumber | phone) || '-'"
             class="label-value"
-            (longPress)="showMenu($event, $event.object.text, job?.customer?.homePhoneNumber, true, true, true)"
+            (longPress)="showMenu($event, $event.object.text, job?.customer?.homePhoneNumber, true, true, true, 'Primary Number')"
             textAlignment="right">
           </Label>
         </GridLayout>
@@ -58,7 +58,7 @@
             col="1"
             [text]="(job?.customer?.callFirstPhoneNumber | phone) || '-'"
             class="label-value"
-            (longPress)="showMenu($event, $event.object.text, job?.customer?.callFirstPhoneNumber, true, true, true)"
+            (longPress)="showMenu($event, $event.object.text, job?.customer?.callFirstPhoneNumber, true, true, true, 'Call First Number')"
             textAlignment="right">
           </Label>
         </GridLayout>
@@ -69,7 +69,7 @@
             col="1"
             [text]="(job?.customer?.workPhoneNumber | phone) || '-'"
             class="label-value"
-            (longPress)="showMenu($event, $event.object.text, job?.customer?.workPhoneNumber, true, true, true)"
+            (longPress)="showMenu($event, $event.object.text, job?.customer?.workPhoneNumber, true, true, true, 'Work Number')"
             textAlignment="right">
           </Label>
         </GridLayout>
@@ -80,7 +80,7 @@
             col="1"
             [text]="(job?.customer?.surveyPhoneNumber | phone) || '-'"
             class="label-value"
-            (longPress)="showMenu($event, $event.object.text, job?.customer?.surveyPhoneNumber, true, true, true)"
+            (longPress)="showMenu($event, $event.object.text, job?.customer?.surveyPhoneNumber, true, true, true, 'Survey Number')"
             textAlignment="right">
           </Label>
         </GridLayout>
@@ -91,7 +91,7 @@
             col="1"
             [text]="job?.customer?.xfinityAppUsername || '-'"
             class="label-value"
-            (longPress)="showMenu($event, $event.object.text)"
+            (longPress)="showMenu($event, $event.object.text, undefined, false, false, false, 'Xfinity App Username')"
             textAlignment="right">
           </Label>
         </GridLayout>
@@ -102,7 +102,7 @@
             col="1"
             [text]="(job?.customer?.email || '-') | lowercase"
             class="label-value"
-            (longPress)="showMenu($event, $event.object.text)"
+            (longPress)="showMenu($event, $event.object.text, undefined, false, false, false, 'Email')"
             textAlignment="right">
           </Label>
         </GridLayout>
