@@ -1,5 +1,16 @@
 import { Application } from '@nativescript/core';
-import { MenuButtonBase, MenuButtonAction, optionsProperty, useSFIconProperty, sfIconNameProperty, showSpinnerProperty, isRightSideProperty } from './common';
+import {
+  MenuButtonBase,
+  MenuButtonAction,
+  MenuButtonInsets,
+  optionsProperty,
+  useSFIconProperty,
+  sfIconNameProperty,
+  showSpinnerProperty,
+  isRightSideProperty,
+  contentInsetsProperty,
+  imageInsetsProperty
+} from './common';
 
 export class MenuButton extends MenuButtonBase {
   [optionsProperty.setNative](value: Array<MenuButtonAction>) {
@@ -23,6 +34,16 @@ export class MenuButton extends MenuButtonBase {
 
   [isRightSideProperty.setNative](value: boolean) {
     this.isRightSide = value;
+    this.resetMenu();
+  }
+
+  [contentInsetsProperty.setNative](value: MenuButtonInsets | string) {
+    this.contentInsets = value;
+    this.resetMenu();
+  }
+
+  [imageInsetsProperty.setNative](value: MenuButtonInsets | string) {
+    this.imageInsets = value;
     this.resetMenu();
   }
 
@@ -73,8 +94,8 @@ export class MenuButton extends MenuButtonBase {
       iosButton.translatesAutoresizingMaskIntoConstraints = false;
       iosButton.widthAnchor.constraintEqualToConstant(56).active = true;
       iosButton.heightAnchor.constraintEqualToConstant(48).active = true;
-      iosButton.contentEdgeInsets = { top: 0, left: 0, bottom: 0, right: 0 };
-      iosButton.imageEdgeInsets = { top: -6, left: -10, bottom: 6, right: 9 };
+      iosButton.contentEdgeInsets = this.resolveInsets(this.contentInsets, { top: 0, left: 0, bottom: 0, right: 0 });
+      iosButton.imageEdgeInsets = this.resolveInsets(this.imageInsets, { top: -6, left: -10, bottom: 6, right: 9 });
       iosButton.contentVerticalAlignment = UIControlContentVerticalAlignment.Center;
       iosButton.contentHorizontalAlignment = UIControlContentHorizontalAlignment.Center;
       iosButton.imageView.contentMode = UIViewContentMode.ScaleAspectFit;
@@ -90,8 +111,8 @@ export class MenuButton extends MenuButtonBase {
       iosButton.tintColor = tintColor;
       // iosButton.translatesAutoresizingMaskIntoConstraints = false;
 
-      iosButton.contentEdgeInsets = { top: 0, left: 0, bottom: 0, right: 0 };
-      iosButton.imageEdgeInsets = { top: -6, left: 0, bottom: 6, right: 0 };
+      iosButton.contentEdgeInsets = this.resolveInsets(this.contentInsets, { top: 0, left: 0, bottom: 0, right: 0 });
+      iosButton.imageEdgeInsets = this.resolveInsets(this.imageInsets, { top: -6, left: 0, bottom: 6, right: 0 });
       iosButton.contentVerticalAlignment = UIControlContentVerticalAlignment.Center;
       iosButton.contentHorizontalAlignment = UIControlContentHorizontalAlignment.Center;
       iosButton.imageView.contentMode = UIViewContentMode.ScaleAspectFit;
@@ -180,6 +201,35 @@ export class MenuButton extends MenuButtonBase {
       );
     }
     iosButton.showsMenuAsPrimaryAction = true;
+  }
+
+  private resolveInsets(
+    value: MenuButtonInsets | string | undefined,
+    fallback: MenuButtonInsets
+  ): UIEdgeInsets {
+    if (!value) {
+      return fallback;
+    }
+
+    if (typeof value === 'string') {
+      const parts = value.split(',').map((v) => Number(v.trim()));
+      if (parts.length === 4 && parts.every((n) => Number.isFinite(n))) {
+        return {
+          top: parts[0],
+          left: parts[1],
+          bottom: parts[2],
+          right: parts[3],
+        };
+      }
+      return fallback;
+    }
+
+    return {
+      top: Number.isFinite(value.top) ? value.top : fallback.top,
+      left: Number.isFinite(value.left) ? value.left : fallback.left,
+      bottom: Number.isFinite(value.bottom) ? value.bottom : fallback.bottom,
+      right: Number.isFinite(value.right) ? value.right : fallback.right,
+    };
   }
 
   private getAdaptiveTintColor(): UIColor {
