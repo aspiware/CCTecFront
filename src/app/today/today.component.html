@@ -143,10 +143,10 @@
         </GridLayout> -->
 
         <GridLayout rows="auto" columns="auto, *, auto" class="meta-row">
-            <Label col="0" (longPress)="showMenu($event, item.number)"  class="secondRow"
+            <Label col="0" (longPress)="showMenu($event, item.number, 'job')"  class="secondRow"
               [text]="'Job#: ' + item.number" style="margin-right: 10;"></Label>
 
-            <Label col="1" (longPress)="showMenu($event, item.accountNumber)"  class="secondRow"
+            <Label col="1" (longPress)="showMenu($event, item.accountNumber, 'account')"  class="secondRow"
               [text]="'Account#: ' + item.accountNumber"></Label>
 
             <Label col="2" class="secondRow units" [text]="'Units: ' + (item.jobUnits ? item.jobUnits : 'n/a')"></Label>
@@ -288,11 +288,21 @@
                   text="&#xf0ee;" [options]="scansMenu.options" (tap)="markJobActionTap(item, 'scans')" (selected)="selected($event, item)">
                 </MenuButton>
 
-                <MenuButton *ngIf="item.status != 'CLOSED' && roleId == 2" class="fas job-action-button"
+                <StackLayout *ngIf="roleId == 2" class="job-action-button" style="width: 100px; height: 70px;">
+                <MenuButton class="fas" 
                   [class.job-action-tapped]="isJobActionTapped(item, 'job-menu')"
-                  style="font-size: 16px; height: 70px; width: 100px; margin-right: 6"
-                  text="&#xf560;" [options]="jobMenu.options" (tap)="markJobActionTap(item, 'job-menu')" (selected)="onSelectedJobMenu($event, item)">
+                  style="font-size: 16px; height: 70px; width: 100px;"
+                  [showSpinner]="isJobMenuLoading(item)"
+                  [spinnerOffsetX]="0"
+                  [spinnerOffsetY]="0"
+                  [isRightSide]="true"
+                  [useSFIcon]="true"
+                  [sfIconName]="'bolt.circle'"
+                  [imageInsets]="{ top: 0, left: 0, bottom: 0, right: 0 }"
+                  [options]="jobMenu.options" (tap)="markJobActionTap(item, 'job-menu')" (selected)="onSelectedJobMenu($event, item)">
                 </MenuButton>
+              </StackLayout>
+
               </StackLayout>
             </GridLayout>
 

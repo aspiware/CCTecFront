@@ -84,7 +84,8 @@ export class CustomerInfoComponent implements OnInit {
     copyValue?: any,
     digitsOnly = false,
     allowCall = false,
-    allowMessage = false
+    allowMessage = false,
+    title = 'Copy'
   ): void {
     if (args && typeof args.cancel === 'boolean') {
       args.cancel = true;
@@ -131,7 +132,7 @@ export class CustomerInfoComponent implements OnInit {
 
       const sourceView = args?.object?.ios as UIView | undefined;
       const alert = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
-        'Copy',
+        title || 'Copy',
         textToShow,
         UIAlertControllerStyle.ActionSheet
       );
@@ -237,7 +238,7 @@ export class CustomerInfoComponent implements OnInit {
     }
 
     const alert = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
-      'Availability SMS',
+      'Send Availability SMS',
       'Choose language',
       UIAlertControllerStyle.ActionSheet
     );
@@ -319,8 +320,8 @@ export class CustomerInfoComponent implements OnInit {
     }
 
     const alert = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
-      'Send Message',
-      'Choose survey language',
+      'Send Survey SMS',
+      'Choose language',
       UIAlertControllerStyle.ActionSheet
     );
 

@@ -26,536 +26,536 @@ import { EditJobComponent } from '../edit-job/edit-job.component';
 export class TodayComponent implements OnInit {
   private readonly demoJobs: any[] = [
     {
-        "id": 12648,
-        "jobTypeId": 5,
-        "sms_survey_sent": 0,
-        "notes": null,
-        "jobDescription": "TECH RECOVERY",
-        "address": "2001 BURKE RD APT 36",
-        "city": "PASADENA",
-        "state": "TX",
-        "zipcode": "775023019",
-        "number": "601048",
-        "accountNumber": "8777701843015816",
-        "workOrderNumber": "10018331781220170001",
-        "amount": "52.33",
-        "description": "",
-        "jobUnits": "20",
-        "modems": "1",
-        "tvBoxes": "0",
-        "cameras": "0",
-        "timeSlotStartDateTime": "2026-02-24T09:00:00-06:00",
-        "timeSlotEndDateTime": "2026-02-24T11:00:00-06:00",
-        "status": "CLOSED",
-        "isCurrent": 0,
-        "isUpgrade": 0,
-        "devices": [
-            {
-                "id": 28688,
-                "type": "MTA",
-                "lob": "HSI",
-                "name": "MTA",
-                "serialNumber": "8C6A8DFA23FE",
-                "mac": "8C:6A:8D:FA:23:FE",
-                "connectionStatus": true,
-                "wasChangedUpgrade": 0
-            }
-        ],
-        "customer": {
-            "id": 9821,
-            "firstName": "SHAI",
-            "lastName": "SMITH",
-            "callFirstPhoneNumber": "3464535807",
-            "homePhoneNumber": "3464559228",
-            "workPhoneNumber": null,
-            "surveyPhoneNumber": "3464559228",
-            "xfinityAppUsername": "sourthennsweetstrawberry",
-            "email": "SOURTHENNSWEETSTRAWBERRY@GMAIL.COM"
-        },
-        "customJob": null,
-        "createdAt": "2026-02-24T14:54:12.000Z"
+      "id": 12648,
+      "jobTypeId": 5,
+      "sms_survey_sent": 0,
+      "notes": null,
+      "jobDescription": "TECH RECOVERY",
+      "address": "2001 BURKE RD APT 36",
+      "city": "PASADENA",
+      "state": "TX",
+      "zipcode": "775023019",
+      "number": "601048",
+      "accountNumber": "8777701843015816",
+      "workOrderNumber": "10018331781220170001",
+      "amount": "52.33",
+      "description": "",
+      "jobUnits": "20",
+      "modems": "1",
+      "tvBoxes": "0",
+      "cameras": "0",
+      "timeSlotStartDateTime": "2026-02-24T09:00:00-06:00",
+      "timeSlotEndDateTime": "2026-02-24T11:00:00-06:00",
+      "status": "CLOSED",
+      "isCurrent": 0,
+      "isUpgrade": 0,
+      "devices": [
+        {
+          "id": 28688,
+          "type": "MTA",
+          "lob": "HSI",
+          "name": "MTA",
+          "serialNumber": "8C6A8DFA23FE",
+          "mac": "8C:6A:8D:FA:23:FE",
+          "connectionStatus": true,
+          "wasChangedUpgrade": 0
+        }
+      ],
+      "customer": {
+        "id": 9821,
+        "firstName": "SHAI",
+        "lastName": "SMITH",
+        "callFirstPhoneNumber": "3464535807",
+        "homePhoneNumber": "3464559228",
+        "workPhoneNumber": null,
+        "surveyPhoneNumber": "3464559228",
+        "xfinityAppUsername": "sourthennsweetstrawberry",
+        "email": "SOURTHENNSWEETSTRAWBERRY@GMAIL.COM"
+      },
+      "customJob": null,
+      "createdAt": "2026-02-24T14:54:12.000Z"
     },
     {
-        "id": 12650,
-        "jobTypeId": 5,
-        "sms_survey_sent": 0,
-        "notes": null,
-        "jobDescription": "TECH RECOVERY",
-        "address": "5218 ALLENDALE RD",
-        "city": "HOUSTON",
-        "state": "TX",
-        "zipcode": "770176011",
-        "number": "601283",
-        "accountNumber": "8777703352924008",
-        "workOrderNumber": "10018331991720170001",
-        "amount": "52.33",
-        "description": "",
-        "jobUnits": "20",
-        "modems": "1",
-        "tvBoxes": "0",
-        "cameras": "0",
-        "timeSlotStartDateTime": "2026-02-24T09:00:00-06:00",
-        "timeSlotEndDateTime": "2026-02-24T11:00:00-06:00",
-        "status": "CLOSED",
-        "isCurrent": 0,
-        "isUpgrade": 0,
-        "devices": [
-            {
-                "id": 28690,
-                "type": "MTA",
-                "lob": "HSI",
-                "name": "MTA",
-                "serialNumber": "0CFE7BF34D94",
-                "mac": "0C:FE:7B:F3:4D:94",
-                "connectionStatus": true,
-                "wasChangedUpgrade": 0
-            }
-        ],
-        "customer": {
-            "id": 9823,
-            "firstName": "CRISPIN JR",
-            "lastName": "ELIAS",
-            "callFirstPhoneNumber": "8328206255",
-            "homePhoneNumber": "8328206255",
-            "workPhoneNumber": null,
-            "surveyPhoneNumber": "8328206255",
-            "xfinityAppUsername": "ecrjr_eli23",
-            "email": null
-        },
-        "customJob": null,
-        "createdAt": "2026-02-24T16:09:27.000Z"
+      "id": 12650,
+      "jobTypeId": 5,
+      "sms_survey_sent": 0,
+      "notes": null,
+      "jobDescription": "TECH RECOVERY",
+      "address": "5218 ALLENDALE RD",
+      "city": "HOUSTON",
+      "state": "TX",
+      "zipcode": "770176011",
+      "number": "601283",
+      "accountNumber": "8777703352924008",
+      "workOrderNumber": "10018331991720170001",
+      "amount": "52.33",
+      "description": "",
+      "jobUnits": "20",
+      "modems": "1",
+      "tvBoxes": "0",
+      "cameras": "0",
+      "timeSlotStartDateTime": "2026-02-24T09:00:00-06:00",
+      "timeSlotEndDateTime": "2026-02-24T11:00:00-06:00",
+      "status": "CLOSED",
+      "isCurrent": 0,
+      "isUpgrade": 0,
+      "devices": [
+        {
+          "id": 28690,
+          "type": "MTA",
+          "lob": "HSI",
+          "name": "MTA",
+          "serialNumber": "0CFE7BF34D94",
+          "mac": "0C:FE:7B:F3:4D:94",
+          "connectionStatus": true,
+          "wasChangedUpgrade": 0
+        }
+      ],
+      "customer": {
+        "id": 9823,
+        "firstName": "CRISPIN JR",
+        "lastName": "ELIAS",
+        "callFirstPhoneNumber": "8328206255",
+        "homePhoneNumber": "8328206255",
+        "workPhoneNumber": null,
+        "surveyPhoneNumber": "8328206255",
+        "xfinityAppUsername": "ecrjr_eli23",
+        "email": null
+      },
+      "customJob": null,
+      "createdAt": "2026-02-24T16:09:27.000Z"
     },
     {
-        "id": 12652,
-        "jobTypeId": 6,
-        "sms_survey_sent": 0,
-        "notes": null,
-        "jobDescription": "VID UP",
-        "address": "4222 BLUE WATER CT",
-        "city": "PASADENA",
-        "state": "TX",
-        "zipcode": "775053870",
-        "number": "602946",
-        "accountNumber": "8777701842197334",
-        "workOrderNumber": "10018333315120130001",
-        "amount": "44.99",
-        "description": "Upgrade",
-        "jobUnits": "24",
-        "modems": "1",
-        "tvBoxes": "3",
-        "cameras": "0",
-        "timeSlotStartDateTime": "2026-02-24T10:00:00-06:00",
-        "timeSlotEndDateTime": "2026-02-24T12:00:00-06:00",
-        "status": "CLOSED",
-        "isCurrent": 0,
-        "isUpgrade": 1,
-        "devices": [
-            {
-                "id": 28692,
-                "type": "IPSTB",
-                "lob": "VIDEO",
-                "name": "Living Room 3",
-                "serialNumber": "TM00931Q1443",
-                "mac": null,
-                "connectionStatus": true,
-                "wasChangedUpgrade": 1
-            },
-            {
-                "id": 28693,
-                "type": "IPSTB",
-                "lob": "VIDEO",
-                "name": "IPSTB",
-                "serialNumber": "PAM610408104",
-                "mac": null,
-                "connectionStatus": false,
-                "wasChangedUpgrade": 0
-            },
-            {
-                "id": 28694,
-                "type": "STB",
-                "lob": "UNKNOWN",
-                "name": "Living Room 2",
-                "serialNumber": "MA1947PG4024",
-                "mac": "60:D2:48:80:E4:65",
-                "connectionStatus": false,
-                "wasChangedUpgrade": 0
-            },
-            {
-                "id": 28695,
-                "type": "MTA",
-                "lob": "HSI",
-                "name": "MTA",
-                "serialNumber": "F8D00E6945F4",
-                "mac": "F8:D0:0E:69:45:F4",
-                "connectionStatus": true,
-                "wasChangedUpgrade": 1
-            }
-        ],
-        "customer": {
-            "id": 9825,
-            "firstName": "LINDA",
-            "lastName": "HAMMONS",
-            "callFirstPhoneNumber": null,
-            "homePhoneNumber": "2817932585",
-            "workPhoneNumber": null,
-            "surveyPhoneNumber": "2818440552",
-            "xfinityAppUsername": "lshammons",
-            "email": "LSHAMMONS@GMAIL.COM"
+      "id": 12652,
+      "jobTypeId": 6,
+      "sms_survey_sent": 0,
+      "notes": null,
+      "jobDescription": "VID UP",
+      "address": "4222 BLUE WATER CT",
+      "city": "PASADENA",
+      "state": "TX",
+      "zipcode": "775053870",
+      "number": "602946",
+      "accountNumber": "8777701842197334",
+      "workOrderNumber": "10018333315120130001",
+      "amount": "44.99",
+      "description": "Upgrade",
+      "jobUnits": "24",
+      "modems": "1",
+      "tvBoxes": "3",
+      "cameras": "0",
+      "timeSlotStartDateTime": "2026-02-24T10:00:00-06:00",
+      "timeSlotEndDateTime": "2026-02-24T12:00:00-06:00",
+      "status": "CLOSED",
+      "isCurrent": 0,
+      "isUpgrade": 1,
+      "devices": [
+        {
+          "id": 28692,
+          "type": "IPSTB",
+          "lob": "VIDEO",
+          "name": "Living Room 3",
+          "serialNumber": "TM00931Q1443",
+          "mac": null,
+          "connectionStatus": true,
+          "wasChangedUpgrade": 1
         },
-        "customJob": null,
-        "createdAt": "2026-02-24T17:46:31.000Z"
+        {
+          "id": 28693,
+          "type": "IPSTB",
+          "lob": "VIDEO",
+          "name": "IPSTB",
+          "serialNumber": "PAM610408104",
+          "mac": null,
+          "connectionStatus": false,
+          "wasChangedUpgrade": 0
+        },
+        {
+          "id": 28694,
+          "type": "STB",
+          "lob": "UNKNOWN",
+          "name": "Living Room 2",
+          "serialNumber": "MA1947PG4024",
+          "mac": "60:D2:48:80:E4:65",
+          "connectionStatus": false,
+          "wasChangedUpgrade": 0
+        },
+        {
+          "id": 28695,
+          "type": "MTA",
+          "lob": "HSI",
+          "name": "MTA",
+          "serialNumber": "F8D00E6945F4",
+          "mac": "F8:D0:0E:69:45:F4",
+          "connectionStatus": true,
+          "wasChangedUpgrade": 1
+        }
+      ],
+      "customer": {
+        "id": 9825,
+        "firstName": "LINDA",
+        "lastName": "HAMMONS",
+        "callFirstPhoneNumber": null,
+        "homePhoneNumber": "2817932585",
+        "workPhoneNumber": null,
+        "surveyPhoneNumber": "2818440552",
+        "xfinityAppUsername": "lshammons",
+        "email": "LSHAMMONS@GMAIL.COM"
+      },
+      "customJob": null,
+      "createdAt": "2026-02-24T17:46:31.000Z"
     },
     {
-        "id": 12658,
-        "jobTypeId": 2,
-        "sms_survey_sent": 0,
-        "notes": null,
-        "jobDescription": "HSD RC",
-        "address": "2111 COLONIAL DR",
-        "city": "BAYTOWN",
-        "state": "TX",
-        "zipcode": "775203791",
-        "number": "598486",
-        "accountNumber": "8777701042132289",
-        "workOrderNumber": "10018328745420150001",
-        "amount": "62.72",
-        "description": "Double Play Install",
-        "jobUnits": "27",
-        "modems": "2",
-        "tvBoxes": "2",
-        "cameras": "0",
-        "timeSlotStartDateTime": "2026-02-24T13:00:00-06:00",
-        "timeSlotEndDateTime": "2026-02-24T15:00:00-06:00",
-        "status": "CLOSED",
-        "isCurrent": 0,
-        "isUpgrade": 0,
-        "devices": [
-            {
-                "id": 28710,
-                "type": "MTA",
-                "lob": "HSI",
-                "name": "MTA",
-                "serialNumber": "F8D00E4859F4",
-                "mac": "F8:D0:0E:48:59:F4",
-                "connectionStatus": true,
-                "wasChangedUpgrade": 0
-            },
-            {
-                "id": 28711,
-                "type": "IPSTB",
-                "lob": "VIDEO",
-                "name": "IPSTB",
-                "serialNumber": "TM02651G4714",
-                "mac": null,
-                "connectionStatus": true,
-                "wasChangedUpgrade": 0
-            },
-            {
-                "id": 28712,
-                "type": "STB",
-                "lob": "VIDEO",
-                "name": "STB",
-                "serialNumber": "PAK810284123",
-                "mac": "44:34:A7:95:9D:C5",
-                "connectionStatus": false,
-                "wasChangedUpgrade": 0
-            },
-            {
-                "id": 28713,
-                "type": "MTA",
-                "lob": "UNKNOWN",
-                "name": "MTA",
-                "serialNumber": "C09435BAB782",
-                "mac": "C0:94:35:BA:B7:82",
-                "connectionStatus": false,
-                "wasChangedUpgrade": 0
-            }
-        ],
-        "customer": {
-            "id": 9831,
-            "firstName": "ADRIANNA",
-            "lastName": "PHILLIPS",
-            "callFirstPhoneNumber": "8325424697",
-            "homePhoneNumber": "8325424697",
-            "workPhoneNumber": null,
-            "surveyPhoneNumber": "8325424697",
-            "xfinityAppUsername": "ADRIANNNAPHILLIPS",
-            "email": "ADRIANNNAPHILLIPS@GMAIL.COM"
+      "id": 12658,
+      "jobTypeId": 2,
+      "sms_survey_sent": 0,
+      "notes": null,
+      "jobDescription": "HSD RC",
+      "address": "2111 COLONIAL DR",
+      "city": "BAYTOWN",
+      "state": "TX",
+      "zipcode": "775203791",
+      "number": "598486",
+      "accountNumber": "8777701042132289",
+      "workOrderNumber": "10018328745420150001",
+      "amount": "62.72",
+      "description": "Double Play Install",
+      "jobUnits": "27",
+      "modems": "2",
+      "tvBoxes": "2",
+      "cameras": "0",
+      "timeSlotStartDateTime": "2026-02-24T13:00:00-06:00",
+      "timeSlotEndDateTime": "2026-02-24T15:00:00-06:00",
+      "status": "CLOSED",
+      "isCurrent": 0,
+      "isUpgrade": 0,
+      "devices": [
+        {
+          "id": 28710,
+          "type": "MTA",
+          "lob": "HSI",
+          "name": "MTA",
+          "serialNumber": "F8D00E4859F4",
+          "mac": "F8:D0:0E:48:59:F4",
+          "connectionStatus": true,
+          "wasChangedUpgrade": 0
         },
-        "customJob": null,
-        "createdAt": "2026-02-24T19:50:47.000Z"
+        {
+          "id": 28711,
+          "type": "IPSTB",
+          "lob": "VIDEO",
+          "name": "IPSTB",
+          "serialNumber": "TM02651G4714",
+          "mac": null,
+          "connectionStatus": true,
+          "wasChangedUpgrade": 0
+        },
+        {
+          "id": 28712,
+          "type": "STB",
+          "lob": "VIDEO",
+          "name": "STB",
+          "serialNumber": "PAK810284123",
+          "mac": "44:34:A7:95:9D:C5",
+          "connectionStatus": false,
+          "wasChangedUpgrade": 0
+        },
+        {
+          "id": 28713,
+          "type": "MTA",
+          "lob": "UNKNOWN",
+          "name": "MTA",
+          "serialNumber": "C09435BAB782",
+          "mac": "C0:94:35:BA:B7:82",
+          "connectionStatus": false,
+          "wasChangedUpgrade": 0
+        }
+      ],
+      "customer": {
+        "id": 9831,
+        "firstName": "ADRIANNA",
+        "lastName": "PHILLIPS",
+        "callFirstPhoneNumber": "8325424697",
+        "homePhoneNumber": "8325424697",
+        "workPhoneNumber": null,
+        "surveyPhoneNumber": "8325424697",
+        "xfinityAppUsername": "ADRIANNNAPHILLIPS",
+        "email": "ADRIANNNAPHILLIPS@GMAIL.COM"
+      },
+      "customJob": null,
+      "createdAt": "2026-02-24T19:50:47.000Z"
     },
     {
-        "id": 12659,
-        "jobTypeId": 5,
-        "sms_survey_sent": 0,
-        "notes": null,
-        "jobDescription": "TECH RECOVERY",
-        "address": "3201 GARTH RD APT 54",
-        "city": "BAYTOWN",
-        "state": "TX",
-        "zipcode": "775213831",
-        "number": "602679",
-        "accountNumber": "8777701042132651",
-        "workOrderNumber": "10018333134220170001",
-        "amount": "52.33",
-        "description": "",
-        "jobUnits": "20",
-        "modems": "2",
-        "tvBoxes": "0",
-        "cameras": "0",
-        "timeSlotStartDateTime": "2026-02-24T15:00:00-06:00",
-        "timeSlotEndDateTime": "2026-02-24T17:00:00-06:00",
-        "status": "CLOSED",
-        "isCurrent": 0,
-        "isUpgrade": 0,
-        "devices": [
-            {
-                "id": 28714,
-                "type": "MTA",
-                "lob": "UNKNOWN",
-                "name": "MTA",
-                "serialNumber": "989D5D7803E2",
-                "mac": "98:9D:5D:78:03:E2",
-                "connectionStatus": false,
-                "wasChangedUpgrade": 0
-            },
-            {
-                "id": 28715,
-                "type": "MTA",
-                "lob": "HSI",
-                "name": "MTA",
-                "serialNumber": "A8705DFE1AE9",
-                "mac": "A8:70:5D:FE:1A:E9",
-                "connectionStatus": true,
-                "wasChangedUpgrade": 0
-            }
-        ],
-        "customer": {
-            "id": 9832,
-            "firstName": "LOUIS",
-            "lastName": "CAMARILLO",
-            "callFirstPhoneNumber": "8329386831",
-            "homePhoneNumber": "8329386831",
-            "workPhoneNumber": null,
-            "surveyPhoneNumber": "8329386831",
-            "xfinityAppUsername": "lcamarillo35",
-            "email": "LCAMARILLO35@YAHOO.COM"
+      "id": 12659,
+      "jobTypeId": 5,
+      "sms_survey_sent": 0,
+      "notes": null,
+      "jobDescription": "TECH RECOVERY",
+      "address": "3201 GARTH RD APT 54",
+      "city": "BAYTOWN",
+      "state": "TX",
+      "zipcode": "775213831",
+      "number": "602679",
+      "accountNumber": "8777701042132651",
+      "workOrderNumber": "10018333134220170001",
+      "amount": "52.33",
+      "description": "",
+      "jobUnits": "20",
+      "modems": "2",
+      "tvBoxes": "0",
+      "cameras": "0",
+      "timeSlotStartDateTime": "2026-02-24T15:00:00-06:00",
+      "timeSlotEndDateTime": "2026-02-24T17:00:00-06:00",
+      "status": "CLOSED",
+      "isCurrent": 0,
+      "isUpgrade": 0,
+      "devices": [
+        {
+          "id": 28714,
+          "type": "MTA",
+          "lob": "UNKNOWN",
+          "name": "MTA",
+          "serialNumber": "989D5D7803E2",
+          "mac": "98:9D:5D:78:03:E2",
+          "connectionStatus": false,
+          "wasChangedUpgrade": 0
         },
-        "customJob": null,
-        "createdAt": "2026-02-24T20:39:49.000Z"
+        {
+          "id": 28715,
+          "type": "MTA",
+          "lob": "HSI",
+          "name": "MTA",
+          "serialNumber": "A8705DFE1AE9",
+          "mac": "A8:70:5D:FE:1A:E9",
+          "connectionStatus": true,
+          "wasChangedUpgrade": 0
+        }
+      ],
+      "customer": {
+        "id": 9832,
+        "firstName": "LOUIS",
+        "lastName": "CAMARILLO",
+        "callFirstPhoneNumber": "8329386831",
+        "homePhoneNumber": "8329386831",
+        "workPhoneNumber": null,
+        "surveyPhoneNumber": "8329386831",
+        "xfinityAppUsername": "lcamarillo35",
+        "email": "LCAMARILLO35@YAHOO.COM"
+      },
+      "customJob": null,
+      "createdAt": "2026-02-24T20:39:49.000Z"
     },
     {
-        "id": 12656,
-        "jobTypeId": 5,
-        "sms_survey_sent": 0,
-        "notes": null,
-        "jobDescription": "TECH RECOVERY",
-        "address": "2629 1/2 W MAIN ST",
-        "city": "BAYTOWN",
-        "state": "TX",
-        "zipcode": "775206218",
-        "number": "603567",
-        "accountNumber": "8777701042132768",
-        "workOrderNumber": "10018334592820190001",
-        "amount": "52.33",
-        "description": "",
-        "jobUnits": "20",
-        "modems": "1",
-        "tvBoxes": "0",
-        "cameras": "0",
-        "timeSlotStartDateTime": "2026-02-24T13:00:00-06:00",
-        "timeSlotEndDateTime": "2026-02-24T15:00:00-06:00",
-        "status": "CLOSED",
-        "isCurrent": 0,
-        "isUpgrade": 0,
-        "devices": [
-            {
-                "id": 28707,
-                "type": "CM",
-                "lob": "HSI",
-                "name": "CM",
-                "serialNumber": "FC51A46DA559",
-                "mac": "FC:51:A4:6D:A5:59",
-                "connectionStatus": true,
-                "wasChangedUpgrade": 0
-            }
-        ],
-        "customer": {
-            "id": 9829,
-            "firstName": "LAMARQUI",
-            "lastName": "LUCKETT",
-            "callFirstPhoneNumber": "3469778335",
-            "homePhoneNumber": "3469778335",
-            "workPhoneNumber": null,
-            "surveyPhoneNumber": null,
-            "xfinityAppUsername": null,
-            "email": "NO@EMAIL.COM"
-        },
-        "customJob": null,
-        "createdAt": "2026-02-24T18:57:15.000Z"
+      "id": 12656,
+      "jobTypeId": 5,
+      "sms_survey_sent": 0,
+      "notes": null,
+      "jobDescription": "TECH RECOVERY",
+      "address": "2629 1/2 W MAIN ST",
+      "city": "BAYTOWN",
+      "state": "TX",
+      "zipcode": "775206218",
+      "number": "603567",
+      "accountNumber": "8777701042132768",
+      "workOrderNumber": "10018334592820190001",
+      "amount": "52.33",
+      "description": "",
+      "jobUnits": "20",
+      "modems": "1",
+      "tvBoxes": "0",
+      "cameras": "0",
+      "timeSlotStartDateTime": "2026-02-24T13:00:00-06:00",
+      "timeSlotEndDateTime": "2026-02-24T15:00:00-06:00",
+      "status": "CLOSED",
+      "isCurrent": 0,
+      "isUpgrade": 0,
+      "devices": [
+        {
+          "id": 28707,
+          "type": "CM",
+          "lob": "HSI",
+          "name": "CM",
+          "serialNumber": "FC51A46DA559",
+          "mac": "FC:51:A4:6D:A5:59",
+          "connectionStatus": true,
+          "wasChangedUpgrade": 0
+        }
+      ],
+      "customer": {
+        "id": 9829,
+        "firstName": "LAMARQUI",
+        "lastName": "LUCKETT",
+        "callFirstPhoneNumber": "3469778335",
+        "homePhoneNumber": "3469778335",
+        "workPhoneNumber": null,
+        "surveyPhoneNumber": null,
+        "xfinityAppUsername": null,
+        "email": "NO@EMAIL.COM"
+      },
+      "customJob": null,
+      "createdAt": "2026-02-24T18:57:15.000Z"
     },
     {
-        "id": 12674,
-        "jobTypeId": 4,
-        "sms_survey_sent": 0,
-        "notes": null,
-        "jobDescription": "HSD OUT",
-        "address": "4503 ESTATE DR",
-        "city": "BAYTOWN",
-        "state": "TX",
-        "zipcode": "775211881",
-        "number": "601959",
-        "accountNumber": "8777701041483048",
-        "workOrderNumber": "10018332542220120001",
-        "amount": "36.65",
-        "description": "Trouble Call",
-        "jobUnits": "17",
-        "modems": "2",
-        "tvBoxes": "0",
-        "cameras": "4",
-        "timeSlotStartDateTime": "2026-02-24T15:00:00-06:00",
-        "timeSlotEndDateTime": "2026-02-24T17:00:00-06:00",
-        "status": "CLOSED",
-        "isCurrent": 0,
-        "isUpgrade": 0,
-        "devices": [
-            {
-                "id": 28742,
-                "type": "MTA",
-                "lob": "HSI",
-                "name": "MTA",
-                "serialNumber": "60D248161057",
-                "mac": "60:D2:48:16:10:57",
-                "connectionStatus": true,
-                "wasChangedUpgrade": 0
-            },
-            {
-                "id": 28743,
-                "type": "MTA",
-                "lob": "UNKNOWN",
-                "name": "MTA",
-                "serialNumber": "48BDCE19803F",
-                "mac": "48:BD:CE:19:80:3F",
-                "connectionStatus": false,
-                "wasChangedUpgrade": 0
-            },
-            {
-                "id": 28744,
-                "type": "CAMERA",
-                "lob": "UNKNOWN",
-                "name": "Gate side",
-                "serialNumber": "C22114019166",
-                "mac": "88:C9:B3:E7:0D:41",
-                "connectionStatus": false,
-                "wasChangedUpgrade": 0
-            },
-            {
-                "id": 28745,
-                "type": "UNKNOWN",
-                "lob": "XH",
-                "name": "Touch Screen",
-                "serialNumber": "T22013002473",
-                "mac": "NA",
-                "connectionStatus": true,
-                "wasChangedUpgrade": 0
-            },
-            {
-                "id": 28746,
-                "type": "CAMERA",
-                "lob": "UNKNOWN",
-                "name": "Backyard",
-                "serialNumber": "C22017014240",
-                "mac": "E4:26:86:F9:FF:8B",
-                "connectionStatus": false,
-                "wasChangedUpgrade": 0
-            },
-            {
-                "id": 28747,
-                "type": "CAMERA",
-                "lob": "UNKNOWN",
-                "name": "Front",
-                "serialNumber": "C22017014318",
-                "mac": "E4:26:86:F9:FF:D9",
-                "connectionStatus": false,
-                "wasChangedUpgrade": 0
-            },
-            {
-                "id": 28748,
-                "type": "CAMERA",
-                "lob": "UNKNOWN",
-                "name": "Side",
-                "serialNumber": "C22041007683",
-                "mac": "7C:8F:DE:FE:D9:CA",
-                "connectionStatus": false,
-                "wasChangedUpgrade": 0
-            }
-        ],
-        "customer": {
-            "id": 9847,
-            "firstName": "ADRIAN",
-            "lastName": "OLEARY",
-            "callFirstPhoneNumber": "8329759128",
-            "homePhoneNumber": "8329759128",
-            "workPhoneNumber": null,
-            "surveyPhoneNumber": "8329759128",
-            "xfinityAppUsername": "adrianaitor97",
-            "email": "VALERIA_G20@YAHOO.COM"
+      "id": 12674,
+      "jobTypeId": 4,
+      "sms_survey_sent": 0,
+      "notes": null,
+      "jobDescription": "HSD OUT",
+      "address": "4503 ESTATE DR",
+      "city": "BAYTOWN",
+      "state": "TX",
+      "zipcode": "775211881",
+      "number": "601959",
+      "accountNumber": "8777701041483048",
+      "workOrderNumber": "10018332542220120001",
+      "amount": "36.65",
+      "description": "Trouble Call",
+      "jobUnits": "17",
+      "modems": "2",
+      "tvBoxes": "0",
+      "cameras": "4",
+      "timeSlotStartDateTime": "2026-02-24T15:00:00-06:00",
+      "timeSlotEndDateTime": "2026-02-24T17:00:00-06:00",
+      "status": "CLOSED",
+      "isCurrent": 0,
+      "isUpgrade": 0,
+      "devices": [
+        {
+          "id": 28742,
+          "type": "MTA",
+          "lob": "HSI",
+          "name": "MTA",
+          "serialNumber": "60D248161057",
+          "mac": "60:D2:48:16:10:57",
+          "connectionStatus": true,
+          "wasChangedUpgrade": 0
         },
-        "customJob": null,
-        "createdAt": "2026-02-24T21:17:17.000Z"
+        {
+          "id": 28743,
+          "type": "MTA",
+          "lob": "UNKNOWN",
+          "name": "MTA",
+          "serialNumber": "48BDCE19803F",
+          "mac": "48:BD:CE:19:80:3F",
+          "connectionStatus": false,
+          "wasChangedUpgrade": 0
+        },
+        {
+          "id": 28744,
+          "type": "CAMERA",
+          "lob": "UNKNOWN",
+          "name": "Gate side",
+          "serialNumber": "C22114019166",
+          "mac": "88:C9:B3:E7:0D:41",
+          "connectionStatus": false,
+          "wasChangedUpgrade": 0
+        },
+        {
+          "id": 28745,
+          "type": "UNKNOWN",
+          "lob": "XH",
+          "name": "Touch Screen",
+          "serialNumber": "T22013002473",
+          "mac": "NA",
+          "connectionStatus": true,
+          "wasChangedUpgrade": 0
+        },
+        {
+          "id": 28746,
+          "type": "CAMERA",
+          "lob": "UNKNOWN",
+          "name": "Backyard",
+          "serialNumber": "C22017014240",
+          "mac": "E4:26:86:F9:FF:8B",
+          "connectionStatus": false,
+          "wasChangedUpgrade": 0
+        },
+        {
+          "id": 28747,
+          "type": "CAMERA",
+          "lob": "UNKNOWN",
+          "name": "Front",
+          "serialNumber": "C22017014318",
+          "mac": "E4:26:86:F9:FF:D9",
+          "connectionStatus": false,
+          "wasChangedUpgrade": 0
+        },
+        {
+          "id": 28748,
+          "type": "CAMERA",
+          "lob": "UNKNOWN",
+          "name": "Side",
+          "serialNumber": "C22041007683",
+          "mac": "7C:8F:DE:FE:D9:CA",
+          "connectionStatus": false,
+          "wasChangedUpgrade": 0
+        }
+      ],
+      "customer": {
+        "id": 9847,
+        "firstName": "ADRIAN",
+        "lastName": "OLEARY",
+        "callFirstPhoneNumber": "8329759128",
+        "homePhoneNumber": "8329759128",
+        "workPhoneNumber": null,
+        "surveyPhoneNumber": "8329759128",
+        "xfinityAppUsername": "adrianaitor97",
+        "email": "VALERIA_G20@YAHOO.COM"
+      },
+      "customJob": null,
+      "createdAt": "2026-02-24T21:17:17.000Z"
     },
     {
-        "id": 12677,
-        "jobTypeId": 5,
-        "sms_survey_sent": 0,
-        "notes": null,
-        "jobDescription": "TECH RECOVERY",
-        "address": "347 BREEZE PARK DR",
-        "city": "HOUSTON",
-        "state": "TX",
-        "zipcode": "770152107",
-        "number": "604412",
-        "accountNumber": "8777702052244162",
-        "workOrderNumber": "10018335320620160001",
-        "amount": "52.33",
-        "description": "",
-        "jobUnits": "20",
-        "modems": "1",
-        "tvBoxes": "0",
-        "cameras": "0",
-        "timeSlotStartDateTime": "2026-02-24T08:00:00-06:00",
-        "timeSlotEndDateTime": "2026-02-24T20:00:00-06:00",
-        "status": "CLOSED",
-        "isCurrent": 0,
-        "isUpgrade": 0,
-        "devices": [
-            {
-                "id": 28752,
-                "type": "CM",
-                "lob": "HSI",
-                "name": "CM",
-                "serialNumber": "100C6B6859F8",
-                "mac": "10:0C:6B:68:59:F8",
-                "connectionStatus": true,
-                "wasChangedUpgrade": 0
-            }
-        ],
-        "customer": {
-            "id": 9850,
-            "firstName": "MICHAEL",
-            "lastName": "HERNANDEZ",
-            "callFirstPhoneNumber": null,
-            "homePhoneNumber": "8327713996",
-            "workPhoneNumber": null,
-            "surveyPhoneNumber": "8327713996",
-            "xfinityAppUsername": "mh53101",
-            "email": "MH53101@GMAIL.COM"
-        },
-        "customJob": null,
-        "createdAt": "2026-02-25T00:36:44.000Z"
+      "id": 12677,
+      "jobTypeId": 5,
+      "sms_survey_sent": 0,
+      "notes": null,
+      "jobDescription": "TECH RECOVERY",
+      "address": "347 BREEZE PARK DR",
+      "city": "HOUSTON",
+      "state": "TX",
+      "zipcode": "770152107",
+      "number": "604412",
+      "accountNumber": "8777702052244162",
+      "workOrderNumber": "10018335320620160001",
+      "amount": "52.33",
+      "description": "",
+      "jobUnits": "20",
+      "modems": "1",
+      "tvBoxes": "0",
+      "cameras": "0",
+      "timeSlotStartDateTime": "2026-02-24T08:00:00-06:00",
+      "timeSlotEndDateTime": "2026-02-24T20:00:00-06:00",
+      "status": "CLOSED",
+      "isCurrent": 0,
+      "isUpgrade": 0,
+      "devices": [
+        {
+          "id": 28752,
+          "type": "CM",
+          "lob": "HSI",
+          "name": "CM",
+          "serialNumber": "100C6B6859F8",
+          "mac": "10:0C:6B:68:59:F8",
+          "connectionStatus": true,
+          "wasChangedUpgrade": 0
+        }
+      ],
+      "customer": {
+        "id": 9850,
+        "firstName": "MICHAEL",
+        "lastName": "HERNANDEZ",
+        "callFirstPhoneNumber": null,
+        "homePhoneNumber": "8327713996",
+        "workPhoneNumber": null,
+        "surveyPhoneNumber": "8327713996",
+        "xfinityAppUsername": "mh53101",
+        "email": "MH53101@GMAIL.COM"
+      },
+      "customJob": null,
+      "createdAt": "2026-02-25T00:36:44.000Z"
     }
-];
+  ];
 
   public user: UserModel;
   public jobList: ObservableArray<any>;
@@ -637,6 +637,7 @@ export class TodayComponent implements OnInit {
   public isOnShift: boolean;
   public techStatus: boolean;
   public isTechStatusLoading = false;
+  public jobMenuLoadingStates: { [key: string]: boolean } = {};
   public lastKnownTechStatus = 'AVAIL';
   showStarred = false;
   private isCopyMenuOpen = false;
@@ -743,12 +744,12 @@ export class TodayComponent implements OnInit {
       },
     });
 
-        // new Toasty({ text: error })
-        //   .setToastDuration(ToastDuration.LONG)
-        //   .setToastPosition(ToastPosition.TOP)
-        //   .setTextColor(new Color("white"))
-        //   .setBackgroundColor(new Color("gray"))
-        //   .show();
+    // new Toasty({ text: error })
+    //   .setToastDuration(ToastDuration.LONG)
+    //   .setToastPosition(ToastPosition.TOP)
+    //   .setTextColor(new Color("white"))
+    //   .setBackgroundColor(new Color("gray"))
+    //   .show();
     // this.todayService.findTodayByUser(userId).subscribe({
     //   next: (res) => {
     //     console.log(res.jobs);
@@ -1297,7 +1298,7 @@ export class TodayComponent implements OnInit {
 
       const sourceView = args?.object?.ios as UIView | undefined;
       const alert = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
-        type === 'address' ? 'Address' : 'Copy',
+        this.getCopyMenuTitle(type),
         textToCopy,
         UIAlertControllerStyle.ActionSheet
       );
@@ -1349,6 +1350,19 @@ export class TodayComponent implements OnInit {
       viewController.presentViewControllerAnimatedCompletion(alert, true, null);
       return;
     }
+  }
+
+  private getCopyMenuTitle(type?: string): string {
+    if (!type) {
+      return 'Copy';
+    }
+
+    const normalized = String(type).trim().toLowerCase();
+    if (!normalized) {
+      return 'Copy';
+    }
+
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
   }
 
   private showMapOptions(sourceView: UIView | undefined, address: string): void {
@@ -1420,5 +1434,199 @@ export class TodayComponent implements OnInit {
     }
 
     viewController.presentViewControllerAnimatedCompletion(alert, true, null);
+  }
+
+  onSelectedJobMenu(args: MenuEvent, job: any) {
+    console.log('selected:', args.index);
+
+    switch (args.index) {
+      case 0:
+        this.goEnroute(job);
+        break;
+      case 1:
+        this.goOnjob(job);
+        break;
+      case 2:
+        this.completeJob(job);
+        break;
+      case 3:
+        this.updateLocation(job);
+        break;
+    }
+  }
+
+  public async goEnroute(job: any) {
+    const key = this.getJobMenuKey(job);
+    if (!key || this.jobMenuLoadingStates[key]) {
+      return;
+    }
+
+    this.setJobMenuLoading(job, true);
+    this.isTechStatusLoading = true;
+
+    const selectJob$ = this.todayService.selectJob(
+      this.user?.userId,
+      job.workOrderNumber
+    );
+
+    const updateTechStatus$ = this.todayService.updateTechStatus(
+      this.user?.userId,
+      job.accountNumber,
+      job.workOrderNumber,
+      "ENROUTE",
+      {
+        latitude: 0,
+        longitude: 0
+      }
+    );
+
+    concat(selectJob$, updateTechStatus$).subscribe({
+      next: (res) => {
+        console.log('Response', res);
+      },
+      complete: () => {
+        this.finishJobMenuAction(job, 'car');
+      },
+      error: (error) => {
+        this.finishJobMenuAction(job);
+        console.error('Error en alguna de las validaciones:', error);
+
+        alert({
+          title: 'Error',
+          message: String(error.error.message),
+          okButtonText: 'OK',
+        });
+      },
+    });
+  }
+
+  public async goOnjob(job: any) {
+    const key = this.getJobMenuKey(job);
+    if (!key || this.jobMenuLoadingStates[key]) {
+      return;
+    }
+
+    this.setJobMenuLoading(job, true);
+    this.isTechStatusLoading = true;
+
+    const selectJob$ = this.todayService.selectJob(
+      this.user?.userId,
+      job.workOrderNumber
+    );
+
+    const updateLocation$ = this.todayService.updateLocation(
+      this.user?.userId,
+      {
+        techStatus: 'ONJOB',
+        motionStatus: 'stop',
+        latitude: job.latitude,
+        longitude: job.longitude,
+      }
+    );
+
+    const updateTechStatus$ = this.todayService.updateTechStatus(
+      this.user?.userId,
+      job.accountNumber,
+      job.workOrderNumber,
+      "ONJOB",
+      {
+        latitude: job.latitude,
+        longitude: job.longitude
+      }
+    );
+
+    concat(selectJob$, updateLocation$, updateTechStatus$).subscribe({
+      next: (res) => {
+        console.log('Response', res);
+      },
+      complete: () => {
+        this.finishJobMenuAction(job, 'wrench.adjustable.fill');
+      },
+      error: (error) => {
+        this.finishJobMenuAction(job);
+        console.error('Error en alguna de las validaciones:', error);
+        alert({
+          title: 'Error',
+          message: String(error.error.message),
+          okButtonText: 'OK',
+        });
+      },
+    });
+  }
+
+  public async completeJob(job: any) {
+  }
+
+  private getJobMenuKey(job: any): string {
+    return String(job?.number || job?.workOrderNumber || job?.id || '');
+  }
+
+  private setJobMenuLoading(job: any, isLoading: boolean): void {
+    const key = this.getJobMenuKey(job);
+    if (!key) {
+      return;
+    }
+
+    if (isLoading) {
+      this.jobMenuLoadingStates[key] = true;
+    } else {
+      delete this.jobMenuLoadingStates[key];
+    }
+    this.cdr.detectChanges();
+  }
+
+  private finishJobMenuAction(job: any, iconName?: string): void {
+    setTimeout(() => {
+      this.setJobMenuLoading(job, false);
+      this.isTechStatusLoading = false;
+      if (iconName) {
+        this.mainMenuIconName = iconName;
+      }
+      this.cdr.detectChanges();
+    }, 0);
+  }
+
+  public isJobMenuLoading(item: any): boolean {
+    const key = this.getJobMenuKey(item);
+    return !!key && !!this.jobMenuLoadingStates[key];
+  }
+
+  public updateLocation(job: any) {
+    const key = this.getJobMenuKey(job);
+    if (!key || this.jobMenuLoadingStates[key]) {
+      return;
+    }
+
+    const latitude = job?.latitude;
+    const longitude = job?.longitude;
+
+    this.setJobMenuLoading(job, true);
+    console.log(latitude, longitude)
+
+    this.todayService.updateLocation(
+      this.user?.userId,
+      {
+        techStatus: 'ONJOB',
+        motionStatus: 'stop',
+        latitude,
+        longitude,
+      }
+    ).subscribe({
+      next: (res) => {
+        console.log('updateLocation-RES', res);
+      }, error: (error) => {
+        this.setJobMenuLoading(job, false);
+        console.log(error);
+
+        alert({
+          title: 'Error',
+          message: String(error.error.message),
+          okButtonText: 'OK',
+        });
+      },
+      complete: () => {
+        this.setJobMenuLoading(job, false);
+      }
+    });
   }
 }
