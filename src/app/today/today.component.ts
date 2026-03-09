@@ -1553,7 +1553,7 @@ export class TodayComponent implements OnInit {
       next: (res) => {
         console.log('updateLocation-RES', res);
       }, error: (error) => {
-        // this.isJobMenuLoading = false;
+        this.isJobMenuLoading = false;
         this.cdr.detectChanges();
         console.log(error);
 
@@ -1564,7 +1564,7 @@ export class TodayComponent implements OnInit {
         });
       },
       complete: () => {
-        // this.isJobMenuLoading = false;
+        this.isJobMenuLoading = false;
         this.cdr.detectChanges();
       }
     });
