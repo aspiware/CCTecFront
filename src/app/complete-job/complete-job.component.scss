@@ -42,6 +42,11 @@
   height: 65%;
 }
 
+.modal-body {
+  width: 100%;
+  height: 60%;
+}
+
 .ns-light .modal-card {
   background-color: #F2F2F7;
   border-color: rgba(60, 60, 67, 0.16);
@@ -163,9 +168,9 @@ TextField.custom-tf-inline {
 }
 
 .custom-list-wrap {
-  height: 220;
-  margin-top: 20;
-  margin-bottom: 12;
+  height: 100%;
+  margin-top: 8;
+  margin-bottom: 0;
 }
 
 .custom-types-list {

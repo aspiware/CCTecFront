@@ -25,73 +25,61 @@
         </StackLayout>
       </GridLayout>
 
-      <ScrollView
-        #bodyScroll
-        row="1"
-        class="form-scroll form-scroll-custom">
-        <StackLayout class="content" [class.content-notes-focused]="isNotesFocused">
-          <ActivityIndicator
-            [busy]="isLoadingTypes"
-            [visibility]="isLoadingTypes ? 'visible' : 'collapse'"
-            class="loading-indicator">
-          </ActivityIndicator>
+      <GridLayout row="1" rows="auto,auto,*" class="modal-body">
+        <Label
+          row="0"
+          [text]="emptyMessage"
+          [visibility]="(!isLoadingTypes && emptyMessage) ? 'visible' : 'collapse'"
+          class="empty-message">
+        </Label>
 
-          <Label
-            [text]="emptyMessage"
-            [visibility]="(!isLoadingTypes && emptyMessage) ? 'visible' : 'collapse'"
-            class="empty-message">
-          </Label>
-
-          <GridLayout columns="*" class="segment-row">
-            <GridLayout columns="*,auto" class="input-shell" width="100%">
-              <TextField
-                col="0"
-                hint="Search resolution codes"
-                [text]="resolutionSearch"
-                (textChange)="onResolutionSearchChange($event.value)"
-                class="custom-tf-inline">
-              </TextField>
-              <Label
-                col="1"
-                class="search-icon fas"
-                [text]="resolutionSearch?.trim() ? '&#xf057;' : '&#xf002;'"
-                [isUserInteractionEnabled]="!!resolutionSearch?.trim()"
-                (tap)="clearResolutionSearch()">
-              </Label>
-            </GridLayout>
+        <GridLayout row="1" columns="*" class="segment-row">
+          <GridLayout columns="*,auto" class="input-shell" width="100%">
+            <TextField
+              col="0"
+              hint="Search resolution codes"
+              [text]="resolutionSearch"
+              (textChange)="onResolutionSearchChange($event.value)"
+              class="custom-tf-inline">
+            </TextField>
+            <Label
+              col="1"
+              class="search-icon fas"
+              [text]="resolutionSearch?.trim() ? '&#xf057;' : '&#xf002;'"
+              [isUserInteractionEnabled]="!!resolutionSearch?.trim()"
+              (tap)="clearResolutionSearch()">
+            </Label>
           </GridLayout>
+        </GridLayout>
 
+        <GridLayout row="2" class="custom-list-wrap">
           <Label
             class="empty-message"
             [text]="customTypeEmptyMessage"
             [visibility]="(!isLoadingTypes && !jobUserTypesList.length && customTypeEmptyMessage) ? 'visible' : 'collapse'">
           </Label>
-
-          <GridLayout
-            class="custom-list-wrap">
-            <RadListView
-              #listView
-              (loaded)="onListLoaded()"
-              (itemSelected)="onItemSelected($event)"
-              (itemDeselected)="onItemDeselected($event)"
-              [items]="jobUserTypesList"
-              selectionBehavior="Press"
-              multipleSelection="true"
-              class="custom-types-list">
-              <ng-template tkListItemTemplate let-item="item">
-                <GridLayout rows="auto" columns="*, auto" style="margin-left: 40; margin-right: 20; margin-top: 6; margin-bottom: 6;">
-                  <GridLayout orientation="horizontal" class="item-bag" col="0" columns="*, auto">
-                    <StackLayout orientation="horizontal" col="0">
-                      <Label [text]="item.code"></Label>
-                      <Label [text]="item.description"></Label>
-                    </StackLayout>
-                  </GridLayout>
+          <RadListView
+            #listView
+            (loaded)="onListLoaded()"
+            (itemSelected)="onItemSelected($event)"
+            (itemDeselected)="onItemDeselected($event)"
+            [items]="jobUserTypesList"
+            selectionBehavior="Press"
+            multipleSelection="true"
+            class="custom-types-list">
+            <ng-template tkListItemTemplate let-item="item">
+              <GridLayout rows="auto" columns="*, auto" style="margin-left: 40; margin-right: 20; margin-top: 6; margin-bottom: 6;">
+                <GridLayout orientation="horizontal" class="item-bag" col="0" columns="*, auto">
+                  <StackLayout orientation="horizontal" col="0">
+                    <Label [text]="item.code"></Label>
+                    <Label [text]="item.description"></Label>
+                  </StackLayout>
                 </GridLayout>
-              </ng-template>
-            </RadListView>
-          </GridLayout>
-        </StackLayout>
-      </ScrollView>
+              </GridLayout>
+            </ng-template>
+          </RadListView>
+        </GridLayout>
+      </GridLayout>
     </GridLayout>
   </GridLayout>
 </ModalStack>

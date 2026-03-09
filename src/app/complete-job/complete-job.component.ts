@@ -62,31 +62,25 @@ export class CompleteJobComponent implements OnInit {
     name: 'Main Menu',
     options: [
       {
-        name: 'Save',
+        name: 'Complete',
         icon: 'checkmark.circle',
         destructive: true,
         confirm: {
-          title: 'Save job changes?',
-          confirmText: 'Save',
+          title: 'Complete job?',
+          confirmText: 'Complete',
           cancelText: 'Cancel',
           presentation: 'anchor',
         },
       },
       {
-        name: 'Custom Job',
-        icon: 'wrench.and.screwdriver',
-        toggle: true,
+        name: 'Add note',
+        icon: 'note.text.badge.plus',
       },
     ],
   };
 
   get mainMenuOptions() {
-    return this.mainMenu.options.map((option) => {
-      if (option.name === 'Custom Job') {
-        return { ...option, checked: this.isCustomChecked };
-      }
-      return option;
-    });
+    return this.mainMenu.options;
   }
 
   constructor(
@@ -139,7 +133,7 @@ export class CompleteJobComponent implements OnInit {
         this.saveJobChanges();
         break;
       case 1:
-        this.toggleCustomJob();
+        this.onNotesFocus();
         break;
       default:
         break;
@@ -366,6 +360,7 @@ export class CompleteJobComponent implements OnInit {
     }
 
     this.isLoadingTypes = true;
+    this.setLoading(true);
     this.emptyMessage = '';
     this.customTypeEmptyMessage = '';
     this.cdr.detectChanges();
@@ -389,6 +384,7 @@ export class CompleteJobComponent implements OnInit {
       this.customTypeEmptyMessage = 'Unable to load resolution codes.';
     } finally {
       this.isLoadingTypes = false;
+      this.setLoading(false);
       this.cdr.detectChanges();
     }
   }
