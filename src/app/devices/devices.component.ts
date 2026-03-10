@@ -118,16 +118,14 @@ export class DevicesComponent {
       .gatewayStatus(this.userId, mac, workOrderNumber, accountNumber)
       .pipe(finalize(() => this.finishGatewayLoading(key)))
       .subscribe({
-        next: (response: any) => {
-          const message =
-            typeof response === 'string'
-              ? response
-              : String(
-                  response?.message ||
-                    response?.status ||
-                    response?.result ||
-                    'Gateway status checked.'
-                );
+        next: (res: any) => {
+          const message = String(
+            res?.gatewayStatusFriendlyName ||
+              res?.message ||
+              res?.status ||
+              res?.result ||
+              'Gateway status checked.'
+          );
 
           this.showGatewayStatusMessage(message, anchor);
         },
@@ -193,10 +191,6 @@ export class DevicesComponent {
       title,
       message,
       UIAlertControllerStyle.ActionSheet
-    );
-
-    alert.addAction(
-      UIAlertAction.actionWithTitleStyleHandler('OK', UIAlertActionStyle.Default, null)
     );
 
     const popover = alert.popoverPresentationController;
