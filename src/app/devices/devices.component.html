@@ -20,7 +20,7 @@
             <GridLayout rows="auto" columns="*, auto"
               style="margin-left: 40; margin-right: 20; margin-top: 6; margin-bottom: 6;">
               <GridLayout orientation="horizontal" class="item-bag" col="0" columns="*, auto">
-                <GridLayout col="0" columns="28,60,*,auto,34">
+                <GridLayout col="0" columns="28,60,*,auto,25">
                   <Label *ngIf="item.connectionStatus" class="fas" text="&#xf058;" col="0"
                     style="font-size: 18; color: white; margin-right: 8;"></Label>
                   <Label *ngIf="!item.connectionStatus" class="fas" text="&#xf05e;" col="0"
@@ -40,10 +40,10 @@
                   <MenuButton *ngIf="isModemType(item)" col="4" 
                     [class.job-action-tapped]="isJobActionTapped(item, 'job-menu')"
                     class="device-status-button"
-                    style="font-size: 14px; height: 30px; width: 30px;"
+                    style="font-size: 16px; height: 70px; width: 100px;"
                     [showSpinner]="isJobMenuLoading(item)"
                     [spinnerOffsetX]="0" [spinnerOffsetY]="0" [isRightSide]="true" [useSFIcon]="true"
-                    [sfIconName]="'bolt.circle'" [imageInsets]="{ top: 0, left: 0, bottom: 0, right: 0 }"
+                    [sfIconName]="'antenna.radiowaves.left.and.right'" [imageInsets]="{ top: 0, left: 0, bottom: 0, right: 0 }"
                     (tap)="markJobActionTap(item, 'remove-devices'); showRemoveDevicesModal(item)">
                   </MenuButton>
 

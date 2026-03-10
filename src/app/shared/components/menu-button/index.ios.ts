@@ -101,10 +101,11 @@ export class MenuButton extends MenuButtonBase {
     }
 
     if (this.useSFIcon && !this.showSpinner && !this.isRightSide) {
+      const pointSize = this.getSymbolPointSize();
       const config = UIImageSymbolConfiguration.configurationWithPointSizeWeightScale(
-        18,
+        pointSize,
         UIImageSymbolWeight.Regular,
-        UIImageSymbolScale.Medium
+        this.getSymbolScale(pointSize)
       );
       const sfName = this.sfIconName || "ellipsis.circle";
       const image = UIImage.systemImageNamedWithConfiguration(sfName, config);
@@ -119,10 +120,11 @@ export class MenuButton extends MenuButtonBase {
       iosButton.contentHorizontalAlignment = UIControlContentHorizontalAlignment.Center;
       iosButton.imageView.contentMode = UIViewContentMode.ScaleAspectFit;
     } else if (this.useSFIcon && !this.showSpinner && this.isRightSide) {
+      const pointSize = this.getSymbolPointSize();
       const config = UIImageSymbolConfiguration.configurationWithPointSizeWeightScale(
-        18,
+        pointSize,
         UIImageSymbolWeight.Regular,
-        UIImageSymbolScale.Medium
+        this.getSymbolScale(pointSize)
       );
       const sfName = this.sfIconName || "ellipsis.circle";
       const image = UIImage.systemImageNamedWithConfiguration(sfName, config);
@@ -268,6 +270,24 @@ export class MenuButton extends MenuButtonBase {
       }
     }
     return fallback;
+  }
+
+  private getSymbolPointSize(): number {
+    const raw = (this.style as any)?.fontSize;
+    if (typeof raw === 'number' && Number.isFinite(raw) && raw > 0) {
+      return raw;
+    }
+    if (typeof raw === 'string') {
+      const parsed = Number.parseFloat(raw);
+      if (Number.isFinite(parsed) && parsed > 0) {
+        return parsed;
+      }
+    }
+    return 18;
+  }
+
+  private getSymbolScale(pointSize: number): UIImageSymbolScale {
+    return pointSize >= 20 ? UIImageSymbolScale.Large : UIImageSymbolScale.Medium;
   }
 
   private getAdaptiveTintColor(): UIColor {
