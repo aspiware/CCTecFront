@@ -1,8 +1,12 @@
-import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
+import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ModalDialogParams, NativeScriptCommonModule } from '@nativescript/angular';
+import { Dialogs } from '@nativescript/core';
 import { NativeScriptUIListViewModule } from 'nativescript-ui-listview/angular';
 import { Item } from '../shared/components/menu-button/item';
 import { MenuEvent } from '../shared/components/menu-button';
+import { UsersService } from '../shared/services/users.service';
+import { TodayService } from '../today/today.service';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   standalone: true,
@@ -13,7 +17,9 @@ import { MenuEvent } from '../shared/components/menu-button';
   styleUrl: './devices.component.scss',
 })
 export class DevicesComponent {
+  public job: any;
   public devices: any[] = [];
+  private userId = 0;
   private actionTapStates: { [key: string]: boolean } = {};
   private actionTapTimers: { [key: string]: ReturnType<typeof setTimeout> } = {};
   private loadingStates: { [key: string]: boolean } = {};
@@ -34,9 +40,16 @@ export class DevicesComponent {
     ],
   };
 
-  constructor(private modalParams: ModalDialogParams) {
+  constructor(
+    private modalParams: ModalDialogParams,
+    private usersService: UsersService,
+    private todayService: TodayService,
+    private cdr: ChangeDetectorRef
+  ) {
     const context = this.modalParams.context || {};
-    this.devices = Array.isArray(context?.devices) ? context.devices : [];
+    this.job = context;
+    this.devices = Array.isArray(this.job?.devices) ? this.job.devices : [];
+    this.userId = Number(this.usersService.getUser()?.userId || 0);
   }
 
   get mainMenuOptions() {
@@ -81,17 +94,70 @@ export class DevicesComponent {
     return !!this.loadingStates[this.getDeviceKey(item)];
   }
 
-  public showRemoveDevicesModal(item: any): void {
+  public gatewayStatus(item: any): void {
     const key = this.getDeviceKey(item);
     if (!key || this.loadingStates[key]) {
       return;
     }
 
-    this.loadingStates[key] = true;
-    // Placeholder until modem status action is implemented.
+    const mac = String(item?.mac || item?.deviceMac || '').trim();
+    const workOrderNumber = this.job?.workOrderNumber;
+    const accountNumber = this.job?.accountNumber;
+
+    if (!this.userId || !mac || !workOrderNumber || !accountNumber) {
+      Dialogs.alert({
+        title: 'Gateway Status',
+        message: 'Missing data to check gateway status.',
+        okButtonText: 'OK',
+      });
+      return;
+    }
+
+    this.setGatewayLoading(key, true);
+    this.todayService
+      .gatewayStatus(this.userId, mac, workOrderNumber, accountNumber)
+      .pipe(finalize(() => this.finishGatewayLoading(key)))
+      .subscribe({
+        next: (response: any) => {
+          const message =
+            typeof response === 'string'
+              ? response
+              : String(
+                  response?.message ||
+                    response?.status ||
+                    response?.result ||
+                    'Gateway status checked.'
+                );
+
+          Dialogs.alert({
+            title: 'Gateway Status',
+            message,
+            okButtonText: 'OK',
+          });
+        },
+        error: (error) => {
+          Dialogs.alert({
+            title: 'Gateway Status',
+            message: String(error?.error?.message || error?.message || 'Failed to check gateway status.'),
+            okButtonText: 'OK',
+          });
+        },
+      });
+  }
+
+  private finishGatewayLoading(key: string): void {
+    // Defer spinner state update to the next tick to avoid NG0100 in dev mode.
     setTimeout(() => {
-      this.loadingStates[key] = false;
-    }, 900);
+      this.setGatewayLoading(key, false);
+    }, 0);
+  }
+
+  private setGatewayLoading(key: string, isLoading: boolean): void {
+    if (!key) {
+      return;
+    }
+    this.loadingStates[key] = isLoading;
+    this.cdr.detectChanges();
   }
 
   private getDeviceKey(item: any): string {

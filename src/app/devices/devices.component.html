@@ -18,9 +18,9 @@
         <RadListView [items]="devices" selectionBehavior="None" class="custom-types-list">
           <ng-template tkListItemTemplate let-item="item">
             <GridLayout rows="auto" columns="*, auto"
-              style="margin-left: 40; margin-right: 20; margin-top: 6; margin-bottom: 6;">
+              style="margin-left: 10; margin-right: 10; margin-top: 6; margin-bottom: 6;">
               <GridLayout orientation="horizontal" class="item-bag" col="0" columns="*, auto">
-                <GridLayout col="0" columns="28,60,*,auto,25">
+                <GridLayout col="0" columns="28,60,*,auto,30">
                   <Label *ngIf="item.connectionStatus" class="fas" text="&#xf058;" col="0"
                     style="font-size: 18; color: white; margin-right: 8;"></Label>
                   <Label *ngIf="!item.connectionStatus" class="fas" text="&#xf05e;" col="0"
@@ -38,13 +38,13 @@
                       [style.color]="!item.connectionStatus ? 'rgb(160, 160, 160)' : 'white'"></Label>
                   </StackLayout>
                   <MenuButton *ngIf="isModemType(item)" col="4" 
-                    [class.job-action-tapped]="isJobActionTapped(item, 'job-menu')"
+                    [class.job-action-tapped]="isJobActionTapped(item, 'gateway-status')"
                     class="device-status-button"
                     style="font-size: 16px; height: 70px; width: 100px;"
                     [showSpinner]="isJobMenuLoading(item)"
                     [spinnerOffsetX]="0" [spinnerOffsetY]="0" [isRightSide]="true" [useSFIcon]="true"
                     [sfIconName]="'antenna.radiowaves.left.and.right'" [imageInsets]="{ top: 0, left: 0, bottom: 0, right: 0 }"
-                    (tap)="markJobActionTap(item, 'remove-devices'); showRemoveDevicesModal(item)">
+                    (tap)="markJobActionTap(item, 'gateway-status'); gatewayStatus(item)">
                   </MenuButton>
 
                 </GridLayout>

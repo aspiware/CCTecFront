@@ -176,5 +176,11 @@ export class TodayService {
       `${this.configService.getUrlBase()}/jobs/c/getActivationLink/${userId}/${accountNumber}/${workOrderNumber}`
     );
   }
+
+    public gatewayStatus(userId: number, cmMac: string, workOrderId: any, accountId: any): Observable<any> {
+    return this.httpClient.get<string>(
+      this.configService.getUrlBase() + `/jobs/c/gatewayStatus/${userId}/${cmMac}/${workOrderId}/${accountId}`
+    );
+  }
   
 }
