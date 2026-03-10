@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ModalDialogParams, NativeScriptCommonModule } from '@nativescript/angular';
-import { Dialogs } from '@nativescript/core';
+import { Application, Dialogs } from '@nativescript/core';
 import { NativeScriptUIListViewModule } from 'nativescript-ui-listview/angular';
 import { Item } from '../shared/components/menu-button/item';
 import { MenuEvent } from '../shared/components/menu-button';
@@ -129,18 +129,12 @@ export class DevicesComponent {
                     'Gateway status checked.'
                 );
 
-          Dialogs.alert({
-            title: 'Gateway Status',
-            message,
-            okButtonText: 'OK',
-          });
+          this.showGatewayStatusMessage(message);
         },
         error: (error) => {
-          Dialogs.alert({
-            title: 'Gateway Status',
-            message: String(error?.error?.message || error?.message || 'Failed to check gateway status.'),
-            okButtonText: 'OK',
-          });
+          this.showGatewayStatusMessage(
+            String(error?.error?.message || error?.message || 'Failed to check gateway status.')
+          );
         },
       });
   }
@@ -166,5 +160,76 @@ export class DevicesComponent {
 
   private getActionKey(item: any, action: string): string {
     return `${this.getDeviceKey(item)}:${action}`;
+  }
+
+  private showGatewayStatusMessage(message: string): void {
+    const title = 'Gateway Status';
+
+    if (!__IOS__) {
+      Dialogs.alert({
+        title,
+        message,
+        okButtonText: 'OK',
+      });
+      return;
+    }
+
+    let viewController = Application.ios?.rootController;
+    while (
+      viewController &&
+      viewController.presentedViewController &&
+      !viewController.presentedViewController.beingDismissed
+    ) {
+      viewController = viewController.presentedViewController;
+    }
+
+    const hostView = viewController?.view;
+    if (!hostView) {
+      return;
+    }
+
+    const toastView = UIView.new();
+    toastView.translatesAutoresizingMaskIntoConstraints = false;
+    toastView.backgroundColor = UIColor.colorWithRedGreenBlueAlpha(0, 0, 0, 0.82);
+    toastView.layer.cornerRadius = 12;
+    toastView.layer.masksToBounds = true;
+    toastView.alpha = 0;
+
+    const toastLabel = UILabel.new();
+    toastLabel.translatesAutoresizingMaskIntoConstraints = false;
+    toastLabel.text = `${title}: ${message}`;
+    toastLabel.textColor = UIColor.whiteColor;
+    toastLabel.textAlignment = NSTextAlignment.Center;
+    toastLabel.numberOfLines = 0;
+    toastLabel.font = UIFont.systemFontOfSizeWeight(14, UIFontWeightMedium);
+
+    toastView.addSubview(toastLabel);
+    hostView.addSubview(toastView);
+
+    toastView.leadingAnchor.constraintGreaterThanOrEqualToAnchorConstant(hostView.leadingAnchor, 24).active = true;
+    toastView.trailingAnchor.constraintLessThanOrEqualToAnchorConstant(hostView.trailingAnchor, -24).active = true;
+    toastView.centerXAnchor.constraintEqualToAnchor(hostView.centerXAnchor).active = true;
+    toastView.topAnchor.constraintEqualToAnchorConstant(hostView.safeAreaLayoutGuide.topAnchor, 16).active = true;
+
+    toastLabel.leadingAnchor.constraintEqualToAnchorConstant(toastView.leadingAnchor, 14).active = true;
+    toastLabel.trailingAnchor.constraintEqualToAnchorConstant(toastView.trailingAnchor, -14).active = true;
+    toastLabel.topAnchor.constraintEqualToAnchorConstant(toastView.topAnchor, 10).active = true;
+    toastLabel.bottomAnchor.constraintEqualToAnchorConstant(toastView.bottomAnchor, -10).active = true;
+
+    UIView.animateWithDurationAnimations(0.2, () => {
+      toastView.alpha = 1;
+    });
+
+    setTimeout(() => {
+      UIView.animateWithDurationAnimationsCompletion(
+        0.2,
+        () => {
+          toastView.alpha = 0;
+        },
+        () => {
+          toastView.removeFromSuperview();
+        }
+      );
+    }, 1800);
   }
 }
