@@ -73,29 +73,88 @@ export class DevicesComponent {
     return type === 'MTA' || type === 'HSI' || type === 'CM';
   }
 
+  public isVideoType(item: any): boolean {
+    const type = String(item?.type || '').toUpperCase();
+    return type === 'STB' || type === 'IPSTB';
+  }
+
+  public getDeviceMenuIcon(item: any): string {
+    if (this.isModemType(item)) {
+      return 'antenna.radiowaves.left.and.right';
+    }
+    if (this.isVideoType(item)) {
+      return 'tv';
+    }
+    return 'ellipsis.circle';
+  }
+
   public getDeviceMenuOptions(item: any): Item['options'] {
+    if (this.isModemType(item)) {
+      return [
+        {
+          name: 'Device Info',
+          icon: 'info.circle',
+        },
+        {
+          name: 'Gateway Status',
+          icon: 'antenna.radiowaves.left.and.right',
+        },
+      ];
+    }
+
+    if (this.isVideoType(item)) {
+      return [
+        {
+          name: 'Device Info',
+          icon: 'info.circle',
+        },
+        {
+          name: 'Video Status',
+          icon: 'tv',
+        },
+      ];
+    }
+
     return [
       {
         name: 'Device Info',
         icon: 'info.circle',
       },
-      {
-        name: 'Gateway Status',
-        icon: 'antenna.radiowaves.left.and.right',
-        disabled: !this.isModemType(item),
-      },
     ];
   }
 
   public onSelectedDeviceMenu(event: MenuEvent, item: any, anchor?: any): void {
+    if (this.isModemType(item)) {
+      switch (event?.index) {
+        case 0:
+          this.showDeviceInfo(item, anchor);
+          break;
+        case 1:
+          this.gatewayStatus(item, anchor);
+          break;
+        default:
+          break;
+      }
+      return;
+    }
+
+    if (this.isVideoType(item)) {
+      switch (event?.index) {
+        case 0:
+          this.showDeviceInfo(item, anchor);
+          break;
+        case 1:
+          this.showVideoStatus(item, anchor);
+          break;
+        default:
+          break;
+      }
+      return;
+    }
+
     switch (event?.index) {
       case 0:
         this.showDeviceInfo(item, anchor);
-        break;
-      case 1:
-        if (this.isModemType(item)) {
-          this.gatewayStatus(item, anchor);
-        }
         break;
       default:
         break;
@@ -198,6 +257,11 @@ export class DevicesComponent {
       `MAC: ${String(item?.mac || item?.deviceMac || 'n/a')}`,
     ].join('\n');
     this.showGatewayStatusMessage(info, anchor);
+  }
+
+  private showVideoStatus(item: any, anchor?: any): void {
+    const status = item?.connectionStatus ? 'Connected' : 'Disconnected';
+    this.showGatewayStatusMessage(`Video status: ${status}`, anchor);
   }
 
   private showGatewayStatusMessage(message: string, anchor?: any): void {
