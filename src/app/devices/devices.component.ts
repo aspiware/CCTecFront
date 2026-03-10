@@ -6,7 +6,7 @@ import { Item } from '../shared/components/menu-button/item';
 import { MenuEvent } from '../shared/components/menu-button';
 import { UsersService } from '../shared/services/users.service';
 import { TodayService } from '../today/today.service';
-import { finalize } from 'rxjs/operators';
+import { concatMap, finalize } from 'rxjs/operators';
 
 @Component({
   standalone: true,
@@ -19,6 +19,7 @@ import { finalize } from 'rxjs/operators';
 export class DevicesComponent {
   public job: any;
   public devices: any[] = [];
+  public isRefreshingMainMenu = false;
   private userId = 0;
   private actionTapStates: { [key: string]: boolean } = {};
   private actionTapTimers: { [key: string]: ReturnType<typeof setTimeout> } = {};
@@ -63,9 +64,58 @@ export class DevicesComponent {
   public onSelectedMainMenu(event: MenuEvent, _menuStatus?: any): void {
     switch (event?.index) {
       case 0:
-        // this.saveNote();
+        this.refreshDevices();
         break;
     }
+  }
+
+  private refreshDevices(): void {
+    if (this.isRefreshingMainMenu) {
+      return;
+    }
+
+    const workOrderNumber = this.job?.workOrderNumber;
+    if (!this.userId || !workOrderNumber) {
+      Dialogs.alert({
+        title: 'Refresh',
+        message: 'Missing data to refresh devices.',
+        okButtonText: 'OK',
+      });
+      return;
+    }
+
+    this.isRefreshingMainMenu = true;
+    this.cdr.detectChanges();
+
+    this.todayService
+      .refreshOrderDetail(this.userId, workOrderNumber)
+      .pipe(
+        concatMap(() => this.todayService.getWorkOrderDetails(this.userId, workOrderNumber)),
+        finalize(() => {
+          this.isRefreshingMainMenu = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (details: any) => {
+          const refreshedDevices =
+            details?.devices?.existingDevices?.deviceList ??
+            details?.existingDevices?.deviceList ??
+            details?.deviceList ??
+            [];
+
+          this.devices = Array.isArray(refreshedDevices) ? [...refreshedDevices] : [];
+          this.job = { ...this.job, devices: this.devices };
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          Dialogs.alert({
+            title: 'Refresh',
+            message: String(error?.error?.message || error?.message || 'Failed to refresh devices.'),
+            okButtonText: 'OK',
+          });
+        },
+      });
   }
 
   public isModemType(item: any): boolean {

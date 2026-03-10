@@ -8,7 +8,7 @@
 
         <StackLayout col="2">
           <MenuButton [useSFIcon]="true" style="background-color: transparent; height: 24; width: 35;"
-            [sfIconName]="'ellipsis.circle'" #menuStatus [options]="mainMenuOptions"
+            [sfIconName]="'ellipsis.circle'" [showSpinner]="isRefreshingMainMenu" #menuStatus [options]="mainMenuOptions"
             (selected)="onSelectedMainMenu($event, menuStatus)">
           </MenuButton>
         </StackLayout>

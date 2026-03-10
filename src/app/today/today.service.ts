@@ -8,7 +8,7 @@ export class TodayService {
   constructor(
     private httpClient: HttpClient,
     private configService: ConfigService
-  ) {}
+  ) { }
 
   public findTodayByUser(userId: number): Observable<any> {
     return this.httpClient.get<any>(
@@ -177,10 +177,23 @@ export class TodayService {
     );
   }
 
-    public gatewayStatus(userId: number, cmMac: string, workOrderId: any, accountId: any): Observable<any> {
+  public gatewayStatus(userId: number, cmMac: string, workOrderId: any, accountId: any): Observable<any> {
     return this.httpClient.get<string>(
       this.configService.getUrlBase() + `/jobs/c/gatewayStatus/${userId}/${cmMac}/${workOrderId}/${accountId}`
     );
   }
-  
+
+  public refreshOrderDetail(userId: number, workOrderId: any): Observable<any> {
+    return this.httpClient.get<void>(
+      `${this.configService.getUrlBase()}/jobs/c/refreshOrderDetail/${userId}/${workOrderId}`
+    );
+  }
+
+  public getWorkOrderDetails(userId: number, workOrderId: any): Observable<any> {
+    return this.httpClient.post<void>(
+      this.configService.getUrlBase() + "/jobs/c/getWorkOrderDetails",
+      { userId, workOrderId }
+    );
+  }
+
 }
