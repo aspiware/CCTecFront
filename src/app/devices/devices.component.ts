@@ -27,15 +27,15 @@ export class DevicesComponent {
     name: 'Main Menu',
     options: [
       {
-        name: 'Save',
-        icon: 'checkmark.circle',
-        destructive: true,
-        confirm: {
-          title: 'Save note?',
-          confirmText: 'Save',
-          cancelText: 'Cancel',
-          presentation: 'anchor',
-        },
+        name: 'Refresh',
+        icon: 'arrow.clockwise',
+        // destructive: true,
+        // confirm: {
+        //   title: 'Save note?',
+        //   confirmText: 'Save',
+        //   cancelText: 'Cancel',
+        //   presentation: 'anchor',
+        // },
       }
     ],
   };
@@ -80,7 +80,7 @@ export class DevicesComponent {
 
   public getDeviceMenuIcon(item: any): string {
     if (this.isModemType(item)) {
-      return 'antenna.radiowaves.left.and.right';
+      return 'wifi';
     }
     if (this.isVideoType(item)) {
       return 'tv';
@@ -92,12 +92,12 @@ export class DevicesComponent {
     if (this.isModemType(item)) {
       return [
         {
-          name: 'Device Info',
-          icon: 'info.circle',
-        },
-        {
           name: 'Gateway Status',
           icon: 'antenna.radiowaves.left.and.right',
+        },
+        {
+          name: 'Reboot Modem',
+          icon: 'power',
         },
       ];
     }
@@ -105,12 +105,12 @@ export class DevicesComponent {
     if (this.isVideoType(item)) {
       return [
         {
-          name: 'Device Info',
-          icon: 'info.circle',
+          name: 'Send Init',
+          icon: 'arrow.trianglehead.2.clockwise.rotate.90',
         },
         {
-          name: 'Video Status',
-          icon: 'tv',
+          name: 'Send Hit',
+          icon: 'dot.radiowaves.left.and.right',
         },
       ];
     }
@@ -127,10 +127,10 @@ export class DevicesComponent {
     if (this.isModemType(item)) {
       switch (event?.index) {
         case 0:
-          this.showDeviceInfo(item, anchor);
+          this.gatewayStatus(item, anchor);
           break;
         case 1:
-          this.gatewayStatus(item, anchor);
+          this.rebootGateway(item, anchor);
           break;
         default:
           break;
@@ -225,6 +225,8 @@ export class DevicesComponent {
         },
       });
   }
+
+  rebootGateway(item: any, anchor?: any){}
 
   private finishGatewayLoading(key: string): void {
     // Defer spinner state update to the next tick to avoid NG0100 in dev mode.
