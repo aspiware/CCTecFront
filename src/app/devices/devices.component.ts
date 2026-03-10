@@ -94,7 +94,7 @@ export class DevicesComponent {
     return !!this.loadingStates[this.getDeviceKey(item)];
   }
 
-  public gatewayStatus(item: any): void {
+  public gatewayStatus(item: any, anchor?: any): void {
     const key = this.getDeviceKey(item);
     if (!key || this.loadingStates[key]) {
       return;
@@ -129,11 +129,12 @@ export class DevicesComponent {
                     'Gateway status checked.'
                 );
 
-          this.showGatewayStatusMessage(message);
+          this.showGatewayStatusMessage(message, anchor);
         },
         error: (error) => {
           this.showGatewayStatusMessage(
-            String(error?.error?.message || error?.message || 'Failed to check gateway status.')
+            String(error?.error?.message || error?.message || 'Failed to check gateway status.'),
+            anchor
           );
         },
       });
@@ -162,7 +163,7 @@ export class DevicesComponent {
     return `${this.getDeviceKey(item)}:${action}`;
   }
 
-  private showGatewayStatusMessage(message: string): void {
+  private showGatewayStatusMessage(message: string, anchor?: any): void {
     const title = 'Gateway Status';
 
     if (!__IOS__) {
@@ -183,53 +184,45 @@ export class DevicesComponent {
       viewController = viewController.presentedViewController;
     }
 
-    const hostView = viewController?.view;
-    if (!hostView) {
+    if (!viewController?.view) {
       return;
     }
 
-    const toastView = UIView.new();
-    toastView.translatesAutoresizingMaskIntoConstraints = false;
-    toastView.backgroundColor = UIColor.colorWithRedGreenBlueAlpha(0, 0, 0, 0.82);
-    toastView.layer.cornerRadius = 12;
-    toastView.layer.masksToBounds = true;
-    toastView.alpha = 0;
+    const sourceView = (anchor as any)?.ios as UIView | undefined;
+    const alert = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
+      title,
+      message,
+      UIAlertControllerStyle.ActionSheet
+    );
 
-    const toastLabel = UILabel.new();
-    toastLabel.translatesAutoresizingMaskIntoConstraints = false;
-    toastLabel.text = `${title}: ${message}`;
-    toastLabel.textColor = UIColor.whiteColor;
-    toastLabel.textAlignment = NSTextAlignment.Center;
-    toastLabel.numberOfLines = 0;
-    toastLabel.font = UIFont.systemFontOfSizeWeight(14, UIFontWeightMedium);
+    const copyAction = UIAlertAction.actionWithTitleStyleHandler(
+      'Copy',
+      UIAlertActionStyle.Default,
+      () => {
+        UIPasteboard.generalPasteboard.string = message;
+      }
+    );
+    copyAction.setValueForKey(UIImage.systemImageNamed('doc.on.doc'), 'image');
+    alert.addAction(copyAction);
 
-    toastView.addSubview(toastLabel);
-    hostView.addSubview(toastView);
+    alert.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, null)
+    );
 
-    toastView.leadingAnchor.constraintGreaterThanOrEqualToAnchorConstant(hostView.leadingAnchor, 24).active = true;
-    toastView.trailingAnchor.constraintLessThanOrEqualToAnchorConstant(hostView.trailingAnchor, -24).active = true;
-    toastView.centerXAnchor.constraintEqualToAnchor(hostView.centerXAnchor).active = true;
-    toastView.topAnchor.constraintEqualToAnchorConstant(hostView.safeAreaLayoutGuide.topAnchor, 16).active = true;
+    const popover = alert.popoverPresentationController;
+    if (popover) {
+      popover.sourceView = sourceView || viewController.view;
+      popover.sourceRect = sourceView
+        ? sourceView.bounds
+        : CGRectMake(
+          viewController.view.bounds.size.width / 2,
+          viewController.view.bounds.size.height / 2,
+          1,
+          1
+        );
+      popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
+    }
 
-    toastLabel.leadingAnchor.constraintEqualToAnchorConstant(toastView.leadingAnchor, 14).active = true;
-    toastLabel.trailingAnchor.constraintEqualToAnchorConstant(toastView.trailingAnchor, -14).active = true;
-    toastLabel.topAnchor.constraintEqualToAnchorConstant(toastView.topAnchor, 10).active = true;
-    toastLabel.bottomAnchor.constraintEqualToAnchorConstant(toastView.bottomAnchor, -10).active = true;
-
-    UIView.animateWithDurationAnimations(0.2, () => {
-      toastView.alpha = 1;
-    });
-
-    setTimeout(() => {
-      UIView.animateWithDurationAnimationsCompletion(
-        0.2,
-        () => {
-          toastView.alpha = 0;
-        },
-        () => {
-          toastView.removeFromSuperview();
-        }
-      );
-    }, 1800);
+    viewController.presentViewControllerAnimatedCompletion(alert, true, null);
   }
 }

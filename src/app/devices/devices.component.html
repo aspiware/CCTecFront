@@ -37,14 +37,14 @@
                       [text]="item.serialNumber || item.deviceSerialNumber"
                       [style.color]="!item.connectionStatus ? 'rgb(160, 160, 160)' : 'white'"></Label>
                   </StackLayout>
-                  <MenuButton *ngIf="isModemType(item)" col="4" 
+                  <MenuButton *ngIf="isModemType(item)" col="4" #statusBtn
                     [class.job-action-tapped]="isJobActionTapped(item, 'gateway-status')"
                     class="device-status-button"
                     style="font-size: 16px; height: 70px; width: 100px;"
                     [showSpinner]="isJobMenuLoading(item)"
                     [spinnerOffsetX]="0" [spinnerOffsetY]="0" [isRightSide]="true" [useSFIcon]="true"
                     [sfIconName]="'antenna.radiowaves.left.and.right'" [imageInsets]="{ top: 0, left: 0, bottom: 0, right: 0 }"
-                    (tap)="markJobActionTap(item, 'gateway-status'); gatewayStatus(item)">
+                    (tap)="markJobActionTap(item, 'gateway-status'); gatewayStatus(item, statusBtn)">
                   </MenuButton>
 
                 </GridLayout>
