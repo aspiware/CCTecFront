@@ -195,18 +195,8 @@ export class DevicesComponent {
       UIAlertControllerStyle.ActionSheet
     );
 
-    const copyAction = UIAlertAction.actionWithTitleStyleHandler(
-      'Copy',
-      UIAlertActionStyle.Default,
-      () => {
-        UIPasteboard.generalPasteboard.string = message;
-      }
-    );
-    copyAction.setValueForKey(UIImage.systemImageNamed('doc.on.doc'), 'image');
-    alert.addAction(copyAction);
-
     alert.addAction(
-      UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, null)
+      UIAlertAction.actionWithTitleStyleHandler('OK', UIAlertActionStyle.Default, null)
     );
 
     const popover = alert.popoverPresentationController;
@@ -224,5 +214,11 @@ export class DevicesComponent {
     }
 
     viewController.presentViewControllerAnimatedCompletion(alert, true, null);
+
+    setTimeout(() => {
+      if (alert.presentingViewController && !alert.beingDismissed) {
+        alert.dismissViewControllerAnimatedCompletion(true, null);
+      }
+    }, 2000);
   }
 }
