@@ -60,9 +60,7 @@ export class MenuButton extends MenuButtonBase {
   }
 
   resetMenu() {
-    if (!this.options) {
-      return;
-    }
+    const options = this.options ?? [];
     const iosButton = this.ios as UIButton;
     const tintColor = this.getAdaptiveTintColor();
     const regularActions: UIMenuElement[] = [];
@@ -143,8 +141,8 @@ export class MenuButton extends MenuButtonBase {
 
 
 
-    for (let i = 0; i < this.options.length; i++) {
-      const option = this.options[i];
+    for (let i = 0; i < options.length; i++) {
+      const option = options[i];
 
       const iconImage = option.icon ? UIImage.systemImageNamed(option.icon) : null;
 
@@ -208,6 +206,12 @@ export class MenuButton extends MenuButtonBase {
         destructiveActions
       );
       rootChildren.push(destructiveMenu);
+    }
+
+    if (rootChildren.length === 0) {
+      iosButton.menu = null;
+      iosButton.showsMenuAsPrimaryAction = false;
+      return;
     }
 
     if (rootChildren.length === 1 && regularActions.length > 0 && destructiveActions.length === 0) {
