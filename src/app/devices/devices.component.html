@@ -20,7 +20,7 @@
             <GridLayout rows="auto" columns="*, auto"
               style="margin-left: 10; margin-right: 10; margin-top: 6; margin-bottom: 6;">
               <GridLayout orientation="horizontal" class="item-bag" col="0" columns="*, auto">
-                <GridLayout col="0" columns="28,60,*,auto,30">
+                <GridLayout col="0" columns="28,60,*,auto,30, 30">
                   <Label *ngIf="item.connectionStatus" class="fas" text="&#xf058;" col="0"
                     style="font-size: 18; color: white; margin-right: 8;"></Label>
                   <Label *ngIf="!item.connectionStatus" class="fas" text="&#xf05e;" col="0"
@@ -45,6 +45,16 @@
                     [spinnerOffsetX]="0" [spinnerOffsetY]="0" [isRightSide]="true" [useSFIcon]="true"
                     [sfIconName]="'antenna.radiowaves.left.and.right'" [imageInsets]="{ top: 0, left: 0, bottom: 0, right: 0 }"
                     (tap)="markJobActionTap(item, 'gateway-status'); gatewayStatus(item, statusBtn)">
+                  </MenuButton>
+
+                  <MenuButton col="5" #deviceMenuBtn
+                    class="device-status-button"
+                    style="font-size: 16px; height: 70px; width: 100px;"
+                    [showSpinner]="isJobMenuLoading(item)"
+                    [spinnerOffsetX]="0" [spinnerOffsetY]="0" [isRightSide]="true" [useSFIcon]="true"
+                    [sfIconName]="'ellipsis.circle'" [imageInsets]="{ top: 0, left: 0, bottom: 0, right: 0 }"
+                    [options]="getDeviceMenuOptions(item)"
+                    (selected)="onSelectedDeviceMenu($event, item, deviceMenuBtn)">
                   </MenuButton>
 
                 </GridLayout>

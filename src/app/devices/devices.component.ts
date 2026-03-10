@@ -73,6 +73,35 @@ export class DevicesComponent {
     return type === 'MTA' || type === 'HSI' || type === 'CM';
   }
 
+  public getDeviceMenuOptions(item: any): Item['options'] {
+    return [
+      {
+        name: 'Device Info',
+        icon: 'info.circle',
+      },
+      {
+        name: 'Gateway Status',
+        icon: 'antenna.radiowaves.left.and.right',
+        disabled: !this.isModemType(item),
+      },
+    ];
+  }
+
+  public onSelectedDeviceMenu(event: MenuEvent, item: any, anchor?: any): void {
+    switch (event?.index) {
+      case 0:
+        this.showDeviceInfo(item, anchor);
+        break;
+      case 1:
+        if (this.isModemType(item)) {
+          this.gatewayStatus(item, anchor);
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
   public markJobActionTap(item: any, action: string, autoClearMs = 140): void {
     const key = this.getActionKey(item, action);
     this.actionTapStates[key] = true;
@@ -159,6 +188,16 @@ export class DevicesComponent {
 
   private getActionKey(item: any, action: string): string {
     return `${this.getDeviceKey(item)}:${action}`;
+  }
+
+  private showDeviceInfo(item: any, anchor?: any): void {
+    const info = [
+      `Type: ${String(item?.type || 'n/a')}`,
+      `Name: ${String(item?.name || item?.deviceName || 'n/a')}`,
+      `Serial: ${String(item?.serialNumber || item?.deviceSerialNumber || 'n/a')}`,
+      `MAC: ${String(item?.mac || item?.deviceMac || 'n/a')}`,
+    ].join('\n');
+    this.showGatewayStatusMessage(info, anchor);
   }
 
   private showGatewayStatusMessage(message: string, anchor?: any): void {
