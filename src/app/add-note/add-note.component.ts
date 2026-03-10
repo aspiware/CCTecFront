@@ -1,6 +1,7 @@
 import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ModalDialogParams, NativeScriptCommonModule } from '@nativescript/angular';
 import { Item } from '../shared/components/menu-button/item';
+import { MenuEvent } from '../shared/components/menu-button/common';
 
 @Component({
   standalone: true,
@@ -49,4 +50,12 @@ export class AddNoteComponent {
   public saveNote(): void {
     this.modalParams.closeCallback(this.noteText || '');
   }
+
+    public onSelectedMainMenu(event: MenuEvent, _menuStatus?: any): void {
+      switch (event?.index) {
+        case 0:
+          this.saveNote();
+          break;
+      }
+    }
 }
