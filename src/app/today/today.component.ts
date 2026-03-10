@@ -1084,7 +1084,13 @@ export class TodayComponent implements OnInit {
       },
     };
 
-    this.modalService.showModal(DevicesComponent, options).then(() => {
+    this.modalService.showModal(DevicesComponent, options).then((result: any) => {
+      if (result?.navigateToActivateService) {
+        setTimeout(() => {
+          this.goToActivateService(result?.job || job);
+        }, 0);
+        return;
+      }
       this.clearJobActionTap(job, 'devices');
     });
   }

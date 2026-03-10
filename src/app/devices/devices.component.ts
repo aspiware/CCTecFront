@@ -45,7 +45,7 @@ export class DevicesComponent {
     private modalParams: ModalDialogParams,
     private usersService: UsersService,
     private todayService: TodayService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {
     const context = this.modalParams.context || {};
     this.job = context;
@@ -99,10 +99,7 @@ export class DevicesComponent {
       .subscribe({
         next: (details: any) => {
           const refreshedDevices =
-            details?.devices?.existingDevices?.deviceList ??
-            details?.existingDevices?.deviceList ??
-            details?.deviceList ??
-            [];
+            details?.devices?.existingDevices?.deviceList ?? [];
 
           this.devices = Array.isArray(refreshedDevices) ? [...refreshedDevices] : [];
           this.job = { ...this.job, devices: this.devices };
@@ -142,8 +139,12 @@ export class DevicesComponent {
     if (this.isModemType(item)) {
       return [
         {
-          name: 'Gateway Status',
+          name: 'Modem Status',
           icon: 'antenna.radiowaves.left.and.right',
+        },
+        {
+          name: 'Activate Modem',
+          icon: 'bolt.fill',
         },
         {
           name: 'Reboot Modem',
@@ -180,6 +181,9 @@ export class DevicesComponent {
           this.gatewayStatus(item, anchor);
           break;
         case 1:
+          this.goToActivateService();
+          break;
+        case 2:
           this.rebootGateway(item, anchor);
           break;
         default:
@@ -209,6 +213,13 @@ export class DevicesComponent {
       default:
         break;
     }
+  }
+
+  public goToActivateService(): void {
+    this.modalParams.closeCallback({
+      navigateToActivateService: true,
+      job: this.job,
+    });
   }
 
   public markJobActionTap(item: any, action: string, autoClearMs = 140): void {
@@ -257,26 +268,29 @@ export class DevicesComponent {
       .pipe(finalize(() => this.finishGatewayLoading(key)))
       .subscribe({
         next: (res: any) => {
+          const friendlyName = String(res?.gatewayStatusFriendlyName || '').trim();
           const message = String(
-            res?.gatewayStatusFriendlyName ||
-              res?.message ||
-              res?.status ||
-              res?.result ||
-              'Gateway status checked.'
+            friendlyName ||
+            res?.message ||
+            res?.status ||
+            res?.result ||
+            'Gateway status checked.'
           );
+          const canActivate = friendlyName === 'Fully Manageable';
 
-          this.showGatewayStatusMessage(message, anchor);
+          this.showGatewayStatusMessage(message, anchor, canActivate);
         },
         error: (error) => {
           this.showGatewayStatusMessage(
             String(error?.error?.message || error?.message || 'Failed to check gateway status.'),
-            anchor
+            anchor,
+            false
           );
         },
       });
   }
 
-  rebootGateway(item: any, anchor?: any){}
+  rebootGateway(item: any, anchor?: any) { }
 
   private finishGatewayLoading(key: string): void {
     // Defer spinner state update to the next tick to avoid NG0100 in dev mode.
@@ -316,7 +330,7 @@ export class DevicesComponent {
     this.showGatewayStatusMessage(`Video status: ${status}`, anchor);
   }
 
-  private showGatewayStatusMessage(message: string, anchor?: any): void {
+  private showGatewayStatusMessage(message: string, anchor?: any, canActivate = false): void {
     const title = 'Gateway Status';
 
     if (!__IOS__) {
@@ -347,6 +361,17 @@ export class DevicesComponent {
       message,
       UIAlertControllerStyle.ActionSheet
     );
+    if (canActivate) {
+      const activateAction = UIAlertAction.actionWithTitleStyleHandler(
+        'Activate',
+        UIAlertActionStyle.Default,
+        () => {
+          this.goToActivateService();
+        }
+      );
+      activateAction.setValueForKey(UIImage.systemImageNamed('bolt.fill'), 'image');
+      alert.addAction(activateAction);
+    }
 
     const popover = alert.popoverPresentationController;
     if (popover) {
