@@ -49,7 +49,7 @@ export class SubscriptionComponent implements OnInit {
     } else if (reason === 'verify-error') {
       this.message = 'Could not verify your subscription. Please try again.';
     } else {
-      this.message = 'Start your 7-day trial to unlock full access.';
+      this.message = 'Start your 7-day free trial, then monthly billing.';
     }
   }
 

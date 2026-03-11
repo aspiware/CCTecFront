@@ -17,7 +17,7 @@
           </StackLayout>
         </GridLayout>
 
-        <!-- <Label text="Billed yearly" class="billing-note"></Label> -->
+        <Label [text]="message" class="message message-in-card"></Label>
 
         <Button
           [text]="isBusy ? 'Please wait...' : 'SUBSCRIBE'"
@@ -60,8 +60,6 @@
           </GridLayout>
         </StackLayout>
       </StackLayout>
-
-      <Label [text]="message" class="message"></Label>
     </StackLayout>
   </ScrollView>
 </GridLayout>
