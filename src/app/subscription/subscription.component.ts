@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { NativeScriptCommonModule, RouterExtensions } from '@nativescript/angular';
+import { alert } from '@nativescript/core';
 import { SubscriptionService } from '../shared/services/subscription.service';
 
 @Component({
@@ -13,7 +14,6 @@ import { SubscriptionService } from '../shared/services/subscription.service';
 })
 export class SubscriptionComponent implements OnInit {
   public isBusy = false;
-  public message = '';
 
   private redirectTo = '/tabs';
   private readonly productId = 'com.aspiware.cctec.basic.monthly';
@@ -45,11 +45,9 @@ export class SubscriptionComponent implements OnInit {
     const reason = this.route.snapshot.queryParamMap.get('reason');
 
     if (reason === 'inactive') {
-      this.message = 'Your subscription is inactive. Subscribe to continue.';
+      this.showErrorAlert('Your subscription is inactive. Subscribe to continue.');
     } else if (reason === 'verify-error') {
-      this.message = 'Could not verify your subscription. Please try again.';
-    } else {
-      this.message = 'Start your 7-day free trial, then monthly billing.';
+      this.showErrorAlert('Could not verify your subscription. Please try again.');
     }
   }
 
@@ -77,19 +75,19 @@ export class SubscriptionComponent implements OnInit {
               this.routerExtensions.navigate([this.redirectTo], { clearHistory: true });
               return;
             }
-            this.message = result.message || 'Subscription could not be activated.';
+            this.showErrorAlert(result.message || 'Subscription could not be activated.');
             this.cdr.detectChanges();
           },
           error: () => {
             this.isBusy = false;
-            this.message = 'Subscription validation failed.';
+            this.showErrorAlert('Subscription validation failed.');
             this.cdr.detectChanges();
           },
         });
       })
       .catch((error) => {
         this.isBusy = false;
-        this.message = String(error || 'Subscription failed. Try again.');
+        this.showErrorAlert(String(error || 'Subscription failed. Try again.'));
         this.cdr.detectChanges();
       });
   }
@@ -111,21 +109,29 @@ export class SubscriptionComponent implements OnInit {
               this.routerExtensions.navigate([this.redirectTo], { clearHistory: true });
               return;
             }
-            this.message = result.message || 'No active subscription found for this account.';
+            this.showErrorAlert(result.message || 'No active subscription found for this account.');
             this.cdr.detectChanges();
           },
           error: () => {
             this.isBusy = false;
-            this.message = 'Restore validation failed.';
+            this.showErrorAlert('Restore validation failed.');
             this.cdr.detectChanges();
           },
         });
       })
       .catch((error) => {
         this.isBusy = false;
-        this.message = String(error || 'Restore failed. Please try again.');
+        this.showErrorAlert(String(error || 'Restore failed. Please try again.'));
         this.cdr.detectChanges();
       });
+  }
+
+  private showErrorAlert(message: string): void {
+    alert({
+      title: 'Subscription',
+      message,
+      okButtonText: 'OK',
+    });
   }
 
   private ensureTransactionObserver(): void {
