@@ -23,11 +23,15 @@
 }
 
 .settings-row {
-  min-height: 68;
-  vertical-align: middle;
-  padding: 6 0;
+  min-height: 54;
+  height: 54;
+  padding: 0;
   border-bottom-width: 1;
   border-bottom-color: #34353b;
+}
+
+.settings-row Label {
+  vertical-align: middle;
 }
 
 .settings-row-last {
@@ -35,19 +39,19 @@
 }
 
 .icon-tile {
-  width: 40;
-  height: 40;
+  width: 34;
+  height: 34;
   border-radius: 10;
   text-align: center;
   vertical-align: middle;
-  font-size: 18;
+  font-size: 15;
   color: #f3f4f6;
   background-color: #2e6bd6;
-  margin-right: 14;
+  margin-right: 12;
 }
 
 .row-label {
-  font-size: 17;
+  font-size: 15;
   color: #f5f5f7;
 }
 
