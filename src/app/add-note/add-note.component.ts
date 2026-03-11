@@ -13,26 +13,26 @@ import { MenuEvent } from '../shared/components/menu-button/common';
 })
 export class AddNoteComponent {
   public noteText = '';
-    public mainMenu: Item = {
-      name: 'Main Menu',
-      options: [
-        {
-          name: 'Save',
-          icon: 'checkmark.circle',
-          destructive: true,
-          confirm: {
-            title: 'Save note?',
-            confirmText: 'Save',
-            cancelText: 'Cancel',
-            presentation: 'anchor',
-          },
-        }
-      ],
-    };
-  
-    get mainMenuOptions() {
-      return this.mainMenu.options;
-    }
+  public mainMenu: Item = {
+    name: 'Main Menu',
+    options: [
+      {
+        name: 'Save',
+        icon: 'checkmark.circle',
+        destructive: true,
+        confirm: {
+          title: 'Save note?',
+          confirmText: 'Save',
+          cancelText: 'Cancel',
+          presentation: 'anchor',
+        },
+      }
+    ],
+  };
+
+  get mainMenuOptions() {
+    return this.mainMenu.options;
+  }
 
   constructor(private modalParams: ModalDialogParams) {
     const context = this.modalParams.context || {};
@@ -51,11 +51,11 @@ export class AddNoteComponent {
     this.modalParams.closeCallback(this.noteText || '');
   }
 
-    public onSelectedMainMenu(event: MenuEvent, _menuStatus?: any): void {
-      switch (event?.index) {
-        case 0:
-          this.saveNote();
-          break;
-      }
+  public onSelectedMainMenu(event: MenuEvent, _menuStatus?: any): void {
+    switch (event?.index) {
+      case 0:
+        this.saveNote();
+        break;
     }
+  }
 }

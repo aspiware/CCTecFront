@@ -237,10 +237,22 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.configService.login();
         this.isBusy = false;
         this.routerExtensions.navigate(['/tabs'], { clearHistory: true });
-      }, error: (error) => {
+      }, error: async (error) => {
         console.log(error);
         this.isBusy = false;
         this.cdr.detectChanges();
+
+        const message =
+          error?.error?.message ||
+          error?.error?.error?.message ||
+          error?.message ||
+          'Login failed.';
+
+        await alert({
+          title: 'Login',
+          message: String(message),
+          okButtonText: 'OK',
+        });
       }
     });
   }

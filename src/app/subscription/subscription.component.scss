@@ -1,69 +1,187 @@
 .page {
-  padding: 16;
+  width: 100%;
+  height: 100%;
+  // background-color: #f7a594;
 }
 
-.container {
-  vertical-align: middle;
+.bg-layer {
+  width: 100%;
+  height: 100%;
+  // background-color: #5a1a2d;
+}
+
+.content-wrap {
+  padding: 18;
+}
+
+.plan-card {
+  margin-top: 20;
+  padding: 20;
+  border-radius: 22;
+  border-width: 1;
+  border-color: #f0cdbf;
+  background-color: #f8dee6;
 }
 
 .plan-title {
-  font-size: 28;
-  font-weight: 700;
+  text-align: center;
+  font-size: 44;
+  font-weight: 800;
+  color: #111111;
 }
 
-.price {
-  margin-top: 4;
-  font-size: 22;
-  font-weight: 600;
+.plan-subtitle {
+  margin-top: 8;
+  text-align: center;
+  font-size: 17;
+  color: #2f2f2f;
+  text-wrap: true;
+  white-space: normal;
 }
 
-.trial {
-  margin-top: 4;
-  opacity: 0.85;
+.price-row {
+  margin-top: 16;
+  horizontal-align: center;
 }
 
-.card {
-  margin-top: 14;
-  padding: 14;
-  border-radius: 12;
-  background-color: rgba(126, 151, 185, 0.2);
+.price-main {
+  font-size: 40;
+  font-weight: 900;
+  color: #111111;
 }
 
-.card-title {
+.save-pill {
+  margin-left: 8;
+  margin-top: 12;
+  padding: 3 10;
+  border-radius: 24;
+  background-color: #d692ff;
+  color: #531e5f;
   font-size: 16;
   font-weight: 700;
 }
 
-.line {
-  margin-top: 5;
-}
-
-.message {
+.price-unit {
+  margin-left: 8;
   margin-top: 14;
-  font-size: 13;
-  opacity: 0.9;
-}
-
-.actions {
-  margin-top: 16;
-  column-gap: 10;
-}
-
-.btn {
-  border-radius: 10;
-}
-
-.btn-primary {
-  background-color: #0a84ff;
-  color: #ffffff;
-}
-
-.btn-secondary {
-  background-color: #d1d1d6;
+  font-size: 14;
+  font-weight: 700;
   color: #111111;
 }
 
-.ns-dark .btn-secondary {
-  background-color: #3a3a3c;
-  color: #ffffff;
+.billing-note {
+  margin-top: 6;
+  text-align: center;
+  font-size: 18;
+  color: #222222;
+}
+
+.subscribe-btn {
+  margin-top: 18;
+  height: 56;
+  border-radius: 30;
+  background-color: #f2a06d;
+  color: #35221a;
+  font-size: 18;
+  font-weight: 900;
+  width: 50%;
+}
+
+.restore-btn {
+  margin-top: 10;
+  height: 40;
+  border-radius: 22;
+  background-color: #a65d75;
+  color: #fff6ef;
+  font-size: 14;
+  font-weight: 700;
+  width: 50%;
+}
+
+.features-list {
+  margin-top: 18;
+}
+
+.feature-row {
+  margin-top: 12;
+}
+
+.feature-check {
+  width: 24;
+  height: 24;
+  border-radius: 12;
+  text-align: center;
+  vertical-align: middle;
+  background-color: #ffb173;
+  color: #6a2f18;
+  font-size: 16;
+  font-weight: 900;
+}
+
+.feature-text {
+  margin-left: 10;
+  font-size: 17;
+  font-weight: 700;
+  color: #121212;
+}
+
+.message {
+  margin-top: 16;
+  text-align: center;
+  font-size: 13;
+  color: #3d3d3d;
+}
+
+.message-in-card {
+  margin-top: 10;
+  margin-bottom: 4;
+  font-size: 14;
+  font-weight: 600;
+}
+
+.theme-dark,
+.page.theme-dark,
+.ns-dark .page {
+  // background-color: #3b1021;
+}
+
+.theme-dark .plan-card,
+.page.theme-dark .plan-card,
+.ns-dark .plan-card {
+  border-color: #d89f7f;
+  background-color: #433e3f;
+}
+
+.theme-dark .plan-title,
+.page.theme-dark .plan-title,
+.ns-dark .plan-title {
+  color: #ffb887;
+}
+
+.theme-dark .plan-subtitle,
+.theme-dark .billing-note,
+.theme-dark .message,
+.theme-dark .feature-text,
+.theme-dark .price-unit,
+.theme-dark .price-main,
+.page.theme-dark .plan-subtitle,
+.page.theme-dark .billing-note,
+.page.theme-dark .message,
+.page.theme-dark .feature-text,
+.page.theme-dark .price-unit,
+.page.theme-dark .price-main,
+.ns-dark .plan-subtitle,
+.ns-dark .billing-note,
+.ns-dark .message,
+.ns-dark .feature-text,
+.ns-dark .price-unit,
+.ns-dark .price-main {
+  color: #fff6f1;
+}
+
+.theme-dark .restore-btn,
+.page.theme-dark .restore-btn,
+.ns-dark .restore-btn {
+  background-color: #a65d75;
+  color: #fff6ef;
 }

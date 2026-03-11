@@ -1,6 +1,8 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { NativeScriptCommonModule, RouterExtensions } from '@nativescript/angular';
+import { alert, Application, Page } from '@nativescript/core';
+import { ConfigService } from '../shared/services/config.service';
 import { SubscriptionService } from '../shared/services/subscription.service';
 
 @Component({
@@ -12,11 +14,11 @@ import { SubscriptionService } from '../shared/services/subscription.service';
   styleUrl: './subscription.component.scss',
 })
 export class SubscriptionComponent implements OnInit {
+  public isDarkTheme = Application.systemAppearance() === 'dark';
   public isBusy = false;
-  public message = '';
 
   private redirectTo = '/tabs';
-  private readonly productId = 'com.aspiware.cctec.basic.weekly';
+  private readonly productId = 'com.aspiware.cctec.basic.monthly';
   private iapObserver: any;
   private pendingPurchase: {
     resolve: (value: { receiptData: string; productId?: string; transactionId?: string }) => void;
@@ -28,15 +30,25 @@ export class SubscriptionComponent implements OnInit {
   } | null = null;
   private productsRequest: SKProductsRequest | null = null;
   private productsRequestDelegate: any;
+  private appearanceChangedHandler?: () => void;
 
   constructor(
     private subscriptionService: SubscriptionService,
+    private configService: ConfigService,
     private routerExtensions: RouterExtensions,
     private route: ActivatedRoute,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private page: Page
   ) {}
 
   ngOnInit(): void {
+    this.syncTheme();
+    this.appearanceChangedHandler = () => {
+      this.syncTheme();
+      this.cdr.detectChanges();
+    };
+    Application.on(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
+
     if (__IOS__) {
       this.ensureTransactionObserver();
     }
@@ -44,20 +56,27 @@ export class SubscriptionComponent implements OnInit {
     this.redirectTo = this.route.snapshot.queryParamMap.get('redirect') || '/tabs';
     const reason = this.route.snapshot.queryParamMap.get('reason');
 
-    if (reason === 'inactive') {
-      this.message = 'Your subscription is inactive. Subscribe to continue.';
-    } else if (reason === 'verify-error') {
-      this.message = 'Could not verify your subscription. Please try again.';
-    } else {
-      this.message = 'Start your 7-day trial to unlock full access.';
-    }
+    // if (reason === 'inactive') {
+    //   this.showErrorAlert('Your subscription is inactive. Subscribe to continue.');
+    // } else if (reason === 'verify-error') {
+    //   this.showErrorAlert('Could not verify your subscription. Please try again.');
+    // }
   }
 
   ngOnDestroy(): void {
+    if (this.appearanceChangedHandler) {
+      Application.off(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
+    }
+
     if (__IOS__ && this.iapObserver) {
       SKPaymentQueue.defaultQueue().removeTransactionObserver(this.iapObserver);
       this.iapObserver = null;
     }
+  }
+
+  public onRootLoaded(): void {
+    this.syncTheme();
+    this.cdr.detectChanges();
   }
 
   public onSubscribe(): void {
@@ -77,19 +96,19 @@ export class SubscriptionComponent implements OnInit {
               this.routerExtensions.navigate([this.redirectTo], { clearHistory: true });
               return;
             }
-            this.message = result.message || 'Subscription could not be activated.';
+            this.showErrorAlert(result.message || 'Subscription could not be activated.');
             this.cdr.detectChanges();
           },
           error: () => {
             this.isBusy = false;
-            this.message = 'Subscription validation failed.';
+            this.showErrorAlert('Subscription validation failed.');
             this.cdr.detectChanges();
           },
         });
       })
       .catch((error) => {
         this.isBusy = false;
-        this.message = String(error || 'Subscription failed. Try again.');
+        this.showErrorAlert(String(error || 'Subscription failed. Try again.'));
         this.cdr.detectChanges();
       });
   }
@@ -111,21 +130,49 @@ export class SubscriptionComponent implements OnInit {
               this.routerExtensions.navigate([this.redirectTo], { clearHistory: true });
               return;
             }
-            this.message = result.message || 'No active subscription found for this account.';
+            this.showErrorAlert(result.message || 'No active subscription found for this account.');
             this.cdr.detectChanges();
           },
           error: () => {
             this.isBusy = false;
-            this.message = 'Restore validation failed.';
+            this.showErrorAlert('Restore validation failed.');
             this.cdr.detectChanges();
           },
         });
       })
       .catch((error) => {
         this.isBusy = false;
-        this.message = String(error || 'Restore failed. Please try again.');
+        this.showErrorAlert(String(error || 'Restore failed. Please try again.'));
         this.cdr.detectChanges();
       });
+  }
+
+  public onChangeUser(): void {
+    if (this.isBusy) {
+      return;
+    }
+
+    this.configService.logout();
+    this.routerExtensions.navigate(['/login'], { clearHistory: true });
+  }
+
+  private showErrorAlert(message: string): void {
+    alert({
+      title: 'Subscription',
+      message,
+      okButtonText: 'OK',
+    });
+  }
+
+  private syncTheme(): void {
+    const appAppearance = Application.systemAppearance();
+    if (appAppearance === 'dark' || appAppearance === 'light') {
+      this.isDarkTheme = appAppearance === 'dark';
+      return;
+    }
+
+    const pageClassName = String(this.page.className || '');
+    this.isDarkTheme = pageClassName.includes('ns-dark');
   }
 
   private ensureTransactionObserver(): void {

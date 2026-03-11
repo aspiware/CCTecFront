@@ -1,35 +1,83 @@
-<ActionBar class="action-bar" title="Subscription"></ActionBar>
+<ActionBar class="action-bar" title="Subscription">
+  <ActionItem
+    ios.position="right"
+    [isEnabled]="!isBusy"
+    text="Log out"
+    (tap)="onChangeUser()">
+  </ActionItem>
+</ActionBar>
 
-<GridLayout rows="*,auto" class="page">
-  <StackLayout row="0" class="container">
-    <Label text="Basic Plan" class="plan-title"></Label>
-    <Label text="$4.99 / month" class="price"></Label>
-    <Label text="7-day free trial, then monthly billing." class="trial"></Label>
+<GridLayout rows="*" [class]="'page ' + (isDarkTheme ? 'theme-dark' : 'theme-light')" (loaded)="onRootLoaded()">
+  <!-- <GridLayout class="bg-layer"></GridLayout> -->
 
-    <StackLayout class="card">
-      <Label text="Includes:" class="card-title"></Label>
-      <Label text="• Access to core app workflows" class="line"></Label>
-      <Label text="• Daily jobs and Wi-Fi config tools" class="line"></Label>
-      <Label text="• Standard support" class="line"></Label>
+  <ScrollView>
+    <StackLayout class="content-wrap">
+      <StackLayout class="plan-card">
+        <Label text="Basic" class="plan-title"></Label>
+        <Label text="Track your work and real earnings in one place." class="plan-subtitle"></Label>
+
+        <GridLayout columns="auto,auto" class="price-row">
+          <Label col="0" text="$9.99" class="price-main"></Label>
+          <StackLayout col="1" verticalAlignment="middle">
+            <Label text="USD / month" class="price-unit"></Label>
+          </StackLayout>
+        </GridLayout>
+
+        <Label text="Start your 7-day free trial, cancel anytime." class="message message-in-card"></Label>
+
+        <Button
+          [text]="isBusy ? 'Please wait...' : 'SUBSCRIBE'"
+          class="subscribe-btn"
+          [isEnabled]="!isBusy"
+          (tap)="onSubscribe()">
+        </Button>
+
+        <Button
+          text="Restore Purchase"
+          class="restore-btn"
+          [isEnabled]="!isBusy"
+          (tap)="onRestore()">
+        </Button>
+
+        <StackLayout class="features-list">
+          <GridLayout columns="auto,*" class="feature-row">
+            <Label col="0" text="✓" class="feature-check"></Label>
+            <Label col="1" text="Real-time earnings tracking" class="feature-text"></Label>
+          </GridLayout>
+          <GridLayout columns="auto,*" class="feature-row">
+            <Label col="0" text="✓" class="feature-check"></Label>
+            <Label col="1" text="Daily and weekly earnings summary" class="feature-text"></Label>
+          </GridLayout>
+          <GridLayout columns="auto,*" class="feature-row">
+            <Label col="0" text="✓" class="feature-check"></Label>
+            <Label col="1" text="Automatic job income calculation" class="feature-text"></Label>
+          </GridLayout>
+          <GridLayout columns="auto,*" class="feature-row">
+            <Label col="0" text="✓" class="feature-check"></Label>
+            <Label col="1" text="Smart custom job pricing" class="feature-text"></Label>
+          </GridLayout>
+          <GridLayout columns="auto,*" class="feature-row">
+            <Label col="0" text="✓" class="feature-check"></Label>
+            <Label col="1" text="Full job and equipment management" class="feature-text"></Label>
+          </GridLayout>
+          <GridLayout columns="auto,*" class="feature-row">
+            <Label col="0" text="✓" class="feature-check"></Label>
+            <Label col="1" text="Automated SMS survey" class="feature-text"></Label>
+          </GridLayout>
+          <GridLayout columns="auto,*" class="feature-row">
+            <Label col="0" text="✓" class="feature-check"></Label>
+            <Label col="1" text="Complete job history with notes" class="feature-text"></Label>
+          </GridLayout>
+          <GridLayout columns="auto,*" class="feature-row">
+            <Label col="0" text="✓" class="feature-check"></Label>
+            <Label col="1" text="Job status workflow tracking" class="feature-text"></Label>
+          </GridLayout>
+          <GridLayout columns="auto,*" class="feature-row">
+            <Label col="0" text="✓" class="feature-check"></Label>
+            <Label col="1" text="Track expenses and real profit" class="feature-text"></Label>
+          </GridLayout>
+        </StackLayout>
+      </StackLayout>
     </StackLayout>
-
-    <Label [text]="message" class="message"></Label>
-  </StackLayout>
-
-  <GridLayout row="1" columns="*,*" class="actions">
-    <Button
-      col="0"
-      text="Restore"
-      class="btn btn-secondary"
-      [isEnabled]="!isBusy"
-      (tap)="onRestore()">
-    </Button>
-    <Button
-      col="1"
-      [text]="isBusy ? 'Please wait...' : 'Subscribe'"
-      class="btn btn-primary"
-      [isEnabled]="!isBusy"
-      (tap)="onSubscribe()">
-    </Button>
-  </GridLayout>
+  </ScrollView>
 </GridLayout>

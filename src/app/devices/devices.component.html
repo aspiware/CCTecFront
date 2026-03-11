@@ -1,0 +1,60 @@
+<ModalStack dismissEnabled="true" class="modal-root">
+  <GridLayout rows="*" columns="*">
+    <StackLayout row="0" col="0" class="backdrop" (tap)="closeWithoutSave()"></StackLayout>
+
+    <GridLayout row="0" col="0" rows="auto,*" class="modal-card">
+      <GridLayout row="0" columns="*,auto,auto" class="header header-fixed">
+        <Label col="0" [text]="'Devices (' + devices.length + ')'" class="title modal-title-text"></Label>
+
+        <StackLayout col="2">
+          <MenuButton [useSFIcon]="true" style="background-color: transparent; height: 24; width: 35;"
+            [sfIconName]="'ellipsis.circle'" [showSpinner]="isRefreshingMainMenu" #menuStatus [options]="mainMenuOptions"
+            (selected)="onSelectedMainMenu($event, menuStatus)">
+          </MenuButton>
+        </StackLayout>
+      </GridLayout>
+
+      <GridLayout row="1" class="update-devices-list-wrap">
+        <RadListView [items]="devices" selectionBehavior="None" class="custom-types-list">
+          <ng-template tkListItemTemplate let-item="item">
+            <GridLayout rows="auto" columns="*, auto"
+              style="margin-left: 10; margin-right: 10; margin-top: 6; margin-bottom: 6;">
+              <GridLayout orientation="horizontal" class="item-bag" col="0" columns="*, auto">
+                <GridLayout col="0" columns="28,60,*,auto,30">
+                  <Label *ngIf="item.connectionStatus" class="fas" text="&#xf058;" col="0"
+                    style="font-size: 18; color: white; margin-right: 8;"></Label>
+                  <Label *ngIf="!item.connectionStatus" class="fas" text="&#xf05e;" col="0"
+                    style="font-size: 18; color: rgb(160, 160, 160); margin-right: 8;"></Label>
+                  <Label col="1" class="device-type" horizontalAlignment="left"
+                    [text]="item.type == 'STB' || item.type == 'IPSTB' ? 'VIDEO' : item.type == 'MTA' || item.type == 'HSI' || item.type == 'CM' ? 'MODEM' : item.type"
+                    [style.color]="!item.connectionStatus ? 'rgb(160, 160, 160)' : 'white'"></Label>
+                  <StackLayout col="2" verticalAlignment="middle">
+                    <Label class="device-name" verticalAlignment="middle" [text]="item.name || item.deviceName"
+                      [style.color]="!item.connectionStatus ? 'rgb(160, 160, 160)' : 'white'"></Label>
+                  </StackLayout>
+                  <StackLayout col="3" verticalAlignment="middle">
+                    <Label class="device-serial" verticalAlignment="middle"
+                      [text]="item.serialNumber || item.deviceSerialNumber"
+                      [style.color]="!item.connectionStatus ? 'rgb(160, 160, 160)' : 'white'"></Label>
+                  </StackLayout>
+                  <MenuButton col="4" #deviceMenuBtn
+                    class="device-status-button"
+                    style="font-size: 16px; height: 60px; width: 100px;"
+                    [showSpinner]="isJobMenuLoading(item)"
+                    [spinnerOffsetX]="0" [spinnerOffsetY]="0" [isRightSide]="true" [useSFIcon]="true"
+                    [sfIconName]="getDeviceMenuIcon(item)" [imageInsets]="{ top: 0, left: 0, bottom: 0, right: 0 }"
+                    [options]="getDeviceMenuOptions(item)"
+                    (selected)="onSelectedDeviceMenu($event, item, deviceMenuBtn)">
+                  </MenuButton>
+
+                </GridLayout>
+              </GridLayout>
+            </GridLayout>
+          </ng-template>
+        </RadListView>
+      </GridLayout>
+    </GridLayout>
+
+
+  </GridLayout>
+</ModalStack>

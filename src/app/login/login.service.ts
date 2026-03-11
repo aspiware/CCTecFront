@@ -10,7 +10,7 @@ export class LoginService {
   constructor(
     private httpClient: HttpClient,
     private configService: ConfigService
-  ) {}
+  ) { }
 
   public login(username, password): Observable<any> {
     return this.httpClient.post<void>(
@@ -36,7 +36,7 @@ export class LoginService {
   public signup(username, password, accessToken, refreshToken, idToken): Observable<any> {
     return this.httpClient.post<void>(
       this.configService.getUrlBase() + "/auth/signup",
-      { username, password, accessToken, refreshToken, idToken}
+      { username, password, accessToken, refreshToken, idToken }
     );
   }
 
@@ -60,4 +60,5 @@ export class LoginService {
       { ...response, code }
     );
   }
+
 }

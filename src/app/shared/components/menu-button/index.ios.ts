@@ -60,9 +60,7 @@ export class MenuButton extends MenuButtonBase {
   }
 
   resetMenu() {
-    if (!this.options) {
-      return;
-    }
+    const options = this.options ?? [];
     const iosButton = this.ios as UIButton;
     const tintColor = this.getAdaptiveTintColor();
     const regularActions: UIMenuElement[] = [];
@@ -103,10 +101,11 @@ export class MenuButton extends MenuButtonBase {
     }
 
     if (this.useSFIcon && !this.showSpinner && !this.isRightSide) {
+      const pointSize = this.getSymbolPointSize();
       const config = UIImageSymbolConfiguration.configurationWithPointSizeWeightScale(
-        18,
+        pointSize,
         UIImageSymbolWeight.Regular,
-        UIImageSymbolScale.Medium
+        this.getSymbolScale(pointSize)
       );
       const sfName = this.sfIconName || "ellipsis.circle";
       const image = UIImage.systemImageNamedWithConfiguration(sfName, config);
@@ -121,10 +120,11 @@ export class MenuButton extends MenuButtonBase {
       iosButton.contentHorizontalAlignment = UIControlContentHorizontalAlignment.Center;
       iosButton.imageView.contentMode = UIViewContentMode.ScaleAspectFit;
     } else if (this.useSFIcon && !this.showSpinner && this.isRightSide) {
+      const pointSize = this.getSymbolPointSize();
       const config = UIImageSymbolConfiguration.configurationWithPointSizeWeightScale(
-        18,
+        pointSize,
         UIImageSymbolWeight.Regular,
-        UIImageSymbolScale.Medium
+        this.getSymbolScale(pointSize)
       );
       const sfName = this.sfIconName || "ellipsis.circle";
       const image = UIImage.systemImageNamedWithConfiguration(sfName, config);
@@ -143,8 +143,8 @@ export class MenuButton extends MenuButtonBase {
 
 
 
-    for (let i = 0; i < this.options.length; i++) {
-      const option = this.options[i];
+    for (let i = 0; i < options.length; i++) {
+      const option = options[i];
 
       const iconImage = option.icon ? UIImage.systemImageNamed(option.icon) : null;
 
@@ -210,6 +210,12 @@ export class MenuButton extends MenuButtonBase {
       rootChildren.push(destructiveMenu);
     }
 
+    if (rootChildren.length === 0) {
+      iosButton.menu = null;
+      iosButton.showsMenuAsPrimaryAction = false;
+      return;
+    }
+
     if (rootChildren.length === 1 && regularActions.length > 0 && destructiveActions.length === 0) {
       iosButton.menu = rootChildren[0] as UIMenu;
     } else {
@@ -264,6 +270,24 @@ export class MenuButton extends MenuButtonBase {
       }
     }
     return fallback;
+  }
+
+  private getSymbolPointSize(): number {
+    const raw = (this.style as any)?.fontSize;
+    if (typeof raw === 'number' && Number.isFinite(raw) && raw > 0) {
+      return raw;
+    }
+    if (typeof raw === 'string') {
+      const parsed = Number.parseFloat(raw);
+      if (Number.isFinite(parsed) && parsed > 0) {
+        return parsed;
+      }
+    }
+    return 18;
+  }
+
+  private getSymbolScale(pointSize: number): UIImageSymbolScale {
+    return pointSize >= 20 ? UIImageSymbolScale.Large : UIImageSymbolScale.Medium;
   }
 
   private getAdaptiveTintColor(): UIColor {
