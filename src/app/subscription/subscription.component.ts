@@ -56,11 +56,11 @@ export class SubscriptionComponent implements OnInit {
     this.redirectTo = this.route.snapshot.queryParamMap.get('redirect') || '/tabs';
     const reason = this.route.snapshot.queryParamMap.get('reason');
 
-    if (reason === 'inactive') {
-      this.showErrorAlert('Your subscription is inactive. Subscribe to continue.');
-    } else if (reason === 'verify-error') {
-      this.showErrorAlert('Could not verify your subscription. Please try again.');
-    }
+    // if (reason === 'inactive') {
+    //   this.showErrorAlert('Your subscription is inactive. Subscribe to continue.');
+    // } else if (reason === 'verify-error') {
+    //   this.showErrorAlert('Could not verify your subscription. Please try again.');
+    // }
   }
 
   ngOnDestroy(): void {
