@@ -26,12 +26,16 @@
   min-height: 54;
   height: 54;
   padding: 0;
-  border-bottom-width: 1;
-  border-bottom-color: #34353b;
 }
 
 .settings-row Label {
   vertical-align: middle;
+}
+
+.row-divider {
+  height: 1;
+  vertical-align: bottom;
+  background-color: #34353b;
 }
 
 .settings-row-last {
