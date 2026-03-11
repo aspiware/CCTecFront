@@ -1,6 +1,6 @@
 <ActionBar class="action-bar" title="Subscription"></ActionBar>
 
-<GridLayout rows="*" class="page">
+<GridLayout rows="*" [class]="'page ' + (isDarkTheme ? 'theme-dark' : 'theme-light')" (loaded)="onRootLoaded()">
   <!-- <GridLayout class="bg-layer"></GridLayout> -->
 
   <ScrollView>
@@ -12,10 +12,12 @@
         <GridLayout columns="auto,auto" class="price-row">
           <Label col="0" text="$9.99" class="price-main"></Label>
           <StackLayout col="1" verticalAlignment="middle">
-            <Label text="" class="save-pill"></Label>
+            <Label text="Save 25%" class="save-pill"></Label>
             <Label text="USD / month" class="price-unit"></Label>
           </StackLayout>
         </GridLayout>
+
+        <Label text="Billed yearly" class="billing-note"></Label>
 
         <Label text="Start your 7-day free trial, cancel anytime." class="message message-in-card"></Label>
 

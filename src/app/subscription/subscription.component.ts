@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { NativeScriptCommonModule, RouterExtensions } from '@nativescript/angular';
-import { alert } from '@nativescript/core';
+import { alert, Application, Page } from '@nativescript/core';
 import { SubscriptionService } from '../shared/services/subscription.service';
 
 @Component({
@@ -13,6 +13,7 @@ import { SubscriptionService } from '../shared/services/subscription.service';
   styleUrl: './subscription.component.scss',
 })
 export class SubscriptionComponent implements OnInit {
+  public isDarkTheme = Application.systemAppearance() === 'dark';
   public isBusy = false;
 
   private redirectTo = '/tabs';
@@ -28,15 +29,24 @@ export class SubscriptionComponent implements OnInit {
   } | null = null;
   private productsRequest: SKProductsRequest | null = null;
   private productsRequestDelegate: any;
+  private appearanceChangedHandler?: () => void;
 
   constructor(
     private subscriptionService: SubscriptionService,
     private routerExtensions: RouterExtensions,
     private route: ActivatedRoute,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private page: Page
   ) {}
 
   ngOnInit(): void {
+    this.syncTheme();
+    this.appearanceChangedHandler = () => {
+      this.syncTheme();
+      this.cdr.detectChanges();
+    };
+    Application.on(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
+
     if (__IOS__) {
       this.ensureTransactionObserver();
     }
@@ -52,10 +62,19 @@ export class SubscriptionComponent implements OnInit {
   }
 
   ngOnDestroy(): void {
+    if (this.appearanceChangedHandler) {
+      Application.off(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
+    }
+
     if (__IOS__ && this.iapObserver) {
       SKPaymentQueue.defaultQueue().removeTransactionObserver(this.iapObserver);
       this.iapObserver = null;
     }
+  }
+
+  public onRootLoaded(): void {
+    this.syncTheme();
+    this.cdr.detectChanges();
   }
 
   public onSubscribe(): void {
@@ -132,6 +151,17 @@ export class SubscriptionComponent implements OnInit {
       message,
       okButtonText: 'OK',
     });
+  }
+
+  private syncTheme(): void {
+    const appAppearance = Application.systemAppearance();
+    if (appAppearance === 'dark' || appAppearance === 'light') {
+      this.isDarkTheme = appAppearance === 'dark';
+      return;
+    }
+
+    const pageClassName = String(this.page.className || '');
+    this.isDarkTheme = pageClassName.includes('ns-dark');
   }
 
   private ensureTransactionObserver(): void {

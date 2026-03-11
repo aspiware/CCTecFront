@@ -1,7 +1,7 @@
 .page {
   width: 100%;
   height: 100%;
-  // background-color: #3b1021;
+  background-color: #f7a594;
 }
 
 .bg-layer {
@@ -19,22 +19,22 @@
   padding: 20;
   border-radius: 22;
   border-width: 1;
-  border-color: #d89f7f;
-  background-color: #433e3f;
+  border-color: #f0cdbf;
+  background-color: #f8dee6;
 }
 
 .plan-title {
   text-align: center;
   font-size: 44;
   font-weight: 800;
-  color: #ffb887;
+  color: #111111;
 }
 
 .plan-subtitle {
   margin-top: 8;
   text-align: center;
   font-size: 17;
-  color: #ffe1d3;
+  color: #2f2f2f;
   text-wrap: true;
   white-space: normal;
 }
@@ -47,7 +47,7 @@
 .price-main {
   font-size: 40;
   font-weight: 900;
-  color: #ffffff;
+  color: #111111;
 }
 
 .save-pill {
@@ -66,14 +66,14 @@
   margin-top: 8;
   font-size: 16;
   font-weight: 700;
-  color: #ffffff;
+  color: #111111;
 }
 
 .billing-note {
-  margin-top: 8;
+  margin-top: 6;
   text-align: center;
-  font-size: 16;
-  color: #ffe1d3;
+  font-size: 18;
+  color: #222222;
 }
 
 .subscribe-btn {
@@ -120,14 +120,14 @@
   margin-left: 10;
   font-size: 17;
   font-weight: 700;
-  color: #fff6f1;
+  color: #121212;
 }
 
 .message {
   margin-top: 16;
   text-align: center;
   font-size: 13;
-  color: #f7d8c8;
+  color: #3d3d3d;
 }
 
 .message-in-card {
@@ -135,4 +135,51 @@
   margin-bottom: 4;
   font-size: 14;
   font-weight: 600;
+}
+
+.theme-dark,
+.page.theme-dark,
+.ns-dark .page {
+  background-color: #3b1021;
+}
+
+.theme-dark .plan-card,
+.page.theme-dark .plan-card,
+.ns-dark .plan-card {
+  border-color: #d89f7f;
+  background-color: #433e3f;
+}
+
+.theme-dark .plan-title,
+.page.theme-dark .plan-title,
+.ns-dark .plan-title {
+  color: #ffb887;
+}
+
+.theme-dark .plan-subtitle,
+.theme-dark .billing-note,
+.theme-dark .message,
+.theme-dark .feature-text,
+.theme-dark .price-unit,
+.theme-dark .price-main,
+.page.theme-dark .plan-subtitle,
+.page.theme-dark .billing-note,
+.page.theme-dark .message,
+.page.theme-dark .feature-text,
+.page.theme-dark .price-unit,
+.page.theme-dark .price-main,
+.ns-dark .plan-subtitle,
+.ns-dark .billing-note,
+.ns-dark .message,
+.ns-dark .feature-text,
+.ns-dark .price-unit,
+.ns-dark .price-main {
+  color: #fff6f1;
+}
+
+.theme-dark .restore-btn,
+.page.theme-dark .restore-btn,
+.ns-dark .restore-btn {
+  background-color: #a65d75;
+  color: #fff6ef;
 }
