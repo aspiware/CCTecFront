@@ -1,35 +1,67 @@
 <ActionBar class="action-bar" title="Subscription"></ActionBar>
 
-<GridLayout rows="*,auto" class="page">
-  <StackLayout row="0" class="container">
-    <Label text="Basic Plan" class="plan-title"></Label>
-    <Label text="$4.99 / month" class="price"></Label>
-    <Label text="7-day free trial, then monthly billing." class="trial"></Label>
+<GridLayout rows="*" class="page">
+  <!-- <GridLayout class="bg-layer"></GridLayout> -->
 
-    <StackLayout class="card">
-      <Label text="Includes:" class="card-title"></Label>
-      <Label text="• Access to core app workflows" class="line"></Label>
-      <Label text="• Daily jobs and Wi-Fi config tools" class="line"></Label>
-      <Label text="• Standard support" class="line"></Label>
+  <ScrollView>
+    <StackLayout class="content-wrap">
+      <StackLayout class="plan-card">
+        <Label text="Basic" class="plan-title"></Label>
+        <Label text="Full access to all CCTec standard features." class="plan-subtitle"></Label>
+
+        <GridLayout columns="auto,auto" class="price-row">
+          <Label col="0" text="$9.99" class="price-main"></Label>
+          <StackLayout col="1" verticalAlignment="middle">
+            <Label text="" class="save-pill"></Label>
+            <Label text="USD / month" class="price-unit"></Label>
+          </StackLayout>
+        </GridLayout>
+
+        <!-- <Label text="Billed yearly" class="billing-note"></Label> -->
+
+        <Button
+          [text]="isBusy ? 'Please wait...' : 'SUBSCRIBE'"
+          class="subscribe-btn"
+          [isEnabled]="!isBusy"
+          (tap)="onSubscribe()">
+        </Button>
+
+        <Button
+          text="Restore Purchase"
+          class="restore-btn"
+          [isEnabled]="!isBusy"
+          (tap)="onRestore()">
+        </Button>
+
+        <StackLayout class="features-list">
+          <GridLayout columns="auto,*" class="feature-row">
+            <Label col="0" text="✓" class="feature-check"></Label>
+            <Label col="1" text="All illustration styles" class="feature-text"></Label>
+          </GridLayout>
+          <GridLayout columns="auto,*" class="feature-row">
+            <Label col="0" text="✓" class="feature-check"></Label>
+            <Label col="1" text="Unlimited templates" class="feature-text"></Label>
+          </GridLayout>
+          <GridLayout columns="auto,*" class="feature-row">
+            <Label col="0" text="✓" class="feature-check"></Label>
+            <Label col="1" text="Unlimited mockups" class="feature-text"></Label>
+          </GridLayout>
+          <GridLayout columns="auto,*" class="feature-row">
+            <Label col="0" text="✓" class="feature-check"></Label>
+            <Label col="1" text="JPG, PNG and SVG downloads" class="feature-text"></Label>
+          </GridLayout>
+          <GridLayout columns="auto,*" class="feature-row">
+            <Label col="0" text="✓" class="feature-check"></Label>
+            <Label col="1" text="SVG animations" class="feature-text"></Label>
+          </GridLayout>
+          <GridLayout columns="auto,*" class="feature-row">
+            <Label col="0" text="✓" class="feature-check"></Label>
+            <Label col="1" text="Everything included in Basic" class="feature-text"></Label>
+          </GridLayout>
+        </StackLayout>
+      </StackLayout>
+
+      <Label [text]="message" class="message"></Label>
     </StackLayout>
-
-    <Label [text]="message" class="message"></Label>
-  </StackLayout>
-
-  <GridLayout row="1" columns="*,*" class="actions">
-    <Button
-      col="0"
-      text="Restore"
-      class="btn btn-secondary"
-      [isEnabled]="!isBusy"
-      (tap)="onRestore()">
-    </Button>
-    <Button
-      col="1"
-      [text]="isBusy ? 'Please wait...' : 'Subscribe'"
-      class="btn btn-primary"
-      [isEnabled]="!isBusy"
-      (tap)="onSubscribe()">
-    </Button>
-  </GridLayout>
+  </ScrollView>
 </GridLayout>
