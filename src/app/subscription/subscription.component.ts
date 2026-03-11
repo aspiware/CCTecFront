@@ -2,6 +2,7 @@ import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } fro
 import { ActivatedRoute } from '@angular/router';
 import { NativeScriptCommonModule, RouterExtensions } from '@nativescript/angular';
 import { alert, Application, Page } from '@nativescript/core';
+import { ConfigService } from '../shared/services/config.service';
 import { SubscriptionService } from '../shared/services/subscription.service';
 
 @Component({
@@ -33,6 +34,7 @@ export class SubscriptionComponent implements OnInit {
 
   constructor(
     private subscriptionService: SubscriptionService,
+    private configService: ConfigService,
     private routerExtensions: RouterExtensions,
     private route: ActivatedRoute,
     private cdr: ChangeDetectorRef,
@@ -143,6 +145,15 @@ export class SubscriptionComponent implements OnInit {
         this.showErrorAlert(String(error || 'Restore failed. Please try again.'));
         this.cdr.detectChanges();
       });
+  }
+
+  public onChangeUser(): void {
+    if (this.isBusy) {
+      return;
+    }
+
+    this.configService.logout();
+    this.routerExtensions.navigate(['/login'], { clearHistory: true });
   }
 
   private showErrorAlert(message: string): void {
