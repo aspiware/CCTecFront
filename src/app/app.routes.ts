@@ -27,7 +27,7 @@ export const routes: Routes = [
   },
   {
     path: 'tabs',
-    canActivate: [subscriptionGuard, authGuard],
+    canActivate: [authGuard, subscriptionGuard],
     component: TabsContainerComponent,
     children: [
       {

@@ -11,6 +11,9 @@ import {
   remove,
   clear
 } from "@nativescript/core/application-settings";
+import { Observable } from "rxjs";
+import { HttpClient } from "@angular/common/http";
+import { ConfigService } from "./config.service";
 
 
 
@@ -19,7 +22,11 @@ import {
 })
 export class UsersService {
   private user: UserModel;
-  constructor() {}
+  
+  constructor(
+    private httpClient: HttpClient,
+    private configService: ConfigService
+  ) { }
 
   public setUser(user: UserModel): void {
     this.user = user;
@@ -36,5 +43,11 @@ export class UsersService {
     } catch {
       return null;
     }
+  }
+
+    public findById(userId: number): Observable<any> {
+    return this.httpClient.get<any>(
+      this.configService.getUrlBase() + `/auth/findUserById/${userId}`
+    );
   }
 }
