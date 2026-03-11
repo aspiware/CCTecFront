@@ -1,9 +1,16 @@
 <ActionBar class="action-bar" title="Subscription">
-  <ActionItem
-    ios.position="right"
-    [isEnabled]="!isBusy"
-    text="Log out"
-    (tap)="onChangeUser()">
+  <ActionItem ios.position="right">
+    <StackLayout>
+      <MenuButton
+        [isEnabled]="!isBusy"
+        [useSFIcon]="true"
+        [sfIconName]="'iphone.and.arrow.right.outward'"
+        [isRightSide]="true"
+        [options]="logoutMenu.options"
+        [imageInsets]="{ top: 0, left: 0, bottom: 0, right: -15 }"
+        (selected)="onSelectedLogoutMenu($event)">
+      </MenuButton>
+    </StackLayout>
   </ActionItem>
 </ActionBar>
 

@@ -2,6 +2,8 @@ import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } fro
 import { ActivatedRoute } from '@angular/router';
 import { NativeScriptCommonModule, RouterExtensions } from '@nativescript/angular';
 import { alert, Application, Page } from '@nativescript/core';
+import { Item } from '../shared/components/menu-button/item';
+import { MenuEvent } from '../shared/components/menu-button/common';
 import { ConfigService } from '../shared/services/config.service';
 import { SubscriptionService } from '../shared/services/subscription.service';
 
@@ -16,6 +18,22 @@ import { SubscriptionService } from '../shared/services/subscription.service';
 export class SubscriptionComponent implements OnInit {
   public isDarkTheme = Application.systemAppearance() === 'dark';
   public isBusy = false;
+  public logoutMenu: Item = {
+    name: 'Subscription Menu',
+    options: [
+      {
+        name: 'Log Out',
+        icon: 'person.crop.circle.badge.xmark',
+        destructive: true,
+        confirm: {
+          title: 'Are you sure you want to log out?',
+          confirmText: 'Yes',
+          cancelText: 'Cancel',
+          presentation: 'anchor',
+        },
+      },
+    ],
+  };
 
   private redirectTo = '/tabs';
   private readonly productId = 'com.aspiware.cctec.basic.monthly';
@@ -154,6 +172,12 @@ export class SubscriptionComponent implements OnInit {
 
     this.configService.logout();
     this.routerExtensions.navigate(['/login'], { clearHistory: true });
+  }
+
+  public onSelectedLogoutMenu(event: MenuEvent): void {
+    if (event?.index === 0) {
+      this.onChangeUser();
+    }
   }
 
   private showErrorAlert(message: string): void {
