@@ -1,14 +1,49 @@
 <ActionBar class="action-bar" title="Settings"></ActionBar>
 
-<GridLayout rows="auto,auto,*" class="container">
-  <Label row="0" [text]="'Subscription: ' + (isSubscribed ? 'Active' : 'Inactive')" class="title"></Label>
-  <Label row="1" text="UI flow enabled. Backend validation will be connected next." class="subtitle"></Label>
+<GridLayout rows="*" class="container">
+  <ScrollView>
+    <StackLayout class="content">
+      <Label text="Jobs" class="category-title"></Label>
+      <StackLayout class="settings-card">
+        <GridLayout columns="auto,*,auto" class="settings-row">
+          <Label col="0" class="icon-tile fas" text="&#xf015;"></Label>
+          <Label col="1" class="row-label" text="Residential Job Prices"></Label>
+          <Label col="2" class="chevron fas" text="&#xf054;"></Label>
+        </GridLayout>
+        <GridLayout columns="auto,*,auto" class="settings-row">
+          <Label col="0" class="icon-tile fas" text="&#xf3ed;"></Label>
+          <Label col="1" class="row-label" text="XH Job Prices"></Label>
+          <Label col="2" class="chevron fas" text="&#xf054;"></Label>
+        </GridLayout>
+        <GridLayout columns="auto,*,auto" class="settings-row">
+          <Label col="0" class="icon-tile fas" text="&#xf6ff;"></Label>
+          <Label col="1" class="row-label" text="Fiber Prices"></Label>
+          <Label col="2" class="chevron fas" text="&#xf054;"></Label>
+        </GridLayout>
+        <GridLayout columns="auto,*,auto" class="settings-row settings-row-last">
+          <Label col="0" class="icon-tile fas" text="&#xf0b1;"></Label>
+          <Label col="1" class="row-label" text="Business Prices"></Label>
+          <Label col="2" class="chevron fas" text="&#xf054;"></Label>
+        </GridLayout>
+      </StackLayout>
 
-  <StackLayout row="2" class="card">
-    <Label text="Subscription Controls" class="card-title"></Label>
+      <Label text="Billing" class="category-title"></Label>
+      <StackLayout class="settings-card">
+        <GridLayout columns="auto,*,auto" class="settings-row settings-row-last">
+          <Label col="0" class="icon-tile fas" text="&#xf155;"></Label>
+          <Label col="1" class="row-label" text="Payroll"></Label>
+          <Label col="2" class="chevron fas" text="&#xf054;"></Label>
+        </GridLayout>
+      </StackLayout>
 
-    <Button text="Open Subscription Screen" class="btn btn-primary" (tap)="openSubscription()"></Button>
-    <Button text="Simulate Active" class="btn" (tap)="simulateActive()"></Button>
-    <Button text="Simulate Inactive" class="btn btn-danger" (tap)="simulateInactive()"></Button>
-  </StackLayout>
+      <Label text="XM" class="category-title"></Label>
+      <StackLayout class="settings-card">
+        <GridLayout columns="auto,*,auto" class="settings-row settings-row-last">
+          <Label col="0" class="icon-tile fas" text="&#xf084;"></Label>
+          <Label col="1" class="row-label" text="Update Token"></Label>
+          <Label col="2" class="chevron fas" text="&#xf054;"></Label>
+        </GridLayout>
+      </StackLayout>
+    </StackLayout>
+  </ScrollView>
 </GridLayout>
