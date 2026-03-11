@@ -16,7 +16,7 @@ export class SubscriptionComponent implements OnInit {
   public message = '';
 
   private redirectTo = '/tabs';
-  private readonly productId = 'com.aspiware.cctec.basic.weekly';
+  private readonly productId = 'com.aspiware.cctec.basic.monthly';
   private iapObserver: any;
   private pendingPurchase: {
     resolve: (value: { receiptData: string; productId?: string; transactionId?: string }) => void;
