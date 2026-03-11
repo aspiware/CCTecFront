@@ -32,7 +32,14 @@ export const authGuard: CanActivateFn = (_route, state): boolean | UrlTree => {
           res?.user?.active ??
           res?.data?.user?.active;
 
-        if (activeFlag === false || activeFlag === 0 || activeFlag === 'false') {
+        const isInactive =
+          activeFlag === false ||
+          activeFlag === 0 ||
+          activeFlag === 'false' ||
+          activeFlag === null ||
+          activeFlag === undefined;
+
+        if (isInactive) {
           configService.logout();
           routerExtensions.navigate(['/login'], {
             clearHistory: true,
