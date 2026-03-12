@@ -10,6 +10,10 @@ import { subscriptionGuard } from './subscription/subscription.guard';
 import { LoginComponent } from './login/login.component';
 import { authGuard } from './login/auth.guard';
 import { ActivateServiceComponent } from './activate-service/activate-service.component';
+import { ResidentialJobPricesComponent } from './residential-job-prices/residential-job-prices.component';
+import { XhJobPricesComponent } from './xh-job-prices/xh-job-prices.component';
+import { FiberJobPricesComponent } from './fiber-job-prices/fiber-job-prices.component';
+import { BusinessJobPricesComponent } from './business-job-prices/business-job-prices.component';
 
 export const routes: Routes = [
   {
@@ -59,6 +63,26 @@ export const routes: Routes = [
         path: 'settings',
         outlet: 'settingsTab',
         component: SettingsComponent,
+      },
+      {
+        path: 'residential-job-prices',
+        outlet: 'settingsTab',
+        component: ResidentialJobPricesComponent,
+      },
+      {
+        path: 'xh-job-prices',
+        outlet: 'settingsTab',
+        component: XhJobPricesComponent,
+      },
+      {
+        path: 'fiber-job-prices',
+        outlet: 'settingsTab',
+        component: FiberJobPricesComponent,
+      },
+      {
+        path: 'business-job-prices',
+        outlet: 'settingsTab',
+        component: BusinessJobPricesComponent,
       },
     ],
   },

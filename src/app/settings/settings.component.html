@@ -47,25 +47,25 @@
 
       <Label text="Jobs" class="category-title"></Label>
       <StackLayout class="settings-card">
-        <GridLayout columns="auto,*,auto" class="settings-row">
+        <GridLayout columns="auto,*,auto" class="settings-row" (tap)="openResidentialJobPrices()">
           <Label col="0" class="icon-tile fas" text="&#xf015;"></Label>
           <Label col="1" class="row-label" text="Residential Prices"></Label>
           <Label col="2" class="chevron fas" text="&#xf054;"></Label>
           <GridLayout col="1" colSpan="2" class="row-divider"></GridLayout>
         </GridLayout>
-        <GridLayout columns="auto,*,auto" class="settings-row">
+        <GridLayout columns="auto,*,auto" class="settings-row" (tap)="openXhJobPrices()">
           <Label col="0" class="icon-tile fas" text="&#xf3ed;"></Label>
           <Label col="1" class="row-label" text="XH Prices"></Label>
           <Label col="2" class="chevron fas" text="&#xf054;"></Label>
           <GridLayout col="1" colSpan="2" class="row-divider"></GridLayout>
         </GridLayout>
-        <GridLayout columns="auto,*,auto" class="settings-row">
+        <GridLayout columns="auto,*,auto" class="settings-row" (tap)="openFiberJobPrices()">
           <Label col="0" class="icon-tile fas" text="&#xf6ff;"></Label>
           <Label col="1" class="row-label" text="Fiber Prices"></Label>
           <Label col="2" class="chevron fas" text="&#xf054;"></Label>
           <GridLayout col="1" colSpan="2" class="row-divider"></GridLayout>
         </GridLayout>
-        <GridLayout columns="auto,*,auto" class="settings-row settings-row-last">
+        <GridLayout columns="auto,*,auto" class="settings-row settings-row-last" (tap)="openBusinessJobPrices()">
           <Label col="0" class="icon-tile fas" text="&#xf0b1;"></Label>
           <Label col="1" class="row-label" text="Business Prices"></Label>
           <Label col="2" class="chevron fas" text="&#xf054;"></Label>

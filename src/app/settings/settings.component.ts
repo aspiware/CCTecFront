@@ -1,4 +1,5 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { NativeScriptCommonModule, RouterExtensions } from '@nativescript/angular';
 import { Application, Page, Utils } from '@nativescript/core';
 import { SubscriptionService } from '../shared/services/subscription.service';
@@ -23,6 +24,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   constructor(
     private subscriptionService: SubscriptionService,
+    private router: Router,
     private routerExtensions: RouterExtensions,
     private cdr: ChangeDetectorRef,
     private page: Page
@@ -65,6 +67,22 @@ export class SettingsComponent implements OnInit, OnDestroy {
       return;
     }
     this.openSubscription();
+  }
+
+  public openResidentialJobPrices(): void {
+    this.router.navigate(['/tabs', { outlets: { settingsTab: ['residential-job-prices'] } }]);
+  }
+
+  public openXhJobPrices(): void {
+    this.router.navigate(['/tabs', { outlets: { settingsTab: ['xh-job-prices'] } }]);
+  }
+
+  public openFiberJobPrices(): void {
+    this.router.navigate(['/tabs', { outlets: { settingsTab: ['fiber-job-prices'] } }]);
+  }
+
+  public openBusinessJobPrices(): void {
+    this.router.navigate(['/tabs', { outlets: { settingsTab: ['business-job-prices'] } }]);
   }
 
   public simulateActive(): void {
