@@ -14,6 +14,7 @@ import { ResidentialJobPricesComponent } from './residential-job-prices/resident
 import { XhJobPricesComponent } from './xh-job-prices/xh-job-prices.component';
 import { FiberJobPricesComponent } from './fiber-job-prices/fiber-job-prices.component';
 import { BusinessJobPricesComponent } from './business-job-prices/business-job-prices.component';
+import { XmUpdateTokenComponent } from './xm-update-token/xm-update-token.component';
 
 export const routes: Routes = [
   {
@@ -83,6 +84,11 @@ export const routes: Routes = [
         path: 'business-job-prices',
         outlet: 'settingsTab',
         component: BusinessJobPricesComponent,
+      },
+      {
+        path: 'xm-update-token',
+        outlet: 'settingsTab',
+        component: XmUpdateTokenComponent,
       },
     ],
   },

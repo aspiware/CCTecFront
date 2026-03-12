@@ -1,9 +1,9 @@
 <ActionBar class="action-bar" title="Settings">
-  <ActionItem
+  <!-- <ActionItem
     ios.position="right"
     text="Subscription"
     (tap)="openSubscription()">
-  </ActionItem>
+  </ActionItem> -->
 </ActionBar>
 
 <GridLayout
@@ -83,7 +83,7 @@
 
       <Label text="XM" class="category-title"></Label>
       <StackLayout class="settings-card">
-        <GridLayout columns="auto,*,auto" class="settings-row settings-row-last">
+        <GridLayout columns="auto,*,auto" class="settings-row settings-row-last" (tap)="openXmUpdateToken()">
           <Label col="0" class="icon-tile fas" text="&#xf084;"></Label>
           <Label col="1" class="row-label" text="Update Token"></Label>
           <Label col="2" class="chevron fas" text="&#xf054;"></Label>

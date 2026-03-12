@@ -85,6 +85,10 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.router.navigate(['/tabs', { outlets: { settingsTab: ['business-job-prices'] } }]);
   }
 
+  public openXmUpdateToken(): void {
+    this.router.navigate(['/tabs', { outlets: { settingsTab: ['xm-update-token'] } }]);
+  }
+
   public simulateActive(): void {
     this.subscriptionService.setLocalStatus(true);
   }
