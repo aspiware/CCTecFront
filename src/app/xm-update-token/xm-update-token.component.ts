@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
 import { NativeScriptCommonModule } from '@nativescript/angular';
-import { Application, Page, Utils, alert, isIOS } from '@nativescript/core';
+import { Application, Page, Utils, alert, isAndroid, isIOS } from '@nativescript/core';
 import { MenuEvent } from '~/app/shared/components/menu-button/common';
 import { Item } from '~/app/shared/components/menu-button/item';
 import { SettingsService } from '../settings/settings.service';
@@ -22,17 +22,20 @@ export class XmUpdateTokenComponent implements OnInit, OnDestroy {
   private appearanceChangedHandler?: () => void;
   public mainMenuR: Item = {
     name: 'Main Menu Right',
-    options: [{
-      name: 'Save',
-      icon: 'checkmark.circle',
-      destructive: true,
-      confirm: {
-        title: 'Are you sure you want to save changes?',
-        confirmText: 'Yes',
-        cancelText: 'Cancel',
-        presentation: 'anchor',
+    options: [
+      {
+        name: 'Save',
+        icon: 'checkmark.circle',
+        destructive: true,
+        confirm: {
+          title: 'Are you sure you want to save changes?',
+          confirmText: 'Yes',
+          cancelText: 'Cancel',
+          presentation: 'anchor',
+        },
       },
-    }],
+      { name: 'Paste Token', icon: 'doc.on.clipboard' },
+    ],
   };
 
   constructor(
@@ -64,10 +67,16 @@ export class XmUpdateTokenComponent implements OnInit, OnDestroy {
   }
 
   public onSelectedMainMenuR(event: MenuEvent): void {
-    if (event?.index !== 0 || this.isSaveLoading) {
+    if (event?.index === 0) {
+      if (this.isSaveLoading) {
+        return;
+      }
+      this.saveXmToken();
       return;
     }
-    this.saveXmToken();
+    if (event?.index === 1) {
+      this.pasteTokenFromClipboard();
+    }
   }
 
   private loadXmToken(): void {
@@ -141,6 +150,39 @@ export class XmUpdateTokenComponent implements OnInit, OnDestroy {
         });
       },
     });
+  }
+
+  private pasteTokenFromClipboard(): void {
+    try {
+      const clipboardText = this.readClipboardText();
+      this.token = String(clipboardText ?? '');
+      this.cdr.detectChanges();
+    } catch (error) {
+      console.log('[XmUpdateToken] Clipboard paste error:', error);
+    }
+  }
+
+  private readClipboardText(): string {
+    if (isIOS) {
+      return String(UIPasteboard.generalPasteboard.string || '');
+    }
+
+    if (isAndroid) {
+      const context = Application.android.context;
+      const clipboard = context?.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager;
+      if (!clipboard?.hasPrimaryClip()) {
+        return '';
+      }
+
+      const clip = clipboard.getPrimaryClip();
+      if (!clip || clip.getItemCount() < 1) {
+        return '';
+      }
+
+      return String(clip.getItemAt(0).coerceToText(context) || '');
+    }
+
+    return '';
   }
 
   private async showSavedPopupAnchored(): Promise<void> {
