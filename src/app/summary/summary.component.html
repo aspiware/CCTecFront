@@ -5,7 +5,11 @@
   </ActionItem>
 </ActionBar>
 
-<GridLayout rows="auto, auto" columns="*" class="container">
+<GridLayout
+  rows="auto, auto"
+  columns="*"
+  [class]="'container ' + (isDarkTheme ? 'theme-dark' : 'theme-light')"
+  (loaded)="onRootLoaded()">
   <StackLayout row="0">
     <Label
       [text]="'Next Payment (' + (summaryAmount.startDate | date) + ' - ' + (summaryAmount.endDate | date) + ')'"
