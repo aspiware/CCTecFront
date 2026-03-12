@@ -165,11 +165,9 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
         this.isSaveLoading = false;
         this.cdr.detectChanges();
         this.refreshData();
-        await alert({
-          title: 'Saved',
-          message: 'Prices were saved successfully.',
-          okButtonText: 'OK',
-        });
+        setTimeout(() => {
+          this.showSavedPopupAnchored();
+        }, 0);
       },
       error: async (error) => {
         console.log('[ResidentialJobPrices] saveChanges error', error);
@@ -349,6 +347,75 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
     const beforeDot = clean.slice(0, firstDot + 1);
     const afterDot = clean.slice(firstDot + 1).replace(/\./g, '');
     return `${beforeDot}${afterDot}`;
+  }
+
+  private async showSavedPopupAnchored(): Promise<void> {
+    if (!isIOS) {
+      await alert({
+        title: 'Saved',
+        message: 'Prices were saved successfully.',
+        okButtonText: 'OK',
+      });
+      return;
+    }
+
+    try {
+      const anchorView = this.page.getViewById('residential-main-menu-btn') as any;
+      const iosAnchor = anchorView?.ios as UIButton | undefined;
+
+      const popup = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
+        'Saved',
+        'Prices were saved successfully.',
+        UIAlertControllerStyle.ActionSheet
+      );
+      popup.addAction(
+        UIAlertAction.actionWithTitleStyleHandler('OK', UIAlertActionStyle.Default, null)
+      );
+
+      let viewController = Application.ios?.rootController;
+      while (
+        viewController &&
+        viewController.presentedViewController &&
+        !viewController.presentedViewController.beingDismissed
+      ) {
+        viewController = viewController.presentedViewController;
+      }
+
+      if (!viewController) {
+        await alert({
+          title: 'Saved',
+          message: 'Prices were saved successfully.',
+          okButtonText: 'OK',
+        });
+        return;
+      }
+
+      const popover = popup.popoverPresentationController;
+      if (popover) {
+        if (iosAnchor) {
+          popover.sourceView = iosAnchor;
+          popover.sourceRect = iosAnchor.bounds;
+        } else {
+          popover.sourceView = viewController.view;
+          popover.sourceRect = CGRectMake(
+            viewController.view.bounds.size.width / 2.0,
+            viewController.view.bounds.size.height / 2.0,
+            1.0,
+            1.0
+          );
+        }
+        popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
+      }
+
+      viewController.presentViewControllerAnimatedCompletion(popup, true, null);
+    } catch (error) {
+      console.log('[ResidentialJobPrices] showSavedPopupAnchored error', error);
+      await alert({
+        title: 'Saved',
+        message: 'Prices were saved successfully.',
+        okButtonText: 'OK',
+      });
+    }
   }
 
   private syncTheme(): void {
