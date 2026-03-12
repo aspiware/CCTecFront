@@ -1,6 +1,9 @@
 <ActionBar class="action-bar" title="Settings"></ActionBar>
 
-<GridLayout rows="*" class="container">
+<GridLayout
+  rows="*"
+  [class]="'container ' + (isDarkTheme ? 'theme-dark' : 'theme-light')"
+  (loaded)="onRootLoaded()">
   <ScrollView>
     <StackLayout class="content">
       <Label text="Jobs" class="category-title"></Label>
