@@ -1,6 +1,6 @@
-import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, NO_ERRORS_SCHEMA, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { NativeScriptCommonModule } from '@nativescript/angular';
-import { Application, isAndroid, isIOS, Page, Utils } from '@nativescript/core';
+import { Application, isAndroid, isIOS, Page, Screen, ScrollView, Utils } from '@nativescript/core';
 import { MenuEvent } from '~/app/shared/components/menu-button/common';
 import { Item } from '~/app/shared/components/menu-button/item';
 import { UserModel } from '../shared/models/user.model';
@@ -16,11 +16,15 @@ import { TodayService } from '../today/today.service';
   styleUrl: './residential-job-prices.component.scss',
 })
 export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
+  @ViewChild('pricesScroll', { static: false }) private pricesScrollRef?: ElementRef<ScrollView>;
   public isDarkTheme = Application.systemAppearance() === 'dark';
   public isSaveLoading = false;
   public isLoading = false;
   public jobTypes: any[] = [];
   public user: UserModel | null = null;
+  public pricesScrollHeight: number | string = '100%';
+  private focusedInputs = 0;
+  private suppressDismissUntil = 0;
   private appearanceChangedHandler?: () => void;
   public mainMenuR: Item = {
     name: 'Main Menu Right',
@@ -71,6 +75,9 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
   }
 
   public onContainerTap(event: any): void {
+    if (Date.now() < this.suppressDismissUntil) {
+      return;
+    }
     if (this.isTextInputTap(event)) {
       return;
     }
@@ -159,6 +166,30 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
       return;
     }
     item.editablePrice = this.formatPriceInput(item.price);
+    this.focusedInputs = Math.max(0, this.focusedInputs - 1);
+    if (this.focusedInputs === 0) {
+      this.restoreScrollHeight();
+    }
+  }
+
+  public onPriceFocus(index: number): void {
+    this.focusedInputs += 1;
+    this.reduceScrollHeightForKeyboard();
+    this.suppressDismissUntil = Date.now() + 280;
+    setTimeout(() => {
+      const scroll =
+        this.pricesScrollRef?.nativeElement ||
+        (this.page.getViewById('prices-scroll') as ScrollView | undefined);
+      if (!scroll) {
+        return;
+      }
+      const safeIndex = Number.isFinite(Number(index)) ? Number(index) : 0;
+      const targetOffset = Math.max(0, (safeIndex * 80) - 110);
+      scroll.scrollToVerticalOffset(targetOffset, true);
+      setTimeout(() => {
+        scroll.scrollToVerticalOffset(targetOffset + 60, true);
+      }, 120);
+    }, 90);
   }
 
   private formatPriceInput(value: any): string {
@@ -189,6 +220,17 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
 
     const pageClassName = String(this.page.className || '');
     this.isDarkTheme = pageClassName.includes('ns-dark');
+  }
+
+  private reduceScrollHeightForKeyboard(): void {
+    const screenHeight = Screen.mainScreen.heightDIPs || 700;
+    this.pricesScrollHeight = Math.max(200, screenHeight - 430);
+    this.cdr.detectChanges();
+  }
+
+  private restoreScrollHeight(): void {
+    this.pricesScrollHeight = '100%';
+    this.cdr.detectChanges();
   }
 
   private isTextInputTap(event: any): boolean {

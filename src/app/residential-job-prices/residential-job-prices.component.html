@@ -19,7 +19,7 @@
   [class]="'container ' + (isDarkTheme ? 'theme-dark' : 'theme-light')"
   (loaded)="onRootLoaded()"
   (tap)="onContainerTap($event)">
-  <ScrollView>
+  <ScrollView #pricesScroll id="prices-scroll" [height]="pricesScrollHeight" verticalAlignment="top">
     <StackLayout class="content">
       <StackLayout class="card">
         <StackLayout class="loading-wrap" *ngIf="isLoading">
@@ -40,6 +40,7 @@
               hint="0.00"
               [text]="item.editablePrice"
               (textChange)="onPriceChange(item, $event)"
+              (focus)="onPriceFocus(i)"
               (blur)="onPriceBlur(item)">
             </TextField>
           </GridLayout>
