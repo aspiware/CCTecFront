@@ -16,6 +16,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   public isSubscribed = false;
   public subscriptionDateText = 'Billing date unavailable';
   public subscriptionPlanText = 'Plan: -';
+  public subscriptionPriceIntervalText = '-';
   public subscriptionAutoRenewText = 'Auto-renew: -';
   public subscriptionCanceledAtText = 'Canceled at: -';
   private appearanceChangedHandler?: () => void;
@@ -103,7 +104,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
       }
 
       const planText = details?.planName || '-';
-
+      this.subscriptionPlanText = `Plan: ${planText}`;
       if (details?.amount !== undefined && details?.amount !== null && !Number.isNaN(details.amount)) {
         const amountText = details.amount.toLocaleString('en-US', {
           style: 'currency',
@@ -112,19 +113,18 @@ export class SettingsComponent implements OnInit, OnDestroy {
           maximumFractionDigits: 2,
         });
         const intervalText = details?.interval ? ` / ${details.interval}` : '';
-        this.subscriptionPlanText = `Plan: ${planText} - ${amountText}${intervalText}`;
+        this.subscriptionPriceIntervalText = `$${amountText}${intervalText}`;
       } else {
-        this.subscriptionPlanText = `Plan: ${planText}`;
+        this.subscriptionPriceIntervalText = details?.interval ? String(details.interval) : '-';
       }
 
+      let autoRenewLabel = '-';
       if (details?.autoRenewStatus === true) {
-        this.subscriptionAutoRenewText = 'Auto-renew: On';
+        autoRenewLabel = 'On';
       } else if (details?.autoRenewStatus === false) {
-        this.subscriptionAutoRenewText = 'Auto-renew: Off';
-      } else {
-        this.subscriptionAutoRenewText = 'Auto-renew: -';
+        autoRenewLabel = 'Off';
       }
-
+      this.subscriptionAutoRenewText = `Auto-renew: ${autoRenewLabel}`;
       this.subscriptionCanceledAtText = details?.canceledAt
         ? `Canceled at: ${this.formatDate(details.canceledAt)}`
         : 'Canceled at: -';
