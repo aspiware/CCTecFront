@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
 import { NativeScriptCommonModule, RouterExtensions } from '@nativescript/angular';
-import { Application, Page } from '@nativescript/core';
+import { Application, Page, Utils } from '@nativescript/core';
 import { SubscriptionService } from '../shared/services/subscription.service';
 
 @Component({
@@ -14,6 +14,7 @@ import { SubscriptionService } from '../shared/services/subscription.service';
 export class SettingsComponent implements OnInit, OnDestroy {
   public isDarkTheme = Application.systemAppearance() === 'dark';
   public isSubscribed = false;
+  public subscriptionDateText = 'Billing date unavailable';
   private appearanceChangedHandler?: () => void;
 
   constructor(
@@ -36,6 +37,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
       this.isSubscribed = isActive;
       this.cdr.detectChanges();
     });
+    this.loadSubscriptionDetails();
   }
 
   ngOnDestroy(): void {
@@ -51,6 +53,14 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   public openSubscription(): void {
     this.routerExtensions.navigate(['/subscription']);
+  }
+
+  public onManageSubscription(): void {
+    if (__IOS__) {
+      Utils.openUrl('itms-apps://apps.apple.com/account/subscriptions');
+      return;
+    }
+    this.openSubscription();
   }
 
   public simulateActive(): void {
@@ -74,5 +84,30 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
     const pageClassName = String(this.page.className || '');
     this.isDarkTheme = pageClassName.includes('ns-dark');
+  }
+
+  private loadSubscriptionDetails(): void {
+    this.subscriptionService.getSubscriptionDetails().subscribe((details) => {
+      console.log('SUB-DETAILS', details)
+      const next = details?.nextPaymentDate;
+      const expires = details?.expiresDate;
+
+      if (details?.isActive && next) {
+        this.subscriptionDateText = `Next payment: ${this.formatDate(next)}`;
+      } else if (expires) {
+        this.subscriptionDateText = `Expires: ${this.formatDate(expires)}`;
+      } else {
+        this.subscriptionDateText = 'Billing date unavailable';
+      }
+      this.cdr.detectChanges();
+    });
+  }
+
+  private formatDate(value: Date): string {
+    return value.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
   }
 }

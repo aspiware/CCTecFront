@@ -53,6 +53,52 @@ export class SubscriptionService {
       );
   }
 
+  public getSubscriptionDetails(): Observable<{
+    isActive: boolean;
+    nextPaymentDate?: Date;
+    expiresDate?: Date;
+  }> {
+    const userId = Number(this.usersService.getUser()?.userId || 0);
+    if (!userId) {
+      this.setLocalStatus(false);
+      return of({ isActive: false });
+    }
+
+    return this.httpClient
+      .get<any>(`${this.configService.getUrlBase()}/subscriptions/verify/${userId}`)
+      .pipe(
+        map((res) => {
+          const isActive = Boolean(res?.isActive);
+          const nextPaymentDate = this.pickDate(
+            res?.nextPaymentDate,
+            res?.nextBillingDate,
+            res?.renewalDate,
+            res?.data?.nextPaymentDate,
+            res?.data?.nextBillingDate,
+            res?.data?.renewalDate
+          );
+          const expiresDate = this.pickDate(
+            res?.expiresAt,
+            res?.expiresDate,
+            res?.expirationDate,
+            res?.currentPeriodEnd,
+            res?.current_period_end,
+            res?.data?.expiresAt,
+            res?.data?.expiresDate,
+            res?.data?.expirationDate,
+            res?.data?.currentPeriodEnd,
+            res?.data?.current_period_end
+          );
+          return { isActive, nextPaymentDate, expiresDate };
+        }),
+        tap((details) => this.setLocalStatus(details.isActive)),
+        catchError(() => {
+          this.setLocalStatus(false);
+          return of({ isActive: false });
+        })
+      );
+  }
+
   public validateApplePurchase(payload: {
     receiptData: string;
     productId?: string;
@@ -96,5 +142,19 @@ export class SubscriptionService {
 
   public deactivate(): void {
     this.setLocalStatus(false);
+  }
+
+  private pickDate(...candidates: any[]): Date | undefined {
+    for (const candidate of candidates) {
+      if (candidate === null || candidate === undefined || candidate === '') {
+        continue;
+      }
+
+      const value = candidate instanceof Date ? candidate : new Date(candidate);
+      if (!Number.isNaN(value.getTime())) {
+        return value;
+      }
+    }
+    return undefined;
   }
 }

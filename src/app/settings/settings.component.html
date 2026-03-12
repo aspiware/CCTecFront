@@ -6,6 +6,21 @@
   (loaded)="onRootLoaded()">
   <ScrollView>
     <StackLayout class="content">
+      <Label text="Subscription" class="category-title"></Label>
+      <StackLayout class="settings-card">
+        <GridLayout columns="auto,*,auto" class="settings-row">
+          <Label col="0" class="icon-tile fas" text="&#xf058;"></Label>
+          <Label col="1" class="row-label" [text]="subscriptionDateText"></Label>
+          <Label col="2" class="chevron fas" text=""></Label>
+          <GridLayout col="1" colSpan="2" class="row-divider"></GridLayout>
+        </GridLayout>
+        <GridLayout columns="auto,*,auto" class="settings-row" (tap)="onManageSubscription()">
+          <Label col="0" class="icon-tile fas" text="&#xf0c1;"></Label>
+          <Label col="1" class="row-label" text="Manage Subscription"></Label>
+          <Label col="2" class="chevron fas" text="&#xf054;"></Label>
+        </GridLayout>
+      </StackLayout>
+
       <Label text="Jobs" class="category-title"></Label>
       <StackLayout class="settings-card">
         <GridLayout columns="auto,*,auto" class="settings-row">
