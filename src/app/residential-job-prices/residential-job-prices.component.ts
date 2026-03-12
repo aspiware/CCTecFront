@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
 import { NativeScriptCommonModule } from '@nativescript/angular';
-import { Application, Page } from '@nativescript/core';
+import { Application, isAndroid, isIOS, Page, Utils } from '@nativescript/core';
 import { MenuEvent } from '~/app/shared/components/menu-button/common';
 import { Item } from '~/app/shared/components/menu-button/item';
 import { UserModel } from '../shared/models/user.model';
@@ -68,6 +68,13 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
   public onRootLoaded(): void {
     this.syncTheme();
     this.cdr.detectChanges();
+  }
+
+  public onContainerTap(event: any): void {
+    if (this.isTextInputTap(event)) {
+      return;
+    }
+    Utils.dismissKeyboard();
   }
 
   public onSelectedMainMenuR(event: MenuEvent): void {
@@ -182,5 +189,21 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
 
     const pageClassName = String(this.page.className || '');
     this.isDarkTheme = pageClassName.includes('ns-dark');
+  }
+
+  private isTextInputTap(event: any): boolean {
+    if (isIOS) {
+      const iosView = event?.ios?.view;
+      const className = String(iosView?.className || '');
+      return className.includes('UITextField') || className.includes('UITextView');
+    }
+
+    if (isAndroid) {
+      const androidView = event?.android?.view;
+      const className = String(androidView?.getClass?.()?.getName?.() || '');
+      return className.includes('EditText');
+    }
+
+    return false;
   }
 }

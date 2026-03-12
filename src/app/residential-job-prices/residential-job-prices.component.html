@@ -17,7 +17,8 @@
 <GridLayout
   rows="*"
   [class]="'container ' + (isDarkTheme ? 'theme-dark' : 'theme-light')"
-  (loaded)="onRootLoaded()">
+  (loaded)="onRootLoaded()"
+  (tap)="onContainerTap($event)">
   <ScrollView>
     <StackLayout class="content">
       <StackLayout class="card">
