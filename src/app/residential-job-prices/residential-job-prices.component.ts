@@ -142,12 +142,19 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
     item.price = Number.isFinite(parsed) ? parsed : 0;
   }
 
+  public onPriceBlur(item: any): void {
+    if (!item) {
+      return;
+    }
+    item.editablePrice = this.formatPriceInput(item.price);
+  }
+
   private formatPriceInput(value: any): string {
     const numeric = Number(value);
     if (!Number.isFinite(numeric)) {
-      return '0.00';
+      return '$0.00';
     }
-    return numeric.toFixed(2);
+    return `$${numeric.toFixed(2)}`;
   }
 
   private syncTheme(): void {

@@ -35,8 +35,10 @@
               col="0"
               class="custom-tf-inline item-price-input"
               keyboardType="number"
+              hint="$0.00"
               [text]="item.editablePrice"
-              (textChange)="onPriceChange(item, $event.value)">
+              (textChange)="onPriceChange(item, $event.value)"
+              (blur)="onPriceBlur(item)">
             </TextField>
           </GridLayout>
         </GridLayout>
