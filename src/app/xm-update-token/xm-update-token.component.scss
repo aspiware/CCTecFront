@@ -18,19 +18,15 @@
   background-color: #ffffff;
 }
 
-TextField.custom-tf-inline {
-  height: 44;
-  font-size: 17;
+.notes-input {
+  min-height: 200;
+  font-size: 16;
+  padding-top: 10;
   padding-left: 12;
   padding-right: 12;
-  padding-top: 0;
-  padding-bottom: 0;
   margin: 0;
-  border-width: 0;
+  border-width: 1;
   border-radius: 10;
-  background-color: #ffffff;
-  color: #000000;
-  placeholder-color: #8e8e93;
 }
 
 .container.theme-dark,
@@ -48,9 +44,18 @@ TextField.custom-tf-inline {
   background-color: #1c1d22;
 }
 
-.container.theme-dark .custom-tf-inline,
-.ns-dark .custom-tf-inline {
+.container.theme-dark .notes-input,
+.ns-dark .notes-input {
   background-color: #25262c;
+  border-color: #48484a;
   color: #f2f3f5;
   placeholder-color: #8f9098;
+}
+
+.container.theme-light .notes-input,
+.ns-light .notes-input {
+  background-color: #ffffff;
+  border-color: #d1d1d6;
+  color: #000000;
+  placeholder-color: #8e8e93;
 }

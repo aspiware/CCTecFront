@@ -2,6 +2,7 @@
   <ActionItem ios.position="right" [visibility]="isSaveLoading ? 'collapse' : 'visible'">
     <StackLayout>
       <MenuButton
+        id="xm-update-token-menu-btn"
         style="height: 48; width: 35; padding: 0; margin: 0;"
         [useSFIcon]="true"
         [sfIconName]="'ellipsis.circle'"
@@ -23,12 +24,12 @@
   <ScrollView row="0">
     <StackLayout class="content">
       <StackLayout class="card">
-        <TextField
-          class="custom-tf-inline"
+        <TextView
           hint="Enter token"
           [text]="token"
-          (textChange)="token = $event.value">
-        </TextField>
+          (textChange)="token = $event.value"
+          class="notes-input">
+        </TextView>
       </StackLayout>
     </StackLayout>
   </ScrollView>
