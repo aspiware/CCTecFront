@@ -155,7 +155,8 @@ export class XmUpdateTokenComponent implements OnInit, OnDestroy {
   private pasteTokenFromClipboard(): void {
     try {
       const clipboardText = this.readClipboardText();
-      this.token = String(clipboardText ?? '');
+      const raw = String(clipboardText ?? '');
+      this.token = raw.replace(/^Bearer(?:\+|\s)+/i, '');
       this.cdr.detectChanges();
     } catch (error) {
       console.log('[XmUpdateToken] Clipboard paste error:', error);
