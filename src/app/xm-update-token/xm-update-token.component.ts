@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
 import { NativeScriptCommonModule } from '@nativescript/angular';
-import { Application, Page, alert, isIOS } from '@nativescript/core';
+import { Application, Page, Utils, alert, isIOS } from '@nativescript/core';
 import { MenuEvent } from '~/app/shared/components/menu-button/common';
 import { Item } from '~/app/shared/components/menu-button/item';
 import { SettingsService } from '../settings/settings.service';
@@ -102,6 +102,8 @@ export class XmUpdateTokenComponent implements OnInit, OnDestroy {
   }
 
   private saveXmToken(): void {
+    Utils.dismissKeyboard();
+
     if (!this.settings?.id) {
       alert({
         title: 'Error',
