@@ -30,12 +30,13 @@
           columns="*,auto"
           [class.line-row]="i > 0">
           <Label col="0" class="item-name" [text]="item.name"></Label>
-          <GridLayout col="1" columns="*" class="input-shell item-input-shell">
+          <GridLayout col="1" columns="auto,*" class="input-shell item-input-shell">
+            <Label col="0" class="currency-prefix" text="$"></Label>
             <TextField
-              col="0"
+              col="1"
               class="custom-tf-inline item-price-input"
               keyboardType="number"
-              hint="$0.00"
+              hint="0.00"
               [text]="item.editablePrice"
               (textChange)="onPriceChange(item, $event.value)"
               (blur)="onPriceBlur(item)">

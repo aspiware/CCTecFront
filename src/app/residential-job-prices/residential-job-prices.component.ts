@@ -152,9 +152,9 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
   private formatPriceInput(value: any): string {
     const numeric = Number(value);
     if (!Number.isFinite(numeric)) {
-      return '$0.00';
+      return '0.00';
     }
-    return `$${numeric.toFixed(2)}`;
+    return numeric.toFixed(2);
   }
 
   private syncTheme(): void {

@@ -64,7 +64,17 @@ TextField.custom-tf-inline {
 
 .item-price-input {
   width: 96;
+  // text-align: center;
+  padding-left: 4;
+}
+
+.currency-prefix {
+  width: 18;
   text-align: center;
+  vertical-align: middle;
+  font-size: 16;
+  color: #3a3a3c;
+  margin-left: 14;
 }
 
 .container.theme-dark,
@@ -92,6 +102,11 @@ TextField.custom-tf-inline {
 .ns-dark .item-name,
 .container.theme-dark .custom-tf-inline,
 .ns-dark .custom-tf-inline {
+  color: #f2f3f5;
+}
+
+.container.theme-dark .currency-prefix,
+.ns-dark .currency-prefix {
   color: #f2f3f5;
 }
 
