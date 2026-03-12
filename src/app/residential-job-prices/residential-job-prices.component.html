@@ -21,9 +21,9 @@
   (tap)="onContainerTap($event)">
   <StackLayout row="0" class="fixed-card-wrap">
     <GridLayout columns="*,*" class="card fixed-prices-card">
-      <StackLayout col="0" class="fixed-price-field">
-        <Label text="Modem" class="fixed-price-label"></Label>
-        <GridLayout columns="auto,*" class="input-shell item-input-shell" (tap)="onInputTap()">
+      <GridLayout col="0" columns="auto,*" class="fixed-price-field">
+        <Label col="0" text="Modem" class="fixed-price-label"></Label>
+        <GridLayout col="1" columns="auto,*" class="input-shell header-input-shell" (tap)="onInputTap()">
           <Label col="0" class="currency-prefix" text="$"></Label>
           <TextField
             col="1"
@@ -32,15 +32,16 @@
             hint="0.00"
             [text]="modemPriceText"
             (textChange)="onHeaderPriceChange('modem', $event)"
+            (tap)="onInputTap()"
             (focus)="onHeaderPriceFocus()"
             (blur)="onHeaderPriceBlur('modem')">
           </TextField>
         </GridLayout>
-      </StackLayout>
+      </GridLayout>
 
-      <StackLayout col="1" class="fixed-price-field">
-        <Label text="Tv Box" class="fixed-price-label"></Label>
-        <GridLayout columns="auto,*" class="input-shell item-input-shell" (tap)="onInputTap()">
+      <GridLayout col="1" columns="auto,*" class="fixed-price-field">
+        <Label col="0" text="Tv Box" class="fixed-price-label"></Label>
+        <GridLayout col="1" columns="auto,*" class="input-shell header-input-shell" (tap)="onInputTap()">
           <Label col="0" class="currency-prefix" text="$"></Label>
           <TextField
             col="1"
@@ -49,11 +50,12 @@
             hint="0.00"
             [text]="tvBoxPriceText"
             (textChange)="onHeaderPriceChange('tvBox', $event)"
+            (tap)="onInputTap()"
             (focus)="onHeaderPriceFocus()"
             (blur)="onHeaderPriceBlur('tvBox')">
           </TextField>
         </GridLayout>
-      </StackLayout>
+      </GridLayout>
     </GridLayout>
   </StackLayout>
 

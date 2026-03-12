@@ -17,17 +17,20 @@
 }
 
 .fixed-prices-card {
-  padding-top: 12;
-  padding-bottom: 12;
+  padding-top: 10;
+  padding-bottom: 10;
 }
 
 .fixed-price-field {
+  min-height: 44;
+  vertical-align: middle;
   padding-right: 8;
 }
 
 .fixed-price-label {
   font-size: 13;
-  margin-bottom: 6;
+  margin-right: 8;
+  vertical-align: middle;
   color: #6f717b;
 }
 
@@ -58,9 +61,13 @@
   width: 108;
 }
 
+.header-input-shell {
+  width: 108;
+}
+
 .input-shell {
   height: 44;
-  border-radius: 50%;
+  border-radius: 22;
   border-width: 1;
   background-color: #ffffff;
   border-color: #d1d1d6;
@@ -112,14 +119,14 @@ TextField.custom-tf-inline {
   color: #f2f3f5;
 }
 
-.container.theme-dark .fixed-price-label,
-.ns-dark .fixed-price-label {
-  color: #8f9098;
-}
-
 .container.theme-dark .line-row,
 .ns-dark .line-row {
   border-top-color: rgba(128, 128, 128, 0.24);
+}
+
+.container.theme-dark .fixed-price-label,
+.ns-dark .fixed-price-label {
+  color: #8f9098;
 }
 
 .container.theme-dark .item-name,

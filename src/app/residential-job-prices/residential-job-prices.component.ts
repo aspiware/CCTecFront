@@ -26,7 +26,7 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
   public modemPriceText = '0.00';
   public tvBoxPrice = 0;
   public tvBoxPriceText = '0.00';
-  public pricesScrollHeight: number | string = '100%';
+  public pricesScrollHeight: number | string = 'auto';
   private focusedInputs = 0;
   private suppressDismissUntil = 0;
   private dismissKeyboardTimer?: ReturnType<typeof setTimeout>;
@@ -292,7 +292,7 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
   }
 
   private restoreScrollHeight(): void {
-    this.pricesScrollHeight = '100%';
+    this.pricesScrollHeight = 'auto';
     this.cdr.detectChanges();
   }
 
