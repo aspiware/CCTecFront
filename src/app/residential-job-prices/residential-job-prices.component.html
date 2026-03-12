@@ -15,52 +15,52 @@
 </ActionBar>
 
 <GridLayout
-  rows="auto,*"
+  rows="*"
   [class]="'container ' + (isDarkTheme ? 'theme-dark' : 'theme-light')"
   (loaded)="onRootLoaded()"
   (tap)="onContainerTap($event)">
-  <StackLayout row="0" class="fixed-card-wrap">
-    <GridLayout columns="*,*" class="card fixed-prices-card">
-      <GridLayout col="0" columns="auto,*" class="fixed-price-field">
-        <Label col="0" text="Modem" class="fixed-price-label"></Label>
-        <GridLayout col="1" columns="auto,*" class="input-shell header-input-shell" (tap)="onInputTap()">
-          <Label col="0" class="currency-prefix" text="$"></Label>
-          <TextField
-            col="1"
-            class="custom-tf-inline item-price-input"
-            keyboardType="decimal"
-            hint="0.00"
-            [text]="modemPriceText"
-            (textChange)="onHeaderPriceChange('modem', $event)"
-            (tap)="onInputTap()"
-            (focus)="onHeaderPriceFocus()"
-            (blur)="onHeaderPriceBlur('modem')">
-          </TextField>
-        </GridLayout>
-      </GridLayout>
-
-      <GridLayout col="1" columns="auto,*" class="fixed-price-field">
-        <Label col="0" text="Tv Box" class="fixed-price-label"></Label>
-        <GridLayout col="1" columns="auto,*" class="input-shell header-input-shell" (tap)="onInputTap()">
-          <Label col="0" class="currency-prefix" text="$"></Label>
-          <TextField
-            col="1"
-            class="custom-tf-inline item-price-input"
-            keyboardType="decimal"
-            hint="0.00"
-            [text]="tvBoxPriceText"
-            (textChange)="onHeaderPriceChange('tvBox', $event)"
-            (tap)="onInputTap()"
-            (focus)="onHeaderPriceFocus()"
-            (blur)="onHeaderPriceBlur('tvBox')">
-          </TextField>
-        </GridLayout>
-      </GridLayout>
-    </GridLayout>
-  </StackLayout>
-
-  <ScrollView row="1" #pricesScroll id="prices-scroll" [height]="pricesScrollHeight" verticalAlignment="top">
+  <ScrollView row="0" #pricesScroll id="prices-scroll" [height]="pricesScrollHeight" verticalAlignment="top">
     <StackLayout class="content">
+      <StackLayout class="fixed-card-wrap">
+        <GridLayout columns="*,*" class="card fixed-prices-card">
+          <GridLayout col="0" columns="auto,*" class="fixed-price-field">
+            <Label col="0" text="Modem" class="fixed-price-label"></Label>
+            <GridLayout col="1" columns="auto,*" class="input-shell header-input-shell" (tap)="onInputTap()">
+              <Label col="0" class="currency-prefix" text="$"></Label>
+              <TextField
+                col="1"
+                class="custom-tf-inline item-price-input"
+                keyboardType="decimal"
+                hint="0.00"
+                [text]="modemPriceText"
+                (textChange)="onHeaderPriceChange('modem', $event)"
+                (tap)="onInputTap()"
+                (focus)="onHeaderPriceFocus()"
+                (blur)="onHeaderPriceBlur('modem')">
+              </TextField>
+            </GridLayout>
+          </GridLayout>
+
+          <GridLayout col="1" columns="auto,*" class="fixed-price-field">
+            <Label col="0" text="Tv Box" class="fixed-price-label"></Label>
+            <GridLayout col="1" columns="auto,*" class="input-shell header-input-shell" (tap)="onInputTap()">
+              <Label col="0" class="currency-prefix" text="$"></Label>
+              <TextField
+                col="1"
+                class="custom-tf-inline item-price-input"
+                keyboardType="decimal"
+                hint="0.00"
+                [text]="tvBoxPriceText"
+                (textChange)="onHeaderPriceChange('tvBox', $event)"
+                (tap)="onInputTap()"
+                (focus)="onHeaderPriceFocus()"
+                (blur)="onHeaderPriceBlur('tvBox')">
+              </TextField>
+            </GridLayout>
+          </GridLayout>
+        </GridLayout>
+      </StackLayout>
+
       <StackLayout class="card">
         <StackLayout class="loading-wrap" *ngIf="isLoading">
           <ActivityIndicator [busy]="isLoading" width="24" height="24"></ActivityIndicator>
