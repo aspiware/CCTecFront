@@ -70,14 +70,21 @@ export class SubscriptionService {
         map((res) => {
           const isActive = Boolean(res?.isActive);
           const nextPaymentDate = this.pickDate(
+            res?.subscription?.expiresAt,
+            res?.subscription?.endDate,
             res?.nextPaymentDate,
             res?.nextBillingDate,
             res?.renewalDate,
+            res?.subscription?.nextPaymentDate,
+            res?.subscription?.nextBillingDate,
+            res?.subscription?.renewalDate,
             res?.data?.nextPaymentDate,
             res?.data?.nextBillingDate,
             res?.data?.renewalDate
           );
           const expiresDate = this.pickDate(
+            res?.subscription?.expiresAt,
+            res?.subscription?.endDate,
             res?.expiresAt,
             res?.expiresDate,
             res?.expirationDate,
