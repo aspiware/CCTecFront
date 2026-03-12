@@ -133,12 +133,17 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
     });
   }
 
-  public onPriceChange(item: any, value: string): void {
+  public onPriceChange(item: any, event: any): void {
     if (!item) {
       return;
     }
-    item.editablePrice = value;
-    const parsed = Number(String(value || '').replace(/[^0-9.-]/g, ''));
+    const rawValue = String(event?.value ?? '');
+    const sanitized = this.sanitizePriceInput(rawValue);
+    if (event?.object && event.object.text !== sanitized) {
+      event.object.text = sanitized;
+    }
+    item.editablePrice = sanitized;
+    const parsed = Number(sanitized);
     item.price = Number.isFinite(parsed) ? parsed : 0;
   }
 
@@ -155,6 +160,17 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
       return '0.00';
     }
     return numeric.toFixed(2);
+  }
+
+  private sanitizePriceInput(value: string): string {
+    const clean = value.replace(/[^0-9.]/g, '');
+    const firstDot = clean.indexOf('.');
+    if (firstDot < 0) {
+      return clean;
+    }
+    const beforeDot = clean.slice(0, firstDot + 1);
+    const afterDot = clean.slice(firstDot + 1).replace(/\./g, '');
+    return `${beforeDot}${afterDot}`;
   }
 
   private syncTheme(): void {

@@ -38,7 +38,7 @@
               keyboardType="number"
               hint="0.00"
               [text]="item.editablePrice"
-              (textChange)="onPriceChange(item, $event.value)"
+              (textChange)="onPriceChange(item, $event)"
               (blur)="onPriceBlur(item)">
             </TextField>
           </GridLayout>
