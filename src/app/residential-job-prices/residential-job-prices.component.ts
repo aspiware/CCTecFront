@@ -1,8 +1,10 @@
 import { ChangeDetectorRef, Component, ElementRef, NO_ERRORS_SCHEMA, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { NativeScriptCommonModule } from '@nativescript/angular';
-import { Application, isAndroid, isIOS, Page, Screen, ScrollView, Utils } from '@nativescript/core';
+import { Application, isAndroid, isIOS, Page, Screen, ScrollView, Utils, alert } from '@nativescript/core';
+import { forkJoin, of } from 'rxjs';
 import { MenuEvent } from '~/app/shared/components/menu-button/common';
 import { Item } from '~/app/shared/components/menu-button/item';
+import { SettingsService } from '../settings/settings.service';
 import { UserModel } from '../shared/models/user.model';
 import { UsersService } from '../shared/services/users.service';
 import { TodayService } from '../today/today.service';
@@ -52,6 +54,7 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
   constructor(
     private usersService: UsersService,
     private todayService: TodayService,
+    private settingsService: SettingsService,
     private cdr: ChangeDetectorRef,
     private page: Page
   ) {}
@@ -66,6 +69,7 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
 
     this.user = this.usersService.getUser() || null;
     this.loadJobTypes();
+    this.loadSettingsPrices();
   }
 
   ngOnDestroy(): void {
@@ -125,16 +129,64 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.isSaveLoading = true;
+    const userId = Number(this.user?.userId || 0);
+    if (!userId) {
+      alert({
+        title: 'Error',
+        message: 'User not found. Please log in again.',
+        okButtonText: 'OK',
+      });
+      return;
+    }
 
-    // Placeholder save flow until backend wiring is added.
-    setTimeout(() => {
-      this.isSaveLoading = false;
-    }, 1200);
+    const jobTypePrices = this.jobTypes.map((item: any) => ({
+      userId,
+      id: Number(item?.id || 0),
+      jobTypeId: Number(item?.id || 0),
+      price: Number(item?.price || 0),
+    }));
+
+    const saveJobTypePrices$ = jobTypePrices.length
+      ? this.settingsService.saveJobTypePrice(jobTypePrices)
+      : of(null);
+
+    this.isSaveLoading = true;
+    this.cdr.detectChanges();
+
+    forkJoin({
+      equipment: this.settingsService.updateModemBoxPrices(
+        userId,
+        Number(this.modemPrice || 0),
+        Number(this.tvBoxPrice || 0)
+      ),
+      jobTypes: saveJobTypePrices$,
+    }).subscribe({
+      next: async () => {
+        this.isSaveLoading = false;
+        this.cdr.detectChanges();
+        this.refreshData();
+        await alert({
+          title: 'Saved',
+          message: 'Prices were saved successfully.',
+          okButtonText: 'OK',
+        });
+      },
+      error: async (error) => {
+        console.log('[ResidentialJobPrices] saveChanges error', error);
+        this.isSaveLoading = false;
+        this.cdr.detectChanges();
+        await alert({
+          title: 'Error',
+          message: 'Unable to save prices. Please try again.',
+          okButtonText: 'OK',
+        });
+      },
+    });
   }
 
   private refreshData(): void {
     this.loadJobTypes();
+    this.loadSettingsPrices();
   }
 
   private loadJobTypes(): void {
@@ -166,6 +218,31 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
         this.jobTypes = [];
         this.isLoading = false;
         this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private loadSettingsPrices(): void {
+    const userId = Number(this.user?.userId || 0);
+    if (!userId) {
+      this.modemPrice = 0;
+      this.modemPriceText = '0.00';
+      this.tvBoxPrice = 0;
+      this.tvBoxPriceText = '0.00';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.settingsService.findByUser(userId).subscribe({
+      next: (res: any) => {
+        this.modemPrice = Number(res?.modemPrice || 0);
+        this.modemPriceText = this.formatPriceInput(this.modemPrice);
+        this.tvBoxPrice = Number(res?.boxPrice || 0);
+        this.tvBoxPriceText = this.formatPriceInput(this.tvBoxPrice);
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.log('[ResidentialJobPrices] findByUser error', error);
       },
     });
   }
