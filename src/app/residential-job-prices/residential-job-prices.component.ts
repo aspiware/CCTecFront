@@ -186,9 +186,11 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
       const safeIndex = Number.isFinite(Number(index)) ? Number(index) : 0;
       const targetOffset = Math.max(0, (safeIndex * 80) - 110);
       scroll.scrollToVerticalOffset(targetOffset, true);
-      setTimeout(() => {
-        scroll.scrollToVerticalOffset(targetOffset + 60, true);
-      }, 120);
+      if (safeIndex > 2 && targetOffset > 0) {
+        setTimeout(() => {
+          scroll.scrollToVerticalOffset(targetOffset + 60, true);
+        }, 120);
+      }
     }, 90);
   }
 
