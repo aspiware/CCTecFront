@@ -1,4 +1,10 @@
 .container {
+  width: 100%;
+  height: 100%;
+  background-color: #f2f2f7;
+}
+
+.container ScrollView {
   background-color: #f2f2f7;
 }
 
@@ -68,6 +74,11 @@
 
 .container.theme-dark,
 .ns-dark .container {
+  background-color: #000000;
+}
+
+.container.theme-dark ScrollView,
+.ns-dark .container ScrollView {
   background-color: #000000;
 }
 

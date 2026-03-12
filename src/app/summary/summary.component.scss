@@ -1,6 +1,15 @@
 .container {
-  margin: 12;
+  width: 100%;
+  height: 100%;
   background-color: #f2f2f7;
+}
+
+.container ScrollView {
+  background-color: #f2f2f7;
+}
+
+.content {
+  margin: 12;
 }
 
 .section-title {
@@ -39,6 +48,10 @@
 }
 
 .container.theme-dark {
+  background-color: #000000;
+}
+
+.container.theme-dark ScrollView {
   background-color: #000000;
 }
 
