@@ -1,1 +1,15 @@
-<ActionBar class="action-bar" title="Residential Job Prices"></ActionBar>
+<ActionBar class="action-bar" title="Residential Job Prices">
+  <ActionItem ios.position="right">
+    <StackLayout>
+      <MenuButton
+        style="height: 48; width: 35; padding: 0; margin: 0;"
+        [useSFIcon]="true"
+        [sfIconName]="'ellipsis.circle'"
+        [isRightSide]="true"
+        [showSpinner]="isSaveLoading"
+        [options]="mainMenuR.options"
+        (selected)="onSelectedMainMenuR($event)">
+      </MenuButton>
+    </StackLayout>
+  </ActionItem>
+</ActionBar>
