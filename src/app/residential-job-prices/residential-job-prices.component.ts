@@ -1,5 +1,6 @@
-import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
 import { NativeScriptCommonModule } from '@nativescript/angular';
+import { Application, Page } from '@nativescript/core';
 import { MenuEvent } from '~/app/shared/components/menu-button/common';
 import { Item } from '~/app/shared/components/menu-button/item';
 import { UserModel } from '../shared/models/user.model';
@@ -14,11 +15,13 @@ import { TodayService } from '../today/today.service';
   templateUrl: './residential-job-prices.component.html',
   styleUrl: './residential-job-prices.component.scss',
 })
-export class ResidentialJobPricesComponent implements OnInit {
+export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
+  public isDarkTheme = Application.systemAppearance() === 'dark';
   public isSaveLoading = false;
   public isLoading = false;
   public jobTypes: any[] = [];
   public user: UserModel | null = null;
+  private appearanceChangedHandler?: () => void;
   public mainMenuR: Item = {
     name: 'Main Menu Right',
     options: [
@@ -40,12 +43,31 @@ export class ResidentialJobPricesComponent implements OnInit {
   constructor(
     private usersService: UsersService,
     private todayService: TodayService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private page: Page
   ) {}
 
   ngOnInit(): void {
+    this.syncTheme();
+    this.appearanceChangedHandler = () => {
+      this.syncTheme();
+      this.cdr.detectChanges();
+    };
+    Application.on(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
+
     this.user = this.usersService.getUser() || null;
     this.loadJobTypes();
+  }
+
+  ngOnDestroy(): void {
+    if (this.appearanceChangedHandler) {
+      Application.off(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
+    }
+  }
+
+  public onRootLoaded(): void {
+    this.syncTheme();
+    this.cdr.detectChanges();
   }
 
   public onSelectedMainMenuR(event: MenuEvent): void {
@@ -126,5 +148,16 @@ export class ResidentialJobPricesComponent implements OnInit {
       return '0.00';
     }
     return numeric.toFixed(2);
+  }
+
+  private syncTheme(): void {
+    const appAppearance = Application.systemAppearance();
+    if (appAppearance === 'dark' || appAppearance === 'light') {
+      this.isDarkTheme = appAppearance === 'dark';
+      return;
+    }
+
+    const pageClassName = String(this.page.className || '');
+    this.isDarkTheme = pageClassName.includes('ns-dark');
   }
 }

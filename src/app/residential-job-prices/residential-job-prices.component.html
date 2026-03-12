@@ -14,7 +14,10 @@
   </ActionItem>
 </ActionBar>
 
-<GridLayout rows="*" class="container">
+<GridLayout
+  rows="*"
+  [class]="'container ' + (isDarkTheme ? 'theme-dark' : 'theme-light')"
+  (loaded)="onRootLoaded()">
   <ScrollView>
     <StackLayout class="content">
       <StackLayout class="card">
