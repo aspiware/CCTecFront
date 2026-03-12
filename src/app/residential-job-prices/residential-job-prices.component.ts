@@ -25,6 +25,7 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
   public pricesScrollHeight: number | string = '100%';
   private focusedInputs = 0;
   private suppressDismissUntil = 0;
+  private dismissKeyboardTimer?: ReturnType<typeof setTimeout>;
   private appearanceChangedHandler?: () => void;
   public mainMenuR: Item = {
     name: 'Main Menu Right',
@@ -67,6 +68,10 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
     if (this.appearanceChangedHandler) {
       Application.off(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
     }
+    if (this.dismissKeyboardTimer) {
+      clearTimeout(this.dismissKeyboardTimer);
+      this.dismissKeyboardTimer = undefined;
+    }
   }
 
   public onRootLoaded(): void {
@@ -81,7 +86,21 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
     if (this.isTextInputTap(event)) {
       return;
     }
-    Utils.dismissKeyboard();
+    if (this.dismissKeyboardTimer) {
+      clearTimeout(this.dismissKeyboardTimer);
+    }
+    this.dismissKeyboardTimer = setTimeout(() => {
+      Utils.dismissKeyboard();
+      this.dismissKeyboardTimer = undefined;
+    }, 120);
+  }
+
+  public onInputTap(): void {
+    this.suppressDismissUntil = Date.now() + 350;
+    if (this.dismissKeyboardTimer) {
+      clearTimeout(this.dismissKeyboardTimer);
+      this.dismissKeyboardTimer = undefined;
+    }
   }
 
   public onSelectedMainMenuR(event: MenuEvent): void {
@@ -173,6 +192,7 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
   }
 
   public onPriceFocus(index: number): void {
+    this.onInputTap();
     this.focusedInputs += 1;
     this.reduceScrollHeightForKeyboard();
     this.suppressDismissUntil = Date.now() + 280;
