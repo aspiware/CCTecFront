@@ -128,6 +128,7 @@ export class FiberJobPricesComponent implements OnInit, OnDestroy {
     if (this.isSaveLoading) {
       return;
     }
+    this.endEditingBeforeRefresh();
 
     const userId = Number(this.user?.userId || 0);
     if (!userId) {
@@ -164,7 +165,6 @@ export class FiberJobPricesComponent implements OnInit, OnDestroy {
       next: async () => {
         this.isSaveLoading = false;
         this.cdr.detectChanges();
-        this.refreshData();
         setTimeout(() => {
           this.showSavedPopupAnchored();
         }, 0);
@@ -183,6 +183,7 @@ export class FiberJobPricesComponent implements OnInit, OnDestroy {
   }
 
   private refreshData(): void {
+    this.endEditingBeforeRefresh();
     this.loadJobTypes();
     this.loadSettingsPrices();
   }
@@ -347,6 +348,20 @@ export class FiberJobPricesComponent implements OnInit, OnDestroy {
     const beforeDot = clean.slice(0, firstDot + 1);
     const afterDot = clean.slice(firstDot + 1).replace(/\./g, '');
     return `${beforeDot}${afterDot}`;
+  }
+
+  public trackByJobTypeId(index: number, item: any): number {
+    return Number(item?.id || index);
+  }
+
+  private endEditingBeforeRefresh(): void {
+    if (this.dismissKeyboardTimer) {
+      clearTimeout(this.dismissKeyboardTimer);
+      this.dismissKeyboardTimer = undefined;
+    }
+    this.focusedInputs = 0;
+    this.restoreScrollHeight();
+    Utils.dismissKeyboard();
   }
 
   private async showSavedPopupAnchored(): Promise<void> {
