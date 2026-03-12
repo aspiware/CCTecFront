@@ -57,6 +57,11 @@ export class SubscriptionService {
     isActive: boolean;
     nextPaymentDate?: Date;
     expiresDate?: Date;
+    planName?: string;
+    amount?: number;
+    interval?: string;
+    autoRenewStatus?: boolean;
+    canceledAt?: Date;
   }> {
     const userId = Number(this.usersService.getUser()?.userId || 0);
     if (!userId) {
@@ -69,6 +74,27 @@ export class SubscriptionService {
       .pipe(
         map((res) => {
           const isActive = Boolean(res?.isActive);
+          const planName =
+            res?.subscription?.planName ||
+            res?.subscription?.plan_name;
+          const amountRaw =
+            res?.subscription?.amount;
+          const amount = amountRaw !== null && amountRaw !== undefined && amountRaw !== ''
+            ? Number(amountRaw)
+            : undefined;
+          const interval =
+            res?.subscription?.interval;
+          const autoRenewRaw =
+            res?.subscription?.autoRenewStatus ??
+            res?.subscription?.auto_renew_status;
+          const autoRenewStatus =
+            autoRenewRaw === null || autoRenewRaw === undefined || autoRenewRaw === ''
+              ? undefined
+              : Boolean(autoRenewRaw);
+          const canceledAt = this.pickDate(
+            res?.subscription?.canceledAt,
+            res?.subscription?.canceled_at
+          );
           const nextPaymentDate = this.pickDate(
             res?.subscription?.expiresAt,
             res?.subscription?.endDate,
@@ -96,7 +122,16 @@ export class SubscriptionService {
             res?.data?.currentPeriodEnd,
             res?.data?.current_period_end
           );
-          return { isActive, nextPaymentDate, expiresDate };
+          return {
+            isActive,
+            nextPaymentDate,
+            expiresDate,
+            planName,
+            amount,
+            interval,
+            autoRenewStatus,
+            canceledAt,
+          };
         }),
         tap((details) => this.setLocalStatus(details.isActive)),
         catchError(() => {

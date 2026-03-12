@@ -14,6 +14,24 @@
           <Label col="2" class="chevron fas" text=""></Label>
           <GridLayout col="1" colSpan="2" class="row-divider"></GridLayout>
         </GridLayout>
+        <GridLayout columns="auto,*,auto" class="settings-row">
+          <Label col="0" class="icon-tile fas" text="&#xf02b;"></Label>
+          <Label col="1" class="row-label" [text]="subscriptionPlanText"></Label>
+          <Label col="2" class="chevron fas" text=""></Label>
+          <GridLayout col="1" colSpan="2" class="row-divider"></GridLayout>
+        </GridLayout>
+        <GridLayout columns="auto,*,auto" class="settings-row">
+          <Label col="0" class="icon-tile fas" text="&#xf2f9;"></Label>
+          <Label col="1" class="row-label" [text]="subscriptionAutoRenewText"></Label>
+          <Label col="2" class="chevron fas" text=""></Label>
+          <GridLayout col="1" colSpan="2" class="row-divider"></GridLayout>
+        </GridLayout>
+        <GridLayout columns="auto,*,auto" class="settings-row">
+          <Label col="0" class="icon-tile fas" text="&#xf017;"></Label>
+          <Label col="1" class="row-label" [text]="subscriptionCanceledAtText"></Label>
+          <Label col="2" class="chevron fas" text=""></Label>
+          <GridLayout col="1" colSpan="2" class="row-divider"></GridLayout>
+        </GridLayout>
         <GridLayout columns="auto,*,auto" class="settings-row" (tap)="onManageSubscription()">
           <Label col="0" class="icon-tile fas" text="&#xf013;"></Label>
           <Label col="1" class="row-label" text="Manage Subscription"></Label>

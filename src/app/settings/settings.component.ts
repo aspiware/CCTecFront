@@ -15,6 +15,9 @@ export class SettingsComponent implements OnInit, OnDestroy {
   public isDarkTheme = Application.systemAppearance() === 'dark';
   public isSubscribed = false;
   public subscriptionDateText = 'Billing date unavailable';
+  public subscriptionPlanText = 'Plan: -';
+  public subscriptionAutoRenewText = 'Auto-renew: -';
+  public subscriptionCanceledAtText = 'Canceled at: -';
   private appearanceChangedHandler?: () => void;
 
   constructor(
@@ -88,7 +91,6 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   private loadSubscriptionDetails(): void {
     this.subscriptionService.getSubscriptionDetails().subscribe((details) => {
-      console.log('SUB-DETAILS', details)
       const next = details?.nextPaymentDate;
       const expires = details?.expiresDate;
 
@@ -99,6 +101,34 @@ export class SettingsComponent implements OnInit, OnDestroy {
       } else {
         this.subscriptionDateText = 'Billing date unavailable';
       }
+
+      const planText = details?.planName || '-';
+
+      if (details?.amount !== undefined && details?.amount !== null && !Number.isNaN(details.amount)) {
+        const amountText = details.amount.toLocaleString('en-US', {
+          style: 'currency',
+          currency: 'USD',
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+        const intervalText = details?.interval ? ` / ${details.interval}` : '';
+        this.subscriptionPlanText = `Plan: ${planText} - ${amountText}${intervalText}`;
+      } else {
+        this.subscriptionPlanText = `Plan: ${planText}`;
+      }
+
+      if (details?.autoRenewStatus === true) {
+        this.subscriptionAutoRenewText = 'Auto-renew: On';
+      } else if (details?.autoRenewStatus === false) {
+        this.subscriptionAutoRenewText = 'Auto-renew: Off';
+      } else {
+        this.subscriptionAutoRenewText = 'Auto-renew: -';
+      }
+
+      this.subscriptionCanceledAtText = details?.canceledAt
+        ? `Canceled at: ${this.formatDate(details.canceledAt)}`
+        : 'Canceled at: -';
+
       this.cdr.detectChanges();
     });
   }
