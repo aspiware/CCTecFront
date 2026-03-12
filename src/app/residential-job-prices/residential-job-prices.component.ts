@@ -22,6 +22,10 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
   public isLoading = false;
   public jobTypes: any[] = [];
   public user: UserModel | null = null;
+  public modemPrice = 0;
+  public modemPriceText = '0.00';
+  public tvBoxPrice = 0;
+  public tvBoxPriceText = '0.00';
   public pricesScrollHeight: number | string = '100%';
   private focusedInputs = 0;
   private suppressDismissUntil = 0;
@@ -185,6 +189,43 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
       return;
     }
     item.editablePrice = this.formatPriceInput(item.price);
+    this.focusedInputs = Math.max(0, this.focusedInputs - 1);
+    if (this.focusedInputs === 0) {
+      this.restoreScrollHeight();
+    }
+  }
+
+  public onHeaderPriceChange(type: 'modem' | 'tvBox', event: any): void {
+    const rawValue = String(event?.value ?? '');
+    const sanitized = this.sanitizePriceInput(rawValue);
+    if (event?.object && event.object.text !== sanitized) {
+      event.object.text = sanitized;
+    }
+
+    const parsed = Number(sanitized);
+    if (type === 'modem') {
+      this.modemPriceText = sanitized;
+      this.modemPrice = Number.isFinite(parsed) ? parsed : 0;
+      return;
+    }
+
+    this.tvBoxPriceText = sanitized;
+    this.tvBoxPrice = Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  public onHeaderPriceFocus(): void {
+    this.onInputTap();
+    this.focusedInputs += 1;
+    this.reduceScrollHeightForKeyboard();
+  }
+
+  public onHeaderPriceBlur(type: 'modem' | 'tvBox'): void {
+    if (type === 'modem') {
+      this.modemPriceText = this.formatPriceInput(this.modemPrice);
+    } else {
+      this.tvBoxPriceText = this.formatPriceInput(this.tvBoxPrice);
+    }
+
     this.focusedInputs = Math.max(0, this.focusedInputs - 1);
     if (this.focusedInputs === 0) {
       this.restoreScrollHeight();

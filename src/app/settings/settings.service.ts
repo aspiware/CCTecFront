@@ -91,4 +91,11 @@ export class SettingsService {
       )
     );
   }
+
+  public saveJobTypePrice(prices: any[]): Observable<any> {
+    return this.httpClient.post<void>(
+      this.configService.getUrlBase() + "/jobs/saveJobTypePrice",
+      prices
+    );
+  }
 }

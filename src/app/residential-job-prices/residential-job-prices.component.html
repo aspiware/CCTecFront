@@ -15,11 +15,49 @@
 </ActionBar>
 
 <GridLayout
-  rows="*"
+  rows="auto,*"
   [class]="'container ' + (isDarkTheme ? 'theme-dark' : 'theme-light')"
   (loaded)="onRootLoaded()"
   (tap)="onContainerTap($event)">
-  <ScrollView #pricesScroll id="prices-scroll" [height]="pricesScrollHeight" verticalAlignment="top">
+  <StackLayout row="0" class="fixed-card-wrap">
+    <GridLayout columns="*,*" class="card fixed-prices-card">
+      <StackLayout col="0" class="fixed-price-field">
+        <Label text="Modem" class="fixed-price-label"></Label>
+        <GridLayout columns="auto,*" class="input-shell item-input-shell" (tap)="onInputTap()">
+          <Label col="0" class="currency-prefix" text="$"></Label>
+          <TextField
+            col="1"
+            class="custom-tf-inline item-price-input"
+            keyboardType="decimal"
+            hint="0.00"
+            [text]="modemPriceText"
+            (textChange)="onHeaderPriceChange('modem', $event)"
+            (focus)="onHeaderPriceFocus()"
+            (blur)="onHeaderPriceBlur('modem')">
+          </TextField>
+        </GridLayout>
+      </StackLayout>
+
+      <StackLayout col="1" class="fixed-price-field">
+        <Label text="Tv Box" class="fixed-price-label"></Label>
+        <GridLayout columns="auto,*" class="input-shell item-input-shell" (tap)="onInputTap()">
+          <Label col="0" class="currency-prefix" text="$"></Label>
+          <TextField
+            col="1"
+            class="custom-tf-inline item-price-input"
+            keyboardType="decimal"
+            hint="0.00"
+            [text]="tvBoxPriceText"
+            (textChange)="onHeaderPriceChange('tvBox', $event)"
+            (focus)="onHeaderPriceFocus()"
+            (blur)="onHeaderPriceBlur('tvBox')">
+          </TextField>
+        </GridLayout>
+      </StackLayout>
+    </GridLayout>
+  </StackLayout>
+
+  <ScrollView row="1" #pricesScroll id="prices-scroll" [height]="pricesScrollHeight" verticalAlignment="top">
     <StackLayout class="content">
       <StackLayout class="card">
         <StackLayout class="loading-wrap" *ngIf="isLoading">
