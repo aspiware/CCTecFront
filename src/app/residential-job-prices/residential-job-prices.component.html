@@ -13,3 +13,31 @@
     </StackLayout>
   </ActionItem>
 </ActionBar>
+
+<GridLayout rows="*" class="container">
+  <ScrollView>
+    <StackLayout class="content">
+      <StackLayout class="card">
+        <StackLayout class="loading-wrap" *ngIf="isLoading">
+          <ActivityIndicator [busy]="isLoading" width="24" height="24"></ActivityIndicator>
+        </StackLayout>
+
+        <GridLayout
+          *ngFor="let item of jobTypes; let i = index"
+          columns="*,auto"
+          [class.line-row]="i > 0">
+          <Label col="0" class="item-name" [text]="item.name"></Label>
+          <GridLayout col="1" columns="*" class="input-shell item-input-shell">
+            <TextField
+              col="0"
+              class="custom-tf-inline item-price-input"
+              keyboardType="number"
+              [text]="item.editablePrice"
+              (textChange)="onPriceChange(item, $event.value)">
+            </TextField>
+          </GridLayout>
+        </GridLayout>
+      </StackLayout>
+    </StackLayout>
+  </ScrollView>
+</GridLayout>

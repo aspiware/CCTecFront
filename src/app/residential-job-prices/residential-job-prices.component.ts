@@ -1,7 +1,10 @@
-import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
+import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnInit } from '@angular/core';
 import { NativeScriptCommonModule } from '@nativescript/angular';
 import { MenuEvent } from '~/app/shared/components/menu-button/common';
 import { Item } from '~/app/shared/components/menu-button/item';
+import { UserModel } from '../shared/models/user.model';
+import { UsersService } from '../shared/services/users.service';
+import { TodayService } from '../today/today.service';
 
 @Component({
   standalone: true,
@@ -11,8 +14,11 @@ import { Item } from '~/app/shared/components/menu-button/item';
   templateUrl: './residential-job-prices.component.html',
   styleUrl: './residential-job-prices.component.scss',
 })
-export class ResidentialJobPricesComponent {
+export class ResidentialJobPricesComponent implements OnInit {
   public isSaveLoading = false;
+  public isLoading = false;
+  public jobTypes: any[] = [];
+  public user: UserModel | null = null;
   public mainMenuR: Item = {
     name: 'Main Menu Right',
     options: [
@@ -30,6 +36,17 @@ export class ResidentialJobPricesComponent {
       { name: 'Refresh', icon: 'arrow.clockwise' },
     ],
   };
+
+  constructor(
+    private usersService: UsersService,
+    private todayService: TodayService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit(): void {
+    this.user = this.usersService.getUser() || null;
+    this.loadJobTypes();
+  }
 
   public onSelectedMainMenuR(event: MenuEvent): void {
     switch (event?.index) {
@@ -58,7 +75,56 @@ export class ResidentialJobPricesComponent {
   }
 
   private refreshData(): void {
-    // Placeholder refresh flow until backend wiring is added.
-    console.log('[ResidentialJobPrices] refresh');
+    this.loadJobTypes();
+  }
+
+  private loadJobTypes(): void {
+    const userId = Number(this.user?.userId || 0);
+    if (!userId) {
+      this.isLoading = false;
+      this.jobTypes = [];
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.isLoading = true;
+    this.cdr.detectChanges();
+
+    this.todayService.getJobPricesByUser(userId, 'Residential', true).subscribe({
+      next: (res: any) => {
+        const list = Array.isArray(res) ? res : [];
+        this.jobTypes = list.map((item: any) => ({
+          id: Number(item?.jobTypeId || item?.id || 0),
+          name: item?.name || item?.description || '-',
+          price: Number(item?.price || 0),
+          editablePrice: this.formatPriceInput(item?.price),
+        }));
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.log('[ResidentialJobPrices] getJobPricesByUser error', error);
+        this.jobTypes = [];
+        this.isLoading = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  public onPriceChange(item: any, value: string): void {
+    if (!item) {
+      return;
+    }
+    item.editablePrice = value;
+    const parsed = Number(String(value || '').replace(/[^0-9.-]/g, ''));
+    item.price = Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  private formatPriceInput(value: any): string {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) {
+      return '0.00';
+    }
+    return numeric.toFixed(2);
   }
 }
