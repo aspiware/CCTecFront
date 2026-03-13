@@ -16,12 +16,14 @@ import { UsersService } from '../shared/services/users.service';
 })
 export class SmsSurveyComponent implements OnInit, OnDestroy {
   @ViewChild('surveyScroll', { static: false }) private surveyScrollRef?: ElementRef<ScrollView>;
+  @ViewChild('spanishSurveyInput', { static: false }) private spanishSurveyInputRef?: ElementRef;
   public isDarkTheme = Application.systemAppearance() === 'dark';
   public isSaveLoading = false;
   public englishSurveyText = '';
   public spanishSurveyText = '';
   public settings: any = null;
   public surveyScrollHeight: number | string = 'auto';
+  public isSecondSurveyFocused = false;
   private focusedInputs = 0;
   private suppressDismissUntil = 0;
   private dismissKeyboardTimer?: ReturnType<typeof setTimeout>;
@@ -106,26 +108,25 @@ export class SmsSurveyComponent implements OnInit, OnDestroy {
     if (index !== 1) {
       return;
     }
+    this.isSecondSurveyFocused = true;
     this.suppressDismissUntil = Date.now() + 280;
-    setTimeout(() => {
-      const scroll =
-        this.surveyScrollRef?.nativeElement ||
-        (this.page.getViewById('survey-scroll') as ScrollView | undefined);
-      if (!scroll) {
-        return;
-      }
-      const targetOffset = 300;
-      scroll.scrollToVerticalOffset(targetOffset, true);
-      setTimeout(() => {
-        scroll.scrollToVerticalOffset(targetOffset + 100, true);
-      }, 120);
-    }, 90);
+    this.scheduleEnsureSecondSurveyVisible();
   }
 
-  public onSurveyBlur(): void {
+  public onSurveyBlur(index: number): void {
     this.focusedInputs = Math.max(0, this.focusedInputs - 1);
+    if (index === 1) {
+      this.isSecondSurveyFocused = false;
+    }
     if (this.focusedInputs === 0) {
       this.restoreScrollHeight();
+    }
+  }
+
+  public onSpanishSurveyTextChange(value: string): void {
+    this.spanishSurveyText = value || '';
+    if (this.isSecondSurveyFocused) {
+      this.scheduleEnsureSecondSurveyVisible();
     }
   }
 
@@ -173,7 +174,7 @@ export class SmsSurveyComponent implements OnInit, OnDestroy {
 
   private reduceScrollHeightForKeyboard(): void {
     const screenHeight = Screen.mainScreen.heightDIPs || 700;
-    this.surveyScrollHeight = Math.max(210, screenHeight - 500);
+    this.surveyScrollHeight = Math.max(320, screenHeight - 430);
     this.cdr.detectChanges();
   }
 
@@ -196,6 +197,37 @@ export class SmsSurveyComponent implements OnInit, OnDestroy {
     }
 
     return false;
+  }
+
+  private scheduleEnsureSecondSurveyVisible(): void {
+    setTimeout(() => this.ensureSecondSurveyVisible(), 0);
+    setTimeout(() => this.ensureSecondSurveyVisible(), 90);
+    setTimeout(() => this.ensureSecondSurveyVisible(), 180);
+  }
+
+  private ensureSecondSurveyVisible(): void {
+    const scroll =
+      this.surveyScrollRef?.nativeElement ||
+      (this.page.getViewById('survey-scroll') as ScrollView | undefined);
+    const input = this.spanishSurveyInputRef?.nativeElement as any;
+    if (!scroll || !input?.getLocationRelativeTo || !input?.getActualSize) {
+      return;
+    }
+
+    const relativeLocation = input.getLocationRelativeTo(scroll);
+    const inputSize = input.getActualSize();
+    const visibleHeight =
+      (typeof this.surveyScrollHeight === 'number' ? this.surveyScrollHeight : scroll.getActualSize?.()?.height) || 0;
+    const desiredBottomGap = 24;
+    const desiredOffset =
+      scroll.verticalOffset +
+      Number(relativeLocation?.y || 0) +
+      Number(inputSize?.height || 0) -
+      visibleHeight +
+      desiredBottomGap;
+
+    const clampedOffset = Math.max(0, Math.min(scroll.scrollableHeight || 0, desiredOffset));
+    scroll.scrollToVerticalOffset(clampedOffset, true);
   }
 
   private saveSurveyTexts(): void {
