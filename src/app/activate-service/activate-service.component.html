@@ -1,6 +1,13 @@
-<ActionBar class="action-bar" title="Activate Service"></ActionBar>
+<ActionBar class="action-bar" title="Activate Service">
+  <ActionItem ios.position="right">
+    <StackLayout>
+      <MenuButton style="height: 48; width: 35; padding: 0; margin: 0;" [useSFIcon]="true" [sfIconName]="'person.fill'"
+        [isRightSide]="true" (tap)="showCustomerInfo()">
+      </MenuButton>
+    </StackLayout>
+  </ActionItem>
+</ActionBar>
 
 <GridLayout rows="*">
   <WebView [src]="url"></WebView>
 </GridLayout>
-

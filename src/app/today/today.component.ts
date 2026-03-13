@@ -1088,10 +1088,38 @@ export class TodayComponent implements OnInit {
   }
 
   public goToActivateService(job?: any): void {
+    const queryParams = this.buildActivateServiceQueryParams(job);
     this.router.navigate(['../activate-service'], {
-      queryParams: job,
+      queryParams,
       relativeTo: this.activatedRoute,
     });
+  }
+
+  private buildActivateServiceQueryParams(job?: any): any {
+    if (!job) {
+      return {};
+    }
+
+    return {
+      ...job,
+      customer: this.stringifyQueryParam(job?.customer),
+      devices: this.stringifyQueryParam(job?.devices),
+      customJob: this.stringifyQueryParam(job?.customJob),
+    };
+  }
+
+  private stringifyQueryParam(value: any): string {
+    if (value === null || value === undefined) {
+      return '';
+    }
+    if (typeof value === 'string') {
+      return value;
+    }
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
   }
 
   ngOnDestroy(): void {

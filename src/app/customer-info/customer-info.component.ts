@@ -40,6 +40,7 @@ export class CustomerInfoComponent implements OnInit {
     private configService: ConfigService
   ) {
     this.job = this.modalParams.context;
+    console.log('[CustomerInfoComponent]JOB', this.job);
   }
 
   ngOnInit(): void {
