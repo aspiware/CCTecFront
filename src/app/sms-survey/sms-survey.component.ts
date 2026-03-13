@@ -110,7 +110,7 @@ export class SmsSurveyComponent implements OnInit, OnDestroy {
     }
     this.isSecondSurveyFocused = true;
     this.suppressDismissUntil = Date.now() + 280;
-    this.scheduleEnsureSecondSurveyVisible();
+    this.scheduleEnsureSecondSurveyVisible(true);
   }
 
   public onSurveyBlur(index: number): void {
@@ -125,9 +125,6 @@ export class SmsSurveyComponent implements OnInit, OnDestroy {
 
   public onSpanishSurveyTextChange(value: string): void {
     this.spanishSurveyText = value || '';
-    if (this.isSecondSurveyFocused) {
-      this.scheduleEnsureSecondSurveyVisible();
-    }
   }
 
   public onSelectedMainMenuR(event: MenuEvent): void {
@@ -199,13 +196,14 @@ export class SmsSurveyComponent implements OnInit, OnDestroy {
     return false;
   }
 
-  private scheduleEnsureSecondSurveyVisible(): void {
-    setTimeout(() => this.ensureSecondSurveyVisible(), 0);
-    setTimeout(() => this.ensureSecondSurveyVisible(), 90);
-    setTimeout(() => this.ensureSecondSurveyVisible(), 180);
+  private scheduleEnsureSecondSurveyVisible(animated: boolean): void {
+    setTimeout(() => this.ensureSecondSurveyVisible(animated), 0);
+    if (animated) {
+      setTimeout(() => this.ensureSecondSurveyVisible(true), 90);
+    }
   }
 
-  private ensureSecondSurveyVisible(): void {
+  private ensureSecondSurveyVisible(animated: boolean): void {
     const scroll =
       this.surveyScrollRef?.nativeElement ||
       (this.page.getViewById('survey-scroll') as ScrollView | undefined);
@@ -227,7 +225,10 @@ export class SmsSurveyComponent implements OnInit, OnDestroy {
       desiredBottomGap;
 
     const clampedOffset = Math.max(0, Math.min(scroll.scrollableHeight || 0, desiredOffset));
-    scroll.scrollToVerticalOffset(clampedOffset, true);
+    if (!animated && clampedOffset <= scroll.verticalOffset + 4) {
+      return;
+    }
+    scroll.scrollToVerticalOffset(clampedOffset, animated);
   }
 
   private saveSurveyTexts(): void {
