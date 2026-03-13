@@ -244,17 +244,19 @@ export class SmsSurveyComponent implements OnInit, OnDestroy {
     }
 
     const settingsPayload = {
-      ...this.settings,
-      englishSurveyText: String(this.englishSurveyText || '').trim(),
-      spanishSurveyText: String(this.spanishSurveyText || '').trim(),
+      englishSurveyText: String(this.englishSurveyText || ''),
+      spanishSurveyText: String(this.spanishSurveyText || ''),
     };
 
     this.isSaveLoading = true;
     this.cdr.detectChanges();
 
-    this.settingsService.updateTexts(settingsPayload).subscribe({
+    this.settingsService.update(this.settings.id, settingsPayload).subscribe({
       next: () => {
-        this.settings = settingsPayload;
+        this.settings = {
+          ...this.settings,
+          ...settingsPayload,
+        };
         this.isSaveLoading = false;
         this.cdr.detectChanges();
         setTimeout(() => {

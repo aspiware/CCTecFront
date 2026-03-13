@@ -123,7 +123,6 @@ export class XmUpdateTokenComponent implements OnInit, OnDestroy {
     }
 
     const settingsPayload = {
-      ...this.settings,
       xmToken: String(this.token || '').trim(),
     };
 
