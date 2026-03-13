@@ -14,6 +14,7 @@ import { ResidentialJobPricesComponent } from './residential-job-prices/resident
 import { XhJobPricesComponent } from './xh-job-prices/xh-job-prices.component';
 import { FiberJobPricesComponent } from './fiber-job-prices/fiber-job-prices.component';
 import { BusinessJobPricesComponent } from './business-job-prices/business-job-prices.component';
+import { PayrollComponent } from './payroll/payroll.component';
 import { XmUpdateTokenComponent } from './xm-update-token/xm-update-token.component';
 import { SmsSurveyComponent } from './sms-survey/sms-survey.component';
 import { SmsAvailabilityComponent } from './sms-availability/sms-availability.component';
@@ -86,6 +87,11 @@ export const routes: Routes = [
         path: 'business-job-prices',
         outlet: 'settingsTab',
         component: BusinessJobPricesComponent,
+      },
+      {
+        path: 'payroll',
+        outlet: 'settingsTab',
+        component: PayrollComponent,
       },
       {
         path: 'xm-update-token',
