@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { NativeScriptCommonModule, RouterExtensions } from '@nativescript/angular';
 import { Application, Page, Utils } from '@nativescript/core';
 import { SubscriptionService } from '../shared/services/subscription.service';
+import { UsersService } from '../shared/services/users.service';
 
 @Component({
   standalone: true,
@@ -15,6 +16,7 @@ import { SubscriptionService } from '../shared/services/subscription.service';
 export class SettingsComponent implements OnInit, OnDestroy {
   public isDarkTheme = Application.systemAppearance() === 'dark';
   public isSubscribed = false;
+  public roleId = 0;
   public subscriptionDateText = 'Billing date unavailable';
   public subscriptionPlanText = 'Plan: -';
   public subscriptionPriceIntervalText = '-';
@@ -24,6 +26,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   constructor(
     private subscriptionService: SubscriptionService,
+    private usersService: UsersService,
     private router: Router,
     private routerExtensions: RouterExtensions,
     private cdr: ChangeDetectorRef,
@@ -32,6 +35,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.syncTheme();
+    this.roleId = Number(this.usersService.getUser()?.roleId || 0);
     this.appearanceChangedHandler = () => {
       this.syncTheme();
       this.cdr.detectChanges();

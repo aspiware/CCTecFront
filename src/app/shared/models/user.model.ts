@@ -1,6 +1,7 @@
 export class UserModel {
   public id?: number;
   public userId?: number;
+  public roleId?: number;
   public settingId?: number;
   public name?: string;
   public lastname?: string;
