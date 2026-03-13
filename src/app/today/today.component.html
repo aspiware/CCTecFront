@@ -1,6 +1,6 @@
 <ActionBar class="action-bar" title="Today's Job List">
   <ActionItem ios.position="right" ios.systemIcon="13" [visibility]="isSyncing ? 'collapse' : 'visible'"
-    [isEnabled]="!isSyncing" (tap)="getWorkOrders()">
+    [isEnabled]="!isSyncing" (tap)="refreshToday()">
   </ActionItem>
   <ActionItem ios.position="right" [visibility]="isSyncing ? 'visible' : 'collapse'">
     <ActivityIndicator [busy]="isSyncing" width="20" height="20"></ActivityIndicator>

@@ -7,7 +7,7 @@ import { Item } from '~/app/shared/components/menu-button/item';
 import { UserModel } from '../shared/models/user.model';
 import { UsersService } from '../shared/services/users.service';
 import { TodayService } from './today.service';
-import { concat, map, Subscription } from 'rxjs';
+import { concat, finalize, map, Subscription } from 'rxjs';
 import { ConfigService } from '../shared/services/config.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { WifiConfigComponent } from '../wifi-config/wifi-config.component';
@@ -674,7 +674,7 @@ export class TodayComponent implements OnInit {
     this.getWorkOrders();
   }
 
-  public getWorkOrders(onFinished?: () => void): void {
+  public getWorkOrders(onFinished?: () => void, forceTechStatus = false): void {
     if (this.isSyncing) {
       onFinished?.();
       return;
@@ -686,7 +686,7 @@ export class TodayComponent implements OnInit {
     const userId = this.user?.userId || 0;
 
     this.hasLunch();
-    this.getTechStatus();
+    this.getTechStatus(forceTechStatus);
 
     const workOrders$ = this.todayService.getWorkOrders(userId).pipe(
       map((res) =>
@@ -947,6 +947,14 @@ export class TodayComponent implements OnInit {
       listView?.scrollToIndex?.(0, false);
 
     });
+  }
+
+  public refreshToday(): void {
+    if (this.isSyncing) {
+      return;
+    }
+
+    this.getWorkOrders(undefined, true);
   }
 
   public onItemTap(event: any): void {
@@ -1218,18 +1226,22 @@ export class TodayComponent implements OnInit {
     });
   }
 
-  private getTechStatus(): void {
+  private getTechStatus(force = false): void {
     const userId = this.user?.userId || 0;
 
-    if (this.isTechStatusLoading) {
+    if (this.isTechStatusLoading && !force) {
       return;
     }
 
-    setTimeout(() => {
-      this.isTechStatusLoading = true;
-    })
+    this.isTechStatusLoading = true;
+    this.cdr.detectChanges();
 
-    this.todayService.getTechStatus(userId).subscribe({
+    this.todayService.getTechStatus(userId).pipe(
+      finalize(() => {
+        this.isTechStatusLoading = false;
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
       next: (res) => {
         console.log('TECH_STATUS', res);
 
@@ -1240,7 +1252,6 @@ export class TodayComponent implements OnInit {
         }
 
         this.lastKnownTechStatus = status;
-        this.isTechStatusLoading = false;
 
         switch (status) {
           case 'AVAIL':
@@ -1275,7 +1286,6 @@ export class TodayComponent implements OnInit {
       },
       error: (e) => {
         console.log(e)
-        this.isTechStatusLoading = false;
       },
     });
   }
