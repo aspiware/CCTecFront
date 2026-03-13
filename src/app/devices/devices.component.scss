@@ -48,12 +48,14 @@
   height: 60%;
 }
 
-.ns-light .modal-card {
+.ns-light .modal-card,
+.modal-root.theme-light .modal-card {
   background-color: #F2F2F7;
   border-color: rgba(60, 60, 67, 0.16);
 }
 
-.ns-dark .modal-card {
+.ns-dark .modal-card,
+.modal-root.theme-dark .modal-card {
   background-color: #1C1C1E;
   border-color: rgba(255, 255, 255, 0.14);
 }
@@ -83,7 +85,8 @@
   color: #ffffff;
 }
 
-.ns-light .modal-title-text {
+.ns-light .modal-title-text,
+.modal-root.theme-light .modal-title-text {
   color: #000000;
 }
 
@@ -266,14 +269,16 @@ TextField.custom-tf-inline {
   vertical-align: top;
 }
 
-.ns-light .notes-input {
+.ns-light .notes-input,
+.modal-root.theme-light .notes-input {
   background-color: #ffffff;
   border-color: #d1d1d6;
   color: #000000;
   placeholder-color: #8e8e93;
 }
 
-.ns-dark .notes-input {
+.ns-dark .notes-input,
+.modal-root.theme-dark .notes-input {
   background-color: #2c2c2e;
   border-color: #48484a;
   color: #ffffff;
@@ -281,68 +286,86 @@ TextField.custom-tf-inline {
 }
 
 .ns-light .section-title,
-.ns-light .empty-message {
+.ns-light .empty-message,
+.modal-root.theme-light .section-title,
+.modal-root.theme-light .empty-message {
   color: #1c1c1e;
 }
 
-.ns-light .input-shell {
+.ns-light .input-shell,
+.modal-root.theme-light .input-shell {
   background-color: #ffffff;
   border-color: #d1d1d6;
 }
 
-.ns-light TextField.custom-tf-inline {
+.ns-light TextField.custom-tf-inline,
+.modal-root.theme-light TextField.custom-tf-inline {
   color: #000000;
   placeholder-color: #8e8e93;
 }
 
-.ns-light .search-icon {
+.ns-light .search-icon,
+.modal-root.theme-light .search-icon {
   color: #3a3a3c;
 }
 
-.ns-light .include-panel-label {
+.ns-light .include-panel-label,
+.modal-root.theme-light .include-panel-label {
   color: #1c1c1e;
 }
 
-.ns-light .custom-type-row {
+.ns-light .custom-type-row,
+.modal-root.theme-light .custom-type-row {
   background-color: #ffffff;
   border-color: rgba(60, 60, 67, 0.20);
 }
 
 .ns-light .custom-type-name,
-.ns-light .custom-type-check {
+.ns-light .custom-type-check,
+.modal-root.theme-light .custom-type-name,
+.modal-root.theme-light .custom-type-check {
   color: #1c1c1e;
 }
 
 .ns-dark .section-title,
-.ns-dark .empty-message {
+.ns-dark .empty-message,
+.modal-root.theme-dark .section-title,
+.modal-root.theme-dark .empty-message {
   color: #f2f2f7;
 }
 
-.ns-dark .input-shell {
+.ns-dark .input-shell,
+.modal-root.theme-dark .input-shell {
   background-color: #2c2c2e;
   border-color: #48484a;
 }
 
-.ns-dark TextField.custom-tf-inline {
+.ns-dark TextField.custom-tf-inline,
+.modal-root.theme-dark TextField.custom-tf-inline {
   color: #ffffff;
   placeholder-color: #aeaeb2;
 }
 
-.ns-dark .search-icon {
+.ns-dark .search-icon,
+.modal-root.theme-dark .search-icon {
   color: #f2f2f7;
 }
 
-.ns-dark .include-panel-label {
+.ns-dark .include-panel-label,
+.modal-root.theme-dark .include-panel-label {
   color: #f2f2f7;
 }
 
-.ns-dark .custom-type-row {
+.ns-dark .custom-type-row,
+.modal-root.theme-dark .custom-type-row {
   background-color: #2c2c2e;
   border-color: rgba(255, 255, 255, 0.16);
 }
 
 .ns-dark .custom-type-name,
-.ns-dark .custom-type-check {
+.ns-dark .custom-type-check,
+.modal-root.theme-dark .custom-type-name,
+.modal-root.theme-dark .custom-type-check {
   color: #f2f2f7;
 }
 
