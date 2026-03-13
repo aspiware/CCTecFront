@@ -15,6 +15,7 @@ import { XhJobPricesComponent } from './xh-job-prices/xh-job-prices.component';
 import { FiberJobPricesComponent } from './fiber-job-prices/fiber-job-prices.component';
 import { BusinessJobPricesComponent } from './business-job-prices/business-job-prices.component';
 import { XmUpdateTokenComponent } from './xm-update-token/xm-update-token.component';
+import { SmsSurveyComponent } from './sms-survey/sms-survey.component';
 
 export const routes: Routes = [
   {
@@ -89,6 +90,11 @@ export const routes: Routes = [
         path: 'xm-update-token',
         outlet: 'settingsTab',
         component: XmUpdateTokenComponent,
+      },
+      {
+        path: 'sms-survey',
+        outlet: 'settingsTab',
+        component: SmsSurveyComponent,
       },
     ],
   },

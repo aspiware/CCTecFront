@@ -72,6 +72,21 @@
         </GridLayout>
       </StackLayout>
 
+      <Label text="SMS" class="category-title"></Label>
+      <StackLayout class="settings-card">
+        <GridLayout columns="auto,*,auto" class="settings-row" (tap)="openSmsSurvey()">
+          <Label col="0" class="icon-tile fas" text="&#xf075;"></Label>
+          <Label col="1" class="row-label" text="Survey"></Label>
+          <Label col="2" class="chevron fas" text="&#xf054;"></Label>
+          <GridLayout col="1" colSpan="2" class="row-divider"></GridLayout>
+        </GridLayout>
+        <GridLayout columns="auto,*,auto" class="settings-row settings-row-last">
+          <Label col="0" class="icon-tile fas" text="&#xf27a;"></Label>
+          <Label col="1" class="row-label" text="Availability"></Label>
+          <Label col="2" class="chevron fas" text="&#xf054;"></Label>
+        </GridLayout>
+      </StackLayout>
+
       <Label text="Billing" class="category-title"></Label>
       <StackLayout class="settings-card">
         <GridLayout columns="auto,*,auto" class="settings-row settings-row-last">

@@ -1,0 +1,74 @@
+.container {
+  width: 100%;
+  height: 100%;
+  background-color: #f2f2f7;
+}
+
+.container ScrollView {
+  background-color: #f2f2f7;
+}
+
+.content {
+  margin: 12;
+}
+
+.section-title {
+  font-size: 14;
+  margin-bottom: 8;
+  color: #1f1f25;
+}
+
+.card {
+  padding: 14;
+  border-radius: 8;
+  background-color: #ffffff;
+  color: #1f1f25;
+}
+
+.notes-input {
+  min-height: 200;
+  font-size: 16;
+  padding-top: 10;
+  padding-left: 0;
+  padding-right: 0;
+  margin: 0;
+  border-width: 0;
+  background-color: transparent;
+}
+
+.survey-section {
+  margin-top: 20;
+}
+
+.container.theme-dark,
+.ns-dark .container {
+  background-color: #000000;
+}
+
+.container.theme-dark ScrollView,
+.ns-dark .container ScrollView {
+  background-color: #000000;
+}
+
+.container.theme-dark .card,
+.ns-dark .card {
+  background-color: #1c1d22;
+  color: #f2f3f5;
+}
+
+.container.theme-dark .section-title,
+.ns-dark .section-title {
+  color: #f2f3f5;
+}
+
+.container.theme-dark .notes-input,
+.ns-dark .notes-input {
+  color: #f2f3f5;
+  placeholder-color: #8f9098;
+}
+
+.container.theme-light .notes-input,
+.ns-light .notes-input {
+  color: #000000;
+  placeholder-color: #8e8e93;
+}

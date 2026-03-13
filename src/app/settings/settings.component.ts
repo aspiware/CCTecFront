@@ -89,6 +89,10 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.router.navigate(['/tabs', { outlets: { settingsTab: ['xm-update-token'] } }]);
   }
 
+  public openSmsSurvey(): void {
+    this.router.navigate(['/tabs', { outlets: { settingsTab: ['sms-survey'] } }]);
+  }
+
   public simulateActive(): void {
     this.subscriptionService.setLocalStatus(true);
   }
