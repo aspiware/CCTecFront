@@ -108,11 +108,16 @@
             (itemSelected)="onUpgradeDeviceSelected($event)"
             (itemDeselected)="onUpgradeDeviceDeselected($event)"
             [items]="updateDeviceItems"
-            selectionBehavior="LongPress"
+            selectionBehavior="Press"
             multipleSelection="true"
+            
             class="custom-types-list">
-            <ng-template tkListItemTemplate let-item="item">
-              <GridLayout rows="auto" columns="*, auto" style="margin-left: 40; margin-right: 20; margin-top: 6; margin-bottom: 6;">
+            <ng-template tkListItemTemplate let-item="item" let-i="index">
+              <GridLayout
+                rows="auto"
+                columns="*, auto"
+                style="margin-left: 40; margin-right: 20; margin-top: 6; margin-bottom: 6;"
+                (tap)="onUpgradeDeviceRowTap(i)">
                 <GridLayout orientation="horizontal" class="item-bag" col="0" columns="*, auto">
                   <GridLayout col="0" columns="28,60,*,auto">
                     <Label

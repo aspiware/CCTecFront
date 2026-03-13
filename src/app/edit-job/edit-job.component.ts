@@ -161,7 +161,7 @@ export class EditJobComponent implements OnInit {
       return;
     }
     if (this.isUpdateJobTypeSelected) {
-      this.tryRestoreUpgradeDevicesSelection();
+      this.scheduleUpgradeDevicesSelectionRestore();
     }
     this.jobUserTypesList.splice(0);
     this.selectedJobType = [];
@@ -254,7 +254,7 @@ export class EditJobComponent implements OnInit {
   }
 
   public onUpgradeDevicesListLoaded(): void {
-    this.tryRestoreUpgradeDevicesSelection();
+    this.scheduleUpgradeDevicesSelectionRestore();
   }
 
   public onUpgradeDeviceSelected(args: ListViewEventData): void {
@@ -263,6 +263,27 @@ export class EditJobComponent implements OnInit {
 
   public onUpgradeDeviceDeselected(args: ListViewEventData): void {
     this.setUpgradeDeviceSelection(args?.index, false);
+  }
+
+  public onUpgradeDeviceRowTap(index: number): void {
+    if (!Number.isInteger(index) || index < 0 || index >= this.updateDeviceItems.length) {
+      return;
+    }
+
+    const listView = this.upgradeDevicesListViewRef?.listView;
+    const nextSelected = !this.updateDeviceItems[index]?.selected;
+
+    this.setUpgradeDeviceSelection(index, nextSelected);
+
+    if (listView) {
+      if (nextSelected) {
+        listView.selectItemAt(index);
+      } else {
+        listView.deselectItemAt(index);
+      }
+    }
+
+    this.cdr.detectChanges();
   }
 
   public onListLoaded(): void {
@@ -317,7 +338,7 @@ export class EditJobComponent implements OnInit {
               this.loadPickerJobsBySegment();
             }
             if (this.isUpdateJobTypeSelected) {
-              this.tryRestoreUpgradeDevicesSelection();
+              this.scheduleUpgradeDevicesSelectionRestore();
             }
             this.loadCustomTypesBySegment();
             this.recalculateCustomTotal();
@@ -533,6 +554,9 @@ export class EditJobComponent implements OnInit {
         const nextIndex = normalized.findIndex((item: any) => Number(item?.id) === currentTypeId);
         this.selectedTypeIndex = nextIndex >= 0 ? nextIndex : 0;
         this.cdr.detectChanges();
+        if (this.isUpdateJobTypeSelected) {
+          this.scheduleUpgradeDevicesSelectionRestore();
+        }
       },
       error: (error) => {
         console.log('[EditJob] loadPickerJobsBySegment error', error);
@@ -825,12 +849,16 @@ export class EditJobComponent implements OnInit {
       return;
     }
     for (let i = 0; i < this.updateDeviceItems.length; i++) {
+      listView.deselectItemAt(i);
+    }
+    for (let i = 0; i < this.updateDeviceItems.length; i++) {
       const item = this.updateDeviceItems[i];
       const key = this.getUpgradeDeviceKey(item?.raw);
       if (item?.selected || (!!key && this.selectedUpgradeDeviceKeys.has(key))) {
         listView.selectItemAt(i);
       }
     }
+    this.cdr.detectChanges();
   }
 
   private tryRestoreUpgradeDevicesSelection(attempt = 0): void {
@@ -839,6 +867,13 @@ export class EditJobComponent implements OnInit {
       return;
     }
     setTimeout(() => this.tryRestoreUpgradeDevicesSelection(attempt + 1), 100);
+  }
+
+  private scheduleUpgradeDevicesSelectionRestore(): void {
+    this.tryRestoreUpgradeDevicesSelection();
+    [80, 180, 320, 500].forEach((delay) => {
+      setTimeout(() => this.restoreUpgradeDevicesSelection(), delay);
+    });
   }
 
   private getUpgradeDeviceKey(device: any): string {
