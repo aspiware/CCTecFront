@@ -7,7 +7,11 @@
 
     <GridLayout row="0" col="0" rows="auto,*" class="modal-card">
       <GridLayout row="0" columns="*,auto,auto" class="header header-fixed">
-        <Label col="0" [text]="'Devices (' + devices.length + ')'" class="title modal-title-text"></Label>
+        <Label
+          col="0"
+          [text]="'Devices (' + devices.length + ')'"
+          class="title modal-title-text"
+          [style.color]="isDarkTheme ? '#ffffff' : '#000000'"></Label>
 
         <StackLayout col="2">
           <MenuButton [useSFIcon]="true" style="background-color: transparent; height: 24; width: 35;"
@@ -28,18 +32,19 @@
                     style="font-size: 18; margin-right: 8;"
                     [style.color]="isDarkTheme ? '#ffffff' : '#1c1c1e'"></Label>
                   <Label *ngIf="!item.connectionStatus" class="fas" text="&#xf05e;" col="0"
-                    style="font-size: 18; color: rgb(160, 160, 160); margin-right: 8;"></Label>
+                    style="font-size: 18; margin-right: 8;"
+                    [style.color]="isDarkTheme ? 'rgb(160, 160, 160)' : '#8e8e93'"></Label>
                   <Label col="1" class="device-type" horizontalAlignment="left"
                     [text]="item.type == 'STB' || item.type == 'IPSTB' ? 'VIDEO' : item.type == 'MTA' || item.type == 'HSI' || item.type == 'CM' ? 'MODEM' : item.type"
-                    [style.color]="!item.connectionStatus ? 'rgb(160, 160, 160)' : (isDarkTheme ? '#ffffff' : '#1c1c1e')"></Label>
+                    [style.color]="!item.connectionStatus ? (isDarkTheme ? 'rgb(160, 160, 160)' : '#8e8e93') : (isDarkTheme ? '#ffffff' : '#1c1c1e')"></Label>
                   <StackLayout col="2" verticalAlignment="middle">
                     <Label class="device-name" verticalAlignment="middle" [text]="item.name || item.deviceName"
-                      [style.color]="!item.connectionStatus ? 'rgb(160, 160, 160)' : (isDarkTheme ? '#ffffff' : '#1c1c1e')"></Label>
+                      [style.color]="!item.connectionStatus ? (isDarkTheme ? 'rgb(160, 160, 160)' : '#8e8e93') : (isDarkTheme ? '#ffffff' : '#1c1c1e')"></Label>
                   </StackLayout>
                   <StackLayout col="3" verticalAlignment="middle">
                     <Label class="device-serial" verticalAlignment="middle"
                       [text]="item.serialNumber || item.deviceSerialNumber"
-                      [style.color]="!item.connectionStatus ? 'rgb(160, 160, 160)' : (isDarkTheme ? '#ffffff' : '#1c1c1e')"></Label>
+                      [style.color]="!item.connectionStatus ? (isDarkTheme ? 'rgb(160, 160, 160)' : '#8e8e93') : (isDarkTheme ? '#ffffff' : '#1c1c1e')"></Label>
                   </StackLayout>
                   <MenuButton col="4" #deviceMenuBtn
                     class="device-status-button"
