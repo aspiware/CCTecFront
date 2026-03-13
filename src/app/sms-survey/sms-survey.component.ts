@@ -1,6 +1,6 @@
-import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, NO_ERRORS_SCHEMA, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { NativeScriptCommonModule } from '@nativescript/angular';
-import { Application, Page, Utils, alert, isAndroid, isIOS } from '@nativescript/core';
+import { Application, Page, Screen, ScrollView, Utils, alert, isAndroid, isIOS } from '@nativescript/core';
 import { MenuEvent } from '~/app/shared/components/menu-button/common';
 import { Item } from '~/app/shared/components/menu-button/item';
 import { SettingsService } from '../settings/settings.service';
@@ -15,10 +15,15 @@ import { UsersService } from '../shared/services/users.service';
   styleUrl: './sms-survey.component.scss',
 })
 export class SmsSurveyComponent implements OnInit, OnDestroy {
+  @ViewChild('surveyScroll', { static: false }) private surveyScrollRef?: ElementRef<ScrollView>;
   public isDarkTheme = Application.systemAppearance() === 'dark';
   public isSaveLoading = false;
   public token = '';
   public settings: any = null;
+  public surveyScrollHeight: number | string = 'auto';
+  private focusedInputs = 0;
+  private suppressDismissUntil = 0;
+  private dismissKeyboardTimer?: ReturnType<typeof setTimeout>;
   private appearanceChangedHandler?: () => void;
   public mainMenuR: Item = {
     name: 'Main Menu Right',
@@ -59,11 +64,69 @@ export class SmsSurveyComponent implements OnInit, OnDestroy {
     if (this.appearanceChangedHandler) {
       Application.off(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
     }
+    if (this.dismissKeyboardTimer) {
+      clearTimeout(this.dismissKeyboardTimer);
+      this.dismissKeyboardTimer = undefined;
+    }
   }
 
   public onRootLoaded(): void {
     this.syncTheme();
     this.cdr.detectChanges();
+  }
+
+  public onContainerTap(event: any): void {
+    if (Date.now() < this.suppressDismissUntil) {
+      return;
+    }
+    if (this.isTextInputTap(event)) {
+      return;
+    }
+    if (this.dismissKeyboardTimer) {
+      clearTimeout(this.dismissKeyboardTimer);
+    }
+    this.dismissKeyboardTimer = setTimeout(() => {
+      Utils.dismissKeyboard();
+      this.dismissKeyboardTimer = undefined;
+    }, 120);
+  }
+
+  public onInputTap(): void {
+    this.suppressDismissUntil = Date.now() + 350;
+    if (this.dismissKeyboardTimer) {
+      clearTimeout(this.dismissKeyboardTimer);
+      this.dismissKeyboardTimer = undefined;
+    }
+  }
+
+  public onSurveyFocus(index: number): void {
+    this.onInputTap();
+    this.focusedInputs += 1;
+    this.reduceScrollHeightForKeyboard();
+    if (index !== 1) {
+      return;
+    }
+    this.suppressDismissUntil = Date.now() + 280;
+    setTimeout(() => {
+      const scroll =
+        this.surveyScrollRef?.nativeElement ||
+        (this.page.getViewById('survey-scroll') as ScrollView | undefined);
+      if (!scroll) {
+        return;
+      }
+      const targetOffset = 300;
+      scroll.scrollToVerticalOffset(targetOffset, true);
+      setTimeout(() => {
+        scroll.scrollToVerticalOffset(targetOffset + 100, true);
+      }, 120);
+    }, 90);
+  }
+
+  public onSurveyBlur(): void {
+    this.focusedInputs = Math.max(0, this.focusedInputs - 1);
+    if (this.focusedInputs === 0) {
+      this.restoreScrollHeight();
+    }
   }
 
   public onSelectedMainMenuR(event: MenuEvent): void {
@@ -108,6 +171,33 @@ export class SmsSurveyComponent implements OnInit, OnDestroy {
 
     const pageClassName = String(this.page.className || '');
     this.isDarkTheme = pageClassName.includes('ns-dark');
+  }
+
+  private reduceScrollHeightForKeyboard(): void {
+    const screenHeight = Screen.mainScreen.heightDIPs || 700;
+    this.surveyScrollHeight = Math.max(210, screenHeight - 500);
+    this.cdr.detectChanges();
+  }
+
+  private restoreScrollHeight(): void {
+    this.surveyScrollHeight = 'auto';
+    this.cdr.detectChanges();
+  }
+
+  private isTextInputTap(event: any): boolean {
+    if (isIOS) {
+      const iosView = event?.ios?.view;
+      const className = String(iosView?.className || '');
+      return className.includes('UITextField') || className.includes('UITextView');
+    }
+
+    if (isAndroid) {
+      const androidView = event?.android?.view;
+      const className = String(androidView?.getClass?.()?.getName?.() || '');
+      return className.includes('EditText');
+    }
+
+    return false;
   }
 
   private saveXmToken(): void {

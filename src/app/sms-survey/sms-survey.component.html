@@ -20,8 +20,9 @@
 <GridLayout
   rows="*"
   [class]="'container ' + (isDarkTheme ? 'theme-dark' : 'theme-light')"
-  (loaded)="onRootLoaded()">
-  <ScrollView row="0">
+  (loaded)="onRootLoaded()"
+  (tap)="onContainerTap($event)">
+  <ScrollView row="0" #surveyScroll id="survey-scroll" [height]="surveyScrollHeight" verticalAlignment="top">
     <StackLayout class="content">
       <StackLayout>
         <Label text="English Survey text" class="section-title"></Label>
@@ -29,6 +30,9 @@
           hint="Enter survey message"
           [text]="token"
           (textChange)="token = $event.value"
+          (tap)="onInputTap()"
+          (focus)="onSurveyFocus(0)"
+          (blur)="onSurveyBlur()"
           class="notes-input">
         </TextView>
       </StackLayout>
@@ -39,6 +43,9 @@
           hint="Enter survey message"
           [text]="token"
           (textChange)="token = $event.value"
+          (tap)="onInputTap()"
+          (focus)="onSurveyFocus(1)"
+          (blur)="onSurveyBlur()"
           class="notes-input">
         </TextView>
       </StackLayout>
