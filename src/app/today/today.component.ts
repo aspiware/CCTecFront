@@ -576,15 +576,7 @@ export class TodayComponent implements OnInit {
         { name: 'Ingress Scans', icon: 'waveform.path' },
         { name: 'PHT Scans', icon: 'chart.bar.xaxis' },
         { name: 'Bonding Validation', icon: 'tag' },
-        { name: 'XM Photo', icon: 'photo.fill' },
-        {
-          name: 'End of Day', icon: 'circle.slash.fill', destructive: true, confirm: {
-            title: 'Do you want to log off for the day?',        // texto del submenú
-            confirmText: 'Yes',  // botón final (rojo)
-            cancelText: 'Cancel',
-            presentation: 'anchor'
-          }
-        }
+        { name: 'XM Photo', icon: 'photo.fill' }
       ],
     };
   jobMenu: Item =
