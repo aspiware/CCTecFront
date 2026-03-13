@@ -25,26 +25,22 @@
     <StackLayout class="content">
       <StackLayout>
         <Label text="English Survey text" class="section-title"></Label>
-        <StackLayout class="card">
-          <TextView
-            hint="Enter survey message"
-            [text]="token"
-            (textChange)="token = $event.value"
-            class="notes-input">
-          </TextView>
-        </StackLayout>
+        <TextView
+          hint="Enter survey message"
+          [text]="token"
+          (textChange)="token = $event.value"
+          class="notes-input">
+        </TextView>
       </StackLayout>
 
       <StackLayout class="survey-section">
         <Label text="Spanish Survey text" class="section-title"></Label>
-        <StackLayout class="card">
-          <TextView
-            hint="Enter survey message"
-            [text]="token"
-            (textChange)="token = $event.value"
-            class="notes-input">
-          </TextView>
-        </StackLayout>
+        <TextView
+          hint="Enter survey message"
+          [text]="token"
+          (textChange)="token = $event.value"
+          class="notes-input">
+        </TextView>
       </StackLayout>
     </StackLayout>
   </ScrollView>
