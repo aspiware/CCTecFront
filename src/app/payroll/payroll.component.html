@@ -26,6 +26,46 @@
     <StackLayout class="content">
       <StackLayout class="card">
         <GridLayout columns="*,auto">
+          <Label col="0" class="item-name" text="Car Rental Amount"></Label>
+          <GridLayout col="1" columns="auto,*" class="input-shell item-input-shell" (tap)="onInputTap()">
+            <Label col="0" class="currency-prefix" text="$"></Label>
+            <TextField
+              col="1"
+              class="custom-tf-inline item-price-input"
+              keyboardType="decimal"
+              hint="0.00"
+              [text]="carRentalAmountText"
+              (textChange)="onAmountChange('carRental', $event)"
+              (tap)="onInputTap()"
+              (focus)="onPriceFocus(0)"
+              (blur)="onAmountBlur('carRental')">
+            </TextField>
+          </GridLayout>
+        </GridLayout>
+      </StackLayout>
+
+      <StackLayout class="card section-card">
+        <GridLayout columns="*,auto">
+          <Label col="0" class="item-name" text="Tools Rental Amount"></Label>
+          <GridLayout col="1" columns="auto,*" class="input-shell item-input-shell" (tap)="onInputTap()">
+            <Label col="0" class="currency-prefix" text="$"></Label>
+            <TextField
+              col="1"
+              class="custom-tf-inline item-price-input"
+              keyboardType="decimal"
+              hint="0.00"
+              [text]="toolRentalAmountText"
+              (textChange)="onAmountChange('toolRental', $event)"
+              (tap)="onInputTap()"
+              (focus)="onPriceFocus(1)"
+              (blur)="onAmountBlur('toolRental')">
+            </TextField>
+          </GridLayout>
+        </GridLayout>
+      </StackLayout>
+
+      <StackLayout class="card section-card">
+        <GridLayout columns="*,auto">
           <Label col="0" class="item-name" text="Meter Rent Amount"></Label>
           <GridLayout col="1" columns="auto,*" class="input-shell item-input-shell" (tap)="onInputTap()">
             <Label col="0" class="currency-prefix" text="$"></Label>
@@ -37,7 +77,7 @@
               [text]="meterRentAmountText"
               (textChange)="onAmountChange('meterRent', $event)"
               (tap)="onInputTap()"
-              (focus)="onPriceFocus(0)"
+              (focus)="onPriceFocus(2)"
               (blur)="onAmountBlur('meterRent')">
             </TextField>
           </GridLayout>
@@ -57,7 +97,7 @@
               [text]="billingPlatformAmountText"
               (textChange)="onAmountChange('billingPlatform', $event)"
               (tap)="onInputTap()"
-              (focus)="onPriceFocus(1)"
+              (focus)="onPriceFocus(3)"
               (blur)="onAmountBlur('billingPlatform')">
             </TextField>
           </GridLayout>

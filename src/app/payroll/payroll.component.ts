@@ -22,6 +22,10 @@ export class PayrollComponent implements OnInit, OnDestroy {
   public isSaveLoading = false;
   public user: UserModel | null = null;
   public settings: any = null;
+  public carRentalAmount = 0;
+  public carRentalAmountText = '0.00';
+  public toolRentalAmount = 0;
+  public toolRentalAmountText = '0.00';
   public meterRentAmount = 0;
   public meterRentAmountText = '0.00';
   public billingPlatformAmount = 0;
@@ -152,6 +156,8 @@ export class PayrollComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
 
     const settingsPayload = {
+      carRentalAmount: Number(this.carRentalAmount || 0),
+      toolRentalAmount: Number(this.toolRentalAmount || 0),
       meterRentAmount: Number(this.meterRentAmount || 0),
       billingPlatformAmount: Number(this.billingPlatformAmount || 0),
       fundWeeks: Number(this.fundWeeks || 0),
@@ -192,6 +198,10 @@ export class PayrollComponent implements OnInit, OnDestroy {
     const userId = Number(this.user?.userId || 0);
     if (!userId) {
       this.settings = null;
+      this.carRentalAmount = 0;
+      this.carRentalAmountText = '0.00';
+      this.toolRentalAmount = 0;
+      this.toolRentalAmountText = '0.00';
       this.meterRentAmount = 0;
       this.meterRentAmountText = '0.00';
       this.billingPlatformAmount = 0;
@@ -205,6 +215,10 @@ export class PayrollComponent implements OnInit, OnDestroy {
     this.settingsService.findByUser(userId).subscribe({
       next: (res: any) => {
         this.settings = res || null;
+        this.carRentalAmount = Number(res?.carRentalAmount || 0);
+        this.carRentalAmountText = this.formatPriceInput(this.carRentalAmount);
+        this.toolRentalAmount = Number(res?.toolRentalAmount || 0);
+        this.toolRentalAmountText = this.formatPriceInput(this.toolRentalAmount);
         this.meterRentAmount = Number(res?.meterRentAmount || 0);
         this.meterRentAmountText = this.formatPriceInput(this.meterRentAmount);
         this.billingPlatformAmount = Number(res?.billingPlatformAmount || 0);
@@ -219,7 +233,7 @@ export class PayrollComponent implements OnInit, OnDestroy {
     });
   }
 
-  public onAmountChange(type: 'meterRent' | 'billingPlatform', event: any): void {
+  public onAmountChange(type: 'carRental' | 'toolRental' | 'meterRent' | 'billingPlatform', event: any): void {
     const rawValue = String(event?.value ?? '');
     const sanitized = this.sanitizePriceInput(rawValue);
     if (event?.object && event.object.text !== sanitized) {
@@ -228,6 +242,18 @@ export class PayrollComponent implements OnInit, OnDestroy {
 
     const parsed = Number(sanitized);
     const nextValue = Number.isFinite(parsed) ? parsed : 0;
+
+    if (type === 'carRental') {
+      this.carRentalAmountText = sanitized;
+      this.carRentalAmount = nextValue;
+      return;
+    }
+
+    if (type === 'toolRental') {
+      this.toolRentalAmountText = sanitized;
+      this.toolRentalAmount = nextValue;
+      return;
+    }
 
     if (type === 'meterRent') {
       this.meterRentAmountText = sanitized;
@@ -248,8 +274,12 @@ export class PayrollComponent implements OnInit, OnDestroy {
     this.payDay = Number.isNaN(index) ? 0 : Math.max(0, Math.min(6, index));
   }
 
-  public onAmountBlur(type: 'meterRent' | 'billingPlatform'): void {
-    if (type === 'meterRent') {
+  public onAmountBlur(type: 'carRental' | 'toolRental' | 'meterRent' | 'billingPlatform'): void {
+    if (type === 'carRental') {
+      this.carRentalAmountText = this.formatPriceInput(this.carRentalAmount);
+    } else if (type === 'toolRental') {
+      this.toolRentalAmountText = this.formatPriceInput(this.toolRentalAmount);
+    } else if (type === 'meterRent') {
       this.meterRentAmountText = this.formatPriceInput(this.meterRentAmount);
     } else {
       this.billingPlatformAmountText = this.formatPriceInput(this.billingPlatformAmount);

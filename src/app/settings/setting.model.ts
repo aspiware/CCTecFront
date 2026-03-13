@@ -1,5 +1,7 @@
 export class SettingModel {
   public userId?: number;
+  public carRentalAmount?: number = 0;
+  public toolRentalAmount?: number = 0;
   public meterRentAmount?: number = 0;
   public billingPlatformAmount?: number = 0;
   public penguinDataAmount?: number = 0;
