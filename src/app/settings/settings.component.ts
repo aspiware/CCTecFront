@@ -93,6 +93,10 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.router.navigate(['/tabs', { outlets: { settingsTab: ['sms-survey'] } }]);
   }
 
+  public openSmsAvailability(): void {
+    this.router.navigate(['/tabs', { outlets: { settingsTab: ['sms-availability'] } }]);
+  }
+
   public simulateActive(): void {
     this.subscriptionService.setLocalStatus(true);
   }
