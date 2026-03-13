@@ -1,13 +1,11 @@
 import { ChangeDetectorRef, Component, ElementRef, NO_ERRORS_SCHEMA, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { NativeScriptCommonModule } from '@nativescript/angular';
 import { Application, isAndroid, isIOS, Page, Screen, ScrollView, Utils, alert } from '@nativescript/core';
-import { forkJoin, of } from 'rxjs';
 import { MenuEvent } from '~/app/shared/components/menu-button/common';
 import { Item } from '~/app/shared/components/menu-button/item';
 import { SettingsService } from '../settings/settings.service';
 import { UserModel } from '../shared/models/user.model';
 import { UsersService } from '../shared/services/users.service';
-import { TodayService } from '../today/today.service';
 
 @Component({
   standalone: true,
@@ -21,13 +19,12 @@ export class PayrollComponent implements OnInit, OnDestroy {
   @ViewChild('pricesScroll', { static: false }) private pricesScrollRef?: ElementRef<ScrollView>;
   public isDarkTheme = Application.systemAppearance() === 'dark';
   public isSaveLoading = false;
-  public isLoading = false;
-  public jobTypes: any[] = [];
   public user: UserModel | null = null;
-  public modemPrice = 0;
-  public modemPriceText = '0.00';
-  public tvBoxPrice = 0;
-  public tvBoxPriceText = '0.00';
+  public settings: any = null;
+  public meterRentAmount = 0;
+  public meterRentAmountText = '0.00';
+  public billingPlatformAmount = 0;
+  public billingPlatformAmountText = '0.00';
   public pricesScrollHeight: number | string = 'auto';
   private focusedInputs = 0;
   private suppressDismissUntil = 0;
@@ -53,7 +50,6 @@ export class PayrollComponent implements OnInit, OnDestroy {
 
   constructor(
     private usersService: UsersService,
-    private todayService: TodayService,
     private settingsService: SettingsService,
     private cdr: ChangeDetectorRef,
     private page: Page
@@ -68,7 +64,6 @@ export class PayrollComponent implements OnInit, OnDestroy {
     Application.on(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
 
     this.user = this.usersService.getUser() || null;
-    this.loadJobTypes();
     this.loadSettingsPrices();
   }
 
@@ -140,24 +135,29 @@ export class PayrollComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const jobTypePrices = this.jobTypes.map((item: any) => ({
-      userId,
-      id: Number(item?.id || 0),
-      jobTypeId: Number(item?.id || 0),
-      price: Number(item?.price || 0),
-    }));
-
-    const saveJobTypePrices$ = jobTypePrices.length
-      ? this.settingsService.saveJobTypePrice(jobTypePrices)
-      : of(null);
+    if (!this.settings?.id) {
+      alert({
+        title: 'Error',
+        message: 'Settings not loaded yet.',
+        okButtonText: 'OK',
+      });
+      return;
+    }
 
     this.isSaveLoading = true;
     this.cdr.detectChanges();
 
-    forkJoin({
-      jobTypes: saveJobTypePrices$,
-    }).subscribe({
+    const settingsPayload = {
+      meterRentAmount: Number(this.meterRentAmount || 0),
+      billingPlatformAmount: Number(this.billingPlatformAmount || 0),
+    };
+
+    this.settingsService.update(this.settings.id, settingsPayload).subscribe({
       next: async () => {
+        this.settings = {
+          ...this.settings,
+          ...settingsPayload,
+        };
         this.isSaveLoading = false;
         this.cdr.detectChanges();
         setTimeout(() => {
@@ -179,60 +179,28 @@ export class PayrollComponent implements OnInit, OnDestroy {
 
   private refreshData(): void {
     this.endEditingBeforeRefresh();
-    this.loadJobTypes();
     this.loadSettingsPrices();
-  }
-
-  private loadJobTypes(): void {
-    const userId = Number(this.user?.userId || 0);
-    if (!userId) {
-      this.isLoading = false;
-      this.jobTypes = [];
-      this.cdr.detectChanges();
-      return;
-    }
-
-    this.isLoading = true;
-    this.cdr.detectChanges();
-
-    this.todayService.getJobPricesByUser(userId, 'Fiber', true).subscribe({
-      next: (res: any) => {
-        const list = Array.isArray(res) ? res : [];
-        this.jobTypes = list.map((item: any) => ({
-          id: Number(item?.jobTypeId || item?.id || 0),
-          name: item?.name || item?.description || '-',
-          price: Number(item?.price || 0),
-          editablePrice: this.formatPriceInput(item?.price),
-        }));
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        console.log('[Payroll] getJobPricesByUser error', error);
-        this.jobTypes = [];
-        this.isLoading = false;
-        this.cdr.detectChanges();
-      },
-    });
   }
 
   private loadSettingsPrices(): void {
     const userId = Number(this.user?.userId || 0);
     if (!userId) {
-      this.modemPrice = 0;
-      this.modemPriceText = '0.00';
-      this.tvBoxPrice = 0;
-      this.tvBoxPriceText = '0.00';
+      this.settings = null;
+      this.meterRentAmount = 0;
+      this.meterRentAmountText = '0.00';
+      this.billingPlatformAmount = 0;
+      this.billingPlatformAmountText = '0.00';
       this.cdr.detectChanges();
       return;
     }
 
     this.settingsService.findByUser(userId).subscribe({
       next: (res: any) => {
-        this.modemPrice = Number(res?.modemPrice || 0);
-        this.modemPriceText = this.formatPriceInput(this.modemPrice);
-        this.tvBoxPrice = Number(res?.boxPrice || 0);
-        this.tvBoxPriceText = this.formatPriceInput(this.tvBoxPrice);
+        this.settings = res || null;
+        this.meterRentAmount = Number(res?.meterRentAmount || 0);
+        this.meterRentAmountText = this.formatPriceInput(this.meterRentAmount);
+        this.billingPlatformAmount = Number(res?.billingPlatformAmount || 0);
+        this.billingPlatformAmountText = this.formatPriceInput(this.billingPlatformAmount);
         this.cdr.detectChanges();
       },
       error: (error) => {
@@ -241,32 +209,7 @@ export class PayrollComponent implements OnInit, OnDestroy {
     });
   }
 
-  public onPriceChange(item: any, event: any): void {
-    if (!item) {
-      return;
-    }
-    const rawValue = String(event?.value ?? '');
-    const sanitized = this.sanitizePriceInput(rawValue);
-    if (event?.object && event.object.text !== sanitized) {
-      event.object.text = sanitized;
-    }
-    item.editablePrice = sanitized;
-    const parsed = Number(sanitized);
-    item.price = Number.isFinite(parsed) ? parsed : 0;
-  }
-
-  public onPriceBlur(item: any): void {
-    if (!item) {
-      return;
-    }
-    item.editablePrice = this.formatPriceInput(item.price);
-    this.focusedInputs = Math.max(0, this.focusedInputs - 1);
-    if (this.focusedInputs === 0) {
-      this.restoreScrollHeight();
-    }
-  }
-
-  public onHeaderPriceChange(type: 'modem' | 'tvBox', event: any): void {
+  public onAmountChange(type: 'meterRent' | 'billingPlatform', event: any): void {
     const rawValue = String(event?.value ?? '');
     const sanitized = this.sanitizePriceInput(rawValue);
     if (event?.object && event.object.text !== sanitized) {
@@ -274,27 +217,23 @@ export class PayrollComponent implements OnInit, OnDestroy {
     }
 
     const parsed = Number(sanitized);
-    if (type === 'modem') {
-      this.modemPriceText = sanitized;
-      this.modemPrice = Number.isFinite(parsed) ? parsed : 0;
+    const nextValue = Number.isFinite(parsed) ? parsed : 0;
+
+    if (type === 'meterRent') {
+      this.meterRentAmountText = sanitized;
+      this.meterRentAmount = nextValue;
       return;
     }
 
-    this.tvBoxPriceText = sanitized;
-    this.tvBoxPrice = Number.isFinite(parsed) ? parsed : 0;
+    this.billingPlatformAmountText = sanitized;
+    this.billingPlatformAmount = nextValue;
   }
 
-  public onHeaderPriceFocus(): void {
-    this.onInputTap();
-    this.focusedInputs += 1;
-    this.reduceScrollHeightForKeyboard();
-  }
-
-  public onHeaderPriceBlur(type: 'modem' | 'tvBox'): void {
-    if (type === 'modem') {
-      this.modemPriceText = this.formatPriceInput(this.modemPrice);
+  public onAmountBlur(type: 'meterRent' | 'billingPlatform'): void {
+    if (type === 'meterRent') {
+      this.meterRentAmountText = this.formatPriceInput(this.meterRentAmount);
     } else {
-      this.tvBoxPriceText = this.formatPriceInput(this.tvBoxPrice);
+      this.billingPlatformAmountText = this.formatPriceInput(this.billingPlatformAmount);
     }
 
     this.focusedInputs = Math.max(0, this.focusedInputs - 1);
@@ -343,10 +282,6 @@ export class PayrollComponent implements OnInit, OnDestroy {
     const beforeDot = clean.slice(0, firstDot + 1);
     const afterDot = clean.slice(firstDot + 1).replace(/\./g, '');
     return `${beforeDot}${afterDot}`;
-  }
-
-  public trackByJobTypeId(index: number, item: any): number {
-    return Number(item?.id || index);
   }
 
   private endEditingBeforeRefresh(): void {
