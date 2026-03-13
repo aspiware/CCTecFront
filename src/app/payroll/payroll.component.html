@@ -63,6 +63,33 @@
           </GridLayout>
         </GridLayout>
       </StackLayout>
+
+      <StackLayout class="card section-card">
+        <GridLayout columns="*,160" class="fund-weeks-row">
+          <Label col="0" class="item-name" text="Fund Weeks"></Label>
+          <app-quantity-stepper
+            col="1"
+            [value]="fundWeeks"
+            [min]="0"
+            [max]="52"
+            [step]="1"
+            (valueChange)="onFundWeeksChanged($event)">
+          </app-quantity-stepper>
+        </GridLayout>
+      </StackLayout>
+
+      <StackLayout class="card section-card">
+        <GridLayout columns="*,180" class="fund-weeks-row">
+          <Label col="0" class="item-name" text="Pay Day"></Label>
+          <ListPicker
+            col="1"
+            class="payday-picker"
+            [items]="weekDays"
+            [selectedIndex]="payDay"
+            (selectedIndexChange)="onPayDayChanged($event)">
+          </ListPicker>
+        </GridLayout>
+      </StackLayout>
     </StackLayout>
   </ScrollView>
 </GridLayout>

@@ -6,11 +6,12 @@ import { Item } from '~/app/shared/components/menu-button/item';
 import { SettingsService } from '../settings/settings.service';
 import { UserModel } from '../shared/models/user.model';
 import { UsersService } from '../shared/services/users.service';
+import { QuantityStepperComponent } from '../shared/components/quantity-stepper/quantity-stepper.component';
 
 @Component({
   standalone: true,
   selector: 'app-payroll',
-  imports: [NativeScriptCommonModule],
+  imports: [NativeScriptCommonModule, QuantityStepperComponent],
   schemas: [NO_ERRORS_SCHEMA],
   templateUrl: './payroll.component.html',
   styleUrl: './payroll.component.scss',
@@ -25,6 +26,9 @@ export class PayrollComponent implements OnInit, OnDestroy {
   public meterRentAmountText = '0.00';
   public billingPlatformAmount = 0;
   public billingPlatformAmountText = '0.00';
+  public fundWeeks = 0;
+  public payDay = 0;
+  public weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   public pricesScrollHeight: number | string = 'auto';
   private focusedInputs = 0;
   private suppressDismissUntil = 0;
@@ -150,6 +154,8 @@ export class PayrollComponent implements OnInit, OnDestroy {
     const settingsPayload = {
       meterRentAmount: Number(this.meterRentAmount || 0),
       billingPlatformAmount: Number(this.billingPlatformAmount || 0),
+      fundWeeks: Number(this.fundWeeks || 0),
+      payday: Number(this.payDay || 0),
     };
 
     this.settingsService.update(this.settings.id, settingsPayload).subscribe({
@@ -190,6 +196,8 @@ export class PayrollComponent implements OnInit, OnDestroy {
       this.meterRentAmountText = '0.00';
       this.billingPlatformAmount = 0;
       this.billingPlatformAmountText = '0.00';
+      this.fundWeeks = 0;
+      this.payDay = 0;
       this.cdr.detectChanges();
       return;
     }
@@ -201,6 +209,8 @@ export class PayrollComponent implements OnInit, OnDestroy {
         this.meterRentAmountText = this.formatPriceInput(this.meterRentAmount);
         this.billingPlatformAmount = Number(res?.billingPlatformAmount || 0);
         this.billingPlatformAmountText = this.formatPriceInput(this.billingPlatformAmount);
+        this.fundWeeks = Number(res?.fundWeeks || 0);
+        this.payDay = Math.max(0, Math.min(6, Number(res?.payday || 0)));
         this.cdr.detectChanges();
       },
       error: (error) => {
@@ -227,6 +237,15 @@ export class PayrollComponent implements OnInit, OnDestroy {
 
     this.billingPlatformAmountText = sanitized;
     this.billingPlatformAmount = nextValue;
+  }
+
+  public onFundWeeksChanged(value: number): void {
+    this.fundWeeks = Number(value || 0);
+  }
+
+  public onPayDayChanged(event: any): void {
+    const index = Number(event?.value ?? event);
+    this.payDay = Number.isNaN(index) ? 0 : Math.max(0, Math.min(6, index));
   }
 
   public onAmountBlur(type: 'meterRent' | 'billingPlatform'): void {
