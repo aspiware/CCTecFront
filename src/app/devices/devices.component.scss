@@ -81,15 +81,6 @@
   text-align: right;
 }
 
-.modal-title-text {
-  color: #ffffff;
-}
-
-.ns-light .modal-title-text,
-.modal-root.theme-light .modal-title-text {
-  color: #000000;
-}
-
 .card {
   padding: 14;
   border-radius: 8;
@@ -198,6 +189,11 @@ TextField.custom-tf-inline {
 
 .custom-type-check {
   font-size: 16;
+}
+
+.device-status-icon {
+  font-size: 18;
+  margin-right: 8;
 }
 
 .device-type,
@@ -327,6 +323,24 @@ TextField.custom-tf-inline {
   color: #1c1c1e;
 }
 
+// .ns-light .device-status-icon,
+// .ns-light .device-type,
+// .ns-light .device-name,
+// .ns-light .device-serial,
+// .modal-root.theme-light .device-status-icon,
+// .modal-root.theme-light .device-type,
+// .modal-root.theme-light .device-name,
+// .modal-root.theme-light .device-serial {
+//   color: #1c1c1e;
+// }
+
+.ns-light .device-status-icon-muted,
+.ns-light .device-text-muted,
+.modal-root.theme-light .device-status-icon-muted,
+.modal-root.theme-light .device-text-muted {
+  color: #8e8e93;
+}
+
 .ns-dark .section-title,
 .ns-dark .empty-message,
 .modal-root.theme-dark .section-title,
@@ -367,6 +381,24 @@ TextField.custom-tf-inline {
 .modal-root.theme-dark .custom-type-name,
 .modal-root.theme-dark .custom-type-check {
   color: #f2f2f7;
+}
+
+// .ns-dark .device-status-icon,
+// .ns-dark .device-type,
+// .ns-dark .device-name,
+// .ns-dark .device-serial,
+// .modal-root.theme-dark .device-status-icon,
+// .modal-root.theme-dark .device-type,
+// .modal-root.theme-dark .device-name,
+// .modal-root.theme-dark .device-serial {
+//   color: #ffffff;
+// }
+
+.ns-dark .device-status-icon-muted,
+.ns-dark .device-text-muted,
+.modal-root.theme-dark .device-status-icon-muted,
+.modal-root.theme-dark .device-text-muted {
+  color: rgb(160, 160, 160);
 }
 
 .device-status-button {

@@ -10,8 +10,7 @@
         <Label
           col="0"
           [text]="'Devices (' + devices.length + ')'"
-          class="title modal-title-text"
-          [style.color]="isDarkTheme ? '#ffffff' : '#000000'"></Label>
+          class="title modal-title-text"></Label>
 
         <StackLayout col="2">
           <MenuButton [useSFIcon]="true" style="background-color: transparent; height: 24; width: 35;"
@@ -28,23 +27,20 @@
               style="margin-left: 10; margin-right: 10; margin-top: 6; margin-bottom: 6;">
               <GridLayout orientation="horizontal" class="item-bag" col="0" columns="*, auto">
                 <GridLayout col="0" columns="28,60,*,auto,30">
-                  <Label *ngIf="item.connectionStatus" class="fas" text="&#xf058;" col="0"
-                    style="font-size: 18; margin-right: 8;"
-                    [style.color]="isDarkTheme ? '#ffffff' : '#1c1c1e'"></Label>
-                  <Label *ngIf="!item.connectionStatus" class="fas" text="&#xf05e;" col="0"
-                    style="font-size: 18; margin-right: 8;"
-                    [style.color]="isDarkTheme ? 'rgb(160, 160, 160)' : '#8e8e93'"></Label>
+                  <Label *ngIf="item.connectionStatus" class="fas device-status-icon" text="&#xf058;" col="0"></Label>
+                  <Label *ngIf="!item.connectionStatus" class="fas device-status-icon device-status-icon-muted"
+                    text="&#xf05e;" col="0"></Label>
                   <Label col="1" class="device-type" horizontalAlignment="left"
                     [text]="item.type == 'STB' || item.type == 'IPSTB' ? 'VIDEO' : item.type == 'MTA' || item.type == 'HSI' || item.type == 'CM' ? 'MODEM' : item.type"
-                    [style.color]="!item.connectionStatus ? (isDarkTheme ? 'rgb(160, 160, 160)' : '#8e8e93') : (isDarkTheme ? '#ffffff' : '#1c1c1e')"></Label>
+                    [class.device-text-muted]="!item.connectionStatus"></Label>
                   <StackLayout col="2" verticalAlignment="middle">
                     <Label class="device-name" verticalAlignment="middle" [text]="item.name || item.deviceName"
-                      [style.color]="!item.connectionStatus ? (isDarkTheme ? 'rgb(160, 160, 160)' : '#8e8e93') : (isDarkTheme ? '#ffffff' : '#1c1c1e')"></Label>
+                      [class.device-text-muted]="!item.connectionStatus"></Label>
                   </StackLayout>
                   <StackLayout col="3" verticalAlignment="middle">
                     <Label class="device-serial" verticalAlignment="middle"
                       [text]="item.serialNumber || item.deviceSerialNumber"
-                      [style.color]="!item.connectionStatus ? (isDarkTheme ? 'rgb(160, 160, 160)' : '#8e8e93') : (isDarkTheme ? '#ffffff' : '#1c1c1e')"></Label>
+                      [class.device-text-muted]="!item.connectionStatus"></Label>
                   </StackLayout>
                   <MenuButton col="4" #deviceMenuBtn
                     class="device-status-button"
