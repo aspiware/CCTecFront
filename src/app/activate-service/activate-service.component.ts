@@ -1,6 +1,7 @@
-import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnInit, ViewContainerRef } from '@angular/core';
+import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit, ViewContainerRef } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ModalDialogService, NativeScriptCommonModule } from '@nativescript/angular';
+import { Application, Page } from '@nativescript/core';
 import { getNumber } from '@nativescript/core/application-settings';
 import { CustomerInfoComponent } from '../customer-info/customer-info.component';
 import { TodayService } from '../today/today.service';
@@ -13,20 +14,30 @@ import { TodayService } from '../today/today.service';
   templateUrl: './activate-service.component.html',
   styleUrl: './activate-service.component.scss',
 })
-export class ActivateServiceComponent {
+export class ActivateServiceComponent implements OnInit, OnDestroy {
+  public isDarkTheme = Application.systemAppearance() === 'dark';
   public url = 'https://www.xfinity.com/activate';
   private userId = 0;
   private currentJob: any = null;
+  private appearanceChangedHandler?: () => void;
 
   constructor(
     private route: ActivatedRoute,
     private todayService: TodayService,
     private modalService: ModalDialogService,
     private vcRef: ViewContainerRef,
+    private page: Page,
     private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
+    this.syncTheme();
+    this.appearanceChangedHandler = () => {
+      this.syncTheme();
+      this.cdr.detectChanges();
+    };
+    Application.on(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
+
     this.route.queryParams.subscribe((params) => {
       this.currentJob = this.normalizeJobParams(params || {});
       const accountNumber = String(params?.accountNumber || '').trim();
@@ -53,6 +64,17 @@ export class ActivateServiceComponent {
         },
       });
     });
+  }
+
+  ngOnDestroy(): void {
+    if (this.appearanceChangedHandler) {
+      Application.off(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
+    }
+  }
+
+  public onRootLoaded(): void {
+    this.syncTheme();
+    this.cdr.detectChanges();
   }
 
   public showCustomerInfo(): void {
@@ -107,5 +129,16 @@ export class ActivateServiceComponent {
     } catch {
       return value;
     }
+  }
+
+  private syncTheme(): void {
+    const appAppearance = Application.systemAppearance();
+    if (appAppearance === 'dark' || appAppearance === 'light') {
+      this.isDarkTheme = appAppearance === 'dark';
+      return;
+    }
+
+    const pageClassName = String(this.page.className || '');
+    this.isDarkTheme = pageClassName.includes('ns-dark');
   }
 }

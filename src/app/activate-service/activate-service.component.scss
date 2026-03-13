@@ -1,1 +1,19 @@
+.container {
+  width: 100%;
+  height: 100%;
+  background-color: #f2f2f7;
+}
 
+.container WebView {
+  background-color: #f2f2f7;
+}
+
+.container.theme-dark,
+.ns-dark .container {
+  background-color: #000000;
+}
+
+.container.theme-dark WebView,
+.ns-dark .container WebView {
+  background-color: #000000;
+}
