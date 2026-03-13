@@ -24,7 +24,7 @@
   (tap)="onContainerTap($event)">
   <ScrollView row="0" #pricesScroll id="prices-scroll" [height]="pricesScrollHeight" verticalAlignment="top">
     <StackLayout class="content">
-      <StackLayout class="fixed-card-wrap">
+      <!-- <StackLayout class="fixed-card-wrap">
         <GridLayout columns="*,*" class="card fixed-prices-card">
           <GridLayout col="0" columns="auto,*" class="fixed-price-field">
             <Label col="0" text="Modem" class="fixed-price-label"></Label>
@@ -62,12 +62,12 @@
             </GridLayout>
           </GridLayout>
         </GridLayout>
-      </StackLayout>
+      </StackLayout> -->
 
       <StackLayout class="card">
-        <StackLayout class="loading-wrap" *ngIf="isLoading">
+        <!-- <StackLayout class="loading-wrap" *ngIf="isLoading">
           <ActivityIndicator [busy]="isLoading" width="24" height="24"></ActivityIndicator>
-        </StackLayout>
+        </StackLayout> -->
 
         <GridLayout
           *ngFor="let item of jobTypes; let i = index; trackBy: trackByJobTypeId"

@@ -65,9 +65,9 @@
       </StackLayout>
 
       <StackLayout class="card">
-        <StackLayout class="loading-wrap" *ngIf="isLoading">
+        <!-- <StackLayout class="loading-wrap" *ngIf="isLoading">
           <ActivityIndicator [busy]="isLoading" width="24" height="24"></ActivityIndicator>
-        </StackLayout>
+        </StackLayout> -->
 
         <GridLayout
           *ngFor="let item of jobTypes; let i = index; trackBy: trackByJobTypeId"
