@@ -27,9 +27,9 @@
       <StackLayout>
         <Label text="English Survey text" class="section-title"></Label>
         <TextView
-          hint="Enter survey message"
-          [text]="token"
-          (textChange)="token = $event.value"
+          hint="Enter English survey message"
+          [text]="englishSurveyText"
+          (textChange)="englishSurveyText = $event.value"
           (tap)="onInputTap()"
           (focus)="onSurveyFocus(0)"
           (blur)="onSurveyBlur()"
@@ -40,9 +40,9 @@
       <StackLayout class="survey-section">
         <Label text="Spanish Survey text" class="section-title"></Label>
         <TextView
-          hint="Enter survey message"
-          [text]="token"
-          (textChange)="token = $event.value"
+          hint="Enter Spanish survey message"
+          [text]="spanishSurveyText"
+          (textChange)="spanishSurveyText = $event.value"
           (tap)="onInputTap()"
           (focus)="onSurveyFocus(1)"
           (blur)="onSurveyBlur()"

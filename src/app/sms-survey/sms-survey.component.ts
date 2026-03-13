@@ -18,7 +18,8 @@ export class SmsSurveyComponent implements OnInit, OnDestroy {
   @ViewChild('surveyScroll', { static: false }) private surveyScrollRef?: ElementRef<ScrollView>;
   public isDarkTheme = Application.systemAppearance() === 'dark';
   public isSaveLoading = false;
-  public token = '';
+  public englishSurveyText = '';
+  public spanishSurveyText = '';
   public settings: any = null;
   public surveyScrollHeight: number | string = 'auto';
   private focusedInputs = 0;
@@ -39,7 +40,6 @@ export class SmsSurveyComponent implements OnInit, OnDestroy {
           presentation: 'anchor',
         },
       },
-      { name: 'Paste Token', icon: 'doc.on.clipboard' },
     ],
   };
 
@@ -57,7 +57,7 @@ export class SmsSurveyComponent implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     };
     Application.on(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
-    this.loadXmToken();
+    this.loadSurveyTexts();
   }
 
   ngOnDestroy(): void {
@@ -134,18 +134,15 @@ export class SmsSurveyComponent implements OnInit, OnDestroy {
       if (this.isSaveLoading) {
         return;
       }
-      this.saveXmToken();
-      return;
-    }
-    if (event?.index === 1) {
-      this.pasteTokenFromClipboard();
+      this.saveSurveyTexts();
     }
   }
 
-  private loadXmToken(): void {
+  private loadSurveyTexts(): void {
     const userId = Number(this.usersService.getUser()?.userId || 0);
     if (!userId) {
-      this.token = '';
+      this.englishSurveyText = '';
+      this.spanishSurveyText = '';
       this.cdr.detectChanges();
       return;
     }
@@ -153,7 +150,8 @@ export class SmsSurveyComponent implements OnInit, OnDestroy {
     this.settingsService.findByUser(userId).subscribe({
       next: (res: any) => {
         this.settings = res || null;
-        this.token = String(res?.xmToken || '');
+        this.englishSurveyText = String(res?.englishSurveyText || '');
+        this.spanishSurveyText = String(res?.spanishSurveyText || '');
         this.cdr.detectChanges();
       },
       error: (error) => {
@@ -200,7 +198,7 @@ export class SmsSurveyComponent implements OnInit, OnDestroy {
     return false;
   }
 
-  private saveXmToken(): void {
+  private saveSurveyTexts(): void {
     Utils.dismissKeyboard();
 
     if (!this.settings?.id) {
@@ -214,13 +212,14 @@ export class SmsSurveyComponent implements OnInit, OnDestroy {
 
     const settingsPayload = {
       ...this.settings,
-      xmToken: String(this.token || '').trim(),
+      englishSurveyText: String(this.englishSurveyText || '').trim(),
+      spanishSurveyText: String(this.spanishSurveyText || '').trim(),
     };
 
     this.isSaveLoading = true;
     this.cdr.detectChanges();
 
-    this.settingsService.update(this.settings.id, settingsPayload).subscribe({
+    this.settingsService.updateTexts(settingsPayload).subscribe({
       next: () => {
         this.settings = settingsPayload;
         this.isSaveLoading = false;
@@ -230,7 +229,7 @@ export class SmsSurveyComponent implements OnInit, OnDestroy {
         }, 0);
       },
       error: (error) => {
-        console.log('[SmsSurvey] update error', error);
+        console.log('[SmsSurvey] updateTexts error', error);
         this.isSaveLoading = false;
         this.cdr.detectChanges();
         alert({
@@ -240,40 +239,6 @@ export class SmsSurveyComponent implements OnInit, OnDestroy {
         });
       },
     });
-  }
-
-  private pasteTokenFromClipboard(): void {
-    try {
-      const clipboardText = this.readClipboardText();
-      const raw = String(clipboardText ?? '');
-      this.token = raw.replace(/^Bearer(?:\+|\s)+/i, '');
-      this.cdr.detectChanges();
-    } catch (error) {
-      console.log('[SmsSurvey] Clipboard paste error:', error);
-    }
-  }
-
-  private readClipboardText(): string {
-    if (isIOS) {
-      return String(UIPasteboard.generalPasteboard.string || '');
-    }
-
-    if (isAndroid) {
-      const context = Application.android.context;
-      const clipboard = context?.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager;
-      if (!clipboard?.hasPrimaryClip()) {
-        return '';
-      }
-
-      const clip = clipboard.getPrimaryClip();
-      if (!clip || clip.getItemCount() < 1) {
-        return '';
-      }
-
-      return String(clip.getItemAt(0).coerceToText(context) || '');
-    }
-
-    return '';
   }
 
   private async showSavedPopupAnchored(): Promise<void> {
