@@ -79,6 +79,12 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.openSubscription();
   }
 
+  public restorePurchases(): void {
+    this.routerExtensions.navigate(['/subscription'], {
+      queryParams: { restore: '1' },
+    });
+  }
+
   public openResidentialJobPrices(): void {
     this.router.navigate(['/tabs', { outlets: { settingsTab: ['residential-job-prices'] } }]);
   }
