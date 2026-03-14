@@ -8,20 +8,20 @@
 </ActionBar>
 
 <StackLayout class="container">
-  <GridLayout columns="*,*,auto" class="filters-row">
-    <StackLayout col="0" class="filter-card">
-      <Label text="Start Date" class="filter-label"></Label>
-      <DatePicker [date]="startDate" (dateChange)="onStartDateChange($event)"></DatePicker>
+  <GridLayout rows="auto" columns="*" style="margin-left: 10; margin-right: 10; margin-top: 10;">
+    <StackLayout horizontalAlignment="left" orientation="horizontal">
+      <Label class="action-bar-title today-label" text="Start"></Label>
+      <DatePicker class="today-date-picker" [date]="startDate" (dateChange)="onStartDateChange($event)"></DatePicker>
     </StackLayout>
 
-    <StackLayout col="1" class="filter-card">
-      <Label text="End Date" class="filter-label"></Label>
-      <DatePicker [date]="endDate" [maxDate]="todayDate" (dateChange)="onEndDateChange($event)"></DatePicker>
+    <StackLayout horizontalAlignment="center" orientation="horizontal">
+      <Label class="action-bar-title today-label" text="End"></Label>
+      <DatePicker class="today-date-picker" [date]="endDate" [maxDate]="todayDate"
+        (dateChange)="onEndDateChange($event)"></DatePicker>
     </StackLayout>
 
-    <StackLayout col="2" class="total-card">
-      <Label text="Total" class="filter-label total-label"></Label>
-      <Label [text]="totalAmount | currency" class="total-value"></Label>
+    <StackLayout horizontalAlignment="right" orientation="horizontal">
+      <Label class="action-bar-title today-label" [text]="'Total: ' + (totalAmount | currency)"></Label>
     </StackLayout>
   </GridLayout>
 
@@ -49,10 +49,18 @@
 
           <GridLayout columns="*,auto" style="margin-bottom: 10;">
             <Label col="0" class="second-row"
-              [text]="(item.timeSlotStartDateTime | date: 'MMM d, y h:mm a') + ' - ' + (item.timeSlotEndDateTime | date: 'h:mm a')">
+              [text]="(item.timeSlotStartDateTime | date: 'h:mm a') + ' - ' + (item.timeSlotEndDateTime | date: 'h:mm a')">
             </Label>
-            <Label col="1" *ngIf="item.sms_survey_sent" class="fas survey-icon" text="&#xf7cd;"></Label>
           </GridLayout>
+
+          <StackLayout horizontalAlignment="right" orientation="horizontal" style="padding: 0" backgroundColor="">
+            <GridLayout rows="auto" columns="auto">
+              <StackLayout row="0" col="0" horizontalAlignment="left" orientation="horizontal" style="padding: 0"
+                backgroundColor="">
+                <Label *ngIf="item.sms_survey_sent" class="fas survey-icon" text="&#xf7cd;"></Label>
+              </StackLayout>
+            </GridLayout>
+          </StackLayout>
         </StackLayout>
 
         <Label class="fas status-icon floating-status {{ itemStatusClass(item) }}" [text]="itemStatusIcon(item)"></Label>
