@@ -15,6 +15,7 @@ import { UsersService } from '../shared/services/users.service';
   styleUrl: './jobs.component.scss',
 })
 export class JobsComponent implements OnInit {
+  private readonly demoWeeklyTotal = 2062.75;
   private readonly demoJobs = this.buildDemoJobs();
 
   public user: UserModel | null = null;
@@ -142,7 +143,9 @@ export class JobsComponent implements OnInit {
       });
 
     this.jobList = new ObservableArray(normalizedJobs);
-    this.totalAmount = normalizedJobs.reduce((sum, job) => sum + Number(job?.amount || 0), 0);
+    this.totalAmount = this.usersService.isDemoUser(this.user)
+      ? this.demoWeeklyTotal
+      : normalizedJobs.reduce((sum, job) => sum + Number(job?.amount || 0), 0);
   }
 
   private normalizeJobsResponse(response: any): any[] {
