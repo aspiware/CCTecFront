@@ -106,8 +106,8 @@ export class JobsComponent implements OnInit {
     this.isSyncing = true;
     this.cdr.detectChanges();
 
-    const startDate = this.formatDateParam(this.startDate);
-    const endDate = this.formatDateParam(this.endDate);
+    const startDate = this.formatDateParam(this.startOfDay(this.startDate));
+    const endDate = this.formatDateParam(this.endOfDay(this.endDate));
     const userId = Number(this.user?.userId || 0);
 
     this.settingsService.findJobsByUser(userId, startDate, endDate).subscribe({
@@ -179,13 +179,22 @@ export class JobsComponent implements OnInit {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   }
 
   private createDefaultStartDate(): Date {
-    const date = new Date();
-    date.setDate(date.getDate() - 13);
-    return date;
+    return this.startOfCurrentWeek(new Date());
+  }
+
+  private startOfCurrentWeek(date: Date): Date {
+    const result = new Date(date);
+    const day = result.getDay();
+    result.setDate(result.getDate() - day);
+    result.setHours(0, 0, 0, 0);
+    return result;
   }
 
   private startOfDay(date: Date): Date {
