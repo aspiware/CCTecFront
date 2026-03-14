@@ -8,21 +8,23 @@
 </ActionBar>
 
 <StackLayout class="container">
-  <GridLayout rows="auto,auto" columns="*" style="margin-left: 10; margin-right: 10; margin-top: 10;">
-    <StackLayout row="0" horizontalAlignment="right" orientation="horizontal">
-      <Label class="action-bar-title today-label" [text]="'Total: ' + (totalAmount | currency)"></Label>
-    </StackLayout>
+  <GridLayout rows="auto" columns="*" style="margin-left: 10; margin-right: 10; margin-top: 10;">
+    <GridLayout row="0" columns="*,*,auto" class="jobs-filters-row">
+      <GridLayout col="0" rows="auto,auto" horizontalAlignment="left" class="date-filter-block">
+        <Label row="0" horizontalAlignment="left" class="action-bar-title today-label filter-title" text="Start Date"></Label>
+        <DatePicker row="1" horizontalAlignment="left" class="today-date-picker" [date]="startDate"
+          (dateChange)="onStartDateChange($event)"></DatePicker>
+      </GridLayout>
 
-    <GridLayout row="1" columns="*,*" class="jobs-filters-row">
-      <StackLayout col="0" horizontalAlignment="left" orientation="horizontal">
-      <Label class="action-bar-title today-label" text="Start"></Label>
-      <DatePicker class="today-date-picker" [date]="startDate" (dateChange)="onStartDateChange($event)"></DatePicker>
-      </StackLayout>
-
-      <StackLayout col="1" horizontalAlignment="right" orientation="horizontal">
-        <Label class="action-bar-title today-label" text="End"></Label>
-        <DatePicker class="today-date-picker" [date]="endDate" [maxDate]="todayDate"
+      <GridLayout col="1" rows="auto,auto" horizontalAlignment="left" class="date-filter-block">
+        <Label row="0" horizontalAlignment="left" class="action-bar-title today-label filter-title" text="End Date"></Label>
+        <DatePicker row="1" horizontalAlignment="left" class="today-date-picker" [date]="endDate" [maxDate]="todayDate"
           (dateChange)="onEndDateChange($event)"></DatePicker>
+      </GridLayout>
+
+      <StackLayout col="2" verticalAlignment="bottom" horizontalAlignment="right">
+        <Label class="action-bar-title today-label filter-title" text="Total"></Label>
+        <Label class="action-bar-title today-label" [text]="totalAmount | currency"></Label>
       </StackLayout>
     </GridLayout>
   </GridLayout>
