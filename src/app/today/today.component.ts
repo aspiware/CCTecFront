@@ -567,6 +567,7 @@ export class TodayComponent implements OnInit {
   public units = 0;
   public weeklyTotal = 0;
   public starredCount = 0;
+  public isDemoMode = false;
   public mainMenuIconName = 'ellipsis.circle';
   public item: any;
   scansMenu: Item =
@@ -665,6 +666,7 @@ export class TodayComponent implements OnInit {
     });
 
     if (this.isDemoUser()) {
+      this.isDemoMode = true;
       this.applyJobsForDisplay(this.demoJobs.map((job) => ({ ...job })));
       this.weeklyTotal = this.todayTotal;
       this.cdr.detectChanges();

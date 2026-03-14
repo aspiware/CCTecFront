@@ -54,7 +54,7 @@ export class UsersService {
   public buildDemoUser(): UserModel {
     return {
       userId: 999999,
-      roleId: 2,
+      roleId: 1,
       settingId: 999999,
       name: 'Demo',
       lastname: 'Reviewer',
