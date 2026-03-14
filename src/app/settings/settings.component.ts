@@ -1,8 +1,10 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { NativeScriptCommonModule, RouterExtensions } from '@nativescript/angular';
-import { Application, Page, Utils } from '@nativescript/core';
+import { Application, Dialogs, isIOS, Page, Utils } from '@nativescript/core';
+import { TodayJobsCountService } from '../shared/services/today-jobs-count.service';
 import { SubscriptionService } from '../shared/services/subscription.service';
+import { ConfigService } from '../shared/services/config.service';
 import { UsersService } from '../shared/services/users.service';
 
 @Component({
@@ -26,6 +28,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   constructor(
     private subscriptionService: SubscriptionService,
+    private configService: ConfigService,
+    private todayJobsCountService: TodayJobsCountService,
     private usersService: UsersService,
     private router: Router,
     private routerExtensions: RouterExtensions,
@@ -99,6 +103,26 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   public openTermsOfService(): void {
     Utils.openUrl('https://cctec.aspiware.com/terms-of-service');
+  }
+
+  public logout(): void {
+    this.configService.logout();
+    this.todayJobsCountService.setCount(0);
+    this.routerExtensions.navigate(['/login'], { clearHistory: true });
+  }
+
+  public async confirmDeleteAccount(): Promise<void> {
+    if (isIOS) {
+      this.showDeleteAccountConfirmIos();
+      return;
+    }
+
+    await Dialogs.confirm({
+      title: 'Delete Account',
+      message: 'Are you sure you want to delete your account?\nThis action cannot be undone.',
+      okButtonText: 'Delete',
+      cancelButtonText: 'Cancel',
+    });
   }
 
   public openXmUpdateToken(): void {
@@ -185,5 +209,32 @@ export class SettingsComponent implements OnInit, OnDestroy {
       day: 'numeric',
       year: 'numeric',
     });
+  }
+
+  private showDeleteAccountConfirmIos(): void {
+    const alert = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
+      'Delete Account',
+      'Are you sure you want to delete your account?\nThis action cannot be undone.',
+      UIAlertControllerStyle.Alert
+    );
+
+    alert.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, null)
+    );
+
+    alert.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Delete', UIAlertActionStyle.Destructive, null)
+    );
+
+    let viewController = Application.ios?.rootController;
+    while (
+      viewController &&
+      viewController.presentedViewController &&
+      !viewController.presentedViewController.beingDismissed
+    ) {
+      viewController = viewController.presentedViewController;
+    }
+
+    viewController?.presentViewControllerAnimatedCompletion(alert, true, null);
   }
 }

@@ -65,6 +65,10 @@
   color: #17181c;
 }
 
+.destructive-label {
+  color: #d70015;
+}
+
 .row-label-right {
   text-align: right;
 }
@@ -104,6 +108,11 @@
 .container.theme-dark .row-label,
 .ns-dark .row-label {
   color: #f5f5f7;
+}
+
+.container.theme-dark .destructive-label,
+.ns-dark .destructive-label {
+  color: #ff6961;
 }
 
 .container.theme-dark .chevron,
