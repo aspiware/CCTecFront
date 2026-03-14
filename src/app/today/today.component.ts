@@ -26,6 +26,7 @@ import { DevicesComponent } from '../devices/devices.component';
   styleUrl: './today.component.scss',
 })
 export class TodayComponent implements OnInit {
+  private readonly useScreenshotMocks = true;
   private readonly demoWeeklyTotal = 2062.75;
   private readonly demoJobs: any[] = [
     {
@@ -38,7 +39,7 @@ export class TodayComponent implements OnInit {
       "city": "Clearview",
       "state": "TX",
       "zipcode": "770010101",
-      "number": "D-1001",
+      "number": "601001",
       "accountNumber": "9900000000001001",
       "workOrderNumber": "10018331781220170001",
       "amount": "52.33",
@@ -88,7 +89,7 @@ export class TodayComponent implements OnInit {
       "city": "Northgate",
       "state": "TX",
       "zipcode": "770020202",
-      "number": "D-1002",
+      "number": "601002",
       "accountNumber": "9900000000001002",
       "workOrderNumber": "10018331991720170001",
       "amount": "52.33",
@@ -138,7 +139,7 @@ export class TodayComponent implements OnInit {
       "city": "Lakeside",
       "state": "TX",
       "zipcode": "770030303",
-      "number": "D-1003",
+      "number": "601003",
       "accountNumber": "9900000000001003",
       "workOrderNumber": "10018333315120130001",
       "amount": "44.99",
@@ -218,7 +219,7 @@ export class TodayComponent implements OnInit {
       "city": "Bayview",
       "state": "TX",
       "zipcode": "770040404",
-      "number": "D-1004",
+      "number": "601004",
       "accountNumber": "9900000000001004",
       "workOrderNumber": "10018328745420150001",
       "amount": "62.72",
@@ -298,7 +299,7 @@ export class TodayComponent implements OnInit {
       "city": "Westfield",
       "state": "TX",
       "zipcode": "770050505",
-      "number": "D-1005",
+      "number": "601005",
       "accountNumber": "9900000000001005",
       "workOrderNumber": "10018333134220170001",
       "amount": "52.33",
@@ -358,7 +359,7 @@ export class TodayComponent implements OnInit {
       "city": "Spring Harbor",
       "state": "TX",
       "zipcode": "770060606",
-      "number": "D-1006",
+      "number": "601006",
       "accountNumber": "9900000000001006",
       "workOrderNumber": "10018334592820190001",
       "amount": "52.33",
@@ -408,7 +409,7 @@ export class TodayComponent implements OnInit {
       "city": "River Oaks",
       "state": "TX",
       "zipcode": "770070707",
-      "number": "D-1007",
+      "number": "601007",
       "accountNumber": "9900000000001007",
       "workOrderNumber": "10018332542220120001",
       "amount": "36.65",
@@ -518,7 +519,7 @@ export class TodayComponent implements OnInit {
       "city": "Pine Hills",
       "state": "TX",
       "zipcode": "770080808",
-      "number": "D-1008",
+      "number": "601008",
       "accountNumber": "9900000000001008",
       "workOrderNumber": "10018335320620160001",
       "amount": "52.33",
@@ -666,8 +667,12 @@ export class TodayComponent implements OnInit {
       }
     });
 
-    if (this.isDemoUser()) {
-      this.isDemoMode = true;
+    if (this.shouldUseMockJobs()) {
+      this.isDemoMode = this.isDemoUser();
+      if (!this.isDemoMode) {
+        this.hasLunch();
+        this.getTechStatus();
+      }
       this.applyJobsForDisplay(this.demoJobs.map((job) => ({ ...job })));
       this.weeklyTotal = this.demoWeeklyTotal;
       this.cdr.detectChanges();
@@ -683,7 +688,11 @@ export class TodayComponent implements OnInit {
       return;
     }
 
-    if (this.isDemoUser()) {
+    if (this.shouldUseMockJobs()) {
+      if (!this.isDemoMode) {
+        this.hasLunch();
+        this.getTechStatus(forceTechStatus);
+      }
       this.applyJobsForDisplay(this.demoJobs.map((job) => ({ ...job })));
       this.weeklyTotal = this.demoWeeklyTotal;
       onFinished?.();
@@ -776,6 +785,10 @@ export class TodayComponent implements OnInit {
     const rawUser = this.user as any;
     const username = String(rawUser?.username || rawUser?.bp || rawUser?.name || '').trim().toLowerCase();
     return username === 'demo';
+  }
+
+  private shouldUseMockJobs(): boolean {
+    return this.useScreenshotMocks || this.isDemoUser();
   }
 
   private applyJobsForDisplay(jobs: any[]): void {

@@ -17,6 +17,8 @@ export class TabsContainerComponent implements OnInit, AfterViewInit, OnDestroy 
   @ViewChild('mainTabs', { static: true }) private mainTabsRef?: ElementRef<TabView>;
   private todayCountSub?: Subscription;
   private todayJobsCount = 0;
+  private badgeRetryTimeout?: ReturnType<typeof setTimeout>;
+  public todayTabTitle = 'Today';
   private readonly todayTabIndex = 2;
   private readonly todayBadgeBgColor = new Color('#E57373');
   private readonly todayBadgeTextColor = new Color('#FFFFFF');
@@ -46,12 +48,17 @@ export class TabsContainerComponent implements OnInit, AfterViewInit, OnDestroy 
   ngAfterViewInit(): void {
     this.todayCountSub = this.todayJobsCountService.count$.subscribe((count) => {
       this.todayJobsCount = count;
+      this.todayTabTitle = count > 0 ? `Today (${count})` : 'Today';
       this.updateTodayTabBadge();
     });
+    setTimeout(() => this.updateTodayTabBadge(), 0);
   }
 
   ngOnDestroy(): void {
     this.todayCountSub?.unsubscribe();
+    if (this.badgeRetryTimeout) {
+      clearTimeout(this.badgeRetryTimeout);
+    }
   }
 
   private updateTodayTabBadge(): void {
@@ -68,6 +75,11 @@ export class TabsContainerComponent implements OnInit, AfterViewInit, OnDestroy 
       const todayController = iosController?.viewControllers?.objectAtIndex
         ? iosController.viewControllers.objectAtIndex(this.todayTabIndex)
         : iosController?.viewControllers?.[this.todayTabIndex];
+
+      if (!todayTabItem && !todayController?.tabBarItem) {
+        this.scheduleBadgeRetry();
+        return;
+      }
 
       if (todayTabItem) {
         todayTabItem.badgeValue = count > 0 ? `${count}` : null;
@@ -95,6 +107,7 @@ export class TabsContainerComponent implements OnInit, AfterViewInit, OnDestroy 
       const tab = tabLayout?.getTabAt?.(this.todayTabIndex);
 
       if (!tab || typeof tab.getOrCreateBadge !== 'function') {
+        this.scheduleBadgeRetry();
         return;
       }
 
@@ -110,6 +123,17 @@ export class TabsContainerComponent implements OnInit, AfterViewInit, OnDestroy 
         tab.getBadge?.()?.setVisible?.(false);
       }
     }
+  }
+
+  private scheduleBadgeRetry(): void {
+    if (this.badgeRetryTimeout) {
+      clearTimeout(this.badgeRetryTimeout);
+    }
+
+    this.badgeRetryTimeout = setTimeout(() => {
+      this.badgeRetryTimeout = undefined;
+      this.updateTodayTabBadge();
+    }, 250);
   }
 
   private applyIosBadgeAppearance(tabBar: any): void {
