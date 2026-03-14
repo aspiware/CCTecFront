@@ -96,6 +96,36 @@
         </GridLayout>
       </StackLayout>
 
+      <Label text="LEGAL" class="category-title"></Label>
+      <StackLayout class="settings-card">
+        <GridLayout columns="auto,*,auto" class="settings-row">
+          <Label col="0" class="icon-tile fas" text="&#xf05a;"></Label>
+          <Label col="1" class="row-label" text="Privacy Policy"></Label>
+          <Label col="2" class="chevron fas" text="&#xf054;"></Label>
+          <GridLayout col="1" colSpan="2" class="row-divider"></GridLayout>
+        </GridLayout>
+        <GridLayout columns="auto,*,auto" class="settings-row settings-row-last">
+          <Label col="0" class="icon-tile fas" text="&#xf15c;"></Label>
+          <Label col="1" class="row-label" text="Terms of Service"></Label>
+          <Label col="2" class="chevron fas" text="&#xf054;"></Label>
+        </GridLayout>
+      </StackLayout>
+
+      <Label text="ACCOUNT" class="category-title"></Label>
+      <StackLayout class="settings-card">
+        <GridLayout columns="auto,*,auto" class="settings-row">
+          <Label col="0" class="icon-tile fas" text="&#xf2f5;"></Label>
+          <Label col="1" class="row-label" text="Logout"></Label>
+          <Label col="2" class="chevron fas" text="&#xf054;"></Label>
+          <GridLayout col="1" colSpan="2" class="row-divider"></GridLayout>
+        </GridLayout>
+        <GridLayout columns="auto,*,auto" class="settings-row settings-row-last">
+          <Label col="0" class="icon-tile fas" text="&#xf1f8;"></Label>
+          <Label col="1" class="row-label" text="Delete Account"></Label>
+          <Label col="2" class="chevron fas" text="&#xf054;"></Label>
+        </GridLayout>
+      </StackLayout>
+
       <Label *ngIf="roleId === 2" text="XM" class="category-title"></Label>
       <StackLayout *ngIf="roleId === 2" class="settings-card">
         <GridLayout columns="auto,*,auto" class="settings-row settings-row-last" (tap)="openXmUpdateToken()">
