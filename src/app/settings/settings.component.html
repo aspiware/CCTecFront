@@ -104,13 +104,13 @@
 
       <Label text="LEGAL" class="category-title"></Label>
       <StackLayout class="settings-card">
-        <GridLayout columns="auto,*,auto" class="settings-row">
+        <GridLayout columns="auto,*,auto" class="settings-row" (tap)="openPrivacyPolicy()">
           <Label col="0" class="icon-tile fas" text="&#xf05a;"></Label>
           <Label col="1" class="row-label" text="Privacy Policy"></Label>
           <Label col="2" class="chevron fas" text="&#xf054;"></Label>
           <GridLayout col="1" colSpan="2" class="row-divider"></GridLayout>
         </GridLayout>
-        <GridLayout columns="auto,*,auto" class="settings-row settings-row-last">
+        <GridLayout columns="auto,*,auto" class="settings-row settings-row-last" (tap)="openTermsOfService()">
           <Label col="0" class="icon-tile fas" text="&#xf15c;"></Label>
           <Label col="1" class="row-label" text="Terms of Service"></Label>
           <Label col="2" class="chevron fas" text="&#xf054;"></Label>

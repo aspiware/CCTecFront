@@ -93,6 +93,14 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.router.navigate(['/tabs', { outlets: { settingsTab: ['payroll'] } }]);
   }
 
+  public openPrivacyPolicy(): void {
+    Utils.openUrl('https://cctec.aspiware.com/privacy/');
+  }
+
+  public openTermsOfService(): void {
+    Utils.openUrl('https://cctec.aspiware.com/terms-of-service');
+  }
+
   public openXmUpdateToken(): void {
     this.router.navigate(['/tabs', { outlets: { settingsTab: ['xm-update-token'] } }]);
   }
