@@ -8,21 +8,23 @@
 </ActionBar>
 
 <StackLayout class="container">
-  <GridLayout rows="auto" columns="*" style="margin-left: 10; margin-right: 10; margin-top: 10;">
-    <StackLayout horizontalAlignment="left" orientation="horizontal">
-      <Label class="action-bar-title today-label" text="Start"></Label>
-      <DatePicker class="today-date-picker" [date]="startDate" (dateChange)="onStartDateChange($event)"></DatePicker>
-    </StackLayout>
-
-    <StackLayout horizontalAlignment="center" orientation="horizontal">
-      <Label class="action-bar-title today-label" text="End"></Label>
-      <DatePicker class="today-date-picker" [date]="endDate" [maxDate]="todayDate"
-        (dateChange)="onEndDateChange($event)"></DatePicker>
-    </StackLayout>
-
-    <StackLayout horizontalAlignment="right" orientation="horizontal">
+  <GridLayout rows="auto,auto" columns="*" style="margin-left: 10; margin-right: 10; margin-top: 10;">
+    <StackLayout row="0" horizontalAlignment="right" orientation="horizontal">
       <Label class="action-bar-title today-label" [text]="'Total: ' + (totalAmount | currency)"></Label>
     </StackLayout>
+
+    <GridLayout row="1" columns="*,*" class="jobs-filters-row">
+      <StackLayout col="0" horizontalAlignment="left" orientation="horizontal">
+      <Label class="action-bar-title today-label" text="Start"></Label>
+      <DatePicker class="today-date-picker" [date]="startDate" (dateChange)="onStartDateChange($event)"></DatePicker>
+      </StackLayout>
+
+      <StackLayout col="1" horizontalAlignment="right" orientation="horizontal">
+        <Label class="action-bar-title today-label" text="End"></Label>
+        <DatePicker class="today-date-picker" [date]="endDate" [maxDate]="todayDate"
+          (dateChange)="onEndDateChange($event)"></DatePicker>
+      </StackLayout>
+    </GridLayout>
   </GridLayout>
 
   <RadListView [items]="jobList" [pullToRefresh]="!isSyncing" (pullToRefreshInitiated)="onPullToRefresh($event)"
