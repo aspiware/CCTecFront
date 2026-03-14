@@ -198,7 +198,7 @@
                   (tap)="markJobActionTap(item, 'wifi', 0); wifiConfig(item)">
                 </MenuButton>
 
-                <MenuButton *ngIf="item.status == 'CLOSED'" class="fas job-action-button"
+                <MenuButton *ngIf="item.status == 'CLOSED' && !isDemoMode" class="fas job-action-button"
                   [class.job-action-tapped]="isJobActionTapped(item, 'edit')"
                   style="font-size: 14px; height: 70px; width: 100px; margin-right: 6" text="&#xf044;"
                   (tap)="markJobActionTap(item, 'edit'); showEditJob(item)">
