@@ -98,4 +98,10 @@ export class SettingsService {
       prices
     );
   }
+
+  public deleteAccount(userId: number): Observable<any> {
+    return this.httpClient.put<void>(
+      `${this.configService.getUrlBase()}/auth/deleteAccount/${userId}`, null
+    );
+  }
 }

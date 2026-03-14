@@ -6,6 +6,7 @@ import { TodayJobsCountService } from '../shared/services/today-jobs-count.servi
 import { SubscriptionService } from '../shared/services/subscription.service';
 import { ConfigService } from '../shared/services/config.service';
 import { UsersService } from '../shared/services/users.service';
+import { SettingsService } from './settings.service';
 
 @Component({
   standalone: true,
@@ -29,6 +30,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   constructor(
     private subscriptionService: SubscriptionService,
     private configService: ConfigService,
+    private settingsService: SettingsService,
     private todayJobsCountService: TodayJobsCountService,
     private usersService: UsersService,
     private router: Router,
@@ -117,12 +119,16 @@ export class SettingsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    await Dialogs.confirm({
+    const confirmed = await Dialogs.confirm({
       title: 'Delete Account',
       message: 'Are you sure you want to delete your account?\nThis action cannot be undone.',
       okButtonText: 'Delete',
       cancelButtonText: 'Cancel',
     });
+
+    if (confirmed) {
+      this.deleteAccount();
+    }
   }
 
   public openXmUpdateToken(): void {
@@ -223,7 +229,9 @@ export class SettingsComponent implements OnInit, OnDestroy {
     );
 
     alert.addAction(
-      UIAlertAction.actionWithTitleStyleHandler('Delete', UIAlertActionStyle.Destructive, null)
+      UIAlertAction.actionWithTitleStyleHandler('Delete', UIAlertActionStyle.Destructive, () => {
+        this.deleteAccount();
+      })
     );
 
     let viewController = Application.ios?.rootController;
@@ -236,5 +244,26 @@ export class SettingsComponent implements OnInit, OnDestroy {
     }
 
     viewController?.presentViewControllerAnimatedCompletion(alert, true, null);
+  }
+
+  private deleteAccount(): void {
+    const userId = Number(this.usersService.getUser()?.userId || 0);
+    if (!userId) {
+      return;
+    }
+
+    this.settingsService.deleteAccount(userId).subscribe({
+      next: () => {
+        this.logout();
+      },
+      error: async (error) => {
+        console.log('[Settings] deleteAccount error', error);
+        await Dialogs.alert({
+          title: 'Error',
+          message: 'Unable to delete account.',
+          okButtonText: 'OK',
+        });
+      },
+    });
   }
 }
