@@ -15,7 +15,7 @@
     </StackLayout>
   </ActionItem>
 
-  <ActionItem ios.position="left" style="font-size: 17px" class="fas">
+  <ActionItem *ngIf="!isDemoMode" ios.position="left" style="font-size: 17px" class="fas">
     <StackLayout orientation="horizontal">
       <MenuButton [useSFIcon]="true" class="fas" style="background-color: transparent; font-size: 18px;"
         [sfIconName]="mainMenuIconName" [showSpinner]="isTechStatusLoading" [options]="mainMenu.options"

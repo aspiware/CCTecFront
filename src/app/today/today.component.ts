@@ -26,6 +26,7 @@ import { DevicesComponent } from '../devices/devices.component';
   styleUrl: './today.component.scss',
 })
 export class TodayComponent implements OnInit {
+  private readonly demoWeeklyTotal = 2062.75;
   private readonly demoJobs: any[] = [
     {
       "id": 12648,
@@ -33,12 +34,12 @@ export class TodayComponent implements OnInit {
       "sms_survey_sent": 0,
       "notes": null,
       "jobDescription": "TECH RECOVERY",
-      "address": "2001 BURKE RD APT 36",
-      "city": "PASADENA",
+      "address": "101 Demo Ave Apt 1",
+      "city": "Clearview",
       "state": "TX",
-      "zipcode": "775023019",
-      "number": "601048",
-      "accountNumber": "8777701843015816",
+      "zipcode": "770010101",
+      "number": "D-1001",
+      "accountNumber": "9900000000001001",
       "workOrderNumber": "10018331781220170001",
       "amount": "52.33",
       "description": "",
@@ -65,14 +66,14 @@ export class TodayComponent implements OnInit {
       ],
       "customer": {
         "id": 9821,
-        "firstName": "SHAI",
-        "lastName": "SMITH",
-        "callFirstPhoneNumber": "3464535807",
-        "homePhoneNumber": "3464559228",
+        "firstName": "Avery",
+        "lastName": "Carter",
+        "callFirstPhoneNumber": "5550101001",
+        "homePhoneNumber": "5550101002",
         "workPhoneNumber": null,
-        "surveyPhoneNumber": "3464559228",
-        "xfinityAppUsername": "sourthennsweetstrawberry",
-        "email": "SOURTHENNSWEETSTRAWBERRY@GMAIL.COM"
+        "surveyPhoneNumber": "5550101003",
+        "xfinityAppUsername": "demo.avery.carter",
+        "email": "avery.carter@example.com"
       },
       "customJob": null,
       "createdAt": "2026-02-24T14:54:12.000Z"
@@ -83,12 +84,12 @@ export class TodayComponent implements OnInit {
       "sms_survey_sent": 0,
       "notes": null,
       "jobDescription": "TECH RECOVERY",
-      "address": "5218 ALLENDALE RD",
-      "city": "HOUSTON",
+      "address": "202 Review St",
+      "city": "Northgate",
       "state": "TX",
-      "zipcode": "770176011",
-      "number": "601283",
-      "accountNumber": "8777703352924008",
+      "zipcode": "770020202",
+      "number": "D-1002",
+      "accountNumber": "9900000000001002",
       "workOrderNumber": "10018331991720170001",
       "amount": "52.33",
       "description": "",
@@ -115,14 +116,14 @@ export class TodayComponent implements OnInit {
       ],
       "customer": {
         "id": 9823,
-        "firstName": "CRISPIN JR",
-        "lastName": "ELIAS",
-        "callFirstPhoneNumber": "8328206255",
-        "homePhoneNumber": "8328206255",
+        "firstName": "Jordan",
+        "lastName": "Mills",
+        "callFirstPhoneNumber": "5550102001",
+        "homePhoneNumber": "5550102002",
         "workPhoneNumber": null,
-        "surveyPhoneNumber": "8328206255",
-        "xfinityAppUsername": "ecrjr_eli23",
-        "email": null
+        "surveyPhoneNumber": "5550102003",
+        "xfinityAppUsername": "demo.jordan.mills",
+        "email": "jordan.mills@example.com"
       },
       "customJob": null,
       "createdAt": "2026-02-24T16:09:27.000Z"
@@ -133,12 +134,12 @@ export class TodayComponent implements OnInit {
       "sms_survey_sent": 0,
       "notes": null,
       "jobDescription": "VID UP",
-      "address": "4222 BLUE WATER CT",
-      "city": "PASADENA",
+      "address": "303 Sample Court",
+      "city": "Lakeside",
       "state": "TX",
-      "zipcode": "775053870",
-      "number": "602946",
-      "accountNumber": "8777701842197334",
+      "zipcode": "770030303",
+      "number": "D-1003",
+      "accountNumber": "9900000000001003",
       "workOrderNumber": "10018333315120130001",
       "amount": "44.99",
       "description": "Upgrade",
@@ -195,14 +196,14 @@ export class TodayComponent implements OnInit {
       ],
       "customer": {
         "id": 9825,
-        "firstName": "LINDA",
-        "lastName": "HAMMONS",
+        "firstName": "Taylor",
+        "lastName": "Brooks",
         "callFirstPhoneNumber": null,
-        "homePhoneNumber": "2817932585",
+        "homePhoneNumber": "5550103002",
         "workPhoneNumber": null,
-        "surveyPhoneNumber": "2818440552",
-        "xfinityAppUsername": "lshammons",
-        "email": "LSHAMMONS@GMAIL.COM"
+        "surveyPhoneNumber": "5550103003",
+        "xfinityAppUsername": "demo.taylor.brooks",
+        "email": "taylor.brooks@example.com"
       },
       "customJob": null,
       "createdAt": "2026-02-24T17:46:31.000Z"
@@ -213,12 +214,12 @@ export class TodayComponent implements OnInit {
       "sms_survey_sent": 0,
       "notes": null,
       "jobDescription": "HSD RC",
-      "address": "2111 COLONIAL DR",
-      "city": "BAYTOWN",
+      "address": "404 Preview Lane",
+      "city": "Bayview",
       "state": "TX",
-      "zipcode": "775203791",
-      "number": "598486",
-      "accountNumber": "8777701042132289",
+      "zipcode": "770040404",
+      "number": "D-1004",
+      "accountNumber": "9900000000001004",
       "workOrderNumber": "10018328745420150001",
       "amount": "62.72",
       "description": "Double Play Install",
@@ -275,14 +276,14 @@ export class TodayComponent implements OnInit {
       ],
       "customer": {
         "id": 9831,
-        "firstName": "ADRIANNA",
-        "lastName": "PHILLIPS",
-        "callFirstPhoneNumber": "8325424697",
-        "homePhoneNumber": "8325424697",
+        "firstName": "Morgan",
+        "lastName": "Reed",
+        "callFirstPhoneNumber": "5550104001",
+        "homePhoneNumber": "5550104002",
         "workPhoneNumber": null,
-        "surveyPhoneNumber": "8325424697",
-        "xfinityAppUsername": "ADRIANNNAPHILLIPS",
-        "email": "ADRIANNNAPHILLIPS@GMAIL.COM"
+        "surveyPhoneNumber": "5550104003",
+        "xfinityAppUsername": "demo.morgan.reed",
+        "email": "morgan.reed@example.com"
       },
       "customJob": null,
       "createdAt": "2026-02-24T19:50:47.000Z"
@@ -293,12 +294,12 @@ export class TodayComponent implements OnInit {
       "sms_survey_sent": 0,
       "notes": null,
       "jobDescription": "TECH RECOVERY",
-      "address": "3201 GARTH RD APT 54",
-      "city": "BAYTOWN",
+      "address": "505 Sandbox Blvd Apt 8",
+      "city": "Westfield",
       "state": "TX",
-      "zipcode": "775213831",
-      "number": "602679",
-      "accountNumber": "8777701042132651",
+      "zipcode": "770050505",
+      "number": "D-1005",
+      "accountNumber": "9900000000001005",
       "workOrderNumber": "10018333134220170001",
       "amount": "52.33",
       "description": "",
@@ -335,14 +336,14 @@ export class TodayComponent implements OnInit {
       ],
       "customer": {
         "id": 9832,
-        "firstName": "LOUIS",
-        "lastName": "CAMARILLO",
-        "callFirstPhoneNumber": "8329386831",
-        "homePhoneNumber": "8329386831",
+        "firstName": "Casey",
+        "lastName": "Diaz",
+        "callFirstPhoneNumber": "5550105001",
+        "homePhoneNumber": "5550105002",
         "workPhoneNumber": null,
-        "surveyPhoneNumber": "8329386831",
-        "xfinityAppUsername": "lcamarillo35",
-        "email": "LCAMARILLO35@YAHOO.COM"
+        "surveyPhoneNumber": "5550105003",
+        "xfinityAppUsername": "demo.casey.diaz",
+        "email": "casey.diaz@example.com"
       },
       "customJob": null,
       "createdAt": "2026-02-24T20:39:49.000Z"
@@ -353,12 +354,12 @@ export class TodayComponent implements OnInit {
       "sms_survey_sent": 0,
       "notes": null,
       "jobDescription": "TECH RECOVERY",
-      "address": "2629 1/2 W MAIN ST",
-      "city": "BAYTOWN",
+      "address": "606 Review Park Dr",
+      "city": "Spring Harbor",
       "state": "TX",
-      "zipcode": "775206218",
-      "number": "603567",
-      "accountNumber": "8777701042132768",
+      "zipcode": "770060606",
+      "number": "D-1006",
+      "accountNumber": "9900000000001006",
       "workOrderNumber": "10018334592820190001",
       "amount": "52.33",
       "description": "",
@@ -385,14 +386,14 @@ export class TodayComponent implements OnInit {
       ],
       "customer": {
         "id": 9829,
-        "firstName": "LAMARQUI",
-        "lastName": "LUCKETT",
-        "callFirstPhoneNumber": "3469778335",
-        "homePhoneNumber": "3469778335",
+        "firstName": "Riley",
+        "lastName": "Parker",
+        "callFirstPhoneNumber": "5550106001",
+        "homePhoneNumber": "5550106002",
         "workPhoneNumber": null,
-        "surveyPhoneNumber": null,
-        "xfinityAppUsername": null,
-        "email": "NO@EMAIL.COM"
+        "surveyPhoneNumber": "5550106003",
+        "xfinityAppUsername": "demo.riley.parker",
+        "email": "riley.parker@example.com"
       },
       "customJob": null,
       "createdAt": "2026-02-24T18:57:15.000Z"
@@ -403,12 +404,12 @@ export class TodayComponent implements OnInit {
       "sms_survey_sent": 0,
       "notes": null,
       "jobDescription": "HSD OUT",
-      "address": "4503 ESTATE DR",
-      "city": "BAYTOWN",
+      "address": "707 Example Ridge",
+      "city": "River Oaks",
       "state": "TX",
-      "zipcode": "775211881",
-      "number": "601959",
-      "accountNumber": "8777701041483048",
+      "zipcode": "770070707",
+      "number": "D-1007",
+      "accountNumber": "9900000000001007",
       "workOrderNumber": "10018332542220120001",
       "amount": "36.65",
       "description": "Trouble Call",
@@ -495,14 +496,14 @@ export class TodayComponent implements OnInit {
       ],
       "customer": {
         "id": 9847,
-        "firstName": "ADRIAN",
-        "lastName": "OLEARY",
-        "callFirstPhoneNumber": "8329759128",
-        "homePhoneNumber": "8329759128",
+        "firstName": "Quinn",
+        "lastName": "Foster",
+        "callFirstPhoneNumber": "5550107001",
+        "homePhoneNumber": "5550107002",
         "workPhoneNumber": null,
-        "surveyPhoneNumber": "8329759128",
-        "xfinityAppUsername": "adrianaitor97",
-        "email": "VALERIA_G20@YAHOO.COM"
+        "surveyPhoneNumber": "5550107003",
+        "xfinityAppUsername": "demo.quinn.foster",
+        "email": "quinn.foster@example.com"
       },
       "customJob": null,
       "createdAt": "2026-02-24T21:17:17.000Z"
@@ -513,12 +514,12 @@ export class TodayComponent implements OnInit {
       "sms_survey_sent": 0,
       "notes": null,
       "jobDescription": "TECH RECOVERY",
-      "address": "347 BREEZE PARK DR",
-      "city": "HOUSTON",
+      "address": "808 Mockingbird Way",
+      "city": "Pine Hills",
       "state": "TX",
-      "zipcode": "770152107",
-      "number": "604412",
-      "accountNumber": "8777702052244162",
+      "zipcode": "770080808",
+      "number": "D-1008",
+      "accountNumber": "9900000000001008",
       "workOrderNumber": "10018335320620160001",
       "amount": "52.33",
       "description": "",
@@ -545,14 +546,14 @@ export class TodayComponent implements OnInit {
       ],
       "customer": {
         "id": 9850,
-        "firstName": "MICHAEL",
-        "lastName": "HERNANDEZ",
+        "firstName": "Jamie",
+        "lastName": "Turner",
         "callFirstPhoneNumber": null,
-        "homePhoneNumber": "8327713996",
+        "homePhoneNumber": "5550108002",
         "workPhoneNumber": null,
-        "surveyPhoneNumber": "8327713996",
-        "xfinityAppUsername": "mh53101",
-        "email": "MH53101@GMAIL.COM"
+        "surveyPhoneNumber": "5550108003",
+        "xfinityAppUsername": "demo.jamie.turner",
+        "email": "jamie.turner@example.com"
       },
       "customJob": null,
       "createdAt": "2026-02-25T00:36:44.000Z"
@@ -668,7 +669,7 @@ export class TodayComponent implements OnInit {
     if (this.isDemoUser()) {
       this.isDemoMode = true;
       this.applyJobsForDisplay(this.demoJobs.map((job) => ({ ...job })));
-      this.weeklyTotal = this.todayTotal;
+      this.weeklyTotal = this.demoWeeklyTotal;
       this.cdr.detectChanges();
       return;
     }
@@ -684,7 +685,7 @@ export class TodayComponent implements OnInit {
 
     if (this.isDemoUser()) {
       this.applyJobsForDisplay(this.demoJobs.map((job) => ({ ...job })));
-      this.weeklyTotal = this.todayTotal;
+      this.weeklyTotal = this.demoWeeklyTotal;
       onFinished?.();
       this.cdr.detectChanges();
       return;
