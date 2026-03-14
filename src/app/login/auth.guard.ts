@@ -14,6 +14,7 @@ export const authGuard: CanActivateFn = (_route, state): boolean | UrlTree => {
   const settingsService = inject(SettingsService);
   const user = usersService.getUser();
   const userId = Number(user?.userId || 0);
+  const isDemoUser = usersService.isDemoUser(user);
   const hasValidUser = Boolean(userId);
   const redirectToLogin = () =>
     router.createUrlTree(['/login'], {
@@ -21,6 +22,10 @@ export const authGuard: CanActivateFn = (_route, state): boolean | UrlTree => {
     });
 
   if (configService.isLoggedIn && hasValidUser) {
+    if (isDemoUser) {
+      return true;
+    }
+
     // Allow immediate access from local auth cache, then enforce backend active flag.
     usersService.findById(userId).pipe(take(1)).subscribe({
       next: (res) => {

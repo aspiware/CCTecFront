@@ -8,6 +8,7 @@ import { Application, Page, alert } from '@nativescript/core';
 import { UsersService } from '../shared/services/users.service';
 import { UserModel } from '../shared/models/user.model';
 import { ConfigService } from '../shared/services/config.service';
+import { SubscriptionService } from '../shared/services/subscription.service';
 import { MsAuthCodeComponent } from '../ms-auth-code/ms-auth-code.component';
 import { SegmentedBarItem } from '@nativescript/core';
 import { MsAuthPushComponent } from '../ms-auth-push/ms-auth-push.component';
@@ -41,6 +42,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     private loginService: LoginService,
     private usersService: UsersService,
     private configService: ConfigService,
+    private subscriptionService: SubscriptionService,
     private routerExtensions: RouterExtensions,
     private route: ActivatedRoute,
     private page: Page,
@@ -96,6 +98,12 @@ export class LoginComponent implements OnInit, OnDestroy {
     const username = String(this.loginForm.controls.username.value || '').trim().toLowerCase();
     const password = String(this.loginForm.controls.password.value || '');
     const authMethodId = this.loginForm.controls.authMethodId.value;
+
+    if (username === 'demo' && password === 'Demo123!') {
+      this.loginDemoUser();
+      return;
+    }
+
     this.isBusy = true;
     this.cdr.detectChanges();
 
@@ -255,6 +263,21 @@ export class LoginComponent implements OnInit, OnDestroy {
         });
       }
     });
+  }
+
+  private loginDemoUser(): void {
+    const demoUser = this.usersService.buildDemoUser() as any;
+    setString("token", String(demoUser.token || 'demo-token'));
+    setString("user", JSON.stringify(demoUser));
+    this.usersService.setUser(demoUser as UserModel);
+    setNumber("userId", Number(demoUser.userId || 999999));
+    setNumber("roleId", Number(demoUser.roleId || 2));
+    setNumber("settingId", Number(demoUser.settingId || 999999));
+    setString("bp", String(demoUser.bp || 'demo'));
+    this.subscriptionService.setLocalStatus(true);
+    this.configService.login();
+    this.isBusy = false;
+    this.routerExtensions.navigate(['/tabs'], { clearHistory: true });
   }
 
   private syncTheme(): void {

@@ -63,6 +63,33 @@ export class SummaryComponent implements OnInit, OnDestroy {
   }
 
   public syncSummary() {
+    if (this.usersService.isDemoUser(this.user)) {
+      this.weekAverage = {
+        dailyAverage: 412.35,
+        todayHourlyAverage: 68.72,
+        totalsPerDay: [
+          { date: '2026-03-09', total: 380 },
+          { date: '2026-03-10', total: 425 },
+          { date: '2026-03-11', total: 460 },
+          { date: '2026-03-12', total: 398 },
+          { date: '2026-03-13', total: 399.75 },
+        ],
+      };
+      this.summaryAmount = {
+        startDate: '2026-03-01',
+        endDate: '2026-03-14',
+        gross: 2485.75,
+        meterRent: 35,
+        billingPlatform: 12,
+        carRentalAmount: 55,
+        toolRentalAmount: 18,
+        net: 2365.75,
+      };
+      this.isSyncing = false;
+      this.cdr.detectChanges();
+      return;
+    }
+
     if (this.isSyncing) {
       return;
     }

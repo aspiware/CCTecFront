@@ -45,7 +45,26 @@ export class UsersService {
     }
   }
 
-    public findById(userId: number): Observable<any> {
+  public isDemoUser(user?: Partial<UserModel> | null): boolean {
+    const candidate = (user || this.getUser() || {}) as any;
+    const username = String(candidate?.username || candidate?.bp || candidate?.name || '').trim().toLowerCase();
+    return username === 'demo';
+  }
+
+  public buildDemoUser(): UserModel {
+    return {
+      userId: 999999,
+      roleId: 2,
+      settingId: 999999,
+      name: 'Demo',
+      lastname: 'Reviewer',
+      token: 'demo-token',
+      bp: 'demo',
+      username: 'demo',
+    } as UserModel;
+  }
+
+  public findById(userId: number): Observable<any> {
     return this.httpClient.get<any>(
       this.configService.getUrlBase() + `/auth/findUserById/${userId}`
     );

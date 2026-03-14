@@ -35,6 +35,11 @@ export class SubscriptionService {
   }
 
   public verifyWithBackend(): Observable<boolean> {
+    if (this.usersService.isDemoUser()) {
+      this.setLocalStatus(true);
+      return of(true);
+    }
+
     const userId = Number(this.usersService.getUser()?.userId || 0);
     if (!userId) {
       this.setLocalStatus(false);
@@ -63,6 +68,20 @@ export class SubscriptionService {
     autoRenewStatus?: boolean;
     canceledAt?: Date;
   }> {
+    if (this.usersService.isDemoUser()) {
+      this.setLocalStatus(true);
+      const nextPaymentDate = new Date();
+      nextPaymentDate.setDate(nextPaymentDate.getDate() + 30);
+      return of({
+        isActive: true,
+        nextPaymentDate,
+        planName: 'Basic',
+        amount: 9.99,
+        interval: 'month',
+        autoRenewStatus: true,
+      });
+    }
+
     const userId = Number(this.usersService.getUser()?.userId || 0);
     if (!userId) {
       this.setLocalStatus(false);
@@ -147,6 +166,11 @@ export class SubscriptionService {
     transactionId?: string;
     environment?: string;
   }): Observable<{ isActive: boolean; message?: string }> {
+    if (this.usersService.isDemoUser()) {
+      this.setLocalStatus(true);
+      return of({ isActive: true });
+    }
+
     const userId = Number(this.usersService.getUser()?.userId || 0);
     if (!userId || !payload?.receiptData) {
       this.setLocalStatus(false);
