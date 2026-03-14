@@ -7,7 +7,7 @@ import { Item } from '~/app/shared/components/menu-button/item';
 import { UserModel } from '../shared/models/user.model';
 import { UsersService } from '../shared/services/users.service';
 import { TodayService } from './today.service';
-import { concat, map, Subscription } from 'rxjs';
+import { concat, finalize, map, Subscription } from 'rxjs';
 import { ConfigService } from '../shared/services/config.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { WifiConfigComponent } from '../wifi-config/wifi-config.component';
@@ -576,15 +576,7 @@ export class TodayComponent implements OnInit {
         { name: 'Ingress Scans', icon: 'waveform.path' },
         { name: 'PHT Scans', icon: 'chart.bar.xaxis' },
         { name: 'Bonding Validation', icon: 'tag' },
-        { name: 'XM Photo', icon: 'photo.fill' },
-        {
-          name: 'End of Day', icon: 'circle.slash.fill', destructive: true, confirm: {
-            title: 'Do you want to log off for the day?',        // texto del submenú
-            confirmText: 'Yes',  // botón final (rojo)
-            cancelText: 'Cancel',
-            presentation: 'anchor'
-          }
-        }
+        { name: 'XM Photo', icon: 'photo.fill' }
       ],
     };
   jobMenu: Item =
@@ -682,7 +674,7 @@ export class TodayComponent implements OnInit {
     this.getWorkOrders();
   }
 
-  public getWorkOrders(onFinished?: () => void): void {
+  public getWorkOrders(onFinished?: () => void, forceTechStatus = false): void {
     if (this.isSyncing) {
       onFinished?.();
       return;
@@ -694,7 +686,7 @@ export class TodayComponent implements OnInit {
     const userId = this.user?.userId || 0;
 
     this.hasLunch();
-    this.getTechStatus();
+    this.getTechStatus(forceTechStatus);
 
     const workOrders$ = this.todayService.getWorkOrders(userId).pipe(
       map((res) =>
@@ -957,6 +949,14 @@ export class TodayComponent implements OnInit {
     });
   }
 
+  public refreshToday(): void {
+    if (this.isSyncing) {
+      return;
+    }
+
+    this.getWorkOrders(undefined, true);
+  }
+
   public onItemTap(event: any): void {
     const tappedItem = this.jobList?.getItem?.(event?.index);
     console.log('[Today] item tap', tappedItem?.number);
@@ -1096,10 +1096,38 @@ export class TodayComponent implements OnInit {
   }
 
   public goToActivateService(job?: any): void {
+    const queryParams = this.buildActivateServiceQueryParams(job);
     this.router.navigate(['../activate-service'], {
-      queryParams: job,
+      queryParams,
       relativeTo: this.activatedRoute,
     });
+  }
+
+  private buildActivateServiceQueryParams(job?: any): any {
+    if (!job) {
+      return {};
+    }
+
+    return {
+      ...job,
+      customer: this.stringifyQueryParam(job?.customer),
+      devices: this.stringifyQueryParam(job?.devices),
+      customJob: this.stringifyQueryParam(job?.customJob),
+    };
+  }
+
+  private stringifyQueryParam(value: any): string {
+    if (value === null || value === undefined) {
+      return '';
+    }
+    if (typeof value === 'string') {
+      return value;
+    }
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
   }
 
   ngOnDestroy(): void {
@@ -1198,18 +1226,22 @@ export class TodayComponent implements OnInit {
     });
   }
 
-  private getTechStatus(): void {
+  private getTechStatus(force = false): void {
     const userId = this.user?.userId || 0;
 
-    if (this.isTechStatusLoading) {
+    if (this.isTechStatusLoading && !force) {
       return;
     }
 
-    setTimeout(() => {
-      this.isTechStatusLoading = true;
-    })
+    this.isTechStatusLoading = true;
+    this.cdr.detectChanges();
 
-    this.todayService.getTechStatus(userId).subscribe({
+    this.todayService.getTechStatus(userId).pipe(
+      finalize(() => {
+        this.isTechStatusLoading = false;
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
       next: (res) => {
         console.log('TECH_STATUS', res);
 
@@ -1220,7 +1252,6 @@ export class TodayComponent implements OnInit {
         }
 
         this.lastKnownTechStatus = status;
-        this.isTechStatusLoading = false;
 
         switch (status) {
           case 'AVAIL':
@@ -1255,7 +1286,6 @@ export class TodayComponent implements OnInit {
       },
       error: (e) => {
         console.log(e)
-        this.isTechStatusLoading = false;
       },
     });
   }

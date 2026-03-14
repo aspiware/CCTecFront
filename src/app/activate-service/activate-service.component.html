@@ -1,6 +1,20 @@
-<ActionBar class="action-bar" title="Activate Service"></ActionBar>
+<ActionBar
+  class="action-bar"
+  title="Activate Service"
+  [style.backgroundColor]="isDarkTheme ? '#1f2937' : 'rgba(126, 149, 185, 0.589)'"
+  [style.color]="isDarkTheme ? '#ffffff' : '#000000'">
+  <ActionItem ios.position="right">
+    <StackLayout>
+      <MenuButton style="height: 48; width: 35; padding: 0; margin: 0;" [useSFIcon]="true" [sfIconName]="'person.fill'"
+        [isRightSide]="true" (tap)="showCustomerInfo()">
+      </MenuButton>
+    </StackLayout>
+  </ActionItem>
+</ActionBar>
 
-<GridLayout rows="*">
+<GridLayout
+  rows="*"
+  [class]="'container ' + (isDarkTheme ? 'theme-dark' : 'theme-light')"
+  (loaded)="onRootLoaded()">
   <WebView [src]="url"></WebView>
 </GridLayout>
-

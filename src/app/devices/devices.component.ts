@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA } from '@angular/core';
+import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
 import { ModalDialogParams, NativeScriptCommonModule } from '@nativescript/angular';
 import { Application, Dialogs } from '@nativescript/core';
 import { NativeScriptUIListViewModule } from 'nativescript-ui-listview/angular';
@@ -16,11 +16,13 @@ import { concatMap, finalize } from 'rxjs/operators';
   templateUrl: './devices.component.html',
   styleUrl: './devices.component.scss',
 })
-export class DevicesComponent {
+export class DevicesComponent implements OnInit, OnDestroy {
+  public isDarkTheme = Application.systemAppearance() === 'dark';
   public job: any;
   public devices: any[] = [];
   public isRefreshingMainMenu = false;
   private userId = 0;
+  private appearanceChangedHandler?: () => void;
   private actionTapStates: { [key: string]: boolean } = {};
   private actionTapTimers: { [key: string]: ReturnType<typeof setTimeout> } = {};
   private loadingStates: { [key: string]: boolean } = {};
@@ -51,6 +53,26 @@ export class DevicesComponent {
     this.job = context;
     this.devices = Array.isArray(this.job?.devices) ? this.job.devices : [];
     this.userId = Number(this.usersService.getUser()?.userId || 0);
+  }
+
+  ngOnInit(): void {
+    this.syncTheme();
+    this.appearanceChangedHandler = () => {
+      this.syncTheme();
+      this.cdr.detectChanges();
+    };
+    Application.on(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
+  }
+
+  ngOnDestroy(): void {
+    if (this.appearanceChangedHandler) {
+      Application.off(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
+    }
+  }
+
+  public onRootLoaded(): void {
+    this.syncTheme();
+    this.cdr.detectChanges();
   }
 
   get mainMenuOptions() {
@@ -394,5 +416,10 @@ export class DevicesComponent {
         alert.dismissViewControllerAnimatedCompletion(true, null);
       }
     }, 2000);
+  }
+
+  private syncTheme(): void {
+    const appAppearance = Application.systemAppearance();
+    this.isDarkTheme = appAppearance === 'dark';
   }
 }

@@ -91,4 +91,17 @@ export class SettingsService {
       )
     );
   }
+
+  public saveJobTypePrice(prices: any[]): Observable<any> {
+    return this.httpClient.post<void>(
+      this.configService.getUrlBase() + "/jobs/saveJobTypePrice",
+      prices
+    );
+  }
+
+  public deleteAccount(userId: number): Observable<any> {
+    return this.httpClient.put<void>(
+      `${this.configService.getUrlBase()}/auth/deleteAccount/${userId}`, null
+    );
+  }
 }

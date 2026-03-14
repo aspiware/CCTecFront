@@ -1,0 +1,95 @@
+<ActionBar class="action-bar" title="Residential Job Prices">
+  <ActionItem ios.position="right" [visibility]="isSaveLoading ? 'collapse' : 'visible'">
+    <StackLayout>
+      <MenuButton
+        id="residential-main-menu-btn"
+        style="height: 48; width: 35; padding: 0; margin: 0;"
+        [useSFIcon]="true"
+        [sfIconName]="'ellipsis.circle'"
+        [isRightSide]="true"
+        [options]="mainMenuR.options"
+        (selected)="onSelectedMainMenuR($event)">
+      </MenuButton>
+    </StackLayout>
+  </ActionItem>
+  <ActionItem ios.position="right" [visibility]="isSaveLoading ? 'visible' : 'collapse'">
+    <ActivityIndicator [busy]="isSaveLoading" width="20" height="20"></ActivityIndicator>
+  </ActionItem>
+</ActionBar>
+
+<GridLayout
+  rows="*"
+  [class]="'container ' + (isDarkTheme ? 'theme-dark' : 'theme-light')"
+  (loaded)="onRootLoaded()"
+  (tap)="onContainerTap($event)">
+  <ScrollView row="0" #pricesScroll id="prices-scroll" [height]="pricesScrollHeight" verticalAlignment="top">
+    <StackLayout class="content">
+      <StackLayout class="fixed-card-wrap">
+        <GridLayout columns="*,*" class="card fixed-prices-card">
+          <GridLayout col="0" columns="auto,*" class="fixed-price-field">
+            <Label col="0" text="Modem" class="fixed-price-label"></Label>
+            <GridLayout col="1" columns="auto,*" class="input-shell header-input-shell" (tap)="onInputTap()">
+              <Label col="0" class="currency-prefix" text="$"></Label>
+              <TextField
+                col="1"
+                class="custom-tf-inline item-price-input"
+                keyboardType="decimal"
+                hint="0.00"
+                [text]="modemPriceText"
+                (textChange)="onHeaderPriceChange('modem', $event)"
+                (tap)="onInputTap()"
+                (focus)="onHeaderPriceFocus()"
+                (blur)="onHeaderPriceBlur('modem')">
+              </TextField>
+            </GridLayout>
+          </GridLayout>
+
+          <GridLayout col="1" columns="auto,*" class="fixed-price-field">
+            <Label col="0" text="Tv Box" class="fixed-price-label"></Label>
+            <GridLayout col="1" columns="auto,*" class="input-shell header-input-shell" (tap)="onInputTap()">
+              <Label col="0" class="currency-prefix" text="$"></Label>
+              <TextField
+                col="1"
+                class="custom-tf-inline item-price-input"
+                keyboardType="decimal"
+                hint="0.00"
+                [text]="tvBoxPriceText"
+                (textChange)="onHeaderPriceChange('tvBox', $event)"
+                (tap)="onInputTap()"
+                (focus)="onHeaderPriceFocus()"
+                (blur)="onHeaderPriceBlur('tvBox')">
+              </TextField>
+            </GridLayout>
+          </GridLayout>
+        </GridLayout>
+      </StackLayout>
+
+      <StackLayout class="card">
+        <!-- <StackLayout class="loading-wrap" *ngIf="isLoading">
+          <ActivityIndicator [busy]="isLoading" width="24" height="24"></ActivityIndicator>
+        </StackLayout> -->
+
+        <GridLayout
+          *ngFor="let item of jobTypes; let i = index; trackBy: trackByJobTypeId"
+          columns="*,auto"
+          [class.line-row]="i > 0">
+          <Label col="0" class="item-name" [text]="item.name"></Label>
+          <GridLayout col="1" columns="auto,*" class="input-shell item-input-shell" (tap)="onInputTap()">
+            <Label col="0" class="currency-prefix" text="$"></Label>
+            <TextField
+              col="1"
+              class="custom-tf-inline item-price-input"
+              keyboardType="decimal"
+              hint="0.00"
+              [text]="item.editablePrice"
+              (textChange)="onPriceChange(item, $event)"
+              (tap)="onInputTap()"
+              (focus)="onPriceFocus(i)"
+              (blur)="onPriceBlur(item)">
+            </TextField>
+          </GridLayout>
+        </GridLayout>
+      </StackLayout>
+    </StackLayout>
+  </ScrollView>
+</GridLayout>

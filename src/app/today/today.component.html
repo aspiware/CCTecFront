@@ -1,10 +1,6 @@
 <ActionBar class="action-bar" title="Today's Job List">
-  <ActionItem
-    ios.position="right"
-    ios.systemIcon="13"
-    [visibility]="isSyncing ? 'collapse' : 'visible'"
-    [isEnabled]="!isSyncing"
-    (tap)="getWorkOrders()">
+  <ActionItem ios.position="right" ios.systemIcon="13" [visibility]="isSyncing ? 'collapse' : 'visible'"
+    [isEnabled]="!isSyncing" (tap)="refreshToday()">
   </ActionItem>
   <ActionItem ios.position="right" [visibility]="isSyncing ? 'visible' : 'collapse'">
     <ActivityIndicator [busy]="isSyncing" width="20" height="20"></ActivityIndicator>
@@ -12,12 +8,8 @@
 
   <ActionItem ios.position="right">
     <StackLayout>
-      <MenuButton
-        style="height: 48; width: 35; padding: 0; margin: 0;"
-        [useSFIcon]="true"
-        [sfIconName]="'ellipsis.circle'"
-        [isRightSide]="true"
-        [options]="mainMenuR.options"
+      <MenuButton style="height: 48; width: 35; padding: 0; margin: 0;" [useSFIcon]="true"
+        [sfIconName]="'ellipsis.circle'" [isRightSide]="true" [options]="mainMenuR.options"
         (selected)="onSelectedMainMenuR($event)">
       </MenuButton>
     </StackLayout>
@@ -25,13 +17,8 @@
 
   <ActionItem ios.position="left" style="font-size: 17px" class="fas">
     <StackLayout orientation="horizontal">
-      <MenuButton
-        [useSFIcon]="true"
-        class="fas"
-        style="background-color: transparent; font-size: 18px;"
-        [sfIconName]="mainMenuIconName"
-        [showSpinner]="isTechStatusLoading"
-        [options]="mainMenu.options"
+      <MenuButton [useSFIcon]="true" class="fas" style="background-color: transparent; font-size: 18px;"
+        [sfIconName]="mainMenuIconName" [showSpinner]="isTechStatusLoading" [options]="mainMenu.options"
         (selected)="onSelectedMainMenu($event)">
       </MenuButton>
     </StackLayout>
@@ -39,10 +26,7 @@
 
   <ActionItem *ngIf="isOnShift" ios.position="left">
     <StackLayout>
-      <MenuButton
-        [useSFIcon]="true"
-        [sfIconName]="'fork.knife.circle'"
-        [options]="[]"
+      <MenuButton [useSFIcon]="true" [sfIconName]="'fork.knife.circle'" [options]="[]"
         (selected)="selected($event, item)">
       </MenuButton>
     </StackLayout>
@@ -88,16 +72,19 @@
 
   <GridLayout rows="auto" columns="*, auto" style="margin-left: 10; margin-right: 10; margin-top: 10;">
 
-    <StackLayout col="0" horizontalAlignment="center" orientation="horizontal" style="margin-top: 10; margin-bottom: 20;">
+    <StackLayout col="0" horizontalAlignment="center" orientation="horizontal"
+      style="margin-top: 10; margin-bottom: 20;">
       <StackLayout orientation="horizontal">
         <Label class="fas" text="&#xf058;" style="font-size: 20px; margin-right: 5;"></Label>
         <Label text="All" style="font-size: 17;"></Label>
       </StackLayout>
 
-      <Switch id="userStatus" (checkedChange)="toggleStarredView($event)" style="margin-left: 5; margin-right: 5;"></Switch>
+      <Switch id="userStatus" (checkedChange)="toggleStarredView($event)" style="margin-left: 5; margin-right: 5;">
+      </Switch>
       <StackLayout orientation="horizontal">
         <Label class="fas" text="&#xf005;" style="font-size: 20px; margin-right: 5;"></Label>
-        <Label [text]="starredCount > 0 ? ('Starred (' + starredCount + ')') : 'Starred'" style="font-size: 17;"></Label>
+        <Label [text]="starredCount > 0 ? ('Starred (' + starredCount + ')') : 'Starred'"
+          style="font-size: 17;"></Label>
       </StackLayout>
     </StackLayout>
 
@@ -111,62 +98,52 @@
     <!-- <CheckBox text="Open" [(ngModel)]="openJobs" style="font-size: 20px" col="2"></CheckBox> -->
   </GridLayout>
 
-  <RadListView
-    [items]="jobList"
-    [pullToRefresh]="!isSyncing"
-    (pullToRefreshInitiated)="onPullToRefresh($event)"
-    (itemTap)="onItemTap($event)"
-    height="100%"
-    class="jobs-list">
+  <RadListView [items]="jobList" [pullToRefresh]="!isSyncing" (pullToRefreshInitiated)="onPullToRefresh($event)"
+    (itemTap)="onItemTap($event)" height="100%" class="jobs-list">
     <ng-template tkListItemTemplate let-item="item">
       <GridLayout clipToBounds="false">
         <StackLayout class="item-bag">
           <GridLayout columns="*,auto" width="100%" class="item-header">
-            <Label
-              col="0"
-              class="first-row"
+            <Label col="0" class="first-row"
               [text]="(item.jobDescription || 'Job') + (item.description ? ' - ' + item.description : '')">
             </Label>
             <Label col="1" class="first-row amount" [text]="(item.amount || 0) | currency"></Label>
           </GridLayout>
 
-        <Label
-          class="second-row"
-          (longPress)="showMenu($event, (item.address || '') + ', ' + (item.city || '') + ', ' + (item.state || '') + ' ' + fiveDigitZip(item.zipcode), 'address')"
-          [text]="(item.address || '') + ', ' + (item.city || '') + ', ' + (item.state || '') + ' ' + fiveDigitZip(item.zipcode)">
-        </Label>
+          <Label class="second-row"
+            (longPress)="showMenu($event, (item.address || '') + ', ' + (item.city || '') + ', ' + (item.state || '') + ' ' + fiveDigitZip(item.zipcode), 'address')"
+            [text]="(item.address || '') + ', ' + (item.city || '') + ', ' + (item.state || '') + ' ' + fiveDigitZip(item.zipcode)">
+          </Label>
 
-        <!-- <GridLayout rows="auto" columns="auto,*,auto" class="meta-row">
+          <!-- <GridLayout rows="auto" columns="auto,*,auto" class="meta-row">
           <Label col="0" class="second-row" [text]="'Job#: ' + (item.number || 'n/a')"></Label>
           <Label col="1" class="second-row" [text]="'Account#: ' + (item.accountNumber || 'n/a')"></Label>
           <Label col="2" class="second-row units" [text]="'Units: ' + (item.jobUnits || 'n/a')"></Label>
         </GridLayout> -->
 
-        <GridLayout rows="auto" columns="auto, *, auto" class="meta-row">
-            <Label col="0" (longPress)="showMenu($event, item.number, 'job')"  class="secondRow"
+          <GridLayout rows="auto" columns="auto, *, auto" class="meta-row">
+            <Label col="0" (longPress)="showMenu($event, item.number, 'job')" class="secondRow"
               [text]="'Job#: ' + item.number" style="margin-right: 10;"></Label>
 
-            <Label col="1" (longPress)="showMenu($event, item.accountNumber, 'account')"  class="secondRow"
+            <Label col="1" (longPress)="showMenu($event, item.accountNumber, 'account')" class="secondRow"
               [text]="'Account#: ' + item.accountNumber"></Label>
 
             <Label col="2" class="secondRow units" [text]="'Units: ' + (item.jobUnits ? item.jobUnits : 'n/a')"></Label>
           </GridLayout>
-        
 
-        <GridLayout columns="*,auto" style="margin-bottom: 10;">
-          <!-- <Label
+
+          <GridLayout columns="*,auto" style="margin-bottom: 10;">
+            <!-- <Label
             col="0"
             class="second-row"
             [text]="'Modems: ' + (item.modems || 0) + '  TV Boxes: ' + (item.tvBoxes || 0) + '  Cameras: ' + (item.cameras || 0)">
           </Label> -->
-          <Label
-            col="0"
-            class="second-row"
-            [text]="(item.timeSlotStartDateTime | date: 'h:mm a') + ' - ' + (item.timeSlotEndDateTime | date: 'h:mm a')">
-          </Label>
-        </GridLayout>
+            <Label col="0" class="second-row"
+              [text]="(item.timeSlotStartDateTime | date: 'h:mm a') + ' - ' + (item.timeSlotEndDateTime | date: 'h:mm a')">
+            </Label>
+          </GridLayout>
 
-        <StackLayout horizontalAlignment="right" orientation="horizontal" style="padding: 0" backgroundColor="">
+          <StackLayout horizontalAlignment="right" orientation="horizontal" style="padding: 0" backgroundColor="">
             <GridLayout rows="auto" columns="auto, *">
               <!-- <MDButton rippleColor="blue" text="">
                                 <FormattedString>
@@ -210,56 +187,49 @@
                 </MDRipple> -->
 
                 <!-- <MDRipple rippleColor="blue" elevation="1" style="border-radius: 5; margin-right: 20px"> -->
-                <MenuButton
-                  class="job-action-button"
-                  [class.far]="!item.isStarred"
-                  [class.fas]="item.isStarred"
-                  style="font-size: 16px; height: 70px; width: 100px; margin-right: 6"
-                  text="&#xf005;"
+                <MenuButton class="job-action-button" [class.far]="!item.isStarred" [class.fas]="item.isStarred"
+                  style="font-size: 16px; height: 70px; width: 100px; margin-right: 6" text="&#xf005;"
                   (tap)="setStarred(item)">
                 </MenuButton>
                 <!-- </MDRipple>s -->
 
-                <MenuButton class="fas job-action-button"
-                  [class.job-action-tapped]="isJobActionTapped(item, 'wifi')"
-                  style="font-size: 14px; height: 70px; width: 100px; margin-right: 6"
-                  text="&#xf1eb;" (tap)="markJobActionTap(item, 'wifi', 0); wifiConfig(item)">
+                <MenuButton class="fas job-action-button" [class.job-action-tapped]="isJobActionTapped(item, 'wifi')"
+                  style="font-size: 14px; height: 70px; width: 100px; margin-right: 6" text="&#xf1eb;"
+                  (tap)="markJobActionTap(item, 'wifi', 0); wifiConfig(item)">
                 </MenuButton>
 
                 <MenuButton *ngIf="item.status == 'CLOSED'" class="fas job-action-button"
                   [class.job-action-tapped]="isJobActionTapped(item, 'edit')"
-                  style="font-size: 14px; height: 70px; width: 100px; margin-right: 6"
-                  text="&#xf044;" (tap)="markJobActionTap(item, 'edit'); showEditJob(item)">
+                  style="font-size: 14px; height: 70px; width: 100px; margin-right: 6" text="&#xf044;"
+                  (tap)="markJobActionTap(item, 'edit'); showEditJob(item)">
                 </MenuButton>
 
                 <MenuButton class="fas job-action-button"
                   [class.job-action-tapped]="isJobActionTapped(item, 'customer')"
-                  style="font-size: 14px; height: 70px; width: 100px; margin-right: 6"
-                  text="&#xf007;" (tap)="markJobActionTap(item, 'customer', 0); showCustomerInfo(item)">
+                  style="font-size: 14px; height: 70px; width: 100px; margin-right: 6" text="&#xf007;"
+                  (tap)="markJobActionTap(item, 'customer', 0); showCustomerInfo(item)">
                 </MenuButton>
 
-                <MenuButton class="fas job-action-button"
-                  [class.job-action-tapped]="isJobActionTapped(item, 'history')"
-                  style="font-size: 16px; height: 70px; width: 100px; margin-right: 6"
-                  text="&#xff682;" (tap)="markJobActionTap(item, 'history'); showJobHistory(item)">
+                <MenuButton class="fas job-action-button" [class.job-action-tapped]="isJobActionTapped(item, 'history')"
+                  style="font-size: 16px; height: 70px; width: 100px; margin-right: 6" text="&#xff682;"
+                  (tap)="markJobActionTap(item, 'history'); showJobHistory(item)">
                 </MenuButton>
 
-                <MenuButton class="fas job-action-button"
-                  [class.job-action-tapped]="isJobActionTapped(item, 'devices')"
-                  style="font-size: 14px; height: 70px; width: 100px; margin-right: 6"
-                  text="&#xf26c;" (tap)="markJobActionTap(item, 'devices'); showDevicesModal(item)">
+                <MenuButton class="fas job-action-button" [class.job-action-tapped]="isJobActionTapped(item, 'devices')"
+                  style="font-size: 14px; height: 70px; width: 100px; margin-right: 6" text="&#xf26c;"
+                  (tap)="markJobActionTap(item, 'devices'); showDevicesModal(item)">
                 </MenuButton>
 
                 <MenuButton class="fas job-action-button"
                   [class.job-action-tapped]="isJobActionTapped(item, 'activate-service')"
-                  style="font-size: 16px; height: 70px; width: 100px; margin-right: 6"
-                  text="&#xe012;" (tap)="markJobActionTap(item, 'activate-service'); goToActivateService(item)">
+                  style="font-size: 16px; height: 70px; width: 100px; margin-right: 6" text="&#xe012;"
+                  (tap)="markJobActionTap(item, 'activate-service'); goToActivateService(item)">
                 </MenuButton>
 
-                <MenuButton *ngIf="(item.status == 'OPEN' && item.isCurrent) && roleId == 2" class="fas job-action-button"
-                  [class.job-action-tapped]="isJobActionTapped(item, 'remove-devices')"
-                  style="font-size: 14px; height: 70px; width: 100px; margin-right: 6"
-                  text="&#xf2ed;" (tap)="markJobActionTap(item, 'remove-devices'); showRemoveDevicesModal(item)">
+                <MenuButton *ngIf="(item.status == 'OPEN' && item.isCurrent) && user.roleId == 2"
+                  class="fas job-action-button" [class.job-action-tapped]="isJobActionTapped(item, 'remove-devices')"
+                  style="font-size: 14px; height: 70px; width: 100px; margin-right: 6" text="&#xf2ed;"
+                  (tap)="markJobActionTap(item, 'remove-devices'); showRemoveDevicesModal(item)">
                 </MenuButton>
 
                 <!-- <MDRipple *ngIf="(item.status == 'OPEN' && item.isCurrent) && roleId == 2" rippleColor="blue"
@@ -282,36 +252,34 @@
                   <Label class="fas" text="&#xe473;" (tap)="goPHTScans(item)" style="font-size: 17px"></Label>
                 </MDRipple> -->
 
-                <MenuButton *ngIf="roleId == 2" class="fas job-action-button"
-                  [class.job-action-tapped]="isJobActionTapped(item, 'scans')"
-                  style="font-size: 16px; height: 70px; width: 100px; margin-right: 6"
-                  text="&#xf0ee;" [options]="scansMenu.options" (tap)="markJobActionTap(item, 'scans')" (selected)="selected($event, item)">
-                </MenuButton>
+                <StackLayout *ngIf="user.roleId == 2" class="job-action-button" style="width: 100px; height: 70px;">
+                  <MenuButton class="fas" [class.job-action-tapped]="isJobActionTapped(item, 'scans')"
+                    style="font-size: 16px; height: 70px; width: 100px;" [showSpinner]="isJobMenuLoading(item)"
+                    [spinnerOffsetX]="0" [spinnerOffsetY]="0" [isRightSide]="true" [useSFIcon]="true"
+                    [sfIconName]="'icloud.and.arrow.up'" [imageInsets]="{ top: 0, left: 0, bottom: 0, right: 0 }"
+                    [options]="scansMenu.options" (tap)="markJobActionTap(item, 'scans')"
+                    (selected)="selected($event, item)">
+                  </MenuButton>
+                </StackLayout>
 
-                <StackLayout class="job-action-button" style="width: 100px; height: 70px;">
-                <MenuButton class="fas" 
-                  [class.job-action-tapped]="isJobActionTapped(item, 'job-menu')"
-                  style="font-size: 16px; height: 70px; width: 100px;"
-                  [showSpinner]="isJobMenuLoading(item)"
-                  [spinnerOffsetX]="0"
-                  [spinnerOffsetY]="0"
-                  [isRightSide]="true"
-                  [useSFIcon]="true"
-                  [sfIconName]="'bolt.circle'"
-                  [imageInsets]="{ top: 0, left: 0, bottom: 0, right: 0 }"
-                  [options]="jobMenu.options" (tap)="markJobActionTap(item, 'job-menu')" (selected)="onSelectedJobMenu($event, item)">
-                </MenuButton>
-              </StackLayout>
+                <StackLayout *ngIf="item.status == 'OPEN' && user.roleId == 2" class="job-action-button"
+                  style="width: 100px; height: 70px;">
+                  <MenuButton class="fas" [class.job-action-tapped]="isJobActionTapped(item, 'job-menu')"
+                    style="font-size: 16px; height: 70px; width: 100px;" [showSpinner]="isJobMenuLoading(item)"
+                    [spinnerOffsetX]="0" [spinnerOffsetY]="0" [isRightSide]="true" [useSFIcon]="true"
+                    [sfIconName]="'bolt.circle'" [imageInsets]="{ top: 0, left: 0, bottom: 0, right: 0 }"
+                    [options]="jobMenu.options" (tap)="markJobActionTap(item, 'job-menu')"
+                    (selected)="onSelectedJobMenu($event, item)">
+                  </MenuButton>
+                </StackLayout>
 
               </StackLayout>
             </GridLayout>
 
             <!-- <Label class="fas firstRow" text="&#xf142;" (tap)="onDeleteJob(item)"></Label> -->
+          </StackLayout>
         </StackLayout>
-        </StackLayout>
-        <Label
-          class="fas status-icon floating-status {{ itemStatusClass(item) }}"
-          [text]="itemStatusIcon(item)">
+        <Label class="fas status-icon floating-status {{ itemStatusClass(item) }}" [text]="itemStatusIcon(item)">
         </Label>
       </GridLayout>
     </ng-template>

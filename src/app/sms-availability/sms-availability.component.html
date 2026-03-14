@@ -1,0 +1,55 @@
+<ActionBar class="action-bar" title="SMS Availability">
+  <ActionItem ios.position="right" [visibility]="isSaveLoading ? 'collapse' : 'visible'">
+    <StackLayout>
+      <MenuButton
+        id="sms-availability-menu-btn"
+        style="height: 48; width: 35; padding: 0; margin: 0;"
+        [useSFIcon]="true"
+        [sfIconName]="'ellipsis.circle'"
+        [isRightSide]="true"
+        [options]="mainMenuR.options"
+        (selected)="onSelectedMainMenuR($event)">
+      </MenuButton>
+    </StackLayout>
+  </ActionItem>
+  <ActionItem ios.position="right" [visibility]="isSaveLoading ? 'visible' : 'collapse'">
+    <ActivityIndicator [busy]="isSaveLoading" width="20" height="20"></ActivityIndicator>
+  </ActionItem>
+</ActionBar>
+
+<GridLayout
+  rows="*"
+  [class]="'container ' + (isDarkTheme ? 'theme-dark' : 'theme-light')"
+  (loaded)="onRootLoaded()"
+  (tap)="onContainerTap($event)">
+  <ScrollView row="0" #availabilityScroll id="availability-scroll" [height]="availabilityScrollHeight" verticalAlignment="top">
+    <StackLayout class="content" [class.content-second-focused]="isSecondAvailabilityFocused">
+      <StackLayout>
+        <Label text="English Availability text" class="section-title"></Label>
+        <TextView
+          hint="Enter English availability message"
+          [text]="englishAvailabilityText"
+          (textChange)="englishAvailabilityText = $event.value"
+          (tap)="onInputTap()"
+          (focus)="onAvailabilityFocus(0)"
+          (blur)="onAvailabilityBlur(0)"
+          class="notes-input">
+        </TextView>
+      </StackLayout>
+
+      <StackLayout class="survey-section">
+        <Label text="Spanish Availability text" class="section-title"></Label>
+        <TextView
+          #spanishAvailabilityInput
+          hint="Enter Spanish availability message"
+          [text]="spanishAvailabilityText"
+          (textChange)="onSpanishAvailabilityTextChange($event.value)"
+          (tap)="onInputTap()"
+          (focus)="onAvailabilityFocus(1)"
+          (blur)="onAvailabilityBlur(1)"
+          class="notes-input">
+        </TextView>
+      </StackLayout>
+    </StackLayout>
+  </ScrollView>
+</GridLayout>

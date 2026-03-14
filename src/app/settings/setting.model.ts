@@ -1,6 +1,9 @@
 export class SettingModel {
   public userId?: number;
+  public carRentalAmount?: number = 0;
+  public toolRentalAmount?: number = 0;
   public meterRentAmount?: number = 0;
+  public billingPlatformAmount?: number = 0;
   public penguinDataAmount?: number = 0;
   public fundWeeks?: number = 0;
   public payday: number = 0;
@@ -10,4 +13,3 @@ export class SettingModel {
     Object.assign(this, setting);
   }
 }
-

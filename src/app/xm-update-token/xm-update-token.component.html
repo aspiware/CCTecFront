@@ -1,0 +1,36 @@
+<ActionBar class="action-bar" title="XM Update Token">
+  <ActionItem ios.position="right" [visibility]="isSaveLoading ? 'collapse' : 'visible'">
+    <StackLayout>
+      <MenuButton
+        id="xm-update-token-menu-btn"
+        style="height: 48; width: 35; padding: 0; margin: 0;"
+        [useSFIcon]="true"
+        [sfIconName]="'ellipsis.circle'"
+        [isRightSide]="true"
+        [options]="mainMenuR.options"
+        (selected)="onSelectedMainMenuR($event)">
+      </MenuButton>
+    </StackLayout>
+  </ActionItem>
+  <ActionItem ios.position="right" [visibility]="isSaveLoading ? 'visible' : 'collapse'">
+    <ActivityIndicator [busy]="isSaveLoading" width="20" height="20"></ActivityIndicator>
+  </ActionItem>
+</ActionBar>
+
+<GridLayout
+  rows="*"
+  [class]="'container ' + (isDarkTheme ? 'theme-dark' : 'theme-light')"
+  (loaded)="onRootLoaded()">
+  <ScrollView row="0">
+    <StackLayout class="content">
+      <StackLayout class="card">
+        <TextView
+          hint="Enter token"
+          [text]="token"
+          (textChange)="token = $event.value"
+          class="notes-input">
+        </TextView>
+      </StackLayout>
+    </StackLayout>
+  </ScrollView>
+</GridLayout>

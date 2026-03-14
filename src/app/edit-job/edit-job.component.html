@@ -75,10 +75,10 @@
             <ng-template tkListItemTemplate let-item="item">
               <GridLayout rows="auto" columns="*, auto" style="margin-left: 40; margin-right: 20; margin-top: 6; margin-bottom: 6;">
                 <GridLayout orientation="horizontal" class="item-bag" col="0" columns="*, auto">
-                  <StackLayout orientation="horizontal" col="0">
-                    <Label [text]="item.name"></Label>
-                    <Label [text]="item.price | currency"></Label>
-                  </StackLayout>
+                  <GridLayout col="0" columns="*, auto">
+                    <Label col="0" style="font-size: 14;" [text]="item.name"></Label>
+                    <Label col="1" style="font-size: 14;" [text]="item.price | currency" horizontalAlignment="right"></Label>
+                  </GridLayout>
                 </GridLayout>
               </GridLayout>
             </ng-template>
@@ -108,11 +108,16 @@
             (itemSelected)="onUpgradeDeviceSelected($event)"
             (itemDeselected)="onUpgradeDeviceDeselected($event)"
             [items]="updateDeviceItems"
-            selectionBehavior="LongPress"
+            selectionBehavior="Press"
             multipleSelection="true"
+            
             class="custom-types-list">
-            <ng-template tkListItemTemplate let-item="item">
-              <GridLayout rows="auto" columns="*, auto" style="margin-left: 40; margin-right: 20; margin-top: 6; margin-bottom: 6;">
+            <ng-template tkListItemTemplate let-item="item" let-i="index">
+              <GridLayout
+                rows="auto"
+                columns="*, auto"
+                style="margin-left: 40; margin-right: 20; margin-top: 6; margin-bottom: 6;"
+                (tap)="onUpgradeDeviceRowTap(i)">
                 <GridLayout orientation="horizontal" class="item-bag" col="0" columns="*, auto">
                   <GridLayout col="0" columns="28,60,*,auto">
                     <Label
@@ -132,7 +137,7 @@
                     <Label
                       col="1"
                       horizontalAlignment="left"
-                      style="font-size: 14;"
+                      style="font-size: 12;"
                       [text]="item.raw?.type == 'STB' || item.raw?.type == 'IPSTB'
                         ? 'VIDEO'
                         : item.raw?.type == 'MTA' || item.raw?.type == 'HSI' || item.raw?.type == 'CM'
@@ -143,14 +148,14 @@
                     <Label
                       col="2"
                       horizontalAlignment="left"
-                      style="font-size: 14;"
+                      style="font-size: 12;"
                       [text]="item.raw?.name || item.raw?.deviceName"
                       [style.color]="!item.raw?.connectionStatus ? 'rgb(160, 160, 160)' : 'white'">
                     </Label>
                     <Label
                       col="3"
                       horizontalAlignment="left"
-                      style="font-size: 14;"
+                      style="font-size: 12;"
                       [text]="item.raw?.serialNumber || item.raw?.deviceSerialNumber"
                       [style.color]="!item.raw?.connectionStatus ? 'rgb(160, 160, 160)' : 'white'">
                     </Label>

@@ -1,14 +1,145 @@
-<ActionBar class="action-bar" title="Settings"></ActionBar>
+<ActionBar class="action-bar" title="Settings">
+  <!-- <ActionItem
+    ios.position="right"
+    text="Subscription"
+    (tap)="openSubscription()">
+  </ActionItem> -->
+</ActionBar>
 
-<GridLayout rows="auto,auto,*" class="container">
-  <Label row="0" [text]="'Subscription: ' + (isSubscribed ? 'Active' : 'Inactive')" class="title"></Label>
-  <Label row="1" text="UI flow enabled. Backend validation will be connected next." class="subtitle"></Label>
+<GridLayout
+  rows="*"
+  [class]="'container ' + (isDarkTheme ? 'theme-dark' : 'theme-light')"
+  (loaded)="onRootLoaded()">
+  <ScrollView>
+    <StackLayout class="content">
+      <Label text="Subscription" class="category-title"></Label>
+      <StackLayout class="settings-card">
+        <GridLayout columns="auto,*,auto" class="settings-row">
+          <Label col="0" class="icon-tile fas" text="&#xf073;"></Label>
+          <Label col="1" class="row-label" [text]="subscriptionDateText"></Label>
+          <Label col="2" class="chevron fas" text=""></Label>
+          <GridLayout col="1" colSpan="2" class="row-divider"></GridLayout>
+        </GridLayout>
+        <GridLayout columns="auto,*,auto" class="settings-row">
+          <Label col="0" class="icon-tile fas" text="&#xf02b;"></Label>
+          <GridLayout col="1" columns="*,auto">
+            <Label col="0" class="row-label" [text]="subscriptionPlanText"></Label>
+            <Label col="1" class="row-label row-label-right" [text]="subscriptionPriceIntervalText"></Label>
+          </GridLayout>
+          <Label col="2" class="chevron fas" text=""></Label>
+          <GridLayout col="1" colSpan="2" class="row-divider"></GridLayout>
+        </GridLayout>
+        <GridLayout columns="auto,*,auto" class="settings-row">
+          <Label col="0" class="icon-tile fas" text="&#xf2f9;"></Label>
+          <GridLayout col="1" columns="*,auto">
+            <Label col="0" class="row-label" [text]="subscriptionAutoRenewText"></Label>
+            <Label col="1" class="row-label row-label-right" [text]="subscriptionCanceledAtText"></Label>
+          </GridLayout>
+          <Label col="2" class="chevron fas" text=""></Label>
+          <GridLayout col="1" colSpan="2" class="row-divider"></GridLayout>
+        </GridLayout>
+        <GridLayout columns="auto,*,auto" class="settings-row" (tap)="onManageSubscription()">
+          <Label col="0" class="icon-tile fas" text="&#xf013;"></Label>
+          <Label col="1" class="row-label" text="Manage Subscription"></Label>
+          <Label col="2" class="chevron fas" text="&#xf054;"></Label>
+          <GridLayout col="1" colSpan="2" class="row-divider"></GridLayout>
+        </GridLayout>
+        <GridLayout columns="auto,*,auto" class="settings-row settings-row-last" (tap)="restorePurchases()">
+          <Label col="0" class="icon-tile fas" text="&#xf0e2;"></Label>
+          <Label col="1" class="row-label" text="Restore Purchase"></Label>
+          <Label col="2" class="chevron fas" text=""></Label>
+        </GridLayout>
+      </StackLayout>
 
-  <StackLayout row="2" class="card">
-    <Label text="Subscription Controls" class="card-title"></Label>
+      <Label text="Jobs" class="category-title"></Label>
+      <StackLayout class="settings-card">
+        <GridLayout columns="auto,*,auto" class="settings-row" (tap)="openResidentialJobPrices()">
+          <Label col="0" class="icon-tile fas" text="&#xf015;"></Label>
+          <Label col="1" class="row-label" text="Residential Prices"></Label>
+          <Label col="2" class="chevron fas" text="&#xf054;"></Label>
+          <GridLayout col="1" colSpan="2" class="row-divider"></GridLayout>
+        </GridLayout>
+        <GridLayout columns="auto,*,auto" class="settings-row" (tap)="openXhJobPrices()">
+          <Label col="0" class="icon-tile fas" text="&#xf3ed;"></Label>
+          <Label col="1" class="row-label" text="XH Prices"></Label>
+          <Label col="2" class="chevron fas" text="&#xf054;"></Label>
+          <GridLayout col="1" colSpan="2" class="row-divider"></GridLayout>
+        </GridLayout>
+        <GridLayout columns="auto,*,auto" class="settings-row" (tap)="openFiberJobPrices()">
+          <Label col="0" class="icon-tile fas" text="&#xf6ff;"></Label>
+          <Label col="1" class="row-label" text="Fiber Prices"></Label>
+          <Label col="2" class="chevron fas" text="&#xf054;"></Label>
+          <GridLayout col="1" colSpan="2" class="row-divider"></GridLayout>
+        </GridLayout>
+        <GridLayout columns="auto,*,auto" class="settings-row settings-row-last" (tap)="openBusinessJobPrices()">
+          <Label col="0" class="icon-tile fas" text="&#xf0b1;"></Label>
+          <Label col="1" class="row-label" text="Business Prices"></Label>
+          <Label col="2" class="chevron fas" text="&#xf054;"></Label>
+        </GridLayout>
+      </StackLayout>
 
-    <Button text="Open Subscription Screen" class="btn btn-primary" (tap)="openSubscription()"></Button>
-    <Button text="Simulate Active" class="btn" (tap)="simulateActive()"></Button>
-    <Button text="Simulate Inactive" class="btn btn-danger" (tap)="simulateInactive()"></Button>
-  </StackLayout>
+      <Label text="SMS" class="category-title"></Label>
+      <StackLayout class="settings-card">
+        <GridLayout columns="auto,*,auto" class="settings-row" (tap)="openSmsSurvey()">
+          <Label col="0" class="icon-tile fas" text="&#xf075;"></Label>
+          <Label col="1" class="row-label" text="Survey"></Label>
+          <Label col="2" class="chevron fas" text="&#xf054;"></Label>
+          <GridLayout col="1" colSpan="2" class="row-divider"></GridLayout>
+        </GridLayout>
+        <GridLayout columns="auto,*,auto" class="settings-row settings-row-last" (tap)="openSmsAvailability()">
+          <Label col="0" class="icon-tile fas" text="&#xf27a;"></Label>
+          <Label col="1" class="row-label" text="Availability"></Label>
+          <Label col="2" class="chevron fas" text="&#xf054;"></Label>
+        </GridLayout>
+      </StackLayout>
+
+      <Label text="Billing" class="category-title"></Label>
+      <StackLayout class="settings-card">
+        <GridLayout columns="auto,*,auto" class="settings-row settings-row-last" (tap)="openPayroll()">
+          <Label col="0" class="icon-tile fas" text="&#xf155;"></Label>
+          <Label col="1" class="row-label" text="Payroll"></Label>
+          <Label col="2" class="chevron fas" text="&#xf054;"></Label>
+        </GridLayout>
+      </StackLayout>
+
+      <Label text="LEGAL" class="category-title"></Label>
+      <StackLayout class="settings-card">
+        <GridLayout columns="auto,*,auto" class="settings-row" (tap)="openPrivacyPolicy()">
+          <Label col="0" class="icon-tile fas" text="&#xf05a;"></Label>
+          <Label col="1" class="row-label" text="Privacy Policy"></Label>
+          <Label col="2" class="chevron fas" text="&#xf054;"></Label>
+          <GridLayout col="1" colSpan="2" class="row-divider"></GridLayout>
+        </GridLayout>
+        <GridLayout columns="auto,*,auto" class="settings-row settings-row-last" (tap)="openTermsOfService()">
+          <Label col="0" class="icon-tile fas" text="&#xf15c;"></Label>
+          <Label col="1" class="row-label" text="Terms of Service"></Label>
+          <Label col="2" class="chevron fas" text="&#xf054;"></Label>
+        </GridLayout>
+      </StackLayout>
+
+      <Label text="ACCOUNT" class="category-title"></Label>
+      <StackLayout class="settings-card">
+        <GridLayout columns="auto,*,auto" class="settings-row" (tap)="logout()">
+          <Label col="0" class="icon-tile fas" text="&#xf2f5;"></Label>
+          <Label col="1" class="row-label" text="Logout"></Label>
+          <Label col="2" class="chevron fas" text=""></Label>
+          <GridLayout col="1" colSpan="2" class="row-divider"></GridLayout>
+        </GridLayout>
+        <GridLayout columns="auto,*,auto" class="settings-row settings-row-last" (tap)="confirmDeleteAccount()">
+          <Label col="0" class="icon-tile fas" text="&#xf1f8;"></Label>
+          <Label col="1" class="row-label destructive-label" text="Delete Account"></Label>
+          <Label col="2" class="chevron fas" text=""></Label>
+        </GridLayout>
+      </StackLayout>
+
+      <Label *ngIf="roleId === 2" text="XM" class="category-title"></Label>
+      <StackLayout *ngIf="roleId === 2" class="settings-card">
+        <GridLayout columns="auto,*,auto" class="settings-row settings-row-last" (tap)="openXmUpdateToken()">
+          <Label col="0" class="icon-tile fas" text="&#xf084;"></Label>
+          <Label col="1" class="row-label" text="Update Token"></Label>
+          <Label col="2" class="chevron fas" text="&#xf054;"></Label>
+        </GridLayout>
+      </StackLayout>
+    </StackLayout>
+  </ScrollView>
 </GridLayout>
