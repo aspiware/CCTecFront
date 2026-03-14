@@ -1,29 +1,113 @@
 .container {
-  margin: 12;
+  height: 100%;
 }
 
-.title {
-  font-size: 20;
-  font-weight: 700;
+.filters-row {
+  margin: 10;
+  columns: *, *, auto;
 }
 
-.subtitle {
-  margin-top: 6;
-  opacity: 0.8;
-}
-
-.card {
-  margin-top: 14;
-  padding: 14;
-  border-radius: 8;
+.filter-card,
+.total-card {
   background-color: rgba(126, 151, 185, 0.2);
+  border-radius: 8;
+  padding: 10;
 }
 
-.card-title {
+.filter-card {
+  margin-right: 8;
+}
+
+.filter-label {
+  font-size: 13;
+  font-weight: 700;
+  margin-bottom: 6;
+}
+
+.total-card {
+  min-width: 110;
+  horizontal-align: right;
+}
+
+.total-label {
+  text-align: right;
+}
+
+.total-value {
+  font-size: 18;
+  font-weight: 700;
+  text-align: right;
+}
+
+.jobs-list {
+  height: 100%;
+}
+
+.item-bag {
+  background-color: rgba(126, 151, 185, 0.308);
+  margin-left: 10;
+  margin-right: 10;
+  border-radius: 5;
+  margin-top: 7;
+  padding: 10;
+}
+
+.status-icon {
+  width: 22;
   font-size: 16;
+  margin-top: 2;
+}
+
+.floating-status {
+  horizontal-align: left;
+  vertical-align: top;
+  margin-left: 5;
+  margin-top: 0;
+  z-index: 10;
+}
+
+.status-closed {
+  color: #65b56b;
+}
+
+.status-open {
+  color: #c79042;
+}
+
+.status-current {
+  color: #5a90d6;
+}
+
+.status-default {
+  color: #888;
+}
+
+.first-row {
+  font-size: 15;
   font-weight: 700;
 }
 
-.card-text {
-  margin-top: 6;
+.amount {
+  text-align: right;
+}
+
+.second-row {
+  font-size: 12;
+  margin-top: 15;
+}
+
+.meta-row {
+  margin-top: 15;
+}
+
+.units {
+  text-align: right;
+}
+
+.secondRow {
+  font-size: 12;
+}
+
+.survey-icon {
+  font-size: 18;
 }

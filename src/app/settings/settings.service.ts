@@ -127,15 +127,18 @@ export class SettingsService {
     );
   }
 
-  public findPerDay(
+  public findJobsByUser(
     userId: number,
     starDate: string,
     endDate: string
   ): Observable<any> {
+    if (this.isDemoUser()) {
+      return of([]);
+    }
     return this.httpClient.get<any>(
       encodeURI(
         this.configService.getUrlBase() +
-        `/jobs/findPerDay/${userId}/${starDate}/${endDate}`
+        `/jobs/findByUser/${userId}/${starDate}/${endDate}`
       )
     );
   }
