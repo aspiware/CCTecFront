@@ -680,6 +680,14 @@ export class TodayComponent implements OnInit {
       return;
     }
 
+    if (this.isDemoUser()) {
+      this.applyJobsForDisplay(this.demoJobs.map((job) => ({ ...job })));
+      this.weeklyTotal = this.todayTotal;
+      onFinished?.();
+      this.cdr.detectChanges();
+      return;
+    }
+
     this.isSyncing = true;
     this.cdr.detectChanges();
 
