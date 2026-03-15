@@ -1,4 +1,4 @@
-<ActionBar class="action-bar" title="Jobs History">
+<ActionBar class="action-bar" [title]="'Jobs History (' + jobList.length + ')'">
   <ActionItem ios.position="right" ios.systemIcon="13" [visibility]="isSyncing ? 'collapse' : 'visible'"
     [isEnabled]="!isSyncing" (tap)="refreshJobs()">
   </ActionItem>
