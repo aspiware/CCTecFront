@@ -11,6 +11,10 @@
   margin-bottom: 10;
 }
 
+.search-row {
+  margin-left: 10;
+}
+
 .date-filter-block {
   width: 150;
 }
@@ -29,6 +33,33 @@
 .today-date-picker {
   background-color: transparent;
   width: 130;
+}
+
+.input-shell {
+  border-width: 1;
+  border-radius: 10;
+  height: 44;
+}
+
+TextField.custom-tf-inline {
+  font-size: 17;
+  padding-left: 12;
+  padding-right: 5;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin: 0;
+  border-width: 0;
+  background-color: transparent;
+  vertical-align: middle;
+}
+
+.search-icon {
+  font-size: 16;
+  width: 34;
+  text-align: center;
+  vertical-align: middle;
+  margin-right: 5;
+  height: 44;
 }
 
 .item-bag {
@@ -129,4 +160,32 @@
   border-color: rgba(142, 142, 147, 0.55);
   border-radius: 8;
   margin-right: 6 !important;
+}
+
+.ns-light .input-shell {
+  background-color: #ffffff;
+  border-color: #d1d1d6;
+}
+
+.ns-light TextField.custom-tf-inline {
+  color: #000000;
+  placeholder-color: #8e8e93;
+}
+
+.ns-light .search-icon {
+  color: #3a3a3c;
+}
+
+.ns-dark .input-shell {
+  background-color: #2c2c2e;
+  border-color: #48484a;
+}
+
+.ns-dark TextField.custom-tf-inline {
+  color: #ffffff;
+  placeholder-color: #aeaeb2;
+}
+
+.ns-dark .search-icon {
+  color: #f2f2f7;
 }

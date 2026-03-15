@@ -28,6 +28,7 @@ export class JobsComponent implements OnInit {
   private messageComposeDelegate: any;
   private isCopyMenuOpen = false;
   private lastCopyMenuTs = 0;
+  private allJobs: any[] = [];
 
   public user: UserModel | null = null;
   public isSyncing = false;
@@ -37,6 +38,7 @@ export class JobsComponent implements OnInit {
   public endDate = new Date();
   public todayDate = new Date();
   public isDemoMode = false;
+  public jobsSearch = '';
 
   constructor(
     private usersService: UsersService,
@@ -75,6 +77,19 @@ export class JobsComponent implements OnInit {
 
   public refreshJobs(): void {
     this.loadJobs();
+  }
+
+  public onJobsSearchChange(value: string): void {
+    this.jobsSearch = String(value || '');
+    this.applyJobsFilter();
+  }
+
+  public clearJobsSearch(): void {
+    if (!this.jobsSearch) {
+      return;
+    }
+    this.jobsSearch = '';
+    this.applyJobsFilter();
   }
 
   public onPullToRefresh(event: any): void {
@@ -539,10 +554,34 @@ export class JobsComponent implements OnInit {
         return bTime - aTime;
       });
 
-    this.jobList = new ObservableArray(normalizedJobs);
+    this.allJobs = normalizedJobs;
+    this.applyJobsFilter();
+  }
+
+  private applyJobsFilter(): void {
+    const query = this.jobsSearch.trim().toLowerCase();
+    const filteredJobs = !query
+      ? [...this.allJobs]
+      : this.allJobs.filter((job) => {
+          const haystack = [
+            job?.jobDescription,
+            job?.description,
+            job?.address,
+            job?.city,
+            job?.state,
+            job?.number,
+            job?.accountNumber,
+          ]
+            .map((value) => String(value || '').toLowerCase())
+            .join(' ');
+
+          return haystack.includes(query);
+        });
+
+    this.jobList = new ObservableArray(filteredJobs);
     this.totalAmount = this.usersService.isDemoUser(this.user)
       ? this.demoWeeklyTotal
-      : normalizedJobs.reduce((sum, job) => sum + Number(job?.amount || 0), 0);
+      : filteredJobs.reduce((sum, job) => sum + Number(job?.amount || 0), 0);
   }
 
   private normalizeJobsResponse(response: any): any[] {
