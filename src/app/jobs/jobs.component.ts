@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit, ViewContainerRef } from '@angular/core';
 import { ModalDialogService, NativeScriptCommonModule } from '@nativescript/angular';
-import { Application, ObservableArray, Screen, Utils } from '@nativescript/core';
+import { Application, ObservableArray, Page, Screen, Utils } from '@nativescript/core';
 import { NativeScriptUIListViewModule } from 'nativescript-ui-listview/angular';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CustomerInfoComponent } from '../customer-info/customer-info.component';
@@ -50,7 +50,8 @@ export class JobsComponent implements OnInit, OnDestroy {
     private vcRef: ViewContainerRef,
     private configService: ConfigService,
     private router: Router,
-    private activatedRoute: ActivatedRoute
+    private activatedRoute: ActivatedRoute,
+    private page: Page
   ) {}
 
   ngOnInit(): void {
@@ -69,6 +70,11 @@ export class JobsComponent implements OnInit, OnDestroy {
     if (this.appearanceChangedHandler) {
       Application.off(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
     }
+  }
+
+  public onRootLoaded(): void {
+    this.syncTheme();
+    this.cdr.detectChanges();
   }
 
   public onStartDateChange(event: any): void {
@@ -522,7 +528,14 @@ export class JobsComponent implements OnInit, OnDestroy {
   }
 
   private syncTheme(): void {
-    this.isDarkTheme = Application.systemAppearance() === 'dark';
+    const appAppearance = Application.systemAppearance();
+    if (appAppearance === 'dark' || appAppearance === 'light') {
+      this.isDarkTheme = appAppearance === 'dark';
+      return;
+    }
+
+    const pageClassName = String(this.page.className || '');
+    this.isDarkTheme = pageClassName.includes('ns-dark');
   }
 
   private loadJobs(onFinished?: () => void): void {
