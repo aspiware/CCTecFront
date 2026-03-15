@@ -1,10 +1,16 @@
-import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnInit } from '@angular/core';
-import { NativeScriptCommonModule } from '@nativescript/angular';
-import { ObservableArray } from '@nativescript/core';
+import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnInit, ViewContainerRef } from '@angular/core';
+import { ModalDialogService, NativeScriptCommonModule } from '@nativescript/angular';
+import { ObservableArray, Screen } from '@nativescript/core';
 import { NativeScriptUIListViewModule } from 'nativescript-ui-listview/angular';
+import { ActivatedRoute, Router } from '@angular/router';
+import { CustomerInfoComponent } from '../customer-info/customer-info.component';
+import { DevicesComponent } from '../devices/devices.component';
+import { EditJobComponent } from '../edit-job/edit-job.component';
 import { SettingsService } from '../settings/settings.service';
 import { UserModel } from '../shared/models/user.model';
+import { ConfigService } from '../shared/services/config.service';
 import { UsersService } from '../shared/services/users.service';
+import { WifiConfigComponent } from '../wifi-config/wifi-config.component';
 
 @Component({
   standalone: true,
@@ -17,6 +23,8 @@ import { UsersService } from '../shared/services/users.service';
 export class JobsComponent implements OnInit {
   private readonly demoWeeklyTotal = 2062.75;
   private readonly demoJobs = this.buildDemoJobs();
+  private readonly actionTapStates: Record<string, boolean> = {};
+  private readonly actionTapTimers: Record<string, any> = {};
 
   public user: UserModel | null = null;
   public isSyncing = false;
@@ -25,15 +33,22 @@ export class JobsComponent implements OnInit {
   public startDate = this.createDefaultStartDate();
   public endDate = new Date();
   public todayDate = new Date();
+  public isDemoMode = false;
 
   constructor(
     private usersService: UsersService,
     private settingsService: SettingsService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private modalService: ModalDialogService,
+    private vcRef: ViewContainerRef,
+    private configService: ConfigService,
+    private router: Router,
+    private activatedRoute: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
     this.user = this.usersService.getUser();
+    this.isDemoMode = this.usersService.isDemoUser(this.user);
     this.loadJobs();
   }
 
@@ -96,6 +111,153 @@ export class JobsComponent implements OnInit {
       return '\uf017';
     }
     return '\uf111';
+  }
+
+  public markJobActionTap(item: any, action: string, autoClearMs = 140): void {
+    const key = `${item?.number || 'unknown'}:${action}`;
+    this.actionTapStates[key] = true;
+    this.cdr.detectChanges();
+
+    if (this.actionTapTimers[key]) {
+      clearTimeout(this.actionTapTimers[key]);
+    }
+
+    if (autoClearMs > 0) {
+      this.actionTapTimers[key] = setTimeout(() => {
+        this.actionTapStates[key] = false;
+        this.cdr.detectChanges();
+      }, autoClearMs);
+    }
+  }
+
+  public isJobActionTapped(item: any, action: string): boolean {
+    const key = `${item?.number || 'unknown'}:${action}`;
+    return !!this.actionTapStates[key];
+  }
+
+  public clearJobActionTap(item: any, action: string): void {
+    const key = `${item?.number || 'unknown'}:${action}`;
+    if (this.actionTapTimers[key]) {
+      clearTimeout(this.actionTapTimers[key]);
+      delete this.actionTapTimers[key];
+    }
+    this.actionTapStates[key] = false;
+    this.cdr.detectChanges();
+  }
+
+  public wifiConfig(job: any): void {
+    if (!job) {
+      return;
+    }
+
+    const options: any = {
+      context: job,
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: false,
+      stretched: false,
+      cancelable: true,
+      dismissEnabled: true,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.Custom,
+      },
+    };
+
+    this.modalService.showModal(WifiConfigComponent, options).then(() => {
+      this.clearJobActionTap(job, 'wifi');
+    });
+  }
+
+  public showCustomerInfo(job: any): void {
+    if (!job) {
+      return;
+    }
+
+    const options: any = {
+      context: job,
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: false,
+      stretched: false,
+      cancelable: true,
+      dismissEnabled: true,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.Custom,
+      },
+    };
+
+    this.modalService.showModal(CustomerInfoComponent, options).then(() => {
+      const surveySent = this.configService.getSurveySent(job?.number);
+      job.sms_survey_sent = !!surveySent;
+      this.cdr.detectChanges();
+      this.clearJobActionTap(job, 'customer');
+    });
+  }
+
+  public showEditJob(job: any): void {
+    if (!job) {
+      return;
+    }
+
+    const options: any = {
+      context: job,
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: false,
+      stretched: false,
+      cancelable: true,
+      dismissEnabled: true,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.Custom,
+      },
+    };
+
+    this.modalService.showModal(EditJobComponent, options).then((result) => {
+      if (result) {
+        this.loadJobs();
+      }
+      this.clearJobActionTap(job, 'edit');
+    });
+  }
+
+  public showDevicesModal(job: any): void {
+    if (!job) {
+      return;
+    }
+
+    const options: any = {
+      context: job,
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: false,
+      stretched: false,
+      cancelable: true,
+      dismissEnabled: true,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.Custom,
+      },
+    };
+
+    this.modalService.showModal(DevicesComponent, options).then((result: any) => {
+      if (result?.navigateToActivateService) {
+        setTimeout(() => {
+          this.goToActivateService(result?.job || job);
+        }, 0);
+        return;
+      }
+      this.clearJobActionTap(job, 'devices');
+    });
+  }
+
+  public goToActivateService(job?: any): void {
+    const queryParams = this.buildActivateServiceQueryParams(job);
+    this.router.navigate(['../activate-service'], {
+      queryParams,
+      relativeTo: this.activatedRoute,
+    });
+    if (job) {
+      this.clearJobActionTap(job, 'activate-service');
+    }
   }
 
   private loadJobs(onFinished?: () => void): void {
@@ -210,6 +372,33 @@ export class JobsComponent implements OnInit {
     const result = new Date(date);
     result.setHours(23, 59, 59, 999);
     return result;
+  }
+
+  private buildActivateServiceQueryParams(job?: any): any {
+    if (!job) {
+      return {};
+    }
+
+    return {
+      ...job,
+      customer: this.stringifyQueryParam(job?.customer),
+      devices: this.stringifyQueryParam(job?.devices),
+      customJob: this.stringifyQueryParam(job?.customJob),
+    };
+  }
+
+  private stringifyQueryParam(value: any): string {
+    if (value === null || value === undefined) {
+      return '';
+    }
+    if (typeof value === 'string') {
+      return value;
+    }
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
   }
 
   private buildDemoJobs(): any[] {
