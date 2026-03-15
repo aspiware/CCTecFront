@@ -7,7 +7,7 @@
   </ActionItem>
 </ActionBar>
 
-<StackLayout class="container">
+<StackLayout [class]="'container ' + (isDarkTheme ? 'theme-dark' : 'theme-light')">
   <GridLayout rows="auto,auto" columns="*" style="margin-right: 10; margin-top: 10;">
     <GridLayout row="0" columns="auto,auto,*" class="jobs-filters-row">
       <GridLayout col="0" rows="auto" horizontalAlignment="left" class="date-filter-block">

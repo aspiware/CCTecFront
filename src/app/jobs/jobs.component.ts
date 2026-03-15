@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnInit, ViewContainerRef } from '@angular/core';
+import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit, ViewContainerRef } from '@angular/core';
 import { ModalDialogService, NativeScriptCommonModule } from '@nativescript/angular';
 import { Application, ObservableArray, Screen, Utils } from '@nativescript/core';
 import { NativeScriptUIListViewModule } from 'nativescript-ui-listview/angular';
@@ -20,7 +20,7 @@ import { WifiConfigComponent } from '../wifi-config/wifi-config.component';
   templateUrl: './jobs.component.html',
   styleUrl: './jobs.component.scss',
 })
-export class JobsComponent implements OnInit {
+export class JobsComponent implements OnInit, OnDestroy {
   private readonly demoWeeklyTotal = 2062.75;
   private readonly demoJobs = this.buildDemoJobs();
   private readonly actionTapStates: Record<string, boolean> = {};
@@ -29,6 +29,7 @@ export class JobsComponent implements OnInit {
   private isCopyMenuOpen = false;
   private lastCopyMenuTs = 0;
   private allJobs: any[] = [];
+  private appearanceChangedHandler?: () => void;
 
   public user: UserModel | null = null;
   public isSyncing = false;
@@ -38,6 +39,7 @@ export class JobsComponent implements OnInit {
   public endDate = new Date();
   public todayDate = new Date();
   public isDemoMode = false;
+  public isDarkTheme = Application.systemAppearance() === 'dark';
   public jobsSearch = '';
 
   constructor(
@@ -52,9 +54,21 @@ export class JobsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.syncTheme();
+    this.appearanceChangedHandler = () => {
+      this.syncTheme();
+      this.cdr.detectChanges();
+    };
+    Application.on(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
     this.user = this.usersService.getUser();
     this.isDemoMode = this.usersService.isDemoUser(this.user);
     this.loadJobs();
+  }
+
+  ngOnDestroy(): void {
+    if (this.appearanceChangedHandler) {
+      Application.off(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
+    }
   }
 
   public onStartDateChange(event: any): void {
@@ -505,6 +519,10 @@ export class JobsComponent implements OnInit {
     }
 
     viewController.presentViewControllerAnimatedCompletion(alert, true, null);
+  }
+
+  private syncTheme(): void {
+    this.isDarkTheme = Application.systemAppearance() === 'dark';
   }
 
   private loadJobs(onFinished?: () => void): void {
