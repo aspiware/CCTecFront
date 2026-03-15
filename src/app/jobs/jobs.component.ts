@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnInit, ViewContainerRef } from '@angular/core';
 import { ModalDialogService, NativeScriptCommonModule } from '@nativescript/angular';
-import { ObservableArray, Screen } from '@nativescript/core';
+import { Application, ObservableArray, Screen } from '@nativescript/core';
 import { NativeScriptUIListViewModule } from 'nativescript-ui-listview/angular';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CustomerInfoComponent } from '../customer-info/customer-info.component';
@@ -25,6 +25,7 @@ export class JobsComponent implements OnInit {
   private readonly demoJobs = this.buildDemoJobs();
   private readonly actionTapStates: Record<string, boolean> = {};
   private readonly actionTapTimers: Record<string, any> = {};
+  private messageComposeDelegate: any;
 
   public user: UserModel | null = null;
   public isSyncing = false;
@@ -150,6 +151,9 @@ export class JobsComponent implements OnInit {
       return;
     }
 
+    const modalWidth = Math.min(380, Math.max(300, Screen.mainScreen.widthDIPs - 32));
+    const modalHeight = Math.min(620, Math.max(420, Screen.mainScreen.heightDIPs - 120));
+
     const options: any = {
       context: job,
       viewContainerRef: this.vcRef,
@@ -160,11 +164,31 @@ export class JobsComponent implements OnInit {
       dismissEnabled: true,
       ios: {
         presentationStyle: UIModalPresentationStyle.Custom,
+        // width: modalWidth,
+        // height: modalHeight,
       },
     };
 
-    this.modalService.showModal(WifiConfigComponent, options).then(() => {
+    this.modalService.showModal(WifiConfigComponent, options).then((result) => {
       this.clearJobActionTap(job, 'wifi');
+
+      if (!result) {
+        return;
+      }
+
+      if (!__IOS__) {
+        return;
+      }
+
+      if (typeof MFMessageComposeViewController === 'undefined' || !MFMessageComposeViewController.canSendText()) {
+        return;
+      }
+
+      const recipients = Array.isArray(result?.numbers)
+        ? result.numbers.filter((n: any) => !!n).map((n: any) => String(n))
+        : [];
+      const body = String(result?.wifiData || '');
+      setTimeout(() => this.presentSmsComposer(recipients, body), 150);
     });
   }
 
@@ -173,6 +197,9 @@ export class JobsComponent implements OnInit {
       return;
     }
 
+    const modalWidth = Math.min(380, Math.max(300, Screen.mainScreen.widthDIPs - 32));
+    const modalHeight = Math.min(620, Math.max(420, Screen.mainScreen.heightDIPs - 120));
+
     const options: any = {
       context: job,
       viewContainerRef: this.vcRef,
@@ -183,6 +210,8 @@ export class JobsComponent implements OnInit {
       dismissEnabled: true,
       ios: {
         presentationStyle: UIModalPresentationStyle.Custom,
+        // width: modalWidth,
+        // height: modalHeight,
       },
     };
 
@@ -260,6 +289,37 @@ export class JobsComponent implements OnInit {
     }
   }
 
+  private presentSmsComposer(recipients: string[], body: string): void {
+    const controller = MFMessageComposeViewController.new();
+    const MessageComposeDelegate = (NSObject as any).extend(
+      {
+        messageComposeViewControllerDidFinishWithResult: (
+          msgController: MFMessageComposeViewController,
+          _msgResult: MessageComposeResult
+        ) => {
+          msgController.dismissViewControllerAnimatedCompletion(true, null);
+          this.messageComposeDelegate = null;
+        },
+      },
+      {
+        protocols: [MFMessageComposeViewControllerDelegate],
+      }
+    );
+
+    this.messageComposeDelegate = MessageComposeDelegate.new();
+    controller.body = body;
+    controller.recipients = recipients as any;
+    controller.messageComposeDelegate = this.messageComposeDelegate;
+    (controller as any).__delegate = this.messageComposeDelegate;
+
+    const root = Application.ios?.rootController;
+    let presenter = root as UIViewController;
+    while (presenter?.presentedViewController) {
+      presenter = presenter.presentedViewController;
+    }
+    presenter?.presentViewControllerAnimatedCompletion(controller, true, null);
+  }
+
   private loadJobs(onFinished?: () => void): void {
     if (this.isSyncing) {
       onFinished?.();
@@ -297,6 +357,9 @@ export class JobsComponent implements OnInit {
       .map((job) => ({
         ...job,
         amount: Number(job?.amount || 0),
+        devices: this.parseJsonValue(job?.devices, []),
+        customer: this.parseJsonValue(job?.customer, null),
+        customJob: this.parseJsonValue(job?.customJob, null),
       }))
       .sort((a, b) => {
         const aTime = new Date(a?.timeSlotStartDateTime || a?.createdAt || 0).getTime();
@@ -398,6 +461,22 @@ export class JobsComponent implements OnInit {
       return JSON.stringify(value);
     } catch {
       return String(value);
+    }
+  }
+
+  private parseJsonValue<T>(value: any, fallback: T): T {
+    if (value === null || value === undefined || value === '') {
+      return fallback;
+    }
+
+    if (typeof value !== 'string') {
+      return value as T;
+    }
+
+    try {
+      return JSON.parse(value) as T;
+    } catch {
+      return fallback;
     }
   }
 
