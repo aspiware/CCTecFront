@@ -9,26 +9,7 @@
 
 <StackLayout class="container">
   <GridLayout rows="auto,auto" columns="*" style="margin-right: 10; margin-top: 10;">
-    <GridLayout row="0" columns="*" class="search-row">
-      <GridLayout columns="*,auto" class="input-shell" width="100%">
-        <TextField
-          col="0"
-          hint="Search jobs"
-          [text]="jobsSearch"
-          (textChange)="onJobsSearchChange($event.value)"
-          class="custom-tf-inline">
-        </TextField>
-        <Label
-          col="1"
-          class="search-icon fas"
-          [text]="jobsSearch?.trim() ? '&#xf057;' : '&#xf002;'"
-          [isUserInteractionEnabled]="!!jobsSearch?.trim()"
-          (tap)="clearJobsSearch()">
-        </Label>
-      </GridLayout>
-    </GridLayout>
-
-    <GridLayout row="1" columns="auto,auto,*" class="jobs-filters-row">
+    <GridLayout row="0" columns="auto,auto,*" class="jobs-filters-row">
       <GridLayout col="0" rows="auto" horizontalAlignment="left" class="date-filter-block">
         <GridLayout row="0" columns="auto" class="date-filter-row" horizontalAlignment="left">
           <DatePicker col="0" horizontalAlignment="left" class="today-date-picker" [date]="startDate"
@@ -47,6 +28,25 @@
       <StackLayout col="2" verticalAlignment="middle" horizontalAlignment="right">
         <Label class="action-bar-title today-label" [text]="totalAmount | currency"></Label>
       </StackLayout>
+    </GridLayout>
+
+    <GridLayout row="1" columns="*" class="search-row">
+      <GridLayout columns="*,auto" class="input-shell" width="100%">
+        <TextField
+          col="0"
+          hint="Search jobs"
+          [text]="jobsSearch"
+          (textChange)="onJobsSearchChange($event.value)"
+          class="custom-tf-inline">
+        </TextField>
+        <Label
+          col="1"
+          class="search-icon fas"
+          [text]="jobsSearch?.trim() ? '&#xf057;' : '&#xf002;'"
+          [isUserInteractionEnabled]="!!jobsSearch?.trim()"
+          (tap)="clearJobsSearch()">
+        </Label>
+      </GridLayout>
     </GridLayout>
   </GridLayout>
 
