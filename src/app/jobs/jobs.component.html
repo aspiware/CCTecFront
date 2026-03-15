@@ -44,12 +44,15 @@
           </GridLayout>
 
           <Label class="second-row"
+            (longPress)="showMenu($event, (item.address || '') + ', ' + (item.city || '') + ', ' + (item.state || '') + ' ' + fiveDigitZip(item.zipcode), 'address')"
             [text]="(item.address || '') + ', ' + (item.city || '') + ', ' + (item.state || '') + ' ' + fiveDigitZip(item.zipcode)">
           </Label>
 
           <GridLayout rows="auto" columns="auto, *, auto" class="meta-row">
-            <Label col="0" class="secondRow" [text]="'Job#: ' + (item.number || 'n/a')" style="margin-right: 10;"></Label>
-            <Label col="1" class="secondRow" [text]="'Account#: ' + (item.accountNumber || 'n/a')"></Label>
+            <Label col="0" (longPress)="showMenu($event, item.number, 'job')" class="secondRow"
+              [text]="'Job#: ' + (item.number || 'n/a')" style="margin-right: 10;"></Label>
+            <Label col="1" (longPress)="showMenu($event, item.accountNumber, 'account')" class="secondRow"
+              [text]="'Account#: ' + (item.accountNumber || 'n/a')"></Label>
             <Label col="2" class="secondRow units" [text]="'Units: ' + (item.jobUnits || 'n/a')"></Label>
           </GridLayout>
 
