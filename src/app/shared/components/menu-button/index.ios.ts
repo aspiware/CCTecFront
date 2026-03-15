@@ -69,6 +69,13 @@ export class MenuButton extends MenuButtonBase {
     if (this.showSpinner) {
       iosButton.setImageForState(null, UIControlState.Normal);
       iosButton.tintColor = tintColor;
+      if (!this.isRightSide) {
+        iosButton.translatesAutoresizingMaskIntoConstraints = false;
+        iosButton.widthAnchor.constraintEqualToConstant(56).active = true;
+        iosButton.heightAnchor.constraintEqualToConstant(48).active = true;
+      }
+      iosButton.contentVerticalAlignment = UIControlContentVerticalAlignment.Center;
+      iosButton.contentHorizontalAlignment = UIControlContentHorizontalAlignment.Center;
       const existingSpinner = iosButton.viewWithTag(9999) as UIActivityIndicatorView;
       if (existingSpinner) {
         existingSpinner.stopAnimating();
@@ -82,15 +89,19 @@ export class MenuButton extends MenuButtonBase {
       iosButton.addSubview(spinner);
       spinner.centerXAnchor.constraintEqualToAnchorConstant(
         iosButton.centerXAnchor,
-        this.resolveNumber(this.spinnerOffsetX, -10)
+        this.resolveNumber(this.spinnerOffsetX, 0)
       ).active = true;
       spinner.centerYAnchor.constraintEqualToAnchorConstant(
         iosButton.centerYAnchor,
-        this.resolveNumber(this.spinnerOffsetY, -6)
+        this.resolveNumber(this.spinnerOffsetY, 0)
       ).active = true;
       spinner.color = tintColor;
       iosButton.setNeedsLayout();
       iosButton.layoutIfNeeded();
+      setTimeout(() => {
+        iosButton.setNeedsLayout();
+        iosButton.layoutIfNeeded();
+      }, 0);
       spinner.startAnimating();
     } else {
       const existingSpinner = iosButton.viewWithTag(9999) as UIActivityIndicatorView;
