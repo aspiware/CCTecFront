@@ -280,9 +280,8 @@ export class JobsComponent implements OnInit {
 
   public goToActivateService(job?: any): void {
     const queryParams = this.buildActivateServiceQueryParams(job);
-    this.router.navigate(['../activate-service'], {
+    this.router.navigate(['/tabs', { outlets: { jobListTab: ['activate-service'] } }], {
       queryParams,
-      relativeTo: this.activatedRoute,
     });
     if (job) {
       this.clearJobActionTap(job, 'activate-service');

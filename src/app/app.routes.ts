@@ -49,6 +49,11 @@ export const routes: Routes = [
         component: JobsComponent,
       },
       {
+        path: 'activate-service',
+        outlet: 'jobListTab',
+        component: ActivateServiceComponent,
+      },
+      {
         path: 'today',
         outlet: 'todayListTab',
         component: TodayComponent,
