@@ -1,11 +1,74 @@
-<ActionBar class="action-bar" title="Jobs"></ActionBar>
+<ActionBar class="action-bar" title="Jobs History">
+  <ActionItem ios.position="right" ios.systemIcon="13" [visibility]="isSyncing ? 'collapse' : 'visible'"
+    [isEnabled]="!isSyncing" (tap)="refreshJobs()">
+  </ActionItem>
+  <ActionItem ios.position="right" [visibility]="isSyncing ? 'visible' : 'collapse'">
+    <ActivityIndicator [busy]="isSyncing" width="20" height="20"></ActivityIndicator>
+  </ActionItem>
+</ActionBar>
 
-<GridLayout rows="auto, auto, *" class="container">
-  <Label row="0" text="Jobs base screen migrated" class="title"></Label>
-  <Label row="1" text="Next step: migrate job list and filters." class="subtitle"></Label>
+<StackLayout class="container">
+  <GridLayout rows="auto" columns="*" style="margin-left: 10; margin-right: 10; margin-top: 10;">
+    <GridLayout row="0" columns="*,*,auto" class="jobs-filters-row">
+      <GridLayout col="0" rows="auto,auto" horizontalAlignment="left" class="date-filter-block">
+        <Label row="0" horizontalAlignment="left" class="action-bar-title today-label filter-title" text="Start Date"></Label>
+        <DatePicker row="1" horizontalAlignment="left" class="today-date-picker" [date]="startDate"
+          (dateChange)="onStartDateChange($event)"></DatePicker>
+      </GridLayout>
 
-  <StackLayout row="2" class="card">
-    <Label text="Open Jobs" class="card-title"></Label>
-    <Label text="Placeholder for list module" class="card-text"></Label>
-  </StackLayout>
-</GridLayout>
+      <GridLayout col="1" rows="auto,auto" horizontalAlignment="left" class="date-filter-block">
+        <Label row="0" horizontalAlignment="left" class="action-bar-title today-label filter-title" text="End Date"></Label>
+        <DatePicker row="1" horizontalAlignment="left" class="today-date-picker" [date]="endDate" [maxDate]="todayDate"
+          (dateChange)="onEndDateChange($event)"></DatePicker>
+      </GridLayout>
+
+      <StackLayout col="2" verticalAlignment="bottom" horizontalAlignment="right">
+        <Label class="action-bar-title today-label filter-title" text="Total"></Label>
+        <Label class="action-bar-title today-label" [text]="totalAmount | currency"></Label>
+      </StackLayout>
+    </GridLayout>
+  </GridLayout>
+
+  <RadListView [items]="jobList" [pullToRefresh]="!isSyncing" (pullToRefreshInitiated)="onPullToRefresh($event)"
+    height="100%" class="jobs-list">
+    <ng-template tkListItemTemplate let-item="item">
+      <GridLayout clipToBounds="false">
+        <StackLayout class="item-bag">
+          <GridLayout columns="*,auto" width="100%" class="item-header">
+            <Label col="0" class="first-row"
+              [text]="(item.jobDescription || 'Job') + (item.description ? ' - ' + item.description : '')">
+            </Label>
+            <Label col="1" class="first-row amount" [text]="(item.amount || 0) | currency"></Label>
+          </GridLayout>
+
+          <Label class="second-row"
+            [text]="(item.address || '') + ', ' + (item.city || '') + ', ' + (item.state || '') + ' ' + fiveDigitZip(item.zipcode)">
+          </Label>
+
+          <GridLayout rows="auto" columns="auto, *, auto" class="meta-row">
+            <Label col="0" class="secondRow" [text]="'Job#: ' + (item.number || 'n/a')" style="margin-right: 10;"></Label>
+            <Label col="1" class="secondRow" [text]="'Account#: ' + (item.accountNumber || 'n/a')"></Label>
+            <Label col="2" class="secondRow units" [text]="'Units: ' + (item.jobUnits || 'n/a')"></Label>
+          </GridLayout>
+
+          <GridLayout columns="*,auto" style="margin-bottom: 10;">
+            <Label col="0" class="second-row"
+              [text]="(item.timeSlotStartDateTime | date: 'h:mm a') + ' - ' + (item.timeSlotEndDateTime | date: 'h:mm a')">
+            </Label>
+          </GridLayout>
+
+          <StackLayout horizontalAlignment="right" orientation="horizontal" style="padding: 0" backgroundColor="">
+            <GridLayout rows="auto" columns="auto">
+              <StackLayout row="0" col="0" horizontalAlignment="left" orientation="horizontal" style="padding: 0"
+                backgroundColor="">
+                <Label *ngIf="item.sms_survey_sent" class="fas survey-icon" text="&#xf7cd;"></Label>
+              </StackLayout>
+            </GridLayout>
+          </StackLayout>
+        </StackLayout>
+
+        <Label class="fas status-icon floating-status {{ itemStatusClass(item) }}" [text]="itemStatusIcon(item)"></Label>
+      </GridLayout>
+    </ng-template>
+  </RadListView>
+</StackLayout>

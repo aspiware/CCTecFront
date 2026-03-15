@@ -1,29 +1,115 @@
 .container {
-  margin: 12;
+  height: 100%;
 }
 
-.title {
-  font-size: 20;
-  font-weight: 700;
+.jobs-list {
+  height: 100%;
 }
 
-.subtitle {
-  margin-top: 6;
-  opacity: 0.8;
+.jobs-filters-row {
+  margin-top: 10;
+  margin-bottom: 10;
 }
 
-.card {
-  margin-top: 14;
-  padding: 14;
+.date-filter-block {
+  width: 130;
+}
+
+.today-label {
+  font-size: 17;
+  background-color: rgba(128, 128, 128, 0.219);
+  padding: 5;
+  border-radius: 5;
+}
+
+.filter-title {
+  margin-bottom: 6;
+  background-color: transparent;
+  padding: 0;
+  border-radius: 0;
+  margin-left: 6;
+}
+
+.today-date-picker {
+  background-color: transparent;
+  border-radius: 5;
+  padding: 2 0;
+  margin-left: 0;
+  horizontal-align: left;
+  width: 130;
+}
+
+.item-bag {
+  margin: 0 0 10 0;
+  padding: 10;
   border-radius: 8;
   background-color: rgba(126, 151, 185, 0.2);
 }
 
-.card-title {
+.item-bag {
+  background-color: rgba(126, 151, 185, 0.308);
+  margin-left: 10;
+  margin-right: 10;
+  border-radius: 5;
+  margin-top: 7;
+}
+
+.status-icon {
+  width: 22;
   font-size: 16;
+  margin-top: 2;
+}
+
+.floating-status {
+  horizontal-align: left;
+  vertical-align: top;
+  margin-left: 5;
+  margin-top: 0;
+  z-index: 10;
+}
+
+.status-closed {
+  color: #65b56b;
+}
+
+.status-open {
+  color: #c79042;
+}
+
+.status-current {
+  color: #5a90d6;
+}
+
+.status-default {
+  color: #888;
+}
+
+.first-row {
+  font-size: 15;
   font-weight: 700;
 }
 
-.card-text {
-  margin-top: 6;
+.amount {
+  text-align: right;
+}
+
+.second-row {
+  font-size: 12;
+  margin-top: 15;
+}
+
+.meta-row {
+  margin-top: 15;
+}
+
+.units {
+  text-align: right;
+}
+
+.secondRow {
+  font-size: 12;
+}
+
+.survey-icon {
+  font-size: 18;
 }

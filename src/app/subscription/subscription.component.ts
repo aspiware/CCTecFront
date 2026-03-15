@@ -4,6 +4,7 @@ import { NativeScriptCommonModule, RouterExtensions } from '@nativescript/angula
 import { alert, Application, Page } from '@nativescript/core';
 import { ConfigService } from '../shared/services/config.service';
 import { SubscriptionService } from '../shared/services/subscription.service';
+import { UsersService } from '../shared/services/users.service';
 
 @Component({
   standalone: true,
@@ -35,6 +36,7 @@ export class SubscriptionComponent implements OnInit {
   constructor(
     private subscriptionService: SubscriptionService,
     private configService: ConfigService,
+    private usersService: UsersService,
     private routerExtensions: RouterExtensions,
     private route: ActivatedRoute,
     private cdr: ChangeDetectorRef,
@@ -85,6 +87,12 @@ export class SubscriptionComponent implements OnInit {
   }
 
   public onSubscribe(): void {
+    if (this.usersService.isDemoUser()) {
+      this.subscriptionService.setLocalStatus(true);
+      this.routerExtensions.navigate([this.redirectTo], { clearHistory: true });
+      return;
+    }
+
     if (this.isBusy) {
       return;
     }
@@ -119,6 +127,12 @@ export class SubscriptionComponent implements OnInit {
   }
 
   public onRestore(): void {
+    if (this.usersService.isDemoUser()) {
+      this.subscriptionService.setLocalStatus(true);
+      this.routerExtensions.navigate([this.redirectTo], { clearHistory: true });
+      return;
+    }
+
     if (this.isBusy) {
       return;
     }

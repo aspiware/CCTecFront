@@ -6,7 +6,7 @@
     <ActivityIndicator [busy]="isSyncing" width="20" height="20"></ActivityIndicator>
   </ActionItem>
 
-  <ActionItem ios.position="right">
+  <ActionItem *ngIf="!isDemoMode" ios.position="right">
     <StackLayout>
       <MenuButton style="height: 48; width: 35; padding: 0; margin: 0;" [useSFIcon]="true"
         [sfIconName]="'ellipsis.circle'" [isRightSide]="true" [options]="mainMenuR.options"
@@ -15,7 +15,7 @@
     </StackLayout>
   </ActionItem>
 
-  <ActionItem ios.position="left" style="font-size: 17px" class="fas">
+  <ActionItem *ngIf="!isDemoMode" ios.position="left" style="font-size: 17px" class="fas">
     <StackLayout orientation="horizontal">
       <MenuButton [useSFIcon]="true" class="fas" style="background-color: transparent; font-size: 18px;"
         [sfIconName]="mainMenuIconName" [showSpinner]="isTechStatusLoading" [options]="mainMenu.options"
@@ -193,12 +193,12 @@
                 </MenuButton>
                 <!-- </MDRipple>s -->
 
-                <MenuButton class="fas job-action-button" [class.job-action-tapped]="isJobActionTapped(item, 'wifi')"
+                <MenuButton *ngIf="!isDemoMode" class="fas job-action-button" [class.job-action-tapped]="isJobActionTapped(item, 'wifi')"
                   style="font-size: 14px; height: 70px; width: 100px; margin-right: 6" text="&#xf1eb;"
                   (tap)="markJobActionTap(item, 'wifi', 0); wifiConfig(item)">
                 </MenuButton>
 
-                <MenuButton *ngIf="item.status == 'CLOSED'" class="fas job-action-button"
+                <MenuButton *ngIf="item.status == 'CLOSED' && !isDemoMode" class="fas job-action-button"
                   [class.job-action-tapped]="isJobActionTapped(item, 'edit')"
                   style="font-size: 14px; height: 70px; width: 100px; margin-right: 6" text="&#xf044;"
                   (tap)="markJobActionTap(item, 'edit'); showEditJob(item)">
@@ -210,17 +210,12 @@
                   (tap)="markJobActionTap(item, 'customer', 0); showCustomerInfo(item)">
                 </MenuButton>
 
-                <MenuButton class="fas job-action-button" [class.job-action-tapped]="isJobActionTapped(item, 'history')"
-                  style="font-size: 16px; height: 70px; width: 100px; margin-right: 6" text="&#xff682;"
-                  (tap)="markJobActionTap(item, 'history'); showJobHistory(item)">
-                </MenuButton>
-
-                <MenuButton class="fas job-action-button" [class.job-action-tapped]="isJobActionTapped(item, 'devices')"
+                <MenuButton *ngIf="!isDemoMode" class="fas job-action-button" [class.job-action-tapped]="isJobActionTapped(item, 'devices')"
                   style="font-size: 14px; height: 70px; width: 100px; margin-right: 6" text="&#xf26c;"
                   (tap)="markJobActionTap(item, 'devices'); showDevicesModal(item)">
                 </MenuButton>
 
-                <MenuButton class="fas job-action-button"
+                <MenuButton *ngIf="!isDemoMode" class="fas job-action-button"
                   [class.job-action-tapped]="isJobActionTapped(item, 'activate-service')"
                   style="font-size: 16px; height: 70px; width: 100px; margin-right: 6" text="&#xe012;"
                   (tap)="markJobActionTap(item, 'activate-service'); goToActivateService(item)">
