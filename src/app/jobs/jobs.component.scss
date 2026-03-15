@@ -12,15 +12,11 @@
 }
 
 .date-filter-block {
-  width: 130;
+  width: 150;
 }
 
-.date-picker-shell {
-  border-width: 1;
-  border-color: rgba(142, 142, 147, 0.45);
-  border-radius: 8;
-  padding: 4 8;
-  background-color: rgba(128, 128, 128, 0.08);
+.date-filter-row {
+  width: 150;
 }
 
 .today-label {
@@ -32,17 +28,7 @@
 
 .today-date-picker {
   background-color: transparent;
-  padding: 2 0;
-  margin-left: 0;
-  horizontal-align: left;
-  width: 96;
-}
-
-.date-picker-icon {
-  font-size: 14;
-  opacity: 0.75;
-  vertical-align: middle;
-  margin-left: 6;
+  width: 130;
 }
 
 .item-bag {

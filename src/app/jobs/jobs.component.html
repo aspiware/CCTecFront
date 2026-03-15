@@ -8,25 +8,24 @@
 </ActionBar>
 
 <StackLayout class="container">
-  <GridLayout rows="auto" columns="*" style="margin-left: 10; margin-right: 10; margin-top: 10;">
-    <GridLayout row="0" columns="*,*,auto" class="jobs-filters-row">
+  <GridLayout rows="auto" columns="*" style="margin-right: 10; margin-top: 10;">
+    <GridLayout row="0" columns="auto,auto,*" class="jobs-filters-row">
       <GridLayout col="0" rows="auto" horizontalAlignment="left" class="date-filter-block">
-        <GridLayout row="0" columns="*,auto" class="date-picker-shell">
+        <GridLayout row="0" columns="auto" class="date-filter-row" horizontalAlignment="left">
           <DatePicker col="0" horizontalAlignment="left" class="today-date-picker" [date]="startDate"
             (dateChange)="onStartDateChange($event)"></DatePicker>
-          <Label col="1" class="fas date-picker-icon" text="&#xf073;"></Label>
         </GridLayout>
       </GridLayout>
 
       <GridLayout col="1" rows="auto" horizontalAlignment="left" class="date-filter-block">
-        <GridLayout row="0" columns="*,auto" class="date-picker-shell">
-          <DatePicker col="0" horizontalAlignment="left" class="today-date-picker" [date]="endDate" [maxDate]="todayDate"
+        <GridLayout row="0" columns="auto" class="date-filter-row">
+          <DatePicker col="0" horizontalAlignment="left" class="today-date-picker" [date]="endDate"
+            [maxDate]="todayDate"
             (dateChange)="onEndDateChange($event)"></DatePicker>
-          <Label col="1" class="fas date-picker-icon" text="&#xf078;"></Label>
         </GridLayout>
       </GridLayout>
 
-      <StackLayout col="2" verticalAlignment="bottom" horizontalAlignment="right">
+      <StackLayout col="2" verticalAlignment="middle" horizontalAlignment="right">
         <Label class="action-bar-title today-label" [text]="totalAmount | currency"></Label>
       </StackLayout>
     </GridLayout>
