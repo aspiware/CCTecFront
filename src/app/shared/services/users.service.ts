@@ -48,6 +48,18 @@ export class UsersService {
   public isDemoUser(user?: Partial<UserModel> | null): boolean {
     const candidate = (user || this.getUser() || {}) as any;
     const username = String(candidate?.username || candidate?.bp || candidate?.name || '').trim().toLowerCase();
+    return username === 'demo' || username === 'demoexpired';
+  }
+
+  public isExpiredDemoUser(user?: Partial<UserModel> | null): boolean {
+    const candidate = (user || this.getUser() || {}) as any;
+    const username = String(candidate?.username || candidate?.bp || candidate?.name || '').trim().toLowerCase();
+    return username === 'demoexpired';
+  }
+
+  public isActiveDemoUser(user?: Partial<UserModel> | null): boolean {
+    const candidate = (user || this.getUser() || {}) as any;
+    const username = String(candidate?.username || candidate?.bp || candidate?.name || '').trim().toLowerCase();
     return username === 'demo';
   }
 
@@ -61,6 +73,19 @@ export class UsersService {
       token: 'demo-token',
       bp: 'demo',
       username: 'demo',
+    } as UserModel;
+  }
+
+  public buildExpiredDemoUser(): UserModel {
+    return {
+      userId: 999998,
+      roleId: 1,
+      settingId: 999998,
+      name: 'Demo',
+      lastname: 'Expired',
+      token: 'demoexpired-token',
+      bp: 'demoexpired',
+      username: 'demoexpired',
     } as UserModel;
   }
 

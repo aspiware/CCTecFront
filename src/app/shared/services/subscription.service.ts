@@ -35,9 +35,14 @@ export class SubscriptionService {
   }
 
   public verifyWithBackend(): Observable<boolean> {
-    if (this.usersService.isDemoUser()) {
+    if (this.usersService.isActiveDemoUser()) {
       this.setLocalStatus(true);
       return of(true);
+    }
+
+    if (this.usersService.isExpiredDemoUser()) {
+      this.setLocalStatus(false);
+      return of(false);
     }
 
     const userId = Number(this.usersService.getUser()?.userId || 0);
@@ -68,7 +73,7 @@ export class SubscriptionService {
     autoRenewStatus?: boolean;
     canceledAt?: Date;
   }> {
-    if (this.usersService.isDemoUser()) {
+    if (this.usersService.isActiveDemoUser()) {
       this.setLocalStatus(true);
       const nextPaymentDate = new Date();
       nextPaymentDate.setDate(nextPaymentDate.getDate() + 30);
@@ -79,6 +84,20 @@ export class SubscriptionService {
         amount: 9.99,
         interval: 'month',
         autoRenewStatus: true,
+      });
+    }
+
+    if (this.usersService.isExpiredDemoUser()) {
+      this.setLocalStatus(false);
+      const expiresDate = new Date();
+      expiresDate.setDate(expiresDate.getDate() - 7);
+      return of({
+        isActive: false,
+        expiresDate,
+        planName: 'Basic',
+        amount: 9.99,
+        interval: 'month',
+        autoRenewStatus: false,
       });
     }
 
@@ -166,7 +185,7 @@ export class SubscriptionService {
     transactionId?: string;
     environment?: string;
   }): Observable<{ isActive: boolean; message?: string }> {
-    if (this.usersService.isDemoUser()) {
+    if (this.usersService.isActiveDemoUser() || this.usersService.isExpiredDemoUser()) {
       this.setLocalStatus(true);
       return of({ isActive: true });
     }

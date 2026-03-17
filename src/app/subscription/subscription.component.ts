@@ -87,7 +87,7 @@ export class SubscriptionComponent implements OnInit {
   }
 
   public onSubscribe(): void {
-    if (this.usersService.isDemoUser()) {
+    if (this.usersService.isActiveDemoUser()) {
       this.subscriptionService.setLocalStatus(true);
       this.routerExtensions.navigate([this.redirectTo], { clearHistory: true });
       return;
@@ -127,7 +127,7 @@ export class SubscriptionComponent implements OnInit {
   }
 
   public onRestore(): void {
-    if (this.usersService.isDemoUser()) {
+    if (this.usersService.isActiveDemoUser()) {
       this.subscriptionService.setLocalStatus(true);
       this.routerExtensions.navigate([this.redirectTo], { clearHistory: true });
       return;
