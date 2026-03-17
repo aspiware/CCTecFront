@@ -81,6 +81,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   public restorePurchases(): void {
     this.routerExtensions.navigate(['/subscription'], {
+      clearHistory: true,
       queryParams: { restore: '1' },
     });
   }
