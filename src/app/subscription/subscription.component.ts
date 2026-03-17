@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { NativeScriptCommonModule, RouterExtensions } from '@nativescript/angular';
-import { alert, Application, Page } from '@nativescript/core';
+import { alert, Application, Page, Utils } from '@nativescript/core';
 import { ConfigService } from '../shared/services/config.service';
 import { SubscriptionService } from '../shared/services/subscription.service';
 import { UsersService } from '../shared/services/users.service';
@@ -164,6 +164,14 @@ export class SubscriptionComponent implements OnInit {
         this.showErrorAlert(String(error || 'Restore failed. Please try again.'));
         this.cdr.detectChanges();
       });
+  }
+
+  public openPrivacyPolicy(): void {
+    Utils.openUrl('https://cctec.aspiware.com/privacy/');
+  }
+
+  public openTermsOfService(): void {
+    Utils.openUrl('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/');
   }
 
   public onChangeUser(): void {

@@ -13,11 +13,13 @@
         <GridLayout columns="auto,auto" class="price-row">
           <Label col="0" text="$9.99" class="price-main"></Label>
           <StackLayout col="1" verticalAlignment="middle">
-            <Label text="USD / month" class="price-unit"></Label>
+            <Label text="/ month" class="price-unit"></Label>
           </StackLayout>
         </GridLayout>
 
-        <Label text="Start your 7-day free trial, cancel anytime." class="message message-in-card"></Label>
+        <Label text="Auto-renewable subscription" class="billing-note"></Label>
+
+        <Label text="7-day free trial • Cancel anytime" class="message message-in-card"></Label>
 
         <Button
           [text]="isBusy ? 'Please wait...' : 'SUBSCRIBE'"
@@ -32,6 +34,12 @@
           [isEnabled]="!isBusy"
           (tap)="onRestore()">
         </Button>
+
+        <StackLayout orientation="horizontal" horizontalAlignment="center" class="legal-links">
+          <Label text="Privacy Policy" class="legal-link" (tap)="openPrivacyPolicy()"></Label>
+          <Label text=" | " class="legal-links-separator"></Label>
+          <Label text="Terms of Use" class="legal-link" (tap)="openTermsOfService()"></Label>
+        </StackLayout>
 
         <StackLayout class="features-list">
           <GridLayout columns="auto,*" class="feature-row">
