@@ -41,8 +41,7 @@ export class SubscriptionService {
     }
 
     if (this.usersService.isExpiredDemoUser()) {
-      this.setLocalStatus(false);
-      return of(false);
+      return of(this.getLocalStatus());
     }
 
     const userId = Number(this.usersService.getUser()?.userId || 0);
@@ -88,7 +87,20 @@ export class SubscriptionService {
     }
 
     if (this.usersService.isExpiredDemoUser()) {
-      this.setLocalStatus(false);
+      const isActive = this.getLocalStatus();
+      if (isActive) {
+        const nextPaymentDate = new Date();
+        nextPaymentDate.setDate(nextPaymentDate.getDate() + 30);
+        return of({
+          isActive: true,
+          nextPaymentDate,
+          planName: 'Basic',
+          amount: 9.99,
+          interval: 'month',
+          autoRenewStatus: true,
+        });
+      }
+
       const expiresDate = new Date();
       expiresDate.setDate(expiresDate.getDate() - 7);
       return of({

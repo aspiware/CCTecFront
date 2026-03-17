@@ -32,6 +32,7 @@ export class SubscriptionComponent implements OnInit {
   private productsRequest: SKProductsRequest | null = null;
   private productsRequestDelegate: any;
   private appearanceChangedHandler?: () => void;
+  private resumeHandler?: () => void;
 
   constructor(
     private subscriptionService: SubscriptionService,
@@ -53,6 +54,8 @@ export class SubscriptionComponent implements OnInit {
 
     if (__IOS__) {
       this.ensureTransactionObserver();
+      this.resumeHandler = () => this.processCurrentTransactions();
+      Application.on(Application.resumeEvent, this.resumeHandler);
     }
 
     this.redirectTo = this.route.snapshot.queryParamMap.get('redirect') || '/tabs';
@@ -79,6 +82,11 @@ export class SubscriptionComponent implements OnInit {
       SKPaymentQueue.defaultQueue().removeTransactionObserver(this.iapObserver);
       this.iapObserver = null;
     }
+
+    if (this.resumeHandler) {
+      Application.off(Application.resumeEvent, this.resumeHandler);
+      this.resumeHandler = undefined;
+    }
   }
 
   public onRootLoaded(): void {
@@ -102,10 +110,20 @@ export class SubscriptionComponent implements OnInit {
 
     this.startApplePurchase(this.productId)
       .then((purchase) => {
+        console.log(
+          '[Subscription] purchase resolved',
+          JSON.stringify({
+            productId: purchase?.productId,
+            transactionId: purchase?.transactionId,
+            hasReceiptData: Boolean(purchase?.receiptData),
+          })
+        );
         this.subscriptionService.validateApplePurchase(purchase).subscribe({
           next: (result) => {
+            console.log('[Subscription] validate result', JSON.stringify(result));
             this.isBusy = false;
             if (result.isActive) {
+              console.log('[Subscription] navigating after subscribe', JSON.stringify({ redirectTo: this.redirectTo }));
               this.routerExtensions.navigate([this.redirectTo], { clearHistory: true });
               return;
             }
@@ -211,6 +229,10 @@ export class SubscriptionComponent implements OnInit {
     const ObserverClass = (NSObject as any).extend(
       {
         paymentQueueUpdatedTransactions(_queue: SKPaymentQueue, transactions: NSArray<SKPaymentTransaction>) {
+          console.log(
+            '[Subscription][StoreKit] updated transactions',
+            JSON.stringify({ count: transactions?.count || 0 })
+          );
           for (let i = 0; i < transactions.count; i += 1) {
             const transaction = transactions.objectAtIndex(i);
             self.handleTransaction(transaction);
@@ -248,6 +270,7 @@ export class SubscriptionComponent implements OnInit {
 
     this.iapObserver = ObserverClass.new();
     SKPaymentQueue.defaultQueue().addTransactionObserver(this.iapObserver);
+    this.processCurrentTransactions();
   }
 
   private startApplePurchase(productId: string): Promise<{
@@ -274,8 +297,16 @@ export class SubscriptionComponent implements OnInit {
 
       this.fetchProduct(productId)
         .then((product) => {
+          console.log(
+            '[Subscription][StoreKit] add payment',
+            JSON.stringify({
+              productId: String(product.productIdentifier || productId),
+              pendingPurchase: Boolean(this.pendingPurchase),
+            })
+          );
           const payment = SKPayment.paymentWithProduct(product);
           SKPaymentQueue.defaultQueue().addPayment(payment);
+          setTimeout(() => this.processCurrentTransactions(), 1000);
         })
         .catch((error) => {
           this.pendingPurchase = null;
@@ -372,6 +403,22 @@ export class SubscriptionComponent implements OnInit {
   }
 
   private handleTransaction(transaction: SKPaymentTransaction): void {
+    console.log(
+      '[Subscription][StoreKit] transaction state',
+      JSON.stringify({
+        state: transaction?.transactionState,
+        productId: transaction?.payment?.productIdentifier
+          ? String(transaction.payment.productIdentifier)
+          : undefined,
+        transactionId: transaction?.transactionIdentifier
+          ? String(transaction.transactionIdentifier)
+          : undefined,
+        hasPendingPurchase: Boolean(this.pendingPurchase),
+        hasPendingRestore: Boolean(this.pendingRestore),
+        error: transaction?.error?.localizedDescription || undefined,
+      })
+    );
+
     if (!this.pendingPurchase) {
       return;
     }
@@ -379,6 +426,15 @@ export class SubscriptionComponent implements OnInit {
     switch (transaction.transactionState) {
       case SKPaymentTransactionState.Purchased:
       case SKPaymentTransactionState.Restored: {
+        console.log(
+          '[Subscription][StoreKit] handling completed transaction',
+          JSON.stringify({
+            state: transaction.transactionState,
+            productId: transaction.payment?.productIdentifier
+              ? String(transaction.payment.productIdentifier)
+              : undefined,
+          })
+        );
         const receiptData = this.getReceiptData();
         const transactionId = transaction.transactionIdentifier
           ? String(transaction.transactionIdentifier)
@@ -393,10 +449,12 @@ export class SubscriptionComponent implements OnInit {
         this.pendingPurchase = null;
 
         if (!receiptData) {
+          console.log('[Subscription][StoreKit] missing receipt data');
           pending.reject('Could not read App Store receipt.');
           return;
         }
 
+        console.log('[Subscription][StoreKit] resolving purchase', JSON.stringify({ hasReceiptData: true }));
         pending.resolve({ receiptData, transactionId, productId });
         break;
       }
@@ -410,6 +468,27 @@ export class SubscriptionComponent implements OnInit {
       }
       default:
         break;
+    }
+  }
+
+  private processCurrentTransactions(): void {
+    if (!__IOS__) {
+      return;
+    }
+
+    const transactions = SKPaymentQueue.defaultQueue().transactions;
+    if (!transactions || !transactions.count) {
+      return;
+    }
+
+    console.log(
+      '[Subscription][StoreKit] process current transactions',
+      JSON.stringify({ count: transactions.count })
+    );
+
+    for (let i = 0; i < transactions.count; i += 1) {
+      const transaction = transactions.objectAtIndex(i);
+      this.handleTransaction(transaction);
     }
   }
 
