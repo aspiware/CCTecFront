@@ -110,7 +110,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   public openTermsOfService(): void {
-    Utils.openUrl('https://cctec.aspiware.com/terms-of-service');
+    // Utils.openUrl('https://cctec.aspiware.com/terms-of-service');
+    Utils.openUrl('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/');
   }
 
   public logout(): void {
