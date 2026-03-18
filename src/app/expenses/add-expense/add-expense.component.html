@@ -1,0 +1,41 @@
+<ModalStack dismissEnabled="true" class="modal-root">
+  <GridLayout rows="*" columns="*">
+    <StackLayout row="0" col="0" class="backdrop" (tap)="close()"></StackLayout>
+
+    <GridLayout row="0" col="0" rows="auto,auto,auto" class="modal-card">
+      <GridLayout row="0" columns="*,auto" class="header">
+        <Label col="0" text="Add Expense" class="title"></Label>
+        <Button col="1" text="Close" class="close-btn" (tap)="close()"></Button>
+      </GridLayout>
+
+      <StackLayout row="1" class="form-body">
+        <StackLayout class="field-block">
+          <Label text="Expense Type ID" class="field-label"></Label>
+          <TextField
+            hint="Enter expense type ID"
+            [text]="expenseForm.controls.expenseTypeId.value"
+            [editable]="!isSaving"
+            keyboardType="number"
+            (textChange)="expenseForm.controls.expenseTypeId.setValue($event.value)">
+          </TextField>
+        </StackLayout>
+
+        <StackLayout class="field-block">
+          <Label text="Amount" class="field-label"></Label>
+          <TextField
+            hint="Enter amount"
+            [text]="expenseForm.controls.amount.value"
+            [editable]="!isSaving"
+            keyboardType="number"
+            (textChange)="expenseForm.controls.amount.setValue($event.value)">
+          </TextField>
+        </StackLayout>
+      </StackLayout>
+
+      <GridLayout row="2" columns="*,*" class="footer">
+        <Button col="0" text="Cancel" class="secondary-btn" (tap)="close()"></Button>
+        <Button col="1" [text]="isSaving ? 'Saving...' : 'Save'" class="primary-btn" (tap)="save()"></Button>
+      </GridLayout>
+    </GridLayout>
+  </GridLayout>
+</ModalStack>

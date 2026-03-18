@@ -6,6 +6,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { CustomerInfoComponent } from '../customer-info/customer-info.component';
 import { DevicesComponent } from '../devices/devices.component';
 import { ExpensesService } from './expenses.service';
+import { AddExpenseComponent } from './add-expense/add-expense.component';
 import { EditJobComponent } from '../edit-job/edit-job.component';
 import { UserModel } from '../shared/models/user.model';
 import { ConfigService } from '../shared/services/config.service';
@@ -113,10 +114,28 @@ export class ExpensesComponent implements OnInit, OnDestroy {
   }
 
   public addExpense(): void {
-    alert({
-      title: 'Expenses',
-      message: 'Add expense flow pending implementation.',
-      okButtonText: 'OK',
+    const userId = Number(this.user?.userId || 0);
+    if (!userId) {
+      return;
+    }
+
+    const options: any = {
+      context: { userId },
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: false,
+      stretched: false,
+      cancelable: true,
+      dismissEnabled: true,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.Custom,
+      },
+    };
+
+    this.modalService.showModal(AddExpenseComponent, options).then((result) => {
+      if (result) {
+        this.loadExpenses();
+      }
     });
   }
 

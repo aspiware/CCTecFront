@@ -1,0 +1,62 @@
+.modal-root {
+  width: 100%;
+  height: 100%;
+}
+
+.backdrop {
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+}
+
+.modal-card {
+  width: 88%;
+  padding: 16;
+  border-radius: 16;
+  background-color: #1c1c1e;
+  vertical-align: middle;
+  horizontal-align: center;
+}
+
+.ns-light .modal-card {
+  background-color: #f2f2f7;
+}
+
+.header {
+  margin-bottom: 10;
+}
+
+.title {
+  font-size: 18;
+  font-weight: 600;
+}
+
+.close-btn {
+  background-color: transparent;
+}
+
+.form-body {
+  margin-top: 6;
+}
+
+.field-block {
+  margin-bottom: 12;
+}
+
+.field-label {
+  font-size: 13;
+  margin-bottom: 6;
+  opacity: 0.85;
+}
+
+.footer {
+  margin-top: 8;
+}
+
+.primary-btn {
+  margin-left: 6;
+}
+
+.secondary-btn {
+  margin-right: 6;
+}
