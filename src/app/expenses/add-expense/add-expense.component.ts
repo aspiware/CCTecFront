@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnInit } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ModalDialogParams, NativeScriptCommonModule } from '@nativescript/angular';
-import { alert, SegmentedBarItem } from '@nativescript/core';
+import { alert, isAndroid, isIOS, SegmentedBarItem, Utils } from '@nativescript/core';
 import { Item } from '../../shared/components/menu-button/item';
 import { MenuEvent } from '../../shared/components/menu-button/common';
 import { ExpensesService } from '../expenses.service';
@@ -50,6 +50,8 @@ export class AddExpenseComponent {
   });
 
   private readonly userId: number;
+  private suppressDismissUntil = 0;
+  private dismissKeyboardTimer?: ReturnType<typeof setTimeout>;
 
   constructor(
     private modalParams: ModalDialogParams,
@@ -78,6 +80,22 @@ export class AddExpenseComponent {
       return;
     }
     this.modalParams.closeCallback();
+  }
+
+  public onContainerTap(event: any): void {
+    if (Date.now() < this.suppressDismissUntil) {
+      return;
+    }
+    if (this.isTextInputTap(event)) {
+      return;
+    }
+    if (this.dismissKeyboardTimer) {
+      clearTimeout(this.dismissKeyboardTimer);
+    }
+    this.dismissKeyboardTimer = setTimeout(() => {
+      Utils.dismissKeyboard();
+      this.dismissKeyboardTimer = undefined;
+    }, 120);
   }
 
   public save(): void {
@@ -151,7 +169,11 @@ export class AddExpenseComponent {
   }
 
   public onInputTap(): void {
-    // Keeps the same input interaction entry point used in Residential Job Prices.
+    this.suppressDismissUntil = Date.now() + 350;
+    if (this.dismissKeyboardTimer) {
+      clearTimeout(this.dismissKeyboardTimer);
+      this.dismissKeyboardTimer = undefined;
+    }
   }
 
   public onAmountChange(event: any): void {
@@ -201,6 +223,22 @@ export class AddExpenseComponent {
     const beforeDot = clean.slice(0, firstDot + 1);
     const afterDot = clean.slice(firstDot + 1).replace(/\./g, '');
     return `${beforeDot}${afterDot}`;
+  }
+
+  private isTextInputTap(event: any): boolean {
+    if (isIOS) {
+      const iosView = event?.ios?.view;
+      const className = String(iosView?.className || '');
+      return className.includes('UITextField') || className.includes('UITextView');
+    }
+
+    if (isAndroid) {
+      const androidView = event?.android?.view;
+      const className = String(androidView?.getClass?.()?.getName?.() || '');
+      return className.includes('EditText');
+    }
+
+    return false;
   }
 
   public onSelectedMainMenu(event: MenuEvent, _menuStatus?: any): void {
