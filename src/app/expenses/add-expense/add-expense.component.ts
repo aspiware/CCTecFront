@@ -15,6 +15,7 @@ import { ExpenseUploadFile, ExpensesService } from '../expenses.service';
   styleUrl: './add-expense.component.scss',
 })
 export class AddExpenseComponent {
+  private static readonly MAX_ATTACHMENTS = 5;
   public isSaving = false;
   public viewReady = false;
   public noteText = '';
@@ -192,8 +193,19 @@ export class AddExpenseComponent {
         return;
       }
 
-      this.selectedFiles = [...this.selectedFiles, ...dedupedFiles];
+      const availableSlots = AddExpenseComponent.MAX_ATTACHMENTS - this.selectedFiles.length;
+      if (availableSlots <= 0) {
+        await this.showError(`You can attach up to ${AddExpenseComponent.MAX_ATTACHMENTS} files.`);
+        return;
+      }
+
+      const filesToAdd = dedupedFiles.slice(0, availableSlots);
+      this.selectedFiles = [...this.selectedFiles, ...filesToAdd];
       this.cdr.detectChanges();
+
+      if (dedupedFiles.length > availableSlots) {
+        await this.showError(`Only ${AddExpenseComponent.MAX_ATTACHMENTS} files can be attached.`);
+      }
     } catch (error: any) {
       const message = error?.message || 'Could not select files.';
       await this.showError(String(message));
