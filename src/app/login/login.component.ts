@@ -99,8 +99,8 @@ export class LoginComponent implements OnInit, OnDestroy {
     const password = String(this.loginForm.controls.password.value || '');
     const authMethodId = this.loginForm.controls.authMethodId.value;
 
-    if (username === 'demo' && password === 'Demo123!') {
-      this.loginDemoUser();
+    if ((username === 'demo' || username === 'demoexpired') && password === 'Demo123!') {
+      this.loginDemoUser(username);
       return;
     }
 
@@ -265,8 +265,11 @@ export class LoginComponent implements OnInit, OnDestroy {
     });
   }
 
-  private loginDemoUser(): void {
-    const demoUser = this.usersService.buildDemoUser() as any;
+  private loginDemoUser(username: string): void {
+    const isExpiredDemo = username === 'demoexpired';
+    const demoUser = (isExpiredDemo
+      ? this.usersService.buildExpiredDemoUser()
+      : this.usersService.buildDemoUser()) as any;
     setString("token", String(demoUser.token || 'demo-token'));
     setString("user", JSON.stringify(demoUser));
     this.usersService.setUser(demoUser as UserModel);
@@ -274,7 +277,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     setNumber("roleId", Number(demoUser.roleId || 2));
     setNumber("settingId", Number(demoUser.settingId || 999999));
     setString("bp", String(demoUser.bp || 'demo'));
-    this.subscriptionService.setLocalStatus(true);
+    this.subscriptionService.setLocalStatus(!isExpiredDemo);
     this.configService.login();
     this.isBusy = false;
     this.routerExtensions.navigate(['/tabs'], { clearHistory: true });

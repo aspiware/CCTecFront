@@ -1,10 +1,16 @@
-import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnInit } from '@angular/core';
-import { NativeScriptCommonModule } from '@nativescript/angular';
-import { ObservableArray } from '@nativescript/core';
+import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit, ViewContainerRef } from '@angular/core';
+import { ModalDialogService, NativeScriptCommonModule } from '@nativescript/angular';
+import { Application, ObservableArray, Page, Screen, Utils } from '@nativescript/core';
 import { NativeScriptUIListViewModule } from 'nativescript-ui-listview/angular';
+import { ActivatedRoute, Router } from '@angular/router';
+import { CustomerInfoComponent } from '../customer-info/customer-info.component';
+import { DevicesComponent } from '../devices/devices.component';
+import { EditJobComponent } from '../edit-job/edit-job.component';
 import { SettingsService } from '../settings/settings.service';
 import { UserModel } from '../shared/models/user.model';
+import { ConfigService } from '../shared/services/config.service';
 import { UsersService } from '../shared/services/users.service';
+import { WifiConfigComponent } from '../wifi-config/wifi-config.component';
 
 @Component({
   standalone: true,
@@ -14,9 +20,16 @@ import { UsersService } from '../shared/services/users.service';
   templateUrl: './jobs.component.html',
   styleUrl: './jobs.component.scss',
 })
-export class JobsComponent implements OnInit {
+export class JobsComponent implements OnInit, OnDestroy {
   private readonly demoWeeklyTotal = 2062.75;
   private readonly demoJobs = this.buildDemoJobs();
+  private readonly actionTapStates: Record<string, boolean> = {};
+  private readonly actionTapTimers: Record<string, any> = {};
+  private messageComposeDelegate: any;
+  private isCopyMenuOpen = false;
+  private lastCopyMenuTs = 0;
+  private allJobs: any[] = [];
+  private appearanceChangedHandler?: () => void;
 
   public user: UserModel | null = null;
   public isSyncing = false;
@@ -25,16 +38,43 @@ export class JobsComponent implements OnInit {
   public startDate = this.createDefaultStartDate();
   public endDate = new Date();
   public todayDate = new Date();
+  public isDemoMode = false;
+  public isDarkTheme = Application.systemAppearance() === 'dark';
+  public jobsSearch = '';
 
   constructor(
     private usersService: UsersService,
     private settingsService: SettingsService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private modalService: ModalDialogService,
+    private vcRef: ViewContainerRef,
+    private configService: ConfigService,
+    private router: Router,
+    private activatedRoute: ActivatedRoute,
+    private page: Page
   ) {}
 
   ngOnInit(): void {
+    this.syncTheme();
+    this.appearanceChangedHandler = () => {
+      this.syncTheme();
+      this.cdr.detectChanges();
+    };
+    Application.on(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
     this.user = this.usersService.getUser();
+    this.isDemoMode = this.usersService.isDemoUser(this.user);
     this.loadJobs();
+  }
+
+  ngOnDestroy(): void {
+    if (this.appearanceChangedHandler) {
+      Application.off(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
+    }
+  }
+
+  public onRootLoaded(): void {
+    this.syncTheme();
+    this.cdr.detectChanges();
   }
 
   public onStartDateChange(event: any): void {
@@ -59,12 +99,112 @@ export class JobsComponent implements OnInit {
     this.loadJobs();
   }
 
+  public onJobsSearchChange(value: string): void {
+    this.jobsSearch = String(value || '');
+    this.applyJobsFilter();
+  }
+
+  public clearJobsSearch(): void {
+    if (!this.jobsSearch) {
+      return;
+    }
+    this.jobsSearch = '';
+    this.applyJobsFilter();
+  }
+
   public onPullToRefresh(event: any): void {
     const listView = event?.object;
     this.loadJobs(() => {
       listView?.notifyPullToRefreshFinished?.();
       listView?.scrollToIndex?.(0, false);
     });
+  }
+
+  public showMenu(args: any, value: any, type?: string): void {
+    if (args && typeof args.cancel === 'boolean') {
+      args.cancel = true;
+    }
+
+    const now = Date.now();
+    if (this.isCopyMenuOpen || now - this.lastCopyMenuTs < 500) {
+      return;
+    }
+
+    const textToCopy = String(value ?? '').trim();
+    if (!textToCopy) {
+      return;
+    }
+
+    if (__IOS__) {
+      this.isCopyMenuOpen = true;
+      this.lastCopyMenuTs = now;
+
+      let viewController = Application.ios?.rootController;
+      while (
+        viewController &&
+        viewController.presentedViewController &&
+        !viewController.presentedViewController.beingDismissed
+      ) {
+        viewController = viewController.presentedViewController;
+      }
+      if (!viewController?.view) {
+        this.isCopyMenuOpen = false;
+        return;
+      }
+
+      const sourceView = args?.object?.ios as UIView | undefined;
+      const alert = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
+        this.getCopyMenuTitle(type),
+        textToCopy,
+        UIAlertControllerStyle.ActionSheet
+      );
+
+      const copyAction = UIAlertAction.actionWithTitleStyleHandler(
+        'Copy',
+        UIAlertActionStyle.Default,
+        () => {
+          UIPasteboard.generalPasteboard.string = textToCopy;
+          this.isCopyMenuOpen = false;
+        }
+      );
+      copyAction.setValueForKey(UIImage.systemImageNamed('doc.on.doc'), 'image');
+      alert.addAction(copyAction);
+
+      if (type === 'address') {
+        const goAction = UIAlertAction.actionWithTitleStyleHandler(
+          'Go',
+          UIAlertActionStyle.Default,
+          () => {
+            this.isCopyMenuOpen = false;
+            this.showMapOptions(sourceView, textToCopy);
+          }
+        );
+        goAction.setValueForKey(UIImage.systemImageNamed('location'), 'image');
+        alert.addAction(goAction);
+      }
+
+      alert.addAction(
+        UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, () => {
+          this.isCopyMenuOpen = false;
+        })
+      );
+
+      const popover = alert.popoverPresentationController;
+      if (popover) {
+        popover.sourceView = sourceView || viewController.view;
+        popover.sourceRect = sourceView
+          ? sourceView.bounds
+          : CGRectMake(
+              viewController.view.bounds.size.width / 2,
+              viewController.view.bounds.size.height / 2,
+              1,
+              1
+            );
+        popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
+      }
+
+      viewController.presentViewControllerAnimatedCompletion(alert, true, null);
+    }
   }
 
   public fiveDigitZip(zipcode: string | number | null | undefined): string {
@@ -96,6 +236,306 @@ export class JobsComponent implements OnInit {
       return '\uf017';
     }
     return '\uf111';
+  }
+
+  public markJobActionTap(item: any, action: string, autoClearMs = 140): void {
+    const key = `${item?.number || 'unknown'}:${action}`;
+    this.actionTapStates[key] = true;
+    this.cdr.detectChanges();
+
+    if (this.actionTapTimers[key]) {
+      clearTimeout(this.actionTapTimers[key]);
+    }
+
+    if (autoClearMs > 0) {
+      this.actionTapTimers[key] = setTimeout(() => {
+        this.actionTapStates[key] = false;
+        this.cdr.detectChanges();
+      }, autoClearMs);
+    }
+  }
+
+  public isJobActionTapped(item: any, action: string): boolean {
+    const key = `${item?.number || 'unknown'}:${action}`;
+    return !!this.actionTapStates[key];
+  }
+
+  public clearJobActionTap(item: any, action: string): void {
+    const key = `${item?.number || 'unknown'}:${action}`;
+    if (this.actionTapTimers[key]) {
+      clearTimeout(this.actionTapTimers[key]);
+      delete this.actionTapTimers[key];
+    }
+    this.actionTapStates[key] = false;
+    this.cdr.detectChanges();
+  }
+
+  public wifiConfig(job: any): void {
+    if (!job) {
+      return;
+    }
+
+    const modalWidth = Math.min(380, Math.max(300, Screen.mainScreen.widthDIPs - 32));
+    const modalHeight = Math.min(620, Math.max(420, Screen.mainScreen.heightDIPs - 120));
+
+    const options: any = {
+      context: job,
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: false,
+      stretched: false,
+      cancelable: true,
+      dismissEnabled: true,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.Custom,
+        // width: modalWidth,
+        // height: modalHeight,
+      },
+    };
+
+    this.modalService.showModal(WifiConfigComponent, options).then((result) => {
+      this.clearJobActionTap(job, 'wifi');
+
+      if (!result) {
+        return;
+      }
+
+      if (!__IOS__) {
+        return;
+      }
+
+      if (typeof MFMessageComposeViewController === 'undefined' || !MFMessageComposeViewController.canSendText()) {
+        return;
+      }
+
+      const recipients = Array.isArray(result?.numbers)
+        ? result.numbers.filter((n: any) => !!n).map((n: any) => String(n))
+        : [];
+      const body = String(result?.wifiData || '');
+      setTimeout(() => this.presentSmsComposer(recipients, body), 150);
+    });
+  }
+
+  public showCustomerInfo(job: any): void {
+    if (!job) {
+      return;
+    }
+
+    const modalWidth = Math.min(380, Math.max(300, Screen.mainScreen.widthDIPs - 32));
+    const modalHeight = Math.min(620, Math.max(420, Screen.mainScreen.heightDIPs - 120));
+
+    const options: any = {
+      context: job,
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: false,
+      stretched: false,
+      cancelable: true,
+      dismissEnabled: true,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.Custom,
+        // width: modalWidth,
+        // height: modalHeight,
+      },
+    };
+
+    this.modalService.showModal(CustomerInfoComponent, options).then(() => {
+      const surveySent = this.configService.getSurveySent(job?.number);
+      job.sms_survey_sent = !!surveySent;
+      this.cdr.detectChanges();
+      this.clearJobActionTap(job, 'customer');
+    });
+  }
+
+  public showEditJob(job: any): void {
+    if (!job) {
+      return;
+    }
+
+    const options: any = {
+      context: job,
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: false,
+      stretched: false,
+      cancelable: true,
+      dismissEnabled: true,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.Custom,
+      },
+    };
+
+    this.modalService.showModal(EditJobComponent, options).then((result) => {
+      if (result) {
+        this.loadJobs();
+      }
+      this.clearJobActionTap(job, 'edit');
+    });
+  }
+
+  public showDevicesModal(job: any): void {
+    if (!job) {
+      return;
+    }
+
+    const options: any = {
+      context: job,
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: false,
+      stretched: false,
+      cancelable: true,
+      dismissEnabled: true,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.Custom,
+      },
+    };
+
+    this.modalService.showModal(DevicesComponent, options).then((result: any) => {
+      if (result?.navigateToActivateService) {
+        setTimeout(() => {
+          this.goToActivateService(result?.job || job);
+        }, 0);
+        return;
+      }
+      this.clearJobActionTap(job, 'devices');
+    });
+  }
+
+  public goToActivateService(job?: any): void {
+    const queryParams = this.buildActivateServiceQueryParams(job);
+    this.router.navigate(['/tabs', { outlets: { jobListTab: ['activate-service'] } }], {
+      queryParams,
+    });
+    if (job) {
+      this.clearJobActionTap(job, 'activate-service');
+    }
+  }
+
+  private presentSmsComposer(recipients: string[], body: string): void {
+    const controller = MFMessageComposeViewController.new();
+    const MessageComposeDelegate = (NSObject as any).extend(
+      {
+        messageComposeViewControllerDidFinishWithResult: (
+          msgController: MFMessageComposeViewController,
+          _msgResult: MessageComposeResult
+        ) => {
+          msgController.dismissViewControllerAnimatedCompletion(true, null);
+          this.messageComposeDelegate = null;
+        },
+      },
+      {
+        protocols: [MFMessageComposeViewControllerDelegate],
+      }
+    );
+
+    this.messageComposeDelegate = MessageComposeDelegate.new();
+    controller.body = body;
+    controller.recipients = recipients as any;
+    controller.messageComposeDelegate = this.messageComposeDelegate;
+    (controller as any).__delegate = this.messageComposeDelegate;
+
+    const root = Application.ios?.rootController;
+    let presenter = root as UIViewController;
+    while (presenter?.presentedViewController) {
+      presenter = presenter.presentedViewController;
+    }
+    presenter?.presentViewControllerAnimatedCompletion(controller, true, null);
+  }
+
+  private getCopyMenuTitle(type?: string): string {
+    if (!type) {
+      return 'Copy';
+    }
+
+    const normalized = String(type).trim().toLowerCase();
+    if (!normalized) {
+      return 'Copy';
+    }
+
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+  }
+
+  private showMapOptions(sourceView: UIView | undefined, address: string): void {
+    if (!__IOS__) {
+      return;
+    }
+
+    let viewController = Application.ios?.rootController;
+    while (
+      viewController &&
+      viewController.presentedViewController &&
+      !viewController.presentedViewController.beingDismissed
+    ) {
+      viewController = viewController.presentedViewController;
+    }
+    if (!viewController?.view) {
+      return;
+    }
+
+    const alert = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
+      'Open With',
+      address,
+      UIAlertControllerStyle.ActionSheet
+    );
+
+    const appleAction = UIAlertAction.actionWithTitleStyleHandler(
+      'iOS Map',
+      UIAlertActionStyle.Default,
+      () => {
+        const query = encodeURIComponent(address);
+        Utils.openUrl(`http://maps.apple.com/?q=${query}`);
+      }
+    );
+    appleAction.setValueForKey(UIImage.systemImageNamed('map'), 'image');
+    alert.addAction(appleAction);
+
+    const googleAction = UIAlertAction.actionWithTitleStyleHandler(
+      'Google Map',
+      UIAlertActionStyle.Default,
+      () => {
+        const query = encodeURIComponent(address);
+        const googleAppUrl = `comgooglemaps://?q=${query}`;
+        const googleWebUrl = `https://www.google.com/maps/search/?api=1&query=${query}`;
+        const opened = Utils.openUrl(googleAppUrl);
+        if (!opened) {
+          Utils.openUrl(googleWebUrl);
+        }
+      }
+    );
+    googleAction.setValueForKey(UIImage.systemImageNamed('globe'), 'image');
+    alert.addAction(googleAction);
+
+    alert.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, null)
+    );
+
+    const popover = alert.popoverPresentationController;
+    if (popover) {
+      popover.sourceView = sourceView || viewController.view;
+      popover.sourceRect = sourceView
+        ? sourceView.bounds
+        : CGRectMake(
+            viewController.view.bounds.size.width / 2,
+            viewController.view.bounds.size.height / 2,
+            1,
+            1
+          );
+      popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
+    }
+
+    viewController.presentViewControllerAnimatedCompletion(alert, true, null);
+  }
+
+  private syncTheme(): void {
+    const appAppearance = Application.systemAppearance();
+    if (appAppearance === 'dark' || appAppearance === 'light') {
+      this.isDarkTheme = appAppearance === 'dark';
+      return;
+    }
+
+    const pageClassName = String(this.page.className || '');
+    this.isDarkTheme = pageClassName.includes('ns-dark');
   }
 
   private loadJobs(onFinished?: () => void): void {
@@ -135,6 +575,9 @@ export class JobsComponent implements OnInit {
       .map((job) => ({
         ...job,
         amount: Number(job?.amount || 0),
+        devices: this.parseJsonValue(job?.devices, []),
+        customer: this.parseJsonValue(job?.customer, null),
+        customJob: this.parseJsonValue(job?.customJob, null),
       }))
       .sort((a, b) => {
         const aTime = new Date(a?.timeSlotStartDateTime || a?.createdAt || 0).getTime();
@@ -142,10 +585,34 @@ export class JobsComponent implements OnInit {
         return bTime - aTime;
       });
 
-    this.jobList = new ObservableArray(normalizedJobs);
+    this.allJobs = normalizedJobs;
+    this.applyJobsFilter();
+  }
+
+  private applyJobsFilter(): void {
+    const query = this.jobsSearch.trim().toLowerCase();
+    const filteredJobs = !query
+      ? [...this.allJobs]
+      : this.allJobs.filter((job) => {
+          const haystack = [
+            job?.jobDescription,
+            job?.description,
+            job?.address,
+            job?.city,
+            job?.state,
+            job?.number,
+            job?.accountNumber,
+          ]
+            .map((value) => String(value || '').toLowerCase())
+            .join(' ');
+
+          return haystack.includes(query);
+        });
+
+    this.jobList = new ObservableArray(filteredJobs);
     this.totalAmount = this.usersService.isDemoUser(this.user)
       ? this.demoWeeklyTotal
-      : normalizedJobs.reduce((sum, job) => sum + Number(job?.amount || 0), 0);
+      : filteredJobs.reduce((sum, job) => sum + Number(job?.amount || 0), 0);
   }
 
   private normalizeJobsResponse(response: any): any[] {
@@ -210,6 +677,49 @@ export class JobsComponent implements OnInit {
     const result = new Date(date);
     result.setHours(23, 59, 59, 999);
     return result;
+  }
+
+  private buildActivateServiceQueryParams(job?: any): any {
+    if (!job) {
+      return {};
+    }
+
+    return {
+      ...job,
+      customer: this.stringifyQueryParam(job?.customer),
+      devices: this.stringifyQueryParam(job?.devices),
+      customJob: this.stringifyQueryParam(job?.customJob),
+    };
+  }
+
+  private stringifyQueryParam(value: any): string {
+    if (value === null || value === undefined) {
+      return '';
+    }
+    if (typeof value === 'string') {
+      return value;
+    }
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  }
+
+  private parseJsonValue<T>(value: any, fallback: T): T {
+    if (value === null || value === undefined || value === '') {
+      return fallback;
+    }
+
+    if (typeof value !== 'string') {
+      return value as T;
+    }
+
+    try {
+      return JSON.parse(value) as T;
+    } catch {
+      return fallback;
+    }
   }
 
   private buildDemoJobs(): any[] {

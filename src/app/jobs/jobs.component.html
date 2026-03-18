@@ -1,4 +1,4 @@
-<ActionBar class="action-bar" title="Jobs History">
+<ActionBar class="action-bar" [title]="'Jobs History (' + jobList.length + ')'">
   <ActionItem ios.position="right" ios.systemIcon="13" [visibility]="isSyncing ? 'collapse' : 'visible'"
     [isEnabled]="!isSyncing" (tap)="refreshJobs()">
   </ActionItem>
@@ -7,25 +7,46 @@
   </ActionItem>
 </ActionBar>
 
-<StackLayout class="container">
-  <GridLayout rows="auto" columns="*" style="margin-left: 10; margin-right: 10; margin-top: 10;">
-    <GridLayout row="0" columns="*,*,auto" class="jobs-filters-row">
-      <GridLayout col="0" rows="auto,auto" horizontalAlignment="left" class="date-filter-block">
-        <Label row="0" horizontalAlignment="left" class="action-bar-title today-label filter-title" text="Start Date"></Label>
-        <DatePicker row="1" horizontalAlignment="left" class="today-date-picker" [date]="startDate"
-          (dateChange)="onStartDateChange($event)"></DatePicker>
+<StackLayout [class]="'container ' + (isDarkTheme ? 'theme-dark' : 'theme-light')" (loaded)="onRootLoaded()">
+  <GridLayout rows="auto,auto" columns="*" style="margin-right: 10; margin-top: 10;">
+    <GridLayout row="0" columns="auto,auto,*" class="jobs-filters-row">
+      <GridLayout col="0" rows="auto" horizontalAlignment="left" class="date-filter-block">
+        <GridLayout row="0" columns="auto" class="date-filter-row" horizontalAlignment="left">
+          <DatePicker col="0" horizontalAlignment="left" class="today-date-picker" [date]="startDate"
+            (dateChange)="onStartDateChange($event)"></DatePicker>
+        </GridLayout>
       </GridLayout>
 
-      <GridLayout col="1" rows="auto,auto" horizontalAlignment="left" class="date-filter-block">
-        <Label row="0" horizontalAlignment="left" class="action-bar-title today-label filter-title" text="End Date"></Label>
-        <DatePicker row="1" horizontalAlignment="left" class="today-date-picker" [date]="endDate" [maxDate]="todayDate"
-          (dateChange)="onEndDateChange($event)"></DatePicker>
+      <GridLayout col="1" rows="auto" horizontalAlignment="left" class="date-filter-block">
+        <GridLayout row="0" columns="auto" class="date-filter-row">
+          <DatePicker col="0" horizontalAlignment="left" class="today-date-picker" [date]="endDate"
+            [maxDate]="todayDate"
+            (dateChange)="onEndDateChange($event)"></DatePicker>
+        </GridLayout>
       </GridLayout>
 
-      <StackLayout col="2" verticalAlignment="bottom" horizontalAlignment="right">
-        <Label class="action-bar-title today-label filter-title" text="Total"></Label>
+      <StackLayout col="2" verticalAlignment="middle" horizontalAlignment="right">
         <Label class="action-bar-title today-label" [text]="totalAmount | currency"></Label>
       </StackLayout>
+    </GridLayout>
+
+    <GridLayout row="1" columns="*" class="search-row">
+      <GridLayout columns="*,auto" class="input-shell" width="100%">
+        <TextField
+          col="0"
+          hint="Search jobs"
+          [text]="jobsSearch"
+          (textChange)="onJobsSearchChange($event.value)"
+          class="custom-tf-inline">
+        </TextField>
+        <Label
+          col="1"
+          class="search-icon fas"
+          [text]="jobsSearch?.trim() ? '&#xf057;' : '&#xf002;'"
+          [isUserInteractionEnabled]="!!jobsSearch?.trim()"
+          (tap)="clearJobsSearch()">
+        </Label>
+      </GridLayout>
     </GridLayout>
   </GridLayout>
 
@@ -42,12 +63,15 @@
           </GridLayout>
 
           <Label class="second-row"
+            (longPress)="showMenu($event, (item.address || '') + ', ' + (item.city || '') + ', ' + (item.state || '') + ' ' + fiveDigitZip(item.zipcode), 'address')"
             [text]="(item.address || '') + ', ' + (item.city || '') + ', ' + (item.state || '') + ' ' + fiveDigitZip(item.zipcode)">
           </Label>
 
           <GridLayout rows="auto" columns="auto, *, auto" class="meta-row">
-            <Label col="0" class="secondRow" [text]="'Job#: ' + (item.number || 'n/a')" style="margin-right: 10;"></Label>
-            <Label col="1" class="secondRow" [text]="'Account#: ' + (item.accountNumber || 'n/a')"></Label>
+            <Label col="0" (longPress)="showMenu($event, item.number, 'job')" class="secondRow"
+              [text]="'Job#: ' + (item.number || 'n/a')" style="margin-right: 10;"></Label>
+            <Label col="1" (longPress)="showMenu($event, item.accountNumber, 'account')" class="secondRow"
+              [text]="'Account#: ' + (item.accountNumber || 'n/a')"></Label>
             <Label col="2" class="secondRow units" [text]="'Units: ' + (item.jobUnits || 'n/a')"></Label>
           </GridLayout>
 
@@ -64,6 +88,38 @@
                 <Label *ngIf="item.sms_survey_sent" class="fas survey-icon" text="&#xf7cd;"></Label>
               </StackLayout>
             </GridLayout>
+          </StackLayout>
+
+          <StackLayout horizontalAlignment="right" orientation="horizontal" class="job-actions-row">
+            <MenuButton *ngIf="!isDemoMode" class="fas job-action-button"
+              [class.job-action-tapped]="isJobActionTapped(item, 'wifi')"
+              style="font-size: 14px; height: 70px; width: 100px; margin-right: 6" text="&#xf1eb;"
+              (tap)="markJobActionTap(item, 'wifi', 0); wifiConfig(item)">
+            </MenuButton>
+
+            <MenuButton *ngIf="item.status == 'CLOSED' && !isDemoMode" class="fas job-action-button"
+              [class.job-action-tapped]="isJobActionTapped(item, 'edit')"
+              style="font-size: 14px; height: 70px; width: 100px; margin-right: 6" text="&#xf044;"
+              (tap)="markJobActionTap(item, 'edit'); showEditJob(item)">
+            </MenuButton>
+
+            <MenuButton class="fas job-action-button"
+              [class.job-action-tapped]="isJobActionTapped(item, 'customer')"
+              style="font-size: 14px; height: 70px; width: 100px; margin-right: 6" text="&#xf007;"
+              (tap)="markJobActionTap(item, 'customer', 0); showCustomerInfo(item)">
+            </MenuButton>
+
+            <MenuButton *ngIf="!isDemoMode" class="fas job-action-button"
+              [class.job-action-tapped]="isJobActionTapped(item, 'devices')"
+              style="font-size: 14px; height: 70px; width: 100px; margin-right: 6" text="&#xf26c;"
+              (tap)="markJobActionTap(item, 'devices'); showDevicesModal(item)">
+            </MenuButton>
+
+            <MenuButton *ngIf="!isDemoMode" class="fas job-action-button"
+              [class.job-action-tapped]="isJobActionTapped(item, 'activate-service')"
+              style="font-size: 16px; height: 70px; width: 100px; margin-right: 6" text="&#xe012;"
+              (tap)="markJobActionTap(item, 'activate-service'); goToActivateService(item)">
+            </MenuButton>
           </StackLayout>
         </StackLayout>
 

@@ -773,9 +773,7 @@ export class TodayComponent implements OnInit {
   }
 
   private isDemoUser(): boolean {
-    const rawUser = this.user as any;
-    const username = String(rawUser?.username || rawUser?.bp || rawUser?.name || '').trim().toLowerCase();
-    return username === 'demo';
+    return this.usersService.isDemoUser(this.user);
   }
 
   private applyJobsForDisplay(jobs: any[]): void {

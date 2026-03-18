@@ -35,9 +35,13 @@ export class SubscriptionService {
   }
 
   public verifyWithBackend(): Observable<boolean> {
-    if (this.usersService.isDemoUser()) {
+    if (this.usersService.isActiveDemoUser()) {
       this.setLocalStatus(true);
       return of(true);
+    }
+
+    if (this.usersService.isExpiredDemoUser()) {
+      return of(this.getLocalStatus());
     }
 
     const userId = Number(this.usersService.getUser()?.userId || 0);
@@ -68,7 +72,7 @@ export class SubscriptionService {
     autoRenewStatus?: boolean;
     canceledAt?: Date;
   }> {
-    if (this.usersService.isDemoUser()) {
+    if (this.usersService.isActiveDemoUser()) {
       this.setLocalStatus(true);
       const nextPaymentDate = new Date();
       nextPaymentDate.setDate(nextPaymentDate.getDate() + 30);
@@ -79,6 +83,33 @@ export class SubscriptionService {
         amount: 9.99,
         interval: 'month',
         autoRenewStatus: true,
+      });
+    }
+
+    if (this.usersService.isExpiredDemoUser()) {
+      const isActive = this.getLocalStatus();
+      if (isActive) {
+        const nextPaymentDate = new Date();
+        nextPaymentDate.setDate(nextPaymentDate.getDate() + 30);
+        return of({
+          isActive: true,
+          nextPaymentDate,
+          planName: 'Basic',
+          amount: 9.99,
+          interval: 'month',
+          autoRenewStatus: true,
+        });
+      }
+
+      const expiresDate = new Date();
+      expiresDate.setDate(expiresDate.getDate() - 7);
+      return of({
+        isActive: false,
+        expiresDate,
+        planName: 'Basic',
+        amount: 9.99,
+        interval: 'month',
+        autoRenewStatus: false,
       });
     }
 
@@ -166,7 +197,7 @@ export class SubscriptionService {
     transactionId?: string;
     environment?: string;
   }): Observable<{ isActive: boolean; message?: string }> {
-    if (this.usersService.isDemoUser()) {
+    if (this.usersService.isActiveDemoUser() || this.usersService.isExpiredDemoUser()) {
       this.setLocalStatus(true);
       return of({ isActive: true });
     }

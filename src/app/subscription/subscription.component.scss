@@ -72,7 +72,8 @@
 .billing-note {
   margin-top: 6;
   text-align: center;
-  font-size: 18;
+  font-size: 14;
+  font-weight: 600;
   color: #222222;
 }
 
@@ -96,6 +97,21 @@
   font-size: 14;
   font-weight: 700;
   width: 50%;
+}
+
+.legal-links {
+  margin-top: 10;
+}
+
+.legal-link {
+  font-size: 12;
+  color: #5a5a5a;
+  text-decoration: underline;
+}
+
+.legal-links-separator {
+  font-size: 12;
+  color: #5a5a5a;
 }
 
 .features-list {
@@ -184,4 +200,19 @@
 .ns-dark .restore-btn {
   background-color: #a65d75;
   color: #fff6ef;
+}
+
+.theme-dark .legal-links,
+.page.theme-dark .legal-links,
+.ns-dark .legal-links {
+  color: #d7d7db;
+}
+
+.theme-dark .legal-link,
+.page.theme-dark .legal-link,
+.ns-dark .legal-link,
+.theme-dark .legal-links-separator,
+.page.theme-dark .legal-links-separator,
+.ns-dark .legal-links-separator {
+  color: #d7d7db;
 }
