@@ -59,6 +59,13 @@
               </TextField>
             </GridLayout>
           </GridLayout>
+
+          <TextView
+            hint="Write a note"
+            [text]="noteText"
+            (textChange)="onNoteChanged($event.value)"
+            class="notes-input">
+          </TextView>
         </StackLayout>
       </ScrollView>
     </GridLayout>

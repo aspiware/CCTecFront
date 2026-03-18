@@ -17,6 +17,7 @@ import { ExpensesService } from '../expenses.service';
 export class AddExpenseComponent {
   public isSaving = false;
   public viewReady = false;
+  public noteText = '';
   public isLoadingCategories = false;
   public isLoadingTypes = false;
   public amount = 0;
@@ -174,6 +175,10 @@ export class AddExpenseComponent {
       clearTimeout(this.dismissKeyboardTimer);
       this.dismissKeyboardTimer = undefined;
     }
+  }
+
+  public onNoteChanged(value: string): void {
+    this.noteText = String(value || '');
   }
 
   public onAmountChange(event: any): void {
