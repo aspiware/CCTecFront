@@ -2,7 +2,7 @@
   <GridLayout rows="*" columns="*">
     <StackLayout row="0" col="0" class="backdrop" (tap)="closeWithoutSave()"></StackLayout>
 
-    <GridLayout row="0" col="0" rows="auto,*" class="modal-card" (tap)="onContainerTap($event)">
+    <GridLayout row="0" col="0" rows="auto,*" class="modal-card">
       <GridLayout row="0" columns="*,auto,auto" class="header header-fixed">
         <Label col="0" text="Add Expense" class="title modal-title-text"></Label>
 
@@ -64,8 +64,52 @@
             hint="Write a note"
             [text]="noteText"
             (textChange)="onNoteChanged($event.value)"
+            (tap)="onInputTap()"
+            (touch)="onInputTap()"
+            (focus)="onInputTap()"
             class="notes-input">
           </TextView>
+
+          <GridLayout columns="auto,*" class="attachments-header">
+            <Button
+              col="0"
+              text="Attach Files"
+              class="attach-button"
+              [isEnabled]="!isSaving"
+              (tap)="pickFiles()">
+            </Button>
+
+            <Label
+              col="1"
+              class="attachments-count"
+              [text]="selectedFiles.length ? (selectedFiles.length + ' file(s) selected') : 'No files attached'">
+            </Label>
+          </GridLayout>
+
+          <StackLayout
+            class="attachments-list"
+            [visibility]="selectedFiles.length ? 'visible' : 'collapse'">
+            <GridLayout
+              *ngFor="let file of selectedFiles; let i = index"
+              columns="*,auto"
+              class="attachment-item">
+              <StackLayout col="0">
+                <Label class="attachment-name" [text]="file.name"></Label>
+                <Label
+                  class="attachment-meta"
+                  [text]="getFileSizeLabel(file.size)">
+                </Label>
+              </StackLayout>
+
+              <Button
+                col="1"
+                text="Remove"
+                class="attachment-remove"
+                [isEnabled]="!isSaving"
+                (tap)="removeFile(i)">
+              </Button>
+            </GridLayout>
+          </StackLayout>
         </StackLayout>
       </ScrollView>
     </GridLayout>

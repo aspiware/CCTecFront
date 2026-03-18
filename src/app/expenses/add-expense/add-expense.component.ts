@@ -1,10 +1,10 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnInit } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ModalDialogParams, NativeScriptCommonModule } from '@nativescript/angular';
-import { alert, isAndroid, isIOS, SegmentedBarItem, Utils } from '@nativescript/core';
+import { alert, File, isAndroid, isIOS, knownFolders, path, SegmentedBarItem, Utils } from '@nativescript/core';
 import { Item } from '../../shared/components/menu-button/item';
 import { MenuEvent } from '../../shared/components/menu-button/common';
-import { ExpensesService } from '../expenses.service';
+import { ExpenseUploadFile, ExpensesService } from '../expenses.service';
 
 @Component({
   standalone: true,
@@ -29,6 +29,7 @@ export class AddExpenseComponent {
   public categorySegments: SegmentedBarItem[] = [];
   public selectedCategoryIndex = 0;
   public selectedTypeIndex = 0;
+  public selectedFiles: ExpenseUploadFile[] = [];
   public mainMenu: Item = {
     name: 'Main Menu',
     options: [
@@ -53,6 +54,7 @@ export class AddExpenseComponent {
   private readonly userId: number;
   private suppressDismissUntil = 0;
   private dismissKeyboardTimer?: ReturnType<typeof setTimeout>;
+  private documentPickerDelegate?: any;
 
   constructor(
     private modalParams: ModalDialogParams,
@@ -133,9 +135,31 @@ export class AddExpenseComponent {
       expenseTypeId,
       amount,
     }).subscribe({
-      next: (res) => {
-        this.isSaving = false;
-        this.modalParams.closeCallback(res || true);
+      next: async (res) => {
+        const createdExpense = res || true;
+        const createdExpenseId = this.extractExpenseId(res);
+
+        if (!this.selectedFiles.length || !createdExpenseId) {
+          this.isSaving = false;
+          this.modalParams.closeCallback(createdExpense);
+          return;
+        }
+
+        this.expensesService.uploadFiles(createdExpenseId, this.selectedFiles).subscribe({
+          next: () => {
+            this.isSaving = false;
+            this.modalParams.closeCallback(createdExpense);
+          },
+          error: async (error) => {
+            this.isSaving = false;
+            const message =
+              error?.error?.message ||
+              error?.message ||
+              'Expense was created, but files could not be uploaded.';
+            await this.showError(String(message));
+            this.modalParams.closeCallback(createdExpense);
+          },
+        });
       },
       error: async (error) => {
         this.isSaving = false;
@@ -146,6 +170,60 @@ export class AddExpenseComponent {
         await this.showError(String(message));
       },
     });
+  }
+
+  public async pickFiles(): Promise<void> {
+    this.onInputTap();
+
+    if (!isIOS) {
+      await this.showError('File attachments are only available on iOS for now.');
+      return;
+    }
+
+    try {
+      const files = await this.openDocumentPicker();
+      if (!files.length) {
+        return;
+      }
+
+      const existingPaths = new Set(this.selectedFiles.map((file) => file.path));
+      const dedupedFiles = files.filter((file) => !existingPaths.has(file.path));
+      if (!dedupedFiles.length) {
+        return;
+      }
+
+      this.selectedFiles = [...this.selectedFiles, ...dedupedFiles];
+      this.cdr.detectChanges();
+    } catch (error: any) {
+      const message = error?.message || 'Could not select files.';
+      await this.showError(String(message));
+    }
+  }
+
+  public removeFile(index: number): void {
+    if (index < 0 || index >= this.selectedFiles.length) {
+      return;
+    }
+
+    this.selectedFiles = this.selectedFiles.filter((_, currentIndex) => currentIndex !== index);
+    this.cdr.detectChanges();
+  }
+
+  public getFileSizeLabel(size?: number): string {
+    const numeric = Number(size || 0);
+    if (!numeric) {
+      return '';
+    }
+
+    if (numeric < 1024) {
+      return `${numeric} B`;
+    }
+
+    if (numeric < 1024 * 1024) {
+      return `${(numeric / 1024).toFixed(1)} KB`;
+    }
+
+    return `${(numeric / (1024 * 1024)).toFixed(1)} MB`;
   }
 
   public onExpenseTypeChanged(event: any): void {
@@ -246,6 +324,173 @@ export class AddExpenseComponent {
     return false;
   }
 
+  private extractExpenseId(response: any): number {
+    const candidates = [
+      response?.id,
+      response?.expenseId,
+      response?.data?.id,
+      response?.data?.expenseId,
+    ];
+
+    for (const candidate of candidates) {
+      const numeric = Number(candidate);
+      if (numeric && !Number.isNaN(numeric)) {
+        return numeric;
+      }
+    }
+
+    return 0;
+  }
+
+  private openDocumentPicker(): Promise<ExpenseUploadFile[]> {
+    return new Promise((resolve, reject) => {
+      try {
+        const picker = UIDocumentPickerViewController.alloc().initWithDocumentTypesInMode(
+          ['public.item'],
+          UIDocumentPickerMode.Import
+        );
+        picker.allowsMultipleSelection = true;
+
+        const visibleViewController = this.getVisibleViewController();
+        if (!visibleViewController) {
+          reject(new Error('Could not present file picker.'));
+          return;
+        }
+
+        const delegate = this.createDocumentPickerDelegate(resolve);
+        this.documentPickerDelegate = delegate;
+        picker.delegate = delegate;
+        visibleViewController.presentViewControllerAnimatedCompletion(picker, true, null);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  private getVisibleViewController(): UIViewController | null {
+    const sharedApplication = UIApplication.sharedApplication;
+    const keyWindow =
+      sharedApplication.keyWindow ||
+      (sharedApplication.windows?.count ? sharedApplication.windows.objectAtIndex(0) : null);
+    const rootViewController = keyWindow?.rootViewController;
+
+    if (!rootViewController) {
+      return null;
+    }
+
+    return Utils.ios.getVisibleViewController(rootViewController);
+  }
+
+  private createDocumentPickerDelegate(
+    resolver: (files: ExpenseUploadFile[]) => void
+  ): UIDocumentPickerDelegate {
+    const owner = new WeakRef(this);
+
+    class DocumentPickerDelegateImpl extends NSObject implements UIDocumentPickerDelegate {
+      static ObjCProtocols = [UIDocumentPickerDelegate];
+
+      documentPickerDidPickDocumentsAtURLs(
+        _controller: UIDocumentPickerViewController,
+        urls: NSArray<NSURL> | NSURL[]
+      ): void {
+        const component = owner.deref();
+        resolver(component?.handleDocumentPickerUrls(urls) || []);
+      }
+
+      documentPickerDidPickDocumentAtURL(
+        _controller: UIDocumentPickerViewController,
+        url: NSURL
+      ): void {
+        const component = owner.deref();
+        resolver(component?.handleDocumentPickerUrls([url]) || []);
+      }
+
+      documentPickerWasCancelled(_controller: UIDocumentPickerViewController): void {
+        resolver([]);
+      }
+    }
+
+    return DocumentPickerDelegateImpl.new();
+  }
+
+  public handleDocumentPickerUrls(urls: NSArray<NSURL> | NSURL[]): ExpenseUploadFile[] {
+    const resolvedUrls = Array.isArray(urls)
+      ? urls
+      : Array.from({ length: urls.count }, (_, index) => urls.objectAtIndex(index));
+
+    const files: ExpenseUploadFile[] = [];
+    for (const url of resolvedUrls) {
+      const file = this.copyPickedFile(url);
+      if (file) {
+        files.push(file);
+      }
+    }
+
+    return files;
+  }
+
+  private copyPickedFile(sourceUrl: NSURL): ExpenseUploadFile | null {
+    const fileName = String(sourceUrl?.lastPathComponent || `attachment-${Date.now()}`);
+    const sourcePath = String(sourceUrl?.path || '');
+    if (sourcePath && File.exists(sourcePath)) {
+      const pickedFile = File.fromPath(sourcePath);
+      return {
+        name: fileName,
+        path: sourcePath,
+        size: Number(pickedFile.size || 0),
+        mimeType: this.getMimeType(fileName),
+      };
+    }
+
+    const tempPath = path.join(
+      knownFolders.temp().path,
+      `${Date.now()}-${Math.random().toString(36).slice(2)}-${fileName}`
+    );
+    const destinationUrl = NSURL.fileURLWithPath(tempPath);
+    const fileManager = NSFileManager.defaultManager;
+
+    const didAccessScopedResource = sourceUrl?.startAccessingSecurityScopedResource?.() || false;
+    let copyError = new interop.Reference<NSError>();
+    if (fileManager.fileExistsAtPath(tempPath)) {
+      fileManager.removeItemAtPathError(tempPath, copyError);
+    }
+
+    const copied = fileManager.copyItemAtURLToURLError(sourceUrl, destinationUrl, copyError);
+    if (didAccessScopedResource) {
+      sourceUrl.stopAccessingSecurityScopedResource?.();
+    }
+    if (!copied) {
+      return null;
+    }
+
+    const copiedFile = File.fromPath(tempPath);
+    return {
+      name: fileName,
+      path: tempPath,
+      size: Number(copiedFile.size || 0),
+      mimeType: this.getMimeType(fileName),
+    };
+  }
+
+  private getMimeType(fileName: string): string {
+    const extension = String(fileName.split('.').pop() || '').trim().toLowerCase();
+    const map: Record<string, string> = {
+      pdf: 'application/pdf',
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      heic: 'image/heic',
+      txt: 'text/plain',
+      csv: 'text/csv',
+      doc: 'application/msword',
+      docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      xls: 'application/vnd.ms-excel',
+      xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    };
+
+    return map[extension] || 'application/octet-stream';
+  }
+
   public onSelectedMainMenu(event: MenuEvent, _menuStatus?: any): void {
     switch (event?.index) {
       case 0:
@@ -276,7 +521,6 @@ export class AddExpenseComponent {
     this.isLoadingCategories = true;
     this.expensesService.findExpenseCategories().subscribe({
       next: (res) => {
-        console.log('[EXPENSES-CATEGORIES]', res)
         const categories = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [];
         this.expenseCategories = categories;
         this.categorySegments = categories.map((category: any) => {

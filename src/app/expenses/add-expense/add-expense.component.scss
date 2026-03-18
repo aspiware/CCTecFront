@@ -185,3 +185,82 @@ TextField.custom-tf-inline {
   border-color: #48484a;
   color: #f2f3f5;
 }
+
+.attachments-header {
+  margin-top: 12;
+  margin-bottom: 8;
+  vertical-align: middle;
+}
+
+.attach-button {
+  height: 36;
+  padding: 0 14;
+  border-radius: 18;
+  font-size: 14;
+  text-transform: none;
+}
+
+.attachments-count {
+  margin-left: 10;
+  vertical-align: middle;
+  font-size: 13;
+  opacity: 0.8;
+}
+
+.attachments-list {
+  margin-bottom: 8;
+}
+
+.attachment-item {
+  padding: 8 0;
+  border-bottom-width: 1;
+}
+
+.attachment-name {
+  font-size: 14;
+}
+
+.attachment-meta {
+  font-size: 12;
+  opacity: 0.7;
+  margin-top: 2;
+}
+
+.attachment-remove {
+  height: 32;
+  padding: 0 10;
+  font-size: 13;
+  text-transform: none;
+}
+
+.ns-light .attach-button,
+.ns-light .attachment-remove {
+  background-color: #e5e5ea;
+  color: #000000;
+}
+
+.ns-dark .attach-button,
+.ns-dark .attachment-remove {
+  background-color: #2c2c2e;
+  color: #ffffff;
+}
+
+.ns-light .attachments-count,
+.ns-light .attachment-name,
+.ns-light .attachment-meta {
+  color: #000000;
+}
+
+.ns-dark .attachments-count,
+.ns-dark .attachment-name,
+.ns-dark .attachment-meta {
+  color: #f2f3f5;
+}
+
+.ns-light .attachment-item {
+  border-bottom-color: rgba(60, 60, 67, 0.12);
+}
+
+.ns-dark .attachment-item {
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+}
