@@ -34,6 +34,7 @@ export class TabsContainerComponent implements OnInit, AfterViewInit, OnDestroy 
           outlets: {
             summaryTab: ['summary'],
             jobListTab: ['jobs'],
+            expensesTab: ['expenses'],
             todayListTab: ['today'],
             settingsTab: ['settings'],
           },

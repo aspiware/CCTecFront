@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { TabsContainerComponent } from './tabs/tabs-container.component';
 import { SummaryComponent } from './summary/summary.component';
 import { JobsComponent } from './jobs/jobs.component';
+import { ExpensesComponent } from './expenses/expenses.component';
 import { TodayComponent } from './today/today.component';
 import { SettingsComponent } from './settings/settings.component';
 import { CustomerConsentComponent } from './customer-consent/customer-consent.component';
@@ -47,6 +48,11 @@ export const routes: Routes = [
         path: 'jobs',
         outlet: 'jobListTab',
         component: JobsComponent,
+      },
+      {
+        path: 'expenses',
+        outlet: 'expensesTab',
+        component: ExpensesComponent,
       },
       {
         path: 'activate-service',

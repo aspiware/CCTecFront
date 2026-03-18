@@ -11,6 +11,10 @@
     <page-router-outlet name="todayListTab"></page-router-outlet>
   </GridLayout>
 
+  <GridLayout *tabItem="{ title: 'Expenses', iconSource: 'sys://creditcard.fill' }">
+    <page-router-outlet name="expensesTab"></page-router-outlet>
+  </GridLayout>
+
   <GridLayout *tabItem="{ title: 'Settings', iconSource: 'sys://gearshape.fill' }">
     <page-router-outlet name="settingsTab"></page-router-outlet>
   </GridLayout>
