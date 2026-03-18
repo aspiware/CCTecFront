@@ -113,6 +113,27 @@ export class ExpensesComponent implements OnInit, OnDestroy {
     this.applyExpensesFilter();
   }
 
+  public dismissKeyboard(): void {
+    Utils.dismissKeyboard();
+  }
+
+  public onExpensesListLoaded(event: any): void {
+    if (!__IOS__) {
+      return;
+    }
+
+    const listView = event?.object;
+    const iosListView = listView?.nativeViewProtected;
+    const scrollView =
+      iosListView?.scrollView ||
+      iosListView?.collectionView ||
+      iosListView?.tableView;
+
+    if (scrollView) {
+      scrollView.keyboardDismissMode = UIScrollViewKeyboardDismissMode.OnDrag;
+    }
+  }
+
   public addExpense(): void {
     const userId = Number(this.user?.userId || 0);
     if (!userId) {
@@ -603,13 +624,15 @@ export class ExpensesComponent implements OnInit, OnDestroy {
       .map((expense) => ({
         ...expense,
         amount: Number(expense?.amount || 0),
-        devices: this.parseJsonValue(expense?.devices, []),
-        customer: this.parseJsonValue(expense?.customer, null),
-        customJob: this.parseJsonValue(expense?.customJob, null),
+        files: this.parseJsonValue(expense?.files, []),
+        displayTitle: this.buildExpenseTitle(expense),
+        displaySubtitle: this.buildExpenseSubtitle(expense),
+        displayTimestamp: this.buildExpenseTimestamp(expense),
+        attachmentCount: this.getAttachmentCount(expense),
       }))
       .sort((a, b) => {
-        const aTime = new Date(a?.timeSlotStartDateTime || a?.createdAt || 0).getTime();
-        const bTime = new Date(b?.timeSlotStartDateTime || b?.createdAt || 0).getTime();
+        const aTime = new Date(a?.displayTimestamp || a?.createdAt || 0).getTime();
+        const bTime = new Date(b?.displayTimestamp || b?.createdAt || 0).getTime();
         return bTime - aTime;
       });
 
@@ -623,13 +646,13 @@ export class ExpensesComponent implements OnInit, OnDestroy {
       ? [...this.allJobs]
       : this.allJobs.filter((job) => {
           const haystack = [
-            job?.jobDescription,
+            job?.displayTitle,
+            job?.displaySubtitle,
+            job?.notes,
             job?.description,
-            job?.address,
-            job?.city,
-            job?.state,
-            job?.number,
-            job?.accountNumber,
+            job?.name,
+            job?.expenseTypeName,
+            job?.expenseCategoryName,
           ]
             .map((value) => String(value || '').toLowerCase())
             .join(' ');
@@ -654,6 +677,22 @@ export class ExpensesComponent implements OnInit, OnDestroy {
 
     if (Array.isArray(response?.payload)) {
       return response.payload;
+    }
+
+    if (Array.isArray(response?.data)) {
+      return response.data;
+    }
+
+    if (Array.isArray(response?.data?.expenses)) {
+      return response.data.expenses;
+    }
+
+    if (Array.isArray(response?.data?.payload)) {
+      return response.data.payload;
+    }
+
+    if (Array.isArray(response?.expenses)) {
+      return response.expenses;
     }
 
     if (Array.isArray(response?.jobs)) {
@@ -748,6 +787,53 @@ export class ExpensesComponent implements OnInit, OnDestroy {
     } catch {
       return fallback;
     }
+  }
+
+  private buildExpenseTitle(expense: any): string {
+    return String(
+      expense?.expenseTypeName ||
+      expense?.expenseType?.name ||
+      expense?.typeName ||
+      expense?.name ||
+      expense?.description ||
+      'Expense'
+    );
+  }
+
+  private buildExpenseSubtitle(expense: any): string {
+    const parts = [
+      expense?.expenseCategoryName ||
+      expense?.expenseCategory?.name ||
+      expense?.categoryName,
+      expense?.notes,
+    ]
+      .map((value) => String(value || '').trim())
+      .filter(Boolean);
+
+    return parts.join(' • ');
+  }
+
+  private buildExpenseTimestamp(expense: any): string {
+    return String(
+      expense?.expenseDate ||
+      expense?.createdAt ||
+      expense?.updatedAt ||
+      ''
+    );
+  }
+
+  private getAttachmentCount(expense: any): number {
+    const parsedFiles = this.parseJsonValue<any[]>(expense?.files, []);
+    if (Array.isArray(parsedFiles) && parsedFiles.length) {
+      return parsedFiles.length;
+    }
+
+    return Number(
+      expense?.attachmentCount ||
+      expense?.filesCount ||
+      expense?.fileCount ||
+      0
+    );
   }
 
   private buildDemoJobs(): any[] {
