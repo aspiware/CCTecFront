@@ -226,23 +226,30 @@ TextField.custom-tf-inline {
   margin-top: 2;
 }
 
-.attachment-remove {
-  height: 32;
-  padding: 0 10;
-  font-size: 13;
-  text-transform: none;
+.attachment-remove-icon {
+  width: 28;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 18;
+  padding: 6;
 }
 
-.ns-light .attach-button,
-.ns-light .attachment-remove {
+.ns-light .attach-button {
   background-color: #e5e5ea;
   color: #000000;
 }
 
-.ns-dark .attach-button,
-.ns-dark .attachment-remove {
+.ns-light .attachment-remove-icon {
+  color: #b42318;
+}
+
+.ns-dark .attach-button {
   background-color: #2c2c2e;
   color: #ffffff;
+}
+
+.ns-dark .attachment-remove-icon {
+  color: #ff6961;
 }
 
 .ns-light .attachments-count,
