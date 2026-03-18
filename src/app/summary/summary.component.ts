@@ -64,17 +64,18 @@ export class SummaryComponent implements OnInit, OnDestroy {
 
   public syncSummary() {
     if (this.usersService.isDemoUser(this.user)) {
-      this.weekAverage = {
-        dailyAverage: 412.35,
-        todayHourlyAverage: 68.72,
-        totalsPerDay: [
+      const totalsPerDay = [
           { date: '2026-03-09', total: 380 },
           { date: '2026-03-10', total: 425 },
           { date: '2026-03-11', total: 460 },
           { date: '2026-03-12', total: 398 },
           { date: '2026-03-13', total: 399.75 },
-        ],
+        ];
+      this.weekAverage = {
+        totalsPerDay,
       };
+      this.weekAverage.dailyAverage = this.calculateDailyAverage(totalsPerDay);
+      this.weekAverage.todayHourlyAverage = this.calculateTodayHourlyAverage(totalsPerDay);
       this.summaryAmount = {
         startDate: '2026-03-01',
         endDate: '2026-03-14',
@@ -119,10 +120,8 @@ export class SummaryComponent implements OnInit, OnDestroy {
       next: (res) => {
         this.weekAverage = res;
         const list = Array.isArray(res?.totalsPerDay) ? res.totalsPerDay : [];
-        this.weekAverage.dailyAverage = list.length
-          ? list.reduce((total, i) => total + Number(i.total), 0) / list.length
-          : 0;
-        this.weekAverage.todayHourlyAverage = Number(res?.todayHourlyAverage || 0);
+        this.weekAverage.dailyAverage = this.calculateDailyAverage(list);
+        this.weekAverage.todayHourlyAverage = this.calculateTodayHourlyAverage(list);
         this.weekAverage.totalsPerDay = list;
         onDone();
       },
@@ -141,6 +140,54 @@ export class SummaryComponent implements OnInit, OnDestroy {
       return '0.00';
     }
     return `-${value}`;
+  }
+
+  private calculateDailyAverage(list: Array<{ date: string; total: number }>): number {
+    return list.length
+      ? list.reduce((total, item) => total + Number(item.total || 0), 0) / list.length
+      : 0;
+  }
+
+  private calculateTodayHourlyAverage(list: Array<{ date: string; total: number }>): number {
+    const todayKey = this.toDateKey(new Date());
+    const todayItem = list.find((item) => this.toDateKey(item.date) === todayKey);
+    const todayTotal = Number(todayItem?.total || 0);
+    if (!todayTotal) {
+      return 0;
+    }
+
+    const now = new Date();
+    const startHour = 8;
+    const endHour = 18;
+    const endMinutes = 30;
+    const start = new Date(now);
+    start.setHours(startHour, 0, 0, 0);
+    const end = new Date(now);
+    end.setHours(endHour, endMinutes, 0, 0);
+
+    if (now <= start) {
+      return 0;
+    }
+
+    const effectiveEnd = now < end ? now : end;
+    const elapsedHours = (effectiveEnd.getTime() - start.getTime()) / (1000 * 60 * 60);
+    if (elapsedHours <= 0) {
+      return 0;
+    }
+
+    return todayTotal / elapsedHours;
+  }
+
+  private toDateKey(value: string | Date): string {
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return '';
+    }
+
+    const year = date.getFullYear();
+    const month = `${date.getMonth() + 1}`.padStart(2, '0');
+    const day = `${date.getDate()}`.padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   private syncTheme(): void {
