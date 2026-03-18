@@ -110,6 +110,7 @@ export class AddExpenseComponent {
     const iosScrollView = event?.object?.nativeViewProtected;
     if (iosScrollView) {
       iosScrollView.keyboardDismissMode = UIScrollViewKeyboardDismissMode.OnDrag;
+      iosScrollView.alwaysBounceVertical = true;
     }
   }
 
