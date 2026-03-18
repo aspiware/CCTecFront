@@ -131,10 +131,12 @@ export class AddExpenseComponent {
     }
 
     this.isSaving = true;
+    const notes = String(this.noteText || '').trim();
     this.expensesService.create({
       userId: this.userId,
       expenseTypeId,
       amount,
+      notes: notes || undefined,
     }).subscribe({
       next: async (res) => {
         const createdExpense = res || true;
