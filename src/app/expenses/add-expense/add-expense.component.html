@@ -14,7 +14,7 @@
         </StackLayout>
       </GridLayout>
 
-      <ScrollView row="1" class="form-scroll" (tap)="onContainerTap($event)">
+      <ScrollView row="1" class="form-scroll" (loaded)="onScrollViewLoaded($event)" (tap)="onContainerTap($event)">
         <StackLayout class="content">
           <ActivityIndicator
             [busy]="viewReady && isLoadingCategories"

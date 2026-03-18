@@ -102,6 +102,17 @@ export class AddExpenseComponent {
     }, 120);
   }
 
+  public onScrollViewLoaded(event: any): void {
+    if (!isIOS) {
+      return;
+    }
+
+    const iosScrollView = event?.object?.nativeViewProtected;
+    if (iosScrollView) {
+      iosScrollView.keyboardDismissMode = UIScrollViewKeyboardDismissMode.OnDrag;
+    }
+  }
+
   public save(): void {
     if (this.isSaving) {
       return;
