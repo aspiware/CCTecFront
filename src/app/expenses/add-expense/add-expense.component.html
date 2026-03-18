@@ -1,41 +1,62 @@
 <ModalStack dismissEnabled="true" class="modal-root">
   <GridLayout rows="*" columns="*">
-    <StackLayout row="0" col="0" class="backdrop" (tap)="close()"></StackLayout>
+    <StackLayout row="0" col="0" class="backdrop" (tap)="closeWithoutSave()"></StackLayout>
 
-    <GridLayout row="0" col="0" rows="auto,auto,auto" class="modal-card">
-      <GridLayout row="0" columns="*,auto" class="header">
-        <Label col="0" text="Add Expense" class="title"></Label>
-        <Button col="1" text="Close" class="close-btn" (tap)="close()"></Button>
+    <GridLayout row="0" col="0" rows="auto,*" class="modal-card">
+      <GridLayout row="0" columns="*,auto,auto" class="header header-fixed">
+        <Label col="0" text="Add Expense" class="title modal-title-text"></Label>
+
+        <StackLayout col="2">
+          <MenuButton [useSFIcon]="true" style="background-color: transparent; height: 24; width: 35;"
+            [sfIconName]="'ellipsis.circle'" #menuStatus
+            [options]="mainMenuOptions" (selected)="onSelectedMainMenu($event, menuStatus)">
+          </MenuButton>
+        </StackLayout>
       </GridLayout>
 
-      <StackLayout row="1" class="form-body">
-        <StackLayout class="field-block">
-          <Label text="Expense Type ID" class="field-label"></Label>
-          <TextField
-            hint="Enter expense type ID"
-            [text]="expenseForm.controls.expenseTypeId.value"
-            [editable]="!isSaving"
-            keyboardType="number"
-            (textChange)="expenseForm.controls.expenseTypeId.setValue($event.value)">
-          </TextField>
-        </StackLayout>
+      <ScrollView row="1" class="form-scroll">
+        <StackLayout class="content">
+          <ActivityIndicator
+            [busy]="viewReady && isLoadingCategories"
+            [visibility]="(viewReady && isLoadingCategories) ? 'visible' : 'collapse'"
+            class="loading-indicator">
+          </ActivityIndicator>
 
-        <StackLayout class="field-block">
-          <Label text="Amount" class="field-label"></Label>
-          <TextField
-            hint="Enter amount"
-            [text]="expenseForm.controls.amount.value"
-            [editable]="!isSaving"
-            keyboardType="number"
-            (textChange)="expenseForm.controls.amount.setValue($event.value)">
-          </TextField>
-        </StackLayout>
-      </StackLayout>
+          <GridLayout columns="*" class="segment-row" [visibility]="categorySegments.length ? 'visible' : 'collapse'">
+            <SegmentedBar
+              col="0"
+              [items]="categorySegments"
+              [selectedIndex]="selectedCategoryIndex"
+              [isEnabled]="!isSaving && !isLoadingCategories"
+              (selectedIndexChange)="onCategoryChanged($event)"
+              class="job-segment">
+            </SegmentedBar>
+          </GridLayout>
 
-      <GridLayout row="2" columns="*,*" class="footer">
-        <Button col="0" text="Cancel" class="secondary-btn" (tap)="close()"></Button>
-        <Button col="1" [text]="isSaving ? 'Saving...' : 'Save'" class="primary-btn" (tap)="save()"></Button>
-      </GridLayout>
+          <StackLayout class="field-block">
+            <Label text="Expense Type" class="field-label"></Label>
+            <ListPicker
+              class="job-type-picker"
+              [items]="expenseTypeLabels"
+              [selectedIndex]="selectedTypeIndex"
+              [isEnabled]="!isSaving && !isLoadingTypes"
+              (selectedIndexChange)="onExpenseTypeChanged($event)">
+            </ListPicker>
+          </StackLayout>
+
+          <StackLayout class="field-block">
+            <Label text="Amount" class="field-label"></Label>
+            <TextField
+              hint="Enter amount"
+              [text]="expenseForm.controls.amount.value"
+              [editable]="!isSaving"
+              keyboardType="number"
+              class="notes-input"
+              (textChange)="expenseForm.controls.amount.setValue($event.value)">
+            </TextField>
+          </StackLayout>
+        </StackLayout>
+      </ScrollView>
     </GridLayout>
   </GridLayout>
 </ModalStack>

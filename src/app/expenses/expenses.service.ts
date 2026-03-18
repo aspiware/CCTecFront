@@ -36,6 +36,26 @@ export class ExpensesService {
     );
   }
 
+  public findExpenseTypes(): Observable<any> {
+    if (this.usersService.isDemoUser()) {
+      return of([]);
+    }
+
+    return this.httpClient.get<any>(
+      `${this.configService.getUrlBase()}/expenses/findExpenseTypes`
+    );
+  }
+
+  public findExpenseCategories(): Observable<any> {
+    if (this.usersService.isDemoUser()) {
+      return of([]);
+    }
+
+    return this.httpClient.get<any>(
+      `${this.configService.getUrlBase()}/expenses/findExpenseCategories`
+    );
+  }
+
   public create(expense: CreateExpenseDto): Observable<any> {
     if (this.usersService.isDemoUser()) {
       return of({
