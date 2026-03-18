@@ -33,20 +33,17 @@
             </SegmentedBar>
           </GridLayout>
 
-          <StackLayout class="field-block">
-            <Label text="Expense Type" class="field-label"></Label>
+          <GridLayout columns="*,auto" class="field-block expense-entry-row">
             <ListPicker
+              col="0"
               class="job-type-picker"
               [items]="expenseTypeLabels"
               [selectedIndex]="selectedTypeIndex"
               [isEnabled]="!isSaving && !isLoadingTypes"
               (selectedIndexChange)="onExpenseTypeChanged($event)">
             </ListPicker>
-          </StackLayout>
 
-          <StackLayout class="field-block">
-            <Label text="Amount" class="field-label"></Label>
-            <GridLayout columns="auto,*" class="input-shell amount-input-shell">
+            <GridLayout col="1" columns="auto,*" class="input-shell amount-input-shell">
               <Label col="0" class="currency-prefix" text="$"></Label>
               <TextField
                 col="1"
@@ -61,7 +58,7 @@
                 (blur)="onAmountBlur()">
               </TextField>
             </GridLayout>
-          </StackLayout>
+          </GridLayout>
         </StackLayout>
       </ScrollView>
     </GridLayout>
