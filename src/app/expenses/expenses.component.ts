@@ -1,12 +1,12 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit, ViewContainerRef } from '@angular/core';
 import { ModalDialogService, NativeScriptCommonModule } from '@nativescript/angular';
-import { Application, ObservableArray, Page, Screen, Utils } from '@nativescript/core';
+import { alert, Application, ObservableArray, Page, Screen, Utils } from '@nativescript/core';
 import { NativeScriptUIListViewModule } from 'nativescript-ui-listview/angular';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CustomerInfoComponent } from '../customer-info/customer-info.component';
 import { DevicesComponent } from '../devices/devices.component';
+import { ExpensesService } from './expenses.service';
 import { EditJobComponent } from '../edit-job/edit-job.component';
-import { SettingsService } from '../settings/settings.service';
 import { UserModel } from '../shared/models/user.model';
 import { ConfigService } from '../shared/services/config.service';
 import { UsersService } from '../shared/services/users.service';
@@ -33,18 +33,18 @@ export class ExpensesComponent implements OnInit, OnDestroy {
 
   public user: UserModel | null = null;
   public isSyncing = false;
-  public jobList = new ObservableArray<any>([]);
+  public expenseList = new ObservableArray<any>([]);
   public totalAmount = 0;
   public startDate = this.createDefaultStartDate();
   public endDate = new Date();
   public todayDate = new Date();
   public isDemoMode = false;
   public isDarkTheme = Application.systemAppearance() === 'dark';
-  public jobsSearch = '';
+  public expensesSearch = '';
 
   constructor(
     private usersService: UsersService,
-    private settingsService: SettingsService,
+    private expensesService: ExpensesService,
     private cdr: ChangeDetectorRef,
     private modalService: ModalDialogService,
     private vcRef: ViewContainerRef,
@@ -63,7 +63,7 @@ export class ExpensesComponent implements OnInit, OnDestroy {
     Application.on(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
     this.user = this.usersService.getUser();
     this.isDemoMode = this.usersService.isDemoUser(this.user);
-    this.loadJobs();
+    this.loadExpenses();
   }
 
   ngOnDestroy(): void {
@@ -83,7 +83,7 @@ export class ExpensesComponent implements OnInit, OnDestroy {
     if (this.startDate > this.endDate) {
       this.endDate = new Date(this.startDate);
     }
-    this.loadJobs();
+    this.loadExpenses();
   }
 
   public onEndDateChange(event: any): void {
@@ -92,29 +92,37 @@ export class ExpensesComponent implements OnInit, OnDestroy {
     if (this.endDate < this.startDate) {
       this.startDate = new Date(this.endDate);
     }
-    this.loadJobs();
+    this.loadExpenses();
   }
 
-  public refreshJobs(): void {
-    this.loadJobs();
+  public refreshExpenses(): void {
+    this.loadExpenses();
   }
 
-  public onJobsSearchChange(value: string): void {
-    this.jobsSearch = String(value || '');
-    this.applyJobsFilter();
+  public onExpensesSearchChange(value: string): void {
+    this.expensesSearch = String(value || '');
+    this.applyExpensesFilter();
   }
 
-  public clearJobsSearch(): void {
-    if (!this.jobsSearch) {
+  public clearExpensesSearch(): void {
+    if (!this.expensesSearch) {
       return;
     }
-    this.jobsSearch = '';
-    this.applyJobsFilter();
+    this.expensesSearch = '';
+    this.applyExpensesFilter();
+  }
+
+  public addExpense(): void {
+    alert({
+      title: 'Expenses',
+      message: 'Add expense flow pending implementation.',
+      okButtonText: 'OK',
+    });
   }
 
   public onPullToRefresh(event: any): void {
     const listView = event?.object;
-    this.loadJobs(() => {
+    this.loadExpenses(() => {
       listView?.notifyPullToRefreshFinished?.();
       listView?.scrollToIndex?.(0, false);
     });
@@ -367,7 +375,7 @@ export class ExpensesComponent implements OnInit, OnDestroy {
 
     this.modalService.showModal(EditJobComponent, options).then((result) => {
       if (result) {
-        this.loadJobs();
+        this.loadExpenses();
       }
       this.clearJobActionTap(job, 'edit');
     });
@@ -538,7 +546,7 @@ export class ExpensesComponent implements OnInit, OnDestroy {
     this.isDarkTheme = pageClassName.includes('ns-dark');
   }
 
-  private loadJobs(onFinished?: () => void): void {
+  private loadExpenses(onFinished?: () => void): void {
     if (this.isSyncing) {
       onFinished?.();
       return;
@@ -551,13 +559,14 @@ export class ExpensesComponent implements OnInit, OnDestroy {
     const endDate = this.formatDateParam(this.endOfDay(this.endDate));
     const userId = Number(this.user?.userId || 0);
 
-    this.settingsService.findJobsByUser(userId, startDate, endDate).subscribe({
+    this.expensesService.findByUserAndDates(userId, startDate, endDate).subscribe({
       next: (res) => {
-        const jobs = this.normalizeJobsResponse(res);
-        this.applyJobsForDisplay(jobs);
+        console.log("[EXPENSES]", res)
+        const expenses = this.normalizeExpensesResponse(res);
+        this.applyExpensesForDisplay(expenses);
       },
       error: () => {
-        this.applyJobsForDisplay([]);
+        this.applyExpensesForDisplay([]);
         this.isSyncing = false;
         this.cdr.detectChanges();
         onFinished?.();
@@ -570,14 +579,14 @@ export class ExpensesComponent implements OnInit, OnDestroy {
     });
   }
 
-  private applyJobsForDisplay(jobs: any[]): void {
-    const normalizedJobs = jobs
-      .map((job) => ({
-        ...job,
-        amount: Number(job?.amount || 0),
-        devices: this.parseJsonValue(job?.devices, []),
-        customer: this.parseJsonValue(job?.customer, null),
-        customJob: this.parseJsonValue(job?.customJob, null),
+  private applyExpensesForDisplay(expenses: any[]): void {
+    const normalizedExpenses = expenses
+      .map((expense) => ({
+        ...expense,
+        amount: Number(expense?.amount || 0),
+        devices: this.parseJsonValue(expense?.devices, []),
+        customer: this.parseJsonValue(expense?.customer, null),
+        customJob: this.parseJsonValue(expense?.customJob, null),
       }))
       .sort((a, b) => {
         const aTime = new Date(a?.timeSlotStartDateTime || a?.createdAt || 0).getTime();
@@ -585,12 +594,12 @@ export class ExpensesComponent implements OnInit, OnDestroy {
         return bTime - aTime;
       });
 
-    this.allJobs = normalizedJobs;
-    this.applyJobsFilter();
+    this.allJobs = normalizedExpenses;
+    this.applyExpensesFilter();
   }
 
-  private applyJobsFilter(): void {
-    const query = this.jobsSearch.trim().toLowerCase();
+  private applyExpensesFilter(): void {
+    const query = this.expensesSearch.trim().toLowerCase();
     const filteredJobs = !query
       ? [...this.allJobs]
       : this.allJobs.filter((job) => {
@@ -609,13 +618,13 @@ export class ExpensesComponent implements OnInit, OnDestroy {
           return haystack.includes(query);
         });
 
-    this.jobList = new ObservableArray(filteredJobs);
+    this.expenseList = new ObservableArray(filteredJobs);
     this.totalAmount = this.usersService.isDemoUser(this.user)
       ? this.demoWeeklyTotal
       : filteredJobs.reduce((sum, job) => sum + Number(job?.amount || 0), 0);
   }
 
-  private normalizeJobsResponse(response: any): any[] {
+  private normalizeExpensesResponse(response: any): any[] {
     if (this.usersService.isDemoUser(this.user)) {
       return this.filterDemoJobsByDateRange();
     }

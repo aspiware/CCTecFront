@@ -1,6 +1,7 @@
-<ActionBar class="action-bar" [title]="'Expenses (' + jobList.length + ')'">
+<ActionBar class="action-bar" [title]="'Expenses (' + expenseList.length + ')'">
+  <ActionItem ios.position="left" ios.systemIcon="4" (tap)="addExpense()"></ActionItem>
   <ActionItem ios.position="right" ios.systemIcon="13" [visibility]="isSyncing ? 'collapse' : 'visible'"
-    [isEnabled]="!isSyncing" (tap)="refreshJobs()">
+    [isEnabled]="!isSyncing" (tap)="refreshExpenses()">
   </ActionItem>
   <ActionItem ios.position="right" [visibility]="isSyncing ? 'visible' : 'collapse'">
     <ActivityIndicator [busy]="isSyncing" width="20" height="20"></ActivityIndicator>
@@ -32,25 +33,25 @@
 
     <GridLayout row="1" columns="*" class="search-row">
       <GridLayout columns="*,auto" class="input-shell" width="100%">
-        <TextField
+          <TextField
           col="0"
           hint="Search jobs"
-          [text]="jobsSearch"
-          (textChange)="onJobsSearchChange($event.value)"
+          [text]="expensesSearch"
+          (textChange)="onExpensesSearchChange($event.value)"
           class="custom-tf-inline">
         </TextField>
         <Label
           col="1"
           class="search-icon fas"
-          [text]="jobsSearch?.trim() ? '&#xf057;' : '&#xf002;'"
-          [isUserInteractionEnabled]="!!jobsSearch?.trim()"
-          (tap)="clearJobsSearch()">
+          [text]="expensesSearch?.trim() ? '&#xf057;' : '&#xf002;'"
+          [isUserInteractionEnabled]="!!expensesSearch?.trim()"
+          (tap)="clearExpensesSearch()">
         </Label>
       </GridLayout>
     </GridLayout>
   </GridLayout>
 
-  <RadListView [items]="jobList" [pullToRefresh]="!isSyncing" (pullToRefreshInitiated)="onPullToRefresh($event)"
+  <RadListView [items]="expenseList" [pullToRefresh]="!isSyncing" (pullToRefreshInitiated)="onPullToRefresh($event)"
     height="100%" class="jobs-list">
     <ng-template tkListItemTemplate let-item="item">
       <GridLayout clipToBounds="false">
