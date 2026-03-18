@@ -385,46 +385,56 @@ export class AddExpenseComponent {
     resolver: (files: ExpenseUploadFile[]) => void
   ): UIDocumentPickerDelegate {
     const owner = new WeakRef(this);
+    const DelegateClass = (NSObject as any).extend(
+      {
+        documentPickerDidPickDocumentsAtURLs(
+          _controller: UIDocumentPickerViewController,
+          urls: NSArray<NSURL> | NSURL[]
+        ) {
+          console.log('[Expenses][Picker] didPickDocumentsAtURLs');
+          const component = owner.deref();
+          resolver(component?.handleDocumentPickerUrls(urls) || []);
+        },
 
-    class DocumentPickerDelegateImpl extends NSObject implements UIDocumentPickerDelegate {
-      static ObjCProtocols = [UIDocumentPickerDelegate];
+        documentPickerDidPickDocumentAtURL(
+          _controller: UIDocumentPickerViewController,
+          url: NSURL
+        ) {
+          console.log('[Expenses][Picker] didPickDocumentAtURL');
+          const component = owner.deref();
+          resolver(component?.handleDocumentPickerUrls([url]) || []);
+        },
 
-      documentPickerDidPickDocumentsAtURLs(
-        _controller: UIDocumentPickerViewController,
-        urls: NSArray<NSURL> | NSURL[]
-      ): void {
-        const component = owner.deref();
-        resolver(component?.handleDocumentPickerUrls(urls) || []);
+        documentPickerWasCancelled(_controller: UIDocumentPickerViewController) {
+          console.log('[Expenses][Picker] cancelled');
+          resolver([]);
+        },
+      },
+      {
+        protocols: [UIDocumentPickerDelegate],
+        name: 'ExpenseDocumentPickerDelegateImpl',
       }
+    );
 
-      documentPickerDidPickDocumentAtURL(
-        _controller: UIDocumentPickerViewController,
-        url: NSURL
-      ): void {
-        const component = owner.deref();
-        resolver(component?.handleDocumentPickerUrls([url]) || []);
-      }
-
-      documentPickerWasCancelled(_controller: UIDocumentPickerViewController): void {
-        resolver([]);
-      }
-    }
-
-    return DocumentPickerDelegateImpl.new();
+    return DelegateClass.new() as UIDocumentPickerDelegate;
   }
 
   public handleDocumentPickerUrls(urls: NSArray<NSURL> | NSURL[]): ExpenseUploadFile[] {
+    console.log('[Expenses][Picker] handle urls', Array.isArray(urls) ? urls.length : urls?.count);
     const resolvedUrls = Array.isArray(urls)
       ? urls
       : Array.from({ length: urls.count }, (_, index) => urls.objectAtIndex(index));
 
     const files: ExpenseUploadFile[] = [];
     for (const url of resolvedUrls) {
+      console.log('[Expenses][Picker] url', String(url?.absoluteString || ''), String(url?.path || ''));
       const file = this.copyPickedFile(url);
       if (file) {
         files.push(file);
       }
     }
+
+    console.log('[Expenses][Picker] files resolved', files.length);
 
     return files;
   }
