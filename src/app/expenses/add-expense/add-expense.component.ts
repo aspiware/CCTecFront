@@ -19,6 +19,8 @@ export class AddExpenseComponent {
   public viewReady = false;
   public isLoadingCategories = false;
   public isLoadingTypes = false;
+  public amount = 0;
+  public amountText = '0.00';
   public allExpenseTypes: any[] = [];
   public expenseTypes: any[] = [];
   public expenseTypeLabels: string[] = [];
@@ -55,6 +57,7 @@ export class AddExpenseComponent {
     private cdr: ChangeDetectorRef
   ) {
     this.userId = Number(this.modalParams.context?.userId || 0);
+    this.expenseForm.controls.amount.setValue(this.amountText);
   }
 
   ngOnInit(): void {
@@ -93,7 +96,7 @@ export class AddExpenseComponent {
     }
 
     const expenseTypeId = Number(this.expenseForm.controls.expenseTypeId.value);
-    const amount = Number(this.expenseForm.controls.amount.value);
+    const amount = Number(this.amount);
 
     if (!expenseTypeId || Number.isNaN(expenseTypeId)) {
       this.showError('Expense type is required.');
@@ -147,12 +150,57 @@ export class AddExpenseComponent {
     this.applyExpenseTypeFilter();
   }
 
+  public onInputTap(): void {
+    // Keeps the same input interaction entry point used in Residential Job Prices.
+  }
+
+  public onAmountChange(event: any): void {
+    const rawValue = String(event?.value ?? '');
+    const sanitized = this.sanitizePriceInput(rawValue);
+    if (event?.object && event.object.text !== sanitized) {
+      event.object.text = sanitized;
+    }
+
+    this.amountText = sanitized;
+    const parsed = Number(sanitized);
+    this.amount = Number.isFinite(parsed) ? parsed : 0;
+    this.expenseForm.controls.amount.setValue(sanitized);
+  }
+
+  public onAmountFocus(): void {
+    this.onInputTap();
+  }
+
+  public onAmountBlur(): void {
+    this.amountText = this.formatPriceInput(this.amount);
+    this.expenseForm.controls.amount.setValue(this.amountText);
+  }
+
   private showError(message: string): Promise<void> {
     return alert({
       title: 'Expenses',
       message,
       okButtonText: 'OK',
     });
+  }
+
+  private formatPriceInput(value: any): string {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) {
+      return '0.00';
+    }
+    return numeric.toFixed(2);
+  }
+
+  private sanitizePriceInput(value: string): string {
+    const clean = value.replace(/[^0-9.]/g, '');
+    const firstDot = clean.indexOf('.');
+    if (firstDot < 0) {
+      return clean;
+    }
+    const beforeDot = clean.slice(0, firstDot + 1);
+    const afterDot = clean.slice(firstDot + 1).replace(/\./g, '');
+    return `${beforeDot}${afterDot}`;
   }
 
   public onSelectedMainMenu(event: MenuEvent, _menuStatus?: any): void {

@@ -46,14 +46,21 @@
 
           <StackLayout class="field-block">
             <Label text="Amount" class="field-label"></Label>
-            <TextField
-              hint="Enter amount"
-              [text]="expenseForm.controls.amount.value"
-              [editable]="!isSaving"
-              keyboardType="number"
-              class="notes-input"
-              (textChange)="expenseForm.controls.amount.setValue($event.value)">
-            </TextField>
+            <GridLayout columns="auto,*" class="input-shell amount-input-shell">
+              <Label col="0" class="currency-prefix" text="$"></Label>
+              <TextField
+                col="1"
+                hint="0.00"
+                [text]="amountText"
+                [editable]="!isSaving"
+                keyboardType="decimal"
+                class="custom-tf-inline item-price-input"
+                (textChange)="onAmountChange($event)"
+                (tap)="onInputTap()"
+                (focus)="onAmountFocus()"
+                (blur)="onAmountBlur()">
+              </TextField>
+            </GridLayout>
           </StackLayout>
         </StackLayout>
       </ScrollView>
