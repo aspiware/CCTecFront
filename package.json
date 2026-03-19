@@ -3,6 +3,9 @@
   "main": "./src/main.ts",
   "version": "1.0.0",
   "private": true,
+  "scripts": {
+    "build:ios:release": "./scripts/build-ios-release.sh"
+  },
   "dependencies": {
     "@angular/animations": "~20.2.0",
     "@angular/common": "~20.2.0",
