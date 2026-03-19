@@ -1,0 +1,117 @@
+<ModalStack dismissEnabled="true" class="modal-root">
+  <GridLayout rows="*" columns="*">
+    <StackLayout row="0" col="0" class="backdrop" (tap)="closeWithoutSave()"></StackLayout>
+
+    <GridLayout row="0" col="0" rows="auto,*" class="modal-card">
+      <GridLayout row="0" columns="*,auto,auto" class="header header-fixed">
+        <Label col="0" text="Add Expense" class="title modal-title-text"></Label>
+
+        <StackLayout col="2">
+          <MenuButton [useSFIcon]="true" style="background-color: transparent; height: 24; width: 35;"
+            [sfIconName]="'ellipsis.circle'" #menuStatus
+            [options]="mainMenuOptions" (selected)="onSelectedMainMenu($event, menuStatus)">
+          </MenuButton>
+        </StackLayout>
+      </GridLayout>
+
+      <ScrollView row="1" class="form-scroll" (loaded)="onScrollViewLoaded($event)" (tap)="onContainerTap($event)">
+        <StackLayout class="content">
+          <ActivityIndicator
+            [busy]="viewReady && isLoadingCategories"
+            [visibility]="(viewReady && isLoadingCategories) ? 'visible' : 'collapse'"
+            class="loading-indicator">
+          </ActivityIndicator>
+
+          <GridLayout columns="*" class="segment-row" [visibility]="categorySegments.length ? 'visible' : 'collapse'">
+            <SegmentedBar
+              col="0"
+              [items]="categorySegments"
+              [selectedIndex]="selectedCategoryIndex"
+              [isEnabled]="!isSaving && !isLoadingCategories"
+              (selectedIndexChange)="onCategoryChanged($event)"
+              class="job-segment">
+            </SegmentedBar>
+          </GridLayout>
+
+          <GridLayout columns="*,auto" class="field-block expense-entry-row">
+            <ListPicker
+              col="0"
+              class="job-type-picker"
+              [items]="expenseTypeLabels"
+              [selectedIndex]="selectedTypeIndex"
+              [isEnabled]="!isSaving && !isLoadingTypes"
+              (selectedIndexChange)="onExpenseTypeChanged($event)">
+            </ListPicker>
+
+            <GridLayout col="1" columns="auto,*" class="input-shell amount-input-shell">
+              <Label col="0" class="currency-prefix" text="$"></Label>
+              <TextField
+                col="1"
+                hint="0.00"
+                [text]="amountText"
+                [editable]="!isSaving"
+                keyboardType="decimal"
+                class="custom-tf-inline item-price-input"
+                (textChange)="onAmountChange($event)"
+                (tap)="onInputTap()"
+                (focus)="onAmountFocus()"
+                (blur)="onAmountBlur()">
+              </TextField>
+            </GridLayout>
+          </GridLayout>
+
+          <TextView
+            hint="Write a note"
+            [text]="noteText"
+            (textChange)="onNoteChanged($event.value)"
+            (tap)="onInputTap()"
+            (touch)="onInputTap()"
+            (focus)="onInputTap()"
+            class="notes-input">
+          </TextView>
+
+          <GridLayout columns="auto,*" class="attachments-header">
+            <Button
+              col="0"
+              text="Attach Files"
+              class="attach-button"
+              [isEnabled]="!isSaving"
+              (tap)="pickFiles()">
+            </Button>
+
+            <Label
+              col="1"
+              class="attachments-count"
+              [text]="selectedFiles.length ? (selectedFiles.length + ' file(s) selected') : 'No files attached'">
+            </Label>
+          </GridLayout>
+
+          <StackLayout
+            class="attachments-list"
+            [visibility]="selectedFiles.length ? 'visible' : 'collapse'">
+            <GridLayout
+              *ngFor="let file of selectedFiles; let i = index"
+              columns="*,auto"
+              class="attachment-item">
+              <StackLayout col="0">
+                <Label class="attachment-name" [text]="file.name"></Label>
+                <Label
+                  class="attachment-meta"
+                  [text]="getFileSizeLabel(file.size)">
+                </Label>
+              </StackLayout>
+
+              <Label
+                col="1"
+                text="&#xf2ed;"
+                class="fas attachment-remove-icon"
+                [isEnabled]="!isSaving"
+                (tap)="removeFile(i)">
+              </Label>
+            </GridLayout>
+          </StackLayout>
+        </StackLayout>
+      </ScrollView>
+    </GridLayout>
+  </GridLayout>
+</ModalStack>

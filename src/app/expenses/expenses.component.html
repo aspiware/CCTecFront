@@ -1,0 +1,84 @@
+<ActionBar class="action-bar" [title]="'Expenses (' + expenseList.length + ')'">
+  <ActionItem ios.position="left" ios.systemIcon="4" (tap)="addExpense()"></ActionItem>
+  <ActionItem ios.position="right" ios.systemIcon="13" [visibility]="isSyncing ? 'collapse' : 'visible'"
+    [isEnabled]="!isSyncing" (tap)="refreshExpenses()">
+  </ActionItem>
+  <ActionItem ios.position="right" [visibility]="isSyncing ? 'visible' : 'collapse'">
+    <ActivityIndicator [busy]="isSyncing" width="20" height="20"></ActivityIndicator>
+  </ActionItem>
+</ActionBar>
+
+<StackLayout [class]="'container ' + (isDarkTheme ? 'theme-dark' : 'theme-light')" (loaded)="onRootLoaded()">
+  <GridLayout rows="auto,auto" columns="*" style="margin-right: 10; margin-top: 10;">
+    <GridLayout row="0" columns="auto,auto,*" class="jobs-filters-row">
+      <GridLayout col="0" rows="auto" horizontalAlignment="left" class="date-filter-block">
+        <GridLayout row="0" columns="auto" class="date-filter-row" horizontalAlignment="left">
+          <DatePicker col="0" horizontalAlignment="left" class="today-date-picker" [date]="startDate"
+            (dateChange)="onStartDateChange($event)"></DatePicker>
+        </GridLayout>
+      </GridLayout>
+
+      <GridLayout col="1" rows="auto" horizontalAlignment="left" class="date-filter-block">
+        <GridLayout row="0" columns="auto" class="date-filter-row">
+          <DatePicker col="0" horizontalAlignment="left" class="today-date-picker" [date]="endDate"
+            [maxDate]="todayDate"
+            (dateChange)="onEndDateChange($event)"></DatePicker>
+        </GridLayout>
+      </GridLayout>
+
+      <StackLayout col="2" verticalAlignment="middle" horizontalAlignment="right">
+        <Label class="action-bar-title today-label" [text]="totalAmount | currency"></Label>
+      </StackLayout>
+    </GridLayout>
+
+    <GridLayout row="1" columns="*" class="search-row">
+      <GridLayout columns="*,auto" class="input-shell" width="100%">
+        <TextField
+          col="0"
+          hint="Search by type, note, or category"
+          [text]="expensesSearch"
+          (textChange)="onExpensesSearchChange($event.value)"
+          class="custom-tf-inline">
+        </TextField>
+        <Label
+          col="1"
+          class="search-icon fas"
+          [text]="expensesSearch?.trim() ? '&#xf057;' : '&#xf002;'"
+          [isUserInteractionEnabled]="!!expensesSearch?.trim()"
+          (tap)="clearExpensesSearch()">
+        </Label>
+      </GridLayout>
+    </GridLayout>
+  </GridLayout>
+
+  <RadListView [items]="expenseList" [pullToRefresh]="!isSyncing" (loaded)="onExpensesListLoaded($event)" (tap)="dismissKeyboard()" (pullToRefreshInitiated)="onPullToRefresh($event)"
+    height="100%" class="jobs-list">
+    <ng-template tkListItemTemplate let-item="item">
+      <StackLayout class="item-bag">
+        <GridLayout columns="*,auto" width="100%" class="item-header">
+          <Label col="0" class="first-row" [text]="item.displayTitle || 'Expense'"></Label>
+          <Label col="1" class="first-row amount" [text]="(item.amount || 0) | currency"></Label>
+        </GridLayout>
+
+        <Label
+          *ngIf="item.displaySubtitle"
+          class="second-row compact"
+          [text]="item.displaySubtitle">
+        </Label>
+
+        <GridLayout columns="*,auto" class="expense-meta-row">
+          <Label
+            col="0"
+            class="secondRow compact"
+            [text]="item.displayTimestamp ? (item.displayTimestamp | date: 'MMM d, y h:mm a') : 'No date'">
+          </Label>
+          <Label
+            col="1"
+            class="secondRow compact units"
+            [text]="item.attachmentCount ? (item.attachmentCount + ' file(s)') : 'No files'">
+          </Label>
+        </GridLayout>
+      </StackLayout>
+    </ng-template>
+  </RadListView>
+</StackLayout>
