@@ -25,6 +25,7 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
   public jobTypes: any[] = [];
   public user: UserModel | null = null;
   public equipmentPrices: any[] = [];
+  public equipmentRows: any[][] = [];
   public modemPrice = 0;
   public tvBoxPrice = 0;
   public pricesScrollHeight: number | string = 'auto';
@@ -531,10 +532,19 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
         editablePrice: this.formatPriceInput(price),
       };
     });
+    this.equipmentRows = this.chunkEquipmentRows(this.equipmentPrices);
   }
 
   private getEquipmentPriceByKey(key: 'modem' | 'tvBox'): number {
     const match = this.equipmentPrices.find((item) => item?.key === key);
     return Number(match?.price || 0);
+  }
+
+  private chunkEquipmentRows(items: any[]): any[][] {
+    const rows: any[][] = [];
+    for (let index = 0; index < items.length; index += 2) {
+      rows.push(items.slice(index, index + 2));
+    }
+    return rows;
   }
 }

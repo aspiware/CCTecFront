@@ -27,24 +27,30 @@
       <StackLayout class="fixed-card-wrap">
         <StackLayout class="card fixed-prices-card" *ngIf="equipmentPrices.length">
           <GridLayout
-            *ngFor="let equipment of equipmentPrices; let i = index; trackBy: trackByEquipmentId"
-            columns="auto,*"
-            class="fixed-price-field"
+            *ngFor="let row of equipmentRows; let i = index"
+            columns="*,*"
+            class="equipment-row"
             [class.line-row]="i > 0">
-            <Label col="0" [text]="equipment.name" class="fixed-price-label"></Label>
-            <GridLayout col="1" columns="auto,*" class="input-shell header-input-shell" (tap)="onInputTap()">
-              <Label col="0" class="currency-prefix" text="$"></Label>
-              <TextField
-                col="1"
-                class="custom-tf-inline item-price-input"
-                keyboardType="decimal"
-                hint="0.00"
-                [text]="equipment.editablePrice"
-                (textChange)="onEquipmentPriceChange(equipment, $event)"
-                (tap)="onInputTap()"
-                (focus)="onEquipmentPriceFocus()"
-                (blur)="onEquipmentPriceBlur(equipment)">
-              </TextField>
+            <GridLayout
+              *ngFor="let equipment of row; let colIndex = index"
+              [col]="colIndex"
+              columns="auto,*"
+              class="fixed-price-field">
+              <Label col="0" [text]="equipment.name" class="fixed-price-label"></Label>
+              <GridLayout col="1" columns="auto,*" class="input-shell header-input-shell" (tap)="onInputTap()">
+                <Label col="0" class="currency-prefix" text="$"></Label>
+                <TextField
+                  col="1"
+                  class="custom-tf-inline item-price-input"
+                  keyboardType="decimal"
+                  hint="0.00"
+                  [text]="equipment.editablePrice"
+                  (textChange)="onEquipmentPriceChange(equipment, $event)"
+                  (tap)="onInputTap()"
+                  (focus)="onEquipmentPriceFocus()"
+                  (blur)="onEquipmentPriceBlur(equipment)">
+                </TextField>
+              </GridLayout>
             </GridLayout>
           </GridLayout>
         </StackLayout>
