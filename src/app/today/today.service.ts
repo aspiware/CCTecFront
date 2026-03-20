@@ -166,6 +166,15 @@ export class TodayService {
     );
   }
 
+  public getEquipmentsByCategory(
+    userId: number,
+    categoryId: number
+  ): Observable<any[]> {
+    return this.httpClient.get<any[]>(
+      `${this.configService.getUrlBase()}/jobs/getEquipmentsByCategory/${userId}/${categoryId}`
+    );
+  }
+
   public getActivationLink(
     userId: number,
     accountNumber: string,

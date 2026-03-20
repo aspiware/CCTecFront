@@ -24,10 +24,9 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
   public isLoading = false;
   public jobTypes: any[] = [];
   public user: UserModel | null = null;
+  public equipmentPrices: any[] = [];
   public modemPrice = 0;
-  public modemPriceText = '0.00';
   public tvBoxPrice = 0;
-  public tvBoxPriceText = '0.00';
   public pricesScrollHeight: number | string = 'auto';
   private focusedInputs = 0;
   private suppressDismissUntil = 0;
@@ -69,6 +68,7 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
 
     this.user = this.usersService.getUser() || null;
     this.loadJobTypes();
+    this.loadEquipments();
     this.loadSettingsPrices();
   }
 
@@ -157,8 +157,8 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
     forkJoin({
       equipment: this.settingsService.updateModemBoxPrices(
         userId,
-        Number(this.modemPrice || 0),
-        Number(this.tvBoxPrice || 0)
+        this.getEquipmentPriceByKey('modem'),
+        this.getEquipmentPriceByKey('tvBox')
       ),
       jobTypes: saveJobTypePrices$,
     }).subscribe({
@@ -178,6 +178,38 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
           message: 'Unable to save prices. Please try again.',
           okButtonText: 'OK',
         });
+      },
+    });
+  }
+
+  private loadEquipments(): void {
+    const userId = Number(this.user?.userId || 0);
+    if (!userId) {
+      this.equipmentPrices = [];
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.todayService.getEquipmentsByCategory(userId, 1).subscribe({
+      next: (res: any) => {
+        const list = Array.isArray(res) ? res : [];
+        this.equipmentPrices = list.map((item: any) => ({
+          id: Number(item?.equipmentId || item?.id || 0),
+          name: String(item?.equipmentName || item?.name || '-'),
+          description: String(item?.equipmentDescription || item?.description || ''),
+          sortOrder: Number(item?.sortOrder || 0),
+          key: this.getEquipmentKey(item),
+          price: Number(item?.price || 0),
+          editablePrice: this.formatPriceInput(item?.price),
+        }))
+        .sort((a, b) => Number(a?.sortOrder || 0) - Number(b?.sortOrder || 0));
+        this.syncEquipmentPricesFromSettings();
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.log('[ResidentialJobPrices] getEquipmentsByCategory error', error);
+        this.equipmentPrices = [];
+        this.cdr.detectChanges();
       },
     });
   }
@@ -225,9 +257,8 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
     const userId = Number(this.user?.userId || 0);
     if (!userId) {
       this.modemPrice = 0;
-      this.modemPriceText = '0.00';
       this.tvBoxPrice = 0;
-      this.tvBoxPriceText = '0.00';
+      this.syncEquipmentPricesFromSettings();
       this.cdr.detectChanges();
       return;
     }
@@ -235,9 +266,8 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
     this.settingsService.findByUser(userId).subscribe({
       next: (res: any) => {
         this.modemPrice = Number(res?.modemPrice || 0);
-        this.modemPriceText = this.formatPriceInput(this.modemPrice);
         this.tvBoxPrice = Number(res?.boxPrice || 0);
-        this.tvBoxPriceText = this.formatPriceInput(this.tvBoxPrice);
+        this.syncEquipmentPricesFromSettings();
         this.cdr.detectChanges();
       },
       error: (error) => {
@@ -271,7 +301,7 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
     }
   }
 
-  public onHeaderPriceChange(type: 'modem' | 'tvBox', event: any): void {
+  public onEquipmentPriceChange(item: any, event: any): void {
     const rawValue = String(event?.value ?? '');
     const sanitized = this.sanitizePriceInput(rawValue);
     if (event?.object && event.object.text !== sanitized) {
@@ -279,29 +309,23 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
     }
 
     const parsed = Number(sanitized);
-    if (type === 'modem') {
-      this.modemPriceText = sanitized;
-      this.modemPrice = Number.isFinite(parsed) ? parsed : 0;
-      return;
+    item.editablePrice = sanitized;
+    item.price = Number.isFinite(parsed) ? parsed : 0;
+    if (item?.key === 'modem') {
+      this.modemPrice = item.price;
+    } else if (item?.key === 'tvBox') {
+      this.tvBoxPrice = item.price;
     }
-
-    this.tvBoxPriceText = sanitized;
-    this.tvBoxPrice = Number.isFinite(parsed) ? parsed : 0;
   }
 
-  public onHeaderPriceFocus(): void {
+  public onEquipmentPriceFocus(): void {
     this.onInputTap();
     this.focusedInputs += 1;
     this.reduceScrollHeightForKeyboard();
   }
 
-  public onHeaderPriceBlur(type: 'modem' | 'tvBox'): void {
-    if (type === 'modem') {
-      this.modemPriceText = this.formatPriceInput(this.modemPrice);
-    } else {
-      this.tvBoxPriceText = this.formatPriceInput(this.tvBoxPrice);
-    }
-
+  public onEquipmentPriceBlur(item: any): void {
+    item.editablePrice = this.formatPriceInput(item?.price || 0);
     this.focusedInputs = Math.max(0, this.focusedInputs - 1);
     if (this.focusedInputs === 0) {
       this.restoreScrollHeight();
@@ -351,6 +375,10 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
   }
 
   public trackByJobTypeId(index: number, item: any): number {
+    return Number(item?.id || index);
+  }
+
+  public trackByEquipmentId(index: number, item: any): number {
     return Number(item?.id || index);
   }
 
@@ -469,5 +497,44 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
     }
 
     return false;
+  }
+
+  private getEquipmentKey(item: any): string {
+    const text = String(
+      item?.equipmentName ||
+      item?.name ||
+      item?.equipmentDescription ||
+      item?.description ||
+      ''
+    ).toLowerCase();
+    if (text.includes('modem') || text.includes('mta') || text.includes('hsi') || text.includes('cm')) {
+      return 'modem';
+    }
+    if (text.includes('tv') || text.includes('box') || text.includes('stb')) {
+      return 'tvBox';
+    }
+    return `equipment-${item?.id || text}`;
+  }
+
+  private syncEquipmentPricesFromSettings(): void {
+    this.equipmentPrices = this.equipmentPrices.map((item) => {
+      const price =
+        item?.key === 'modem'
+          ? Number(this.modemPrice || 0)
+          : item?.key === 'tvBox'
+            ? Number(this.tvBoxPrice || 0)
+            : Number(item?.price || 0);
+
+      return {
+        ...item,
+        price,
+        editablePrice: this.formatPriceInput(price),
+      };
+    });
+  }
+
+  private getEquipmentPriceByKey(key: 'modem' | 'tvBox'): number {
+    const match = this.equipmentPrices.find((item) => item?.key === key);
+    return Number(match?.price || 0);
   }
 }
