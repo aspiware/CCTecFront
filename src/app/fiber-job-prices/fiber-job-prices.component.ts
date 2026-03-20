@@ -185,11 +185,14 @@ export class FiberJobPricesComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
 
     forkJoin({
-      // equipment: this.settingsService.updateModemBoxPrices(
-      //   userId,
-      //   Number(this.modemPrice || 0),
-      //   Number(this.tvBoxPrice || 0)
-      // ),
+      equipment: this.todayService.saveEquipmentPrices(
+        userId,
+        3,
+        this.equipmentPrices.map((item: any) => ({
+          equipmentId: Number(item?.id || item?.equipmentId || 0),
+          price: Number(item?.price || 0),
+        })).filter((item) => item.equipmentId > 0)
+      ),
       jobTypes: saveJobTypePrices$,
     }).subscribe({
       next: async () => {

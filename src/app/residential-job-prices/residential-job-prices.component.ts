@@ -153,10 +153,13 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
 
     forkJoin({
-      equipment: this.settingsService.updateModemBoxPrices(
+      equipment: this.todayService.saveEquipmentPrices(
         userId,
-        this.getEquipmentPriceByKey('modem'),
-        this.getEquipmentPriceByKey('tvBox')
+        1,
+        this.equipmentPrices.map((item: any) => ({
+          equipmentId: Number(item?.id || item?.equipmentId || 0),
+          price: Number(item?.price || 0),
+        })).filter((item) => item.equipmentId > 0)
       ),
       jobTypes: saveJobTypePrices$,
     }).subscribe({
@@ -484,11 +487,6 @@ export class ResidentialJobPricesComponent implements OnInit, OnDestroy {
       return 'tvBox';
     }
     return `equipment-${item?.id || text}`;
-  }
-
-  private getEquipmentPriceByKey(key: 'modem' | 'tvBox'): number {
-    const match = this.equipmentPrices.find((item) => item?.key === key);
-    return Number(match?.price || 0);
   }
 
   private chunkEquipmentRows(items: any[]): any[][] {

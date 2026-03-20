@@ -175,6 +175,17 @@ export class TodayService {
     );
   }
 
+  public saveEquipmentPrices(
+    userId: number,
+    categoryId: number,
+    prices: Array<{ equipmentId: number; price: number }>
+  ): Observable<any> {
+    return this.httpClient.post<any>(
+      `${this.configService.getUrlBase()}/jobs/saveEquipmentPrices/${userId}/${categoryId}`,
+      prices
+    );
+  }
+
   public getActivationLink(
     userId: number,
     accountNumber: string,
