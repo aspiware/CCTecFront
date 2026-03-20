@@ -26,8 +26,6 @@ export class FiberJobPricesComponent implements OnInit, OnDestroy {
   public user: UserModel | null = null;
   public equipmentPrices: any[] = [];
   public equipmentRows: any[][] = [];
-  public modemPrice = 0;
-  public tvBoxPrice = 0;
   public pricesScrollHeight: number | string = 'auto';
   private focusedInputs = 0;
   private suppressDismissUntil = 0;
@@ -70,7 +68,6 @@ export class FiberJobPricesComponent implements OnInit, OnDestroy {
     this.user = this.usersService.getUser() || null;
     this.loadJobTypes();
     this.loadEquipments();
-    this.loadSettingsPrices();
   }
 
   ngOnDestroy(): void {
@@ -104,7 +101,7 @@ export class FiberJobPricesComponent implements OnInit, OnDestroy {
           editablePrice: this.formatPriceInput(item?.price),
         }))
         .sort((a, b) => Number(a?.sortOrder || 0) - Number(b?.sortOrder || 0));
-        this.syncEquipmentPricesFromSettings();
+        this.equipmentRows = this.chunkEquipmentRows(this.equipmentPrices);
         this.cdr.detectChanges();
       },
       error: (error) => {
@@ -218,7 +215,7 @@ export class FiberJobPricesComponent implements OnInit, OnDestroy {
   private refreshData(): void {
     this.endEditingBeforeRefresh();
     this.loadJobTypes();
-    this.loadSettingsPrices();
+    this.loadEquipments();
   }
 
   private loadJobTypes(): void {
@@ -250,29 +247,6 @@ export class FiberJobPricesComponent implements OnInit, OnDestroy {
         this.jobTypes = [];
         this.isLoading = false;
         this.cdr.detectChanges();
-      },
-    });
-  }
-
-  private loadSettingsPrices(): void {
-    const userId = Number(this.user?.userId || 0);
-    if (!userId) {
-      this.modemPrice = 0;
-      this.tvBoxPrice = 0;
-      this.syncEquipmentPricesFromSettings();
-      this.cdr.detectChanges();
-      return;
-    }
-
-    this.settingsService.findByUser(userId).subscribe({
-      next: (res: any) => {
-        this.modemPrice = Number(res?.modemPrice || 0);
-        this.tvBoxPrice = Number(res?.boxPrice || 0);
-        this.syncEquipmentPricesFromSettings();
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        console.log('[FiberJobPrices] findByUser error', error);
       },
     });
   }
@@ -312,11 +286,6 @@ export class FiberJobPricesComponent implements OnInit, OnDestroy {
     const parsed = Number(sanitized);
     item.editablePrice = sanitized;
     item.price = Number.isFinite(parsed) ? parsed : 0;
-    if (item?.key === 'modem') {
-      this.modemPrice = item.price;
-    } else if (item?.key === 'tvBox') {
-      this.tvBoxPrice = item.price;
-    }
   }
 
   public onEquipmentPriceFocus(): void {
@@ -515,24 +484,6 @@ export class FiberJobPricesComponent implements OnInit, OnDestroy {
       return 'tvBox';
     }
     return `equipment-${item?.id || text}`;
-  }
-
-  private syncEquipmentPricesFromSettings(): void {
-    this.equipmentPrices = this.equipmentPrices.map((item) => {
-      const price =
-        item?.key === 'modem'
-          ? Number(this.modemPrice || 0)
-          : item?.key === 'tvBox'
-            ? Number(this.tvBoxPrice || 0)
-            : Number(item?.price || 0);
-
-      return {
-        ...item,
-        price,
-        editablePrice: this.formatPriceInput(price),
-      };
-    });
-    this.equipmentRows = this.chunkEquipmentRows(this.equipmentPrices);
   }
 
   private chunkEquipmentRows(items: any[]): any[][] {
