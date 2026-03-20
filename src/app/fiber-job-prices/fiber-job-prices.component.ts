@@ -200,7 +200,7 @@ export class FiberJobPricesComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.cdr.detectChanges();
 
-    this.todayService.getJobPricesByUser(userId, 'Fiber', true).subscribe({
+    this.todayService.getJobPricesByUser(userId, 3).subscribe({
       next: (res: any) => {
         const list = Array.isArray(res) ? res : [];
         this.jobTypes = list.map((item: any) => ({

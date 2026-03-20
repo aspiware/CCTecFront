@@ -538,8 +538,8 @@ export class EditJobComponent implements OnInit {
       this.job?.jobType?.id ||
       0
     );
-    const category = this.getSelectedSegmentCategory();
-    this.todayService.getJobPricesByUser(this.userId, category, true).subscribe({
+    const categoryId = this.getSelectedSegmentCategory();
+    this.todayService.getJobPricesByUser(this.userId, categoryId).subscribe({
       next: (res: any) => {
         const list = Array.isArray(res) ? res : [];
         if (!list.length) {
@@ -571,9 +571,9 @@ export class EditJobComponent implements OnInit {
       return;
     }
 
-    const category = this.getSelectedSegmentCategory();
+    const categoryId = this.getSelectedSegmentCategory();
     this.customTypeEmptyMessage = '';
-    this.todayService.getJobPricesByUser(this.userId, category, true).subscribe({
+    this.todayService.getJobPricesByUser(this.userId, categoryId).subscribe({
       next: (res: any) => {
         const list = Array.isArray(res) ? res : [];
         this.jobUserTypesList.splice(0);
@@ -714,18 +714,18 @@ export class EditJobComponent implements OnInit {
     this.customTotalPrice = Number((selectedJobsTotal + devicesTotal).toFixed(2));
   }
 
-  private getSelectedSegmentCategory(): string {
+  private getSelectedSegmentCategory(): number {
     switch (this.selectedSegmentIndex) {
       case 0:
-        return 'Residential';
+        return 1;
       case 1:
-        return 'XH';
+        return 2;
       case 2:
-        return 'Business';
+        return 3;
       case 3:
-        return 'Fiber';
+        return 4;
       default:
-        return 'Residential';
+        return 1;
     }
   }
 
