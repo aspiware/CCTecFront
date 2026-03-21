@@ -18,6 +18,7 @@ import { TodayService } from '../today/today.service';
   styleUrl: './fiber-job-prices.component.scss',
 })
 export class FiberJobPricesComponent implements OnInit, OnDestroy {
+  private readonly categoryId = 3;
   @ViewChild('pricesScroll', { static: false }) private pricesScrollRef?: ElementRef<ScrollView>;
   public isDarkTheme = Application.systemAppearance() === 'dark';
   public isSaveLoading = false;
@@ -88,7 +89,7 @@ export class FiberJobPricesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.todayService.getEquipmentsByCategory(userId, 3).subscribe({
+    this.todayService.getEquipmentsByCategory(userId, this.categoryId).subscribe({
       next: (res: any) => {
         const list = Array.isArray(res) ? res : [];
         this.equipmentPrices = list.map((item: any) => ({
@@ -187,7 +188,7 @@ export class FiberJobPricesComponent implements OnInit, OnDestroy {
     forkJoin({
       equipment: this.todayService.saveEquipmentPrices(
         userId,
-        3,
+        this.categoryId,
         this.equipmentPrices.map((item: any) => ({
           equipmentId: Number(item?.id || item?.equipmentId || 0),
           price: Number(item?.price || 0),
@@ -233,7 +234,7 @@ export class FiberJobPricesComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.cdr.detectChanges();
 
-    this.todayService.getJobPricesByUser(userId, 3).subscribe({
+    this.todayService.getJobPricesByUser(userId, this.categoryId).subscribe({
       next: (res: any) => {
         const list = Array.isArray(res) ? res : [];
         this.jobTypes = list.map((item: any) => ({
