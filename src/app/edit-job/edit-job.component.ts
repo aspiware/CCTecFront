@@ -414,40 +414,42 @@ export class EditJobComponent implements OnInit {
       ...this.job,
       jobTypeId: nextJobTypeId || this.job?.jobTypeId,
       changedDeviceIds: [...this.changedDeviceIds],
-      modems: String(this.modemsQty),
-      tvBoxes: String(this.tvBoxesQty),
-      cameras: String(this.camerasQty),
-      sensors: String(this.sensorsQty),
+      modems: Number(this.modemsQty || 0),
+      tvBoxes: Number(this.tvBoxesQty || 0),
+      cameras: Number(this.camerasQty || 0),
+      sensors: Number(this.sensorsQty || 0),
       customJob: this.isCustomJobTypeSelected
         ? {
             ...(this.job?.customJob || {}),
-            modems: this.modemsQty,
-            tvBoxes: this.tvBoxesQty,
-            cameras: this.camerasQty,
-            sensors: this.sensorsQty,
-            hasPanel: this.includePanel,
+            modems: Number(this.modemsQty || 0),
+            tvBoxes: Number(this.tvBoxesQty || 0),
+            cameras: Number(this.camerasQty || 0),
+            sensors: Number(this.sensorsQty || 0),
+            hasPanel: this.includePanel ? 1 : 0,
             jobTypesIds: Array.from(this.selectedCustomTypeIds),
             totalPrice: this.customTotalPrice,
+            equipmentSelections: this.buildCustomEquipmentSelections(),
           }
         : this.job?.customJob,
       notes: this.notes || null,
     };
 
-    // console.log('[UpdatedingJob]', updatedJob.customJob.tvBoxes)
-    // return;
+    console.log(updatedJob.customJob.equipmentSelections);
+    return
 
     const save$ = this.isCustomJobTypeSelected
-      ? this.todayService.updateCustomJob([
-          updatedJob.id,
-          17,
-          updatedJob.notes,
-          JSON.stringify(updatedJob.customJob?.jobTypesIds || []),
-          Number(updatedJob.customJob?.sensors || 0),
-          Number(updatedJob.customJob?.cameras || 0),
-          Number(updatedJob.customJob?.tvBoxes || 0),
-          Number(updatedJob.customJob?.modems || 0),
-          Boolean(updatedJob.customJob?.hasPanel),
-        ])
+      ? this.todayService.updateCustomJob({
+          id: Number(updatedJob.id || 0),
+          jobTypeId: 17,
+          notes: updatedJob.notes,
+          jobTypesIds: JSON.stringify(updatedJob.customJob?.jobTypesIds || []),
+          sensors: Number(updatedJob.customJob?.sensors || 0),
+          cameras: Number(updatedJob.customJob?.cameras || 0),
+          tvBoxes: Number(updatedJob.customJob?.tvBoxes || 0),
+          modems: Number(updatedJob.customJob?.modems || 0),
+          hasPanel: Number(updatedJob.customJob?.hasPanel || 0),
+          equipmentSelections: updatedJob.customJob?.equipmentSelections || [],
+        })
       : this.todayService.update([
           updatedJob.id,
           updatedJob.jobTypeId,
@@ -461,17 +463,18 @@ export class EditJobComponent implements OnInit {
     console.log(
       '[EditJob] save payload:',
       this.isCustomJobTypeSelected
-        ? [
-            updatedJob.id,
-            17,
-            updatedJob.notes,
-            JSON.stringify(updatedJob.customJob?.jobTypesIds || []),
-            Number(updatedJob.customJob?.sensors || 0),
-            Number(updatedJob.customJob?.cameras || 0),
-            Number(updatedJob.customJob?.tvBoxes || 0),
-            Number(updatedJob.customJob?.modems || 0),
-            Boolean(updatedJob.customJob?.hasPanel),
-          ]
+        ? {
+            id: Number(updatedJob.id || 0),
+            jobTypeId: 17,
+            notes: updatedJob.notes,
+            jobTypesIds: JSON.stringify(updatedJob.customJob?.jobTypesIds || []),
+            sensors: Number(updatedJob.customJob?.sensors || 0),
+            cameras: Number(updatedJob.customJob?.cameras || 0),
+            tvBoxes: Number(updatedJob.customJob?.tvBoxes || 0),
+            modems: Number(updatedJob.customJob?.modems || 0),
+            hasPanel: Number(updatedJob.customJob?.hasPanel || 0),
+            equipmentSelections: updatedJob.customJob?.equipmentSelections || [],
+          }
         : [updatedJob.id, updatedJob.jobTypeId, updatedJob.notes]
     );
 
@@ -914,6 +917,35 @@ export class EditJobComponent implements OnInit {
       rows.push(items.slice(index, index + 2));
     }
     return rows;
+  }
+
+  private buildCustomEquipmentSelections(): Array<{ jobCategoryId: number; equipmentId: number; quantity: number }> {
+    const selections: Array<{ jobCategoryId: number; equipmentId: number; quantity: number }> = [];
+
+    this.customEquipmentStateByCategory.forEach((items: any[], jobCategoryId: number) => {
+      items.forEach((item: any) => {
+        const equipmentId = Number(item?.id || 0);
+        if (!equipmentId) {
+          return;
+        }
+
+        if (item?.inputType === 'toggle') {
+          selections.push({
+            jobCategoryId,
+            equipmentId,
+            quantity: this.toBoolean(item?.enabled) ? 1 : 0,
+          });
+          return;
+        }
+
+        const quantity = Number(item?.quantity || 0);
+        if (quantity > 0) {
+          selections.push({ jobCategoryId, equipmentId, quantity });
+        }
+      });
+    });
+
+    return selections;
   }
 
   private toBoolean(value: any): boolean {
