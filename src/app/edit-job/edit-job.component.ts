@@ -47,6 +47,7 @@ export class EditJobComponent implements OnInit {
   public customTypeEmptyMessage = '';
   public customEquipmentItems: any[] = [];
   public customEquipmentRows: any[][] = [];
+  private initialCustomEquipmentSelections: any[] = [];
   private customEquipmentStateByCategory = new Map<number, any[]>();
   public updateDeviceItems: Array<{ label: string; selected: boolean; raw: any }> = [];
   public selectedUpgradeDeviceKeys = new Set<string>();
@@ -105,6 +106,7 @@ export class EditJobComponent implements OnInit {
     this.camerasQty = Number(normalizedCustomJob?.cameras ?? this.job?.cameras ?? 0);
     this.sensorsQty = Number(normalizedCustomJob?.sensors ?? this.job?.sensors ?? 0);
     this.includePanel = this.toBoolean(normalizedCustomJob?.hasPanel ?? false);
+    this.initialCustomEquipmentSelections = this.parseCustomEquipmentSelections(normalizedCustomJob?.equipmentSelections);
     const initialCustomIds = this.parseCustomTypeIds(normalizedCustomJob?.jobTypesIds);
     this.selectedCustomTypeIds = new Set(initialCustomIds.map((id: any) => Number(id)).filter((id: number) => !!id));
     const initialCustomTypeItems = Array.isArray(normalizedCustomJob?.jobTypes)
@@ -121,6 +123,8 @@ export class EditJobComponent implements OnInit {
       item.title = label;
       return item;
     });
+
+    console.log('[normalizedCustomJob]', this.job?.customJob);
   }
 
   ngOnInit(): void {
@@ -434,8 +438,8 @@ export class EditJobComponent implements OnInit {
       notes: this.notes || null,
     };
 
-    console.log(updatedJob.customJob.equipmentSelections);
-    return
+    // console.log(updatedJob.customJob.equipmentSelections);
+    // return
 
     const save$ = this.isCustomJobTypeSelected
       ? this.todayService.updateCustomJob({
@@ -642,7 +646,7 @@ export class EditJobComponent implements OnInit {
       next: (res: any) => {
         const list = Array.isArray(res) ? res : [];
         const normalizedItems = list
-          .map((item: any) => this.normalizeCustomEquipment(item))
+          .map((item: any) => this.normalizeCustomEquipment(item, categoryId))
           .sort((a: any, b: any) => Number(a?.sortOrder || 0) - Number(b?.sortOrder || 0));
         this.customEquipmentItems = this.restoreCustomEquipmentState(categoryId, normalizedItems);
         this.customEquipmentRows = this.chunkCustomEquipmentRows(
@@ -802,19 +806,20 @@ export class EditJobComponent implements OnInit {
     }
   }
 
-  private normalizeCustomEquipment(item: any): any {
+  private normalizeCustomEquipment(item: any, categoryId: number): any {
     const key = this.getCustomEquipmentKey(item);
     const inputType = key === 'panel' ? 'toggle' : 'quantity';
+    const equipmentId = Number(item?.equipmentId || item?.id || 0);
     return {
-      id: Number(item?.equipmentId || item?.id || 0),
+      id: equipmentId,
       name: String(item?.equipmentName || item?.name || '-'),
       description: String(item?.equipmentDescription || item?.description || ''),
       sortOrder: Number(item?.sortOrder || 0),
       price: Number(item?.price || 0),
       key,
       inputType,
-      quantity: inputType === 'quantity' ? this.getInitialCustomEquipmentQuantity(key) : 0,
-      enabled: inputType === 'toggle' ? this.getInitialCustomEquipmentToggle(key) : false,
+      quantity: inputType === 'quantity' ? this.getInitialCustomEquipmentQuantity(categoryId, equipmentId, key) : 0,
+      enabled: inputType === 'toggle' ? this.getInitialCustomEquipmentToggle(categoryId, equipmentId, key) : false,
     };
   }
 
@@ -844,7 +849,19 @@ export class EditJobComponent implements OnInit {
     return `equipment-${item?.equipmentId || item?.id || text}`;
   }
 
-  private getInitialCustomEquipmentQuantity(key: string): number {
+  private getInitialCustomEquipmentQuantity(categoryId: number, equipmentId: number, key: string): number {
+    const savedSelection = this.initialCustomEquipmentSelections.find((item: any) =>
+      Number(item?.jobCategoryId || 0) === Number(categoryId || 0) &&
+      Number(item?.equipmentId || 0) === Number(equipmentId || 0)
+    );
+    if (savedSelection) {
+      return Number(savedSelection?.quantity || 0);
+    }
+
+    if (categoryId !== 2) {
+      return 0;
+    }
+
     switch (key) {
       case 'modems':
         return Number(this.modemsQty || 0);
@@ -859,8 +876,16 @@ export class EditJobComponent implements OnInit {
     }
   }
 
-  private getInitialCustomEquipmentToggle(key: string): boolean {
-    return key === 'panel' ? this.includePanel : false;
+  private getInitialCustomEquipmentToggle(categoryId: number, equipmentId: number, key: string): boolean {
+    const savedSelection = this.initialCustomEquipmentSelections.find((item: any) =>
+      Number(item?.jobCategoryId || 0) === Number(categoryId || 0) &&
+      Number(item?.equipmentId || 0) === Number(equipmentId || 0)
+    );
+    if (savedSelection) {
+      return Number(savedSelection?.quantity || 0) > 0;
+    }
+
+    return categoryId === 2 && key === 'panel' ? this.includePanel : false;
   }
 
   private syncLegacyCustomEquipmentState(): void {
@@ -975,6 +1000,27 @@ export class EditJobComponent implements OnInit {
       }
     }
     return typeof raw === 'object' ? raw : {};
+  }
+
+  private parseCustomEquipmentSelections(raw: any): any[] {
+    if (Array.isArray(raw)) {
+      return raw;
+    }
+    if (typeof raw !== 'string') {
+      return [];
+    }
+
+    const value = raw.trim();
+    if (!value) {
+      return [];
+    }
+
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
   }
 
   private parseCustomTypeIds(raw: any): number[] {
