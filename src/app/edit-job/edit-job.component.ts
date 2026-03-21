@@ -45,6 +45,8 @@ export class EditJobComponent implements OnInit {
   public selectedCustomTypeIds = new Set<number>();
   public selectedCustomTypeMap = new Map<number, any>();
   public customTypeEmptyMessage = '';
+  public customEquipmentItems: any[] = [];
+  public customEquipmentRows: any[][] = [];
   public updateDeviceItems: Array<{ label: string; selected: boolean; raw: any }> = [];
   public selectedUpgradeDeviceKeys = new Set<string>();
   public changedDeviceIds: number[] = [];
@@ -157,6 +159,7 @@ export class EditJobComponent implements OnInit {
     const selected = this.jobTypes[this.selectedTypeIndex];
     this.isCustomChecked = Number(selected?.id) === 17;
     if (this.isCustomJobTypeSelected) {
+      this.loadCustomEquipmentsBySegment();
       this.loadCustomTypesBySegment();
       return;
     }
@@ -180,6 +183,7 @@ export class EditJobComponent implements OnInit {
     if (!this.isCustomJobTypeSelected) {
       this.loadPickerJobsBySegment();
     }
+    this.loadCustomEquipmentsBySegment();
     this.loadCustomTypesBySegment();
   }
 
@@ -232,6 +236,24 @@ export class EditJobComponent implements OnInit {
 
   public onIncludePanelChanged(event: any): void {
     this.includePanel = this.toBoolean(event?.value ?? event?.object?.checked ?? false);
+    this.recalculateCustomTotal();
+  }
+
+  public onCustomEquipmentQtyChanged(item: any, value: number): void {
+    if (!item) {
+      return;
+    }
+    item.quantity = Number(value || 0);
+    this.syncLegacyCustomEquipmentState();
+    this.recalculateCustomTotal();
+  }
+
+  public onCustomEquipmentToggleChanged(item: any, event: any): void {
+    if (!item) {
+      return;
+    }
+    item.enabled = this.toBoolean(event?.value ?? event?.object?.checked ?? false);
+    this.syncLegacyCustomEquipmentState();
     this.recalculateCustomTotal();
   }
 
@@ -339,6 +361,9 @@ export class EditJobComponent implements OnInit {
             }
             if (this.isUpdateJobTypeSelected) {
               this.scheduleUpgradeDevicesSelectionRestore();
+            }
+            if (this.isCustomJobTypeSelected) {
+              this.loadCustomEquipmentsBySegment();
             }
             this.loadCustomTypesBySegment();
             this.recalculateCustomTotal();
@@ -593,10 +618,46 @@ export class EditJobComponent implements OnInit {
     });
   }
 
+  private loadCustomEquipmentsBySegment(): void {
+    if (!this.userId || !this.isCustomJobTypeSelected) {
+      this.customEquipmentItems = [];
+      this.customEquipmentRows = [];
+      this.syncLegacyCustomEquipmentState();
+      this.recalculateCustomTotal();
+      this.cdr.detectChanges();
+      return;
+    }
+
+    const categoryId = this.getSelectedSegmentCategory();
+    this.todayService.getEquipmentsByCategory(this.userId, categoryId).subscribe({
+      next: (res: any) => {
+        const list = Array.isArray(res) ? res : [];
+        this.customEquipmentItems = list
+          .map((item: any) => this.normalizeCustomEquipment(item))
+          .sort((a: any, b: any) => Number(a?.sortOrder || 0) - Number(b?.sortOrder || 0));
+        this.customEquipmentRows = this.chunkCustomEquipmentRows(
+          this.customEquipmentItems.filter((item: any) => item?.inputType === 'quantity')
+        );
+        this.syncLegacyCustomEquipmentState();
+        this.recalculateCustomTotal();
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.log('[EditJob] getEquipmentsByCategory error', error);
+        this.customEquipmentItems = [];
+        this.customEquipmentRows = [];
+        this.syncLegacyCustomEquipmentState();
+        this.recalculateCustomTotal();
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
   private toggleCustomJob(): void {
     this.isCustomChecked = !this.isCustomChecked;
     if (this.isCustomChecked) {
       this.resetEditFormState();
+      this.loadCustomEquipmentsBySegment();
       this.loadCustomTypesBySegment();
       this.recalculateCustomTotal();
       this.cdr.detectChanges();
@@ -627,6 +688,8 @@ export class EditJobComponent implements OnInit {
     this.camerasQty = 0;
     this.sensorsQty = 0;
     this.includePanel = false;
+    this.customEquipmentItems = [];
+    this.customEquipmentRows = [];
     this.selectedSegmentIndex = 0;
     this.jobUserTypesList.splice(0);
     this.selectedCustomTypeIds.clear();
@@ -698,18 +761,13 @@ export class EditJobComponent implements OnInit {
       selectedJobsTotal += Number(item?.price || 0);
     });
 
-    const modemPrice = Number(this.settings?.modemPrice || 0);
-    const boxPrice = Number(this.settings?.boxPrice || 0);
-    const cameraPrice = Number(this.settings?.cameraPrice || 0);
-    const sensorPrice = Number(this.settings?.sensorPrice || 0);
-    const panelPrice = Number(this.settings?.xhPanelPrice || 0);
-
-    const devicesTotal =
-      (this.modemsQty * modemPrice) +
-      (this.tvBoxesQty * boxPrice) +
-      (this.camerasQty * cameraPrice) +
-      (this.sensorsQty * sensorPrice) +
-      (this.includePanel ? panelPrice : 0);
+    const devicesTotal = this.customEquipmentItems.reduce((sum: number, item: any) => {
+      const price = Number(item?.price || 0);
+      if (item?.inputType === 'toggle') {
+        return sum + (item?.enabled ? price : 0);
+      }
+      return sum + (Number(item?.quantity || 0) * price);
+    }, 0);
 
     this.customTotalPrice = Number((selectedJobsTotal + devicesTotal).toFixed(2));
   }
@@ -727,6 +785,88 @@ export class EditJobComponent implements OnInit {
       default:
         return 1;
     }
+  }
+
+  private normalizeCustomEquipment(item: any): any {
+    const key = this.getCustomEquipmentKey(item);
+    const inputType = key === 'panel' ? 'toggle' : 'quantity';
+    return {
+      id: Number(item?.equipmentId || item?.id || 0),
+      name: String(item?.equipmentName || item?.name || '-'),
+      description: String(item?.equipmentDescription || item?.description || ''),
+      sortOrder: Number(item?.sortOrder || 0),
+      price: Number(item?.price || 0),
+      key,
+      inputType,
+      quantity: inputType === 'quantity' ? this.getInitialCustomEquipmentQuantity(key) : 0,
+      enabled: inputType === 'toggle' ? this.getInitialCustomEquipmentToggle(key) : false,
+    };
+  }
+
+  private getCustomEquipmentKey(item: any): string {
+    const text = String(
+      item?.equipmentName ||
+      item?.name ||
+      item?.equipmentDescription ||
+      item?.description ||
+      ''
+    ).toLowerCase();
+    if (text.includes('modem') || text.includes('mta') || text.includes('hsi') || text.includes('cm')) {
+      return 'modems';
+    }
+    if (text.includes('tv') || text.includes('box') || text.includes('stb')) {
+      return 'tvBoxes';
+    }
+    if (text.includes('camera')) {
+      return 'cameras';
+    }
+    if (text.includes('sensor')) {
+      return 'sensors';
+    }
+    if (text.includes('panel')) {
+      return 'panel';
+    }
+    return `equipment-${item?.equipmentId || item?.id || text}`;
+  }
+
+  private getInitialCustomEquipmentQuantity(key: string): number {
+    switch (key) {
+      case 'modems':
+        return Number(this.modemsQty || 0);
+      case 'tvBoxes':
+        return Number(this.tvBoxesQty || 0);
+      case 'cameras':
+        return Number(this.camerasQty || 0);
+      case 'sensors':
+        return Number(this.sensorsQty || 0);
+      default:
+        return 0;
+    }
+  }
+
+  private getInitialCustomEquipmentToggle(key: string): boolean {
+    return key === 'panel' ? this.includePanel : false;
+  }
+
+  private syncLegacyCustomEquipmentState(): void {
+    const getQty = (key: string) =>
+      Number(this.customEquipmentItems.find((item: any) => item?.key === key)?.quantity || 0);
+    const getToggle = (key: string) =>
+      this.toBoolean(this.customEquipmentItems.find((item: any) => item?.key === key)?.enabled);
+
+    this.modemsQty = getQty('modems');
+    this.tvBoxesQty = getQty('tvBoxes');
+    this.camerasQty = getQty('cameras');
+    this.sensorsQty = getQty('sensors');
+    this.includePanel = getToggle('panel');
+  }
+
+  private chunkCustomEquipmentRows(items: any[]): any[][] {
+    const rows: any[][] = [];
+    for (let index = 0; index < items.length; index += 2) {
+      rows.push(items.slice(index, index + 2));
+    }
+    return rows;
   }
 
   private toBoolean(value: any): boolean {
