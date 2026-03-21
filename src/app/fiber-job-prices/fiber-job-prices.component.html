@@ -34,10 +34,9 @@
             <GridLayout
               *ngFor="let equipment of row; let colIndex = index"
               [col]="colIndex"
-              [columns]="colIndex === 1 ? '*,auto' : 'auto,*'"
+              columns="auto,*"
               class="fixed-price-field"
-              [class.right-equipment-field]="colIndex === 1"
-              [horizontalAlignment]="colIndex === 1 ? 'stretch' : 'left'">
+              [horizontalAlignment]="colIndex === 1 ? 'right' : 'left'">
               <Label col="0" [text]="equipment.name" class="fixed-price-label"></Label>
               <GridLayout col="1" columns="auto,*" class="input-shell header-input-shell" (tap)="onInputTap()">
                 <Label col="0" class="currency-prefix" text="$"></Label>
