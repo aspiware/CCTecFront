@@ -34,9 +34,9 @@
             <GridLayout
               *ngFor="let equipment of row; let colIndex = index"
               [col]="colIndex"
-              [columns]="colIndex === 0 ? '*,auto' : 'auto,*'"
+              [columns]="colIndex === 0 ? '*,auto' : '*,auto'"
               class="fixed-price-field"
-              [horizontalAlignment]="colIndex === 0 ? 'stretch' : 'right'">
+              [horizontalAlignment]="colIndex === 0 ? 'stretch' : 'stretch'">
               <Label
                 col="0"
                 [text]="equipment.name"
