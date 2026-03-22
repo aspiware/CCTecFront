@@ -657,7 +657,7 @@ export class CompleteJobComponent implements OnInit {
       0
     );
     const categoryId = this.getSelectedSegmentCategory();
-    this.todayService.getJobPricesByUser(this.userId, categoryId).subscribe({
+    this.todayService.getJobPricesByUser(this.userId, categoryId, true).subscribe({
       next: (res: any) => {
         const list = Array.isArray(res) ? res : [];
         if (!list.length) {
@@ -688,7 +688,7 @@ export class CompleteJobComponent implements OnInit {
 
     const categoryId = this.getSelectedSegmentCategory();
     this.customTypeEmptyMessage = '';
-    this.todayService.getJobPricesByUser(this.userId, categoryId).subscribe({
+    this.todayService.getJobPricesByUser(this.userId, categoryId, true).subscribe({
       next: (res: any) => {
         const list = Array.isArray(res) ? res : [];
         this.jobUserTypesList.splice(0);

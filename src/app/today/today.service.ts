@@ -159,10 +159,11 @@ export class TodayService {
 
   public getJobPricesByUser(
     userId: number,
-    categoryId: number
+    categoryId: number,
+    includeGeneral = false
   ): Observable<any[]> {
     return this.httpClient.get<any[]>(
-      `${this.configService.getUrlBase()}/jobs/getJobPricesByUser/${userId}/${categoryId}`
+      `${this.configService.getUrlBase()}/jobs/getJobPricesByUser/${userId}/${categoryId}/${includeGeneral}`
     );
   }
 
