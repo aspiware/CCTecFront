@@ -371,6 +371,7 @@ export class EditJobComponent implements OnInit {
             }
             if (this.isCustomJobTypeSelected) {
               this.loadCustomEquipmentsBySegment();
+              this.preloadAllCustomEquipments();
             }
             this.loadCustomTypesBySegment();
             this.recalculateCustomTotal();
@@ -642,25 +643,50 @@ export class EditJobComponent implements OnInit {
     }
 
     const categoryId = this.getSelectedSegmentCategory();
+    this.loadCustomEquipmentsForCategory(categoryId, true);
+  }
+
+  private preloadAllCustomEquipments(): void {
+    if (!this.userId || !this.isCustomJobTypeSelected) {
+      return;
+    }
+
+    [1, 2, 3, 4].forEach((categoryId) => {
+      if (categoryId === this.getSelectedSegmentCategory()) {
+        return;
+      }
+      this.loadCustomEquipmentsForCategory(categoryId, false);
+    });
+  }
+
+  private loadCustomEquipmentsForCategory(categoryId: number, updateCurrentView: boolean): void {
     this.todayService.getEquipmentsByCategory(this.userId, categoryId).subscribe({
       next: (res: any) => {
         const list = Array.isArray(res) ? res : [];
         const normalizedItems = list
           .map((item: any) => this.normalizeCustomEquipment(item, categoryId))
           .sort((a: any, b: any) => Number(a?.sortOrder || 0) - Number(b?.sortOrder || 0));
-        this.customEquipmentItems = this.restoreCustomEquipmentState(categoryId, normalizedItems);
-        this.customEquipmentRows = this.chunkCustomEquipmentRows(
-          this.customEquipmentItems.filter((item: any) => item?.inputType === 'quantity')
+        const restoredItems = this.restoreCustomEquipmentState(categoryId, normalizedItems);
+        this.customEquipmentStateByCategory.set(
+          categoryId,
+          restoredItems.map((item: any) => ({ ...item }))
         );
-        this.persistCurrentCustomEquipmentState();
+        if (updateCurrentView) {
+          this.customEquipmentItems = restoredItems;
+          this.customEquipmentRows = this.chunkCustomEquipmentRows(
+            this.customEquipmentItems.filter((item: any) => item?.inputType === 'quantity')
+          );
+        }
         this.syncLegacyCustomEquipmentState();
         this.recalculateCustomTotal();
         this.cdr.detectChanges();
       },
       error: (error) => {
         console.log('[EditJob] getEquipmentsByCategory error', error);
-        this.customEquipmentItems = [];
-        this.customEquipmentRows = [];
+        if (updateCurrentView) {
+          this.customEquipmentItems = [];
+          this.customEquipmentRows = [];
+        }
         this.syncLegacyCustomEquipmentState();
         this.recalculateCustomTotal();
         this.cdr.detectChanges();
@@ -673,6 +699,7 @@ export class EditJobComponent implements OnInit {
     if (this.isCustomChecked) {
       this.resetEditFormState();
       this.loadCustomEquipmentsBySegment();
+      this.preloadAllCustomEquipments();
       this.loadCustomTypesBySegment();
       this.recalculateCustomTotal();
       this.cdr.detectChanges();
