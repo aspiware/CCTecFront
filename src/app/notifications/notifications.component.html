@@ -26,13 +26,37 @@
           </StackLayout>
 
           <Label
-            [visibility]="notifications.length > 1 ? 'visible' : 'collapse'"
-            text="More active notifications are waiting in this batch."
+            [visibility]="hasMultipleNotifications ? 'visible' : 'collapse'"
+            text="You can move through the active notifications from here."
             class="support-copy"
             textWrap="true">
           </Label>
 
-          <Button text="Got it" class="primary-btn" (tap)="closeModal()"></Button>
+          <GridLayout
+            columns="auto,12,*"
+            class="actions-row"
+            [visibility]="hasMultipleNotifications ? 'visible' : 'collapse'">
+            <Button
+              col="0"
+              text="Previous"
+              class="secondary-btn"
+              [isEnabled]="canGoPrevious"
+              (tap)="showPrevious()">
+            </Button>
+            <Button
+              col="2"
+              [text]="primaryButtonText"
+              class="primary-btn"
+              (tap)="advance()">
+            </Button>
+          </GridLayout>
+
+          <Button
+            [visibility]="hasMultipleNotifications ? 'collapse' : 'visible'"
+            text="Got it"
+            class="primary-btn"
+            (tap)="closeModal()">
+          </Button>
         </StackLayout>
       </ScrollView>
     </GridLayout>

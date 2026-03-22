@@ -14,6 +14,7 @@ import { MenuEvent } from '../shared/components/menu-button';
 export class NotificationsComponent {
   public notifications: any[] = [];
   public notification: any = null;
+  public currentIndex = 0;
   public mainMenu: Item = {
     name: 'Main Menu',
     options: [
@@ -31,7 +32,7 @@ export class NotificationsComponent {
         : [];
 
     this.notifications = list;
-    this.notification = list[0] || null;
+    this.notification = list[this.currentIndex] || null;
   }
 
   get notificationTitle(): string {
@@ -43,7 +44,23 @@ export class NotificationsComponent {
   }
 
   get notificationCountLabel(): string {
-    return this.notifications.length > 1 ? `${this.notifications.length} active` : '1 active';
+    return `${this.currentIndex + 1} of ${Math.max(this.notifications.length, 1)}`;
+  }
+
+  get hasMultipleNotifications(): boolean {
+    return this.notifications.length > 1;
+  }
+
+  get canGoPrevious(): boolean {
+    return this.currentIndex > 0;
+  }
+
+  get isLastNotification(): boolean {
+    return this.currentIndex >= this.notifications.length - 1;
+  }
+
+  get primaryButtonText(): string {
+    return this.isLastNotification ? 'Done' : 'Next';
   }
 
   public onSelectedMainMenu(event: MenuEvent): void {
@@ -62,5 +79,24 @@ export class NotificationsComponent {
 
   public closeModal(): void {
     this.modalParams.closeCallback();
+  }
+
+  public showPrevious(): void {
+    if (!this.canGoPrevious) {
+      return;
+    }
+
+    this.currentIndex -= 1;
+    this.notification = this.notifications[this.currentIndex] || null;
+  }
+
+  public advance(): void {
+    if (this.isLastNotification) {
+      this.closeModal();
+      return;
+    }
+
+    this.currentIndex += 1;
+    this.notification = this.notifications[this.currentIndex] || null;
   }
 }

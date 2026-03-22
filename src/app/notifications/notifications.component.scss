@@ -107,10 +107,22 @@
   margin-top: 18;
 }
 
-.primary-btn {
+.actions-row {
   margin-top: 22;
+}
+
+.primary-btn {
   border-radius: 12;
   background-color: #4ea1ff;
+  color: #ffffff;
+  font-size: 15;
+  font-weight: 600;
+  padding: 14 12;
+}
+
+.secondary-btn {
+  border-radius: 12;
+  background-color: rgba(255, 255, 255, 0.1);
   color: #ffffff;
   font-size: 15;
   font-weight: 600;
@@ -136,6 +148,11 @@
 
 .ns-light .support-copy {
   color: rgba(17, 17, 17, 0.62);
+}
+
+.ns-light .secondary-btn {
+  background-color: rgba(10, 132, 255, 0.1);
+  color: #0a84ff;
 }
 
 .ns-light .primary-btn {
