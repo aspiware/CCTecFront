@@ -1,0 +1,173 @@
+.modal-root {
+  width: 100%;
+  height: 100%;
+}
+
+.backdrop {
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+}
+
+.modal-card {
+  padding: 10;
+  margin-top: 15;
+  margin-bottom: 15;
+  margin-left: 15;
+  margin-right: 15;
+  border-radius: 16;
+  border-width: 1;
+  border-color: rgba(255, 255, 255, 0.10);
+  shadow-color: #000000;
+  shadow-offset: 0 8;
+  shadow-opacity: 0.28;
+  shadow-radius: 20;
+  background-color: #281d1d;
+  vertical-align: middle;
+  horizontal-align: center;
+}
+
+.ns-light .modal-card {
+  background-color: #F2F2F7;
+  border-color: rgba(60, 60, 67, 0.16);
+}
+
+.ns-dark .modal-card {
+  background-color: #1C1C1E;
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.header {
+  margin-bottom: 4;
+}
+
+.header-fixed {
+  height: 50;
+}
+
+.title {
+  font-size: 18;
+  font-weight: 600;
+  padding-bottom: 20;
+}
+
+.modal-title-text {
+  color: #ffffff;
+}
+
+.ns-light .modal-title-text {
+  color: #000000;
+}
+
+.card {
+  padding: 14;
+  border-radius: 8;
+  background-color: rgba(126, 151, 185, 0.2);
+}
+
+.hero {
+  padding: 8 2 4 2;
+}
+
+.message-scroll {
+  height: 220;
+  margin-top: 4;
+}
+
+.message-inline {
+  margin-top: 4;
+}
+
+.eyebrow {
+  font-size: 11;
+  letter-spacing: 1.2;
+  text-transform: uppercase;
+  color: #8dc7ff;
+  margin-bottom: 8;
+}
+
+.count-badge {
+  horizontal-align: left;
+  padding: 4 10;
+  border-radius: 999;
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 12;
+  font-weight: 600;
+  margin-bottom: 14;
+}
+
+.headline {
+  font-size: 24;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 12;
+}
+
+.message {
+  font-size: 15;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.support-copy {
+  font-size: 13;
+  color: rgba(255, 255, 255, 0.68);
+  margin-top: 18;
+}
+
+.actions-row {
+  margin-top: 22;
+}
+
+.single-action-btn {
+  margin-top: 22;
+}
+
+.primary-btn {
+  border-radius: 12;
+  background-color: #4ea1ff;
+  color: #ffffff;
+  font-size: 15;
+  font-weight: 600;
+  padding: 14 12;
+}
+
+.secondary-btn {
+  border-radius: 12;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-size: 15;
+  font-weight: 600;
+  padding: 14 12;
+}
+
+.ns-light .eyebrow {
+  color: #0a84ff;
+}
+
+.ns-light .count-badge {
+  background-color: rgba(10, 132, 255, 0.12);
+  color: #0a84ff;
+}
+
+.ns-light .headline {
+  color: #111111;
+}
+
+.ns-light .message {
+  color: rgba(17, 17, 17, 0.82);
+}
+
+.ns-light .support-copy {
+  color: rgba(17, 17, 17, 0.62);
+}
+
+.ns-light .secondary-btn {
+  background-color: rgba(10, 132, 255, 0.1);
+  color: #0a84ff;
+}
+
+.ns-light .primary-btn {
+  background-color: #0a84ff;
+}

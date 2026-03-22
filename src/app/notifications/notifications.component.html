@@ -1,0 +1,71 @@
+<ModalStack dismissEnabled="false" class="modal-root">
+  <GridLayout rows="*" columns="*">
+    <StackLayout row="0" col="0" class="backdrop"></StackLayout>
+
+    <GridLayout row="0" col="0" rows="auto,auto" class="modal-card">
+      <GridLayout row="0" columns="*,auto" class="header header-fixed">
+        <Label col="0" text="Notifications" class="title modal-title-text"></Label>
+
+        <StackLayout col="1">
+          <MenuButton
+            [useSFIcon]="true"
+            style="background-color: transparent; height: 24; width: 35;"
+            [sfIconName]="'ellipsis.circle'"
+            [options]="mainMenu.options"
+            (selected)="onSelectedMainMenu($event)">
+          </MenuButton>
+        </StackLayout>
+      </GridLayout>
+
+      <GridLayout row="1" rows="auto,auto,auto" class="card">
+        <StackLayout row="0" class="hero">
+          <Label [text]="notificationCountLabel" class="count-badge"></Label>
+          <Label [text]="notificationTitle" class="headline" textWrap="true"></Label>
+        </StackLayout>
+
+        <ScrollView
+          row="1"
+          class="message-scroll"
+          [visibility]="shouldScrollMessage ? 'visible' : 'collapse'">
+          <Label [text]="notificationMessage" class="message" textWrap="true"></Label>
+        </ScrollView>
+
+        <Label
+          row="1"
+          [visibility]="shouldScrollMessage ? 'collapse' : 'visible'"
+          [text]="notificationMessage"
+          class="message message-inline"
+          textWrap="true">
+        </Label>
+
+        <GridLayout
+          row="2"
+          columns="*,12,*"
+          class="actions-row"
+          [visibility]="hasMultipleNotifications ? 'visible' : 'collapse'">
+          <Button
+            col="0"
+            text="Previous"
+            class="secondary-btn"
+            [isEnabled]="canGoPrevious"
+            (tap)="showPrevious()">
+          </Button>
+          <Button
+            col="2"
+            [text]="primaryButtonText"
+            class="primary-btn"
+            (tap)="advance()">
+          </Button>
+        </GridLayout>
+
+        <Button
+          row="2"
+          [visibility]="hasMultipleNotifications ? 'collapse' : 'visible'"
+          text="Got it"
+          class="primary-btn single-action-btn"
+          (tap)="closeModal()">
+        </Button>
+      </GridLayout>
+    </GridLayout>
+  </GridLayout>
+</ModalStack>

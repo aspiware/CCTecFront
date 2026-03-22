@@ -1,9 +1,14 @@
-import { AfterViewInit, Component, ElementRef, NO_ERRORS_SCHEMA, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, NO_ERRORS_SCHEMA, OnDestroy, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { NativeScriptCommonModule, PageRouterOutlet } from '@nativescript/angular';
+import { ModalDialogService, NativeScriptCommonModule, PageRouterOutlet } from '@nativescript/angular';
 import { Color, isAndroid, isIOS, TabView } from '@nativescript/core';
 import { Subscription } from 'rxjs';
+import { ForceUpdateComponent } from '../force-update/force-update.component';
+import { NotificationsComponent } from '../notifications/notifications.component';
+import { NotificationsService } from '../notifications/notifications.service';
 import { TodayJobsCountService } from '../shared/services/today-jobs-count.service';
+import { UsersService } from '../shared/services/users.service';
+import { VersionService } from '../shared/services/version.service';
 
 @Component({
   standalone: true,
@@ -20,11 +25,20 @@ export class TabsContainerComponent implements OnInit, AfterViewInit, OnDestroy 
   private readonly todayTabIndex = 2;
   private readonly todayBadgeBgColor = new Color('#E57373');
   private readonly todayBadgeTextColor = new Color('#FFFFFF');
+  private hasCheckedNotifications = false;
+  private hasShownNotifications = false;
+  private hasCheckedVersion = false;
+  private hasShownForceUpdate = false;
 
   constructor(
     private router: Router,
     private activeRoute: ActivatedRoute,
-    private todayJobsCountService: TodayJobsCountService
+    private todayJobsCountService: TodayJobsCountService,
+    private usersService: UsersService,
+    private notificationsService: NotificationsService,
+    private versionService: VersionService,
+    private modalService: ModalDialogService,
+    private vcRef: ViewContainerRef
   ) {}
 
   ngOnInit(): void {
@@ -41,7 +55,9 @@ export class TabsContainerComponent implements OnInit, AfterViewInit, OnDestroy 
         },
       ],
       { relativeTo: this.activeRoute, replaceUrl: true }
-    );
+    ).then(() => {
+      this.checkRequiredUpdate();
+    });
   }
 
   ngAfterViewInit(): void {
@@ -147,5 +163,105 @@ export class TabsContainerComponent implements OnInit, AfterViewInit, OnDestroy 
     if (tabBar.scrollEdgeAppearance !== undefined) {
       tabBar.scrollEdgeAppearance = appearance;
     }
+  }
+
+  private checkActiveNotifications(): void {
+    if (this.hasCheckedNotifications) {
+      return;
+    }
+
+    const userId = Number(this.usersService.getUser()?.userId || 0);
+    if (!userId) {
+      return;
+    }
+
+    this.hasCheckedNotifications = true;
+    this.notificationsService.findActiveByUser(userId).subscribe({
+      next: (res: any) => {
+        const notifications = this.normalizeNotifications(res);
+        if (!notifications.length || this.hasShownNotifications) {
+          return;
+        }
+
+        this.hasShownNotifications = true;
+        const options: any = {
+          context: { notifications, userId },
+          viewContainerRef: this.vcRef,
+          animated: true,
+          fullscreen: false,
+          stretched: false,
+          cancelable: true,
+          dismissEnabled: true,
+          ios: {
+            presentationStyle: UIModalPresentationStyle.Custom,
+          },
+        };
+
+        setTimeout(() => {
+          this.modalService.showModal(NotificationsComponent, options)
+            .then(() => {})
+            .catch((error) => {
+              console.log('[TabsContainer] show notifications modal error', error);
+              this.hasShownNotifications = false;
+            });
+        }, 250);
+      },
+      error: (error) => {
+        console.log('[TabsContainer] findActive error', error);
+      },
+    });
+  }
+
+  private checkRequiredUpdate(): void {
+    if (this.hasCheckedVersion) {
+      this.checkActiveNotifications();
+      return;
+    }
+
+    this.hasCheckedVersion = true;
+    this.versionService.checkAppStoreVersion().subscribe((status) => {
+      if (!status?.isUpdateAvailable || this.hasShownForceUpdate) {
+        this.checkActiveNotifications();
+        return;
+      }
+
+      this.hasShownForceUpdate = true;
+      const options: any = {
+        context: {
+          localVersion: status.localVersion,
+          storeVersion: status.storeVersion,
+          appStoreUrl: status.appStoreUrl,
+        },
+        viewContainerRef: this.vcRef,
+        animated: true,
+        fullscreen: false,
+        stretched: false,
+        cancelable: false,
+        dismissEnabled: false,
+        ios: {
+          presentationStyle: UIModalPresentationStyle.Custom,
+        },
+      };
+
+      setTimeout(() => {
+        this.modalService.showModal(ForceUpdateComponent, options).catch((error) => {
+          console.log('[TabsContainer] show force update modal error', error);
+          this.hasShownForceUpdate = false;
+        });
+      }, 200);
+    });
+  }
+
+  private normalizeNotifications(res: any): any[] {
+    if (Array.isArray(res)) {
+      return res;
+    }
+    if (Array.isArray(res?.data)) {
+      return res.data;
+    }
+    if (Array.isArray(res?.notifications)) {
+      return res.notifications;
+    }
+    return [];
   }
 }
