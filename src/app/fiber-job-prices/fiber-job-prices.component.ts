@@ -18,16 +18,15 @@ import { TodayService } from '../today/today.service';
   styleUrl: './fiber-job-prices.component.scss',
 })
 export class FiberJobPricesComponent implements OnInit, OnDestroy {
+  private readonly categoryId = 3;
   @ViewChild('pricesScroll', { static: false }) private pricesScrollRef?: ElementRef<ScrollView>;
   public isDarkTheme = Application.systemAppearance() === 'dark';
   public isSaveLoading = false;
   public isLoading = false;
   public jobTypes: any[] = [];
   public user: UserModel | null = null;
-  public modemPrice = 0;
-  public modemPriceText = '0.00';
-  public tvBoxPrice = 0;
-  public tvBoxPriceText = '0.00';
+  public equipmentPrices: any[] = [];
+  public equipmentRows: any[][] = [];
   public pricesScrollHeight: number | string = 'auto';
   private focusedInputs = 0;
   private suppressDismissUntil = 0;
@@ -69,7 +68,7 @@ export class FiberJobPricesComponent implements OnInit, OnDestroy {
 
     this.user = this.usersService.getUser() || null;
     this.loadJobTypes();
-    this.loadSettingsPrices();
+    this.loadEquipments();
   }
 
   ngOnDestroy(): void {
@@ -80,6 +79,38 @@ export class FiberJobPricesComponent implements OnInit, OnDestroy {
       clearTimeout(this.dismissKeyboardTimer);
       this.dismissKeyboardTimer = undefined;
     }
+  }
+
+  private loadEquipments(): void {
+    const userId = Number(this.user?.userId || 0);
+    if (!userId) {
+      this.equipmentPrices = [];
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.todayService.getEquipmentsByCategory(userId, this.categoryId).subscribe({
+      next: (res: any) => {
+        const list = Array.isArray(res) ? res : [];
+        this.equipmentPrices = list.map((item: any) => ({
+          id: Number(item?.equipmentId || item?.id || 0),
+          name: String(item?.equipmentName || item?.name || '-'),
+          description: String(item?.equipmentDescription || item?.description || ''),
+          sortOrder: Number(item?.sortOrder || 0),
+          key: this.getEquipmentKey(item),
+          price: Number(item?.price || 0),
+          editablePrice: this.formatPriceInput(item?.price),
+        }))
+        .sort((a, b) => Number(a?.sortOrder || 0) - Number(b?.sortOrder || 0));
+        this.equipmentRows = this.chunkEquipmentRows(this.equipmentPrices);
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.log('[FiberJobPrices] getEquipmentsByCategory error', error);
+        this.equipmentPrices = [];
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   public onRootLoaded(): void {
@@ -155,11 +186,14 @@ export class FiberJobPricesComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
 
     forkJoin({
-      // equipment: this.settingsService.updateModemBoxPrices(
-      //   userId,
-      //   Number(this.modemPrice || 0),
-      //   Number(this.tvBoxPrice || 0)
-      // ),
+      equipment: this.todayService.saveEquipmentPrices(
+        userId,
+        this.categoryId,
+        this.equipmentPrices.map((item: any) => ({
+          equipmentId: Number(item?.id || item?.equipmentId || 0),
+          price: Number(item?.price || 0),
+        })).filter((item) => item.equipmentId > 0)
+      ),
       jobTypes: saveJobTypePrices$,
     }).subscribe({
       next: async () => {
@@ -185,7 +219,7 @@ export class FiberJobPricesComponent implements OnInit, OnDestroy {
   private refreshData(): void {
     this.endEditingBeforeRefresh();
     this.loadJobTypes();
-    this.loadSettingsPrices();
+    this.loadEquipments();
   }
 
   private loadJobTypes(): void {
@@ -200,7 +234,7 @@ export class FiberJobPricesComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     this.cdr.detectChanges();
 
-    this.todayService.getJobPricesByUser(userId, 'Fiber', true).subscribe({
+    this.todayService.getJobPricesByUser(userId, this.categoryId).subscribe({
       next: (res: any) => {
         const list = Array.isArray(res) ? res : [];
         this.jobTypes = list.map((item: any) => ({
@@ -217,31 +251,6 @@ export class FiberJobPricesComponent implements OnInit, OnDestroy {
         this.jobTypes = [];
         this.isLoading = false;
         this.cdr.detectChanges();
-      },
-    });
-  }
-
-  private loadSettingsPrices(): void {
-    const userId = Number(this.user?.userId || 0);
-    if (!userId) {
-      this.modemPrice = 0;
-      this.modemPriceText = '0.00';
-      this.tvBoxPrice = 0;
-      this.tvBoxPriceText = '0.00';
-      this.cdr.detectChanges();
-      return;
-    }
-
-    this.settingsService.findByUser(userId).subscribe({
-      next: (res: any) => {
-        this.modemPrice = Number(res?.modemPrice || 0);
-        this.modemPriceText = this.formatPriceInput(this.modemPrice);
-        this.tvBoxPrice = Number(res?.boxPrice || 0);
-        this.tvBoxPriceText = this.formatPriceInput(this.tvBoxPrice);
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        console.log('[FiberJobPrices] findByUser error', error);
       },
     });
   }
@@ -271,7 +280,7 @@ export class FiberJobPricesComponent implements OnInit, OnDestroy {
     }
   }
 
-  public onHeaderPriceChange(type: 'modem' | 'tvBox', event: any): void {
+  public onEquipmentPriceChange(item: any, event: any): void {
     const rawValue = String(event?.value ?? '');
     const sanitized = this.sanitizePriceInput(rawValue);
     if (event?.object && event.object.text !== sanitized) {
@@ -279,29 +288,18 @@ export class FiberJobPricesComponent implements OnInit, OnDestroy {
     }
 
     const parsed = Number(sanitized);
-    if (type === 'modem') {
-      this.modemPriceText = sanitized;
-      this.modemPrice = Number.isFinite(parsed) ? parsed : 0;
-      return;
-    }
-
-    this.tvBoxPriceText = sanitized;
-    this.tvBoxPrice = Number.isFinite(parsed) ? parsed : 0;
+    item.editablePrice = sanitized;
+    item.price = Number.isFinite(parsed) ? parsed : 0;
   }
 
-  public onHeaderPriceFocus(): void {
+  public onEquipmentPriceFocus(): void {
     this.onInputTap();
     this.focusedInputs += 1;
     this.reduceScrollHeightForKeyboard();
   }
 
-  public onHeaderPriceBlur(type: 'modem' | 'tvBox'): void {
-    if (type === 'modem') {
-      this.modemPriceText = this.formatPriceInput(this.modemPrice);
-    } else {
-      this.tvBoxPriceText = this.formatPriceInput(this.tvBoxPrice);
-    }
-
+  public onEquipmentPriceBlur(item: any): void {
+    item.editablePrice = this.formatPriceInput(item?.price || 0);
     this.focusedInputs = Math.max(0, this.focusedInputs - 1);
     if (this.focusedInputs === 0) {
       this.restoreScrollHeight();
@@ -351,6 +349,10 @@ export class FiberJobPricesComponent implements OnInit, OnDestroy {
   }
 
   public trackByJobTypeId(index: number, item: any): number {
+    return Number(item?.id || index);
+  }
+
+  public trackByEquipmentId(index: number, item: any): number {
     return Number(item?.id || index);
   }
 
@@ -469,5 +471,30 @@ export class FiberJobPricesComponent implements OnInit, OnDestroy {
     }
 
     return false;
+  }
+
+  private getEquipmentKey(item: any): string {
+    const text = String(
+      item?.equipmentName ||
+      item?.name ||
+      item?.equipmentDescription ||
+      item?.description ||
+      ''
+    ).toLowerCase();
+    if (text.includes('modem') || text.includes('mta') || text.includes('hsi') || text.includes('cm')) {
+      return 'modem';
+    }
+    if (text.includes('tv') || text.includes('box') || text.includes('stb')) {
+      return 'tvBox';
+    }
+    return `equipment-${item?.id || text}`;
+  }
+
+  private chunkEquipmentRows(items: any[]): any[][] {
+    const rows: any[][] = [];
+    for (let index = 0; index < items.length; index += 2) {
+      rows.push(items.slice(index, index + 2));
+    }
+    return rows;
   }
 }

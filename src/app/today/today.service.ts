@@ -159,11 +159,31 @@ export class TodayService {
 
   public getJobPricesByUser(
     userId: number,
-    category: string,
-    activeOnly = true
+    categoryId: number,
+    includeGeneral = false
   ): Observable<any[]> {
     return this.httpClient.get<any[]>(
-      `${this.configService.getUrlBase()}/jobs/getJobPricesByUser/${userId}/${category}/${activeOnly}`
+      `${this.configService.getUrlBase()}/jobs/getJobPricesByUser/${userId}/${categoryId}/${includeGeneral}`
+    );
+  }
+
+  public getEquipmentsByCategory(
+    userId: number,
+    categoryId: number
+  ): Observable<any[]> {
+    return this.httpClient.get<any[]>(
+      `${this.configService.getUrlBase()}/jobs/getEquipmentsByCategory/${userId}/${categoryId}`
+    );
+  }
+
+  public saveEquipmentPrices(
+    userId: number,
+    categoryId: number,
+    prices: Array<{ equipmentId: number; price: number }>
+  ): Observable<any> {
+    return this.httpClient.post<any>(
+      `${this.configService.getUrlBase()}/jobs/saveEquipmentPrices/${userId}/${categoryId}`,
+      prices
     );
   }
 

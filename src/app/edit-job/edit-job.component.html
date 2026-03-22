@@ -167,71 +167,49 @@
         </GridLayout>
 
         <GridLayout
-          columns="*,16,*"
-          class="stepper-row stepper-primary-row"
+          *ngFor="let row of customEquipmentRows; let i = index"
+          [columns]="row.length > 1 ? '*,16,*' : '*'"
+          class="stepper-row"
+          [class.stepper-primary-row]="i === 0"
           [visibility]="isCustomJobTypeSelected ? 'visible' : 'collapse'">
           <app-quantity-stepper
+            *ngIf="row[0]"
             col="0"
-            label="Modems"
-            [value]="modemsQty"
+            [label]="row[0].name"
+            [value]="row[0].quantity"
             [min]="0"
-            [max]="20"
+            [max]="50"
             [step]="1"
-            (valueChange)="onModemsChanged($event)"
+            (valueChange)="onCustomEquipmentQtyChanged(row[0], $event)"
             class="modems-stepper">
           </app-quantity-stepper>
 
           <app-quantity-stepper
+            *ngIf="row.length > 1 && row[1]"
             col="2"
-            label="TV Boxes"
-            [value]="tvBoxesQty"
+            [label]="row[1].name"
+            [value]="row[1].quantity"
             [min]="0"
             [max]="50"
             [step]="1"
-            (valueChange)="onTvBoxesChanged($event)"
+            (valueChange)="onCustomEquipmentQtyChanged(row[1], $event)"
             class="tv-boxes-stepper">
           </app-quantity-stepper>
         </GridLayout>
 
         <GridLayout
-          columns="*,16,*"
-          class="stepper-row"
-          [visibility]="(isCustomJobTypeSelected && selectedSegmentIndex === 1) ? 'visible' : 'collapse'">
-          <app-quantity-stepper
-            col="0"
-            label="Cameras"
-            [value]="camerasQty"
-            [min]="0"
-            [max]="50"
-            [step]="1"
-            (valueChange)="onCamerasChanged($event)"
-            class="modems-stepper">
-          </app-quantity-stepper>
-
-          <app-quantity-stepper
-            col="2"
-            label="Sensors"
-            [value]="sensorsQty"
-            [min]="0"
-            [max]="50"
-            [step]="1"
-            (valueChange)="onSensorsChanged($event)"
-            class="tv-boxes-stepper">
-          </app-quantity-stepper>
-        </GridLayout>
-
-        <GridLayout
+          *ngFor="let item of customEquipmentItems"
           columns="auto,*"
           class="include-panel-row"
-          [visibility]="(isCustomJobTypeSelected && selectedSegmentIndex === 1) ? 'visible' : 'collapse'">
+          [visibility]="(isCustomJobTypeSelected && item.inputType === 'toggle') ? 'visible' : 'collapse'">
           <Switch
             col="0"
-            [checked]="includePanel"
-            (checkedChange)="onIncludePanelChanged($event)">
+            [checked]="item.enabled"
+            (checkedChange)="onCustomEquipmentToggleChanged(item, $event)">
           </Switch>
           <Label
             col="1"
-            text="Include Panel"
+            [text]="item.name"
             class="include-panel-label">
           </Label>
         </GridLayout>
