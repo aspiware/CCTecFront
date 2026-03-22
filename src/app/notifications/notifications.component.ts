@@ -2,6 +2,7 @@ import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ModalDialogParams, NativeScriptCommonModule } from '@nativescript/angular';
 import { Item } from '../shared/components/menu-button/item';
 import { MenuEvent } from '../shared/components/menu-button';
+import { NotificationsService } from './notifications.service';
 
 @Component({
   standalone: true,
@@ -15,6 +16,8 @@ export class NotificationsComponent {
   public notifications: any[] = [];
   public notification: any = null;
   public currentIndex = 0;
+  private userId = 0;
+  private seenNotificationIds = new Set<number>();
   public mainMenu: Item = {
     name: 'Main Menu',
     options: [
@@ -23,7 +26,10 @@ export class NotificationsComponent {
     ],
   };
 
-  constructor(private modalParams: ModalDialogParams) {
+  constructor(
+    private modalParams: ModalDialogParams,
+    private notificationsService: NotificationsService
+  ) {
     const context = this.modalParams.context || {};
     const list = Array.isArray(context?.notifications)
       ? context.notifications
@@ -31,8 +37,10 @@ export class NotificationsComponent {
         ? [context.notification]
         : [];
 
+    this.userId = Number(context?.userId || 0);
     this.notifications = list;
     this.notification = list[this.currentIndex] || null;
+    this.markCurrentNotificationSeen();
   }
 
   get notificationTitle(): string {
@@ -88,6 +96,7 @@ export class NotificationsComponent {
 
     this.currentIndex -= 1;
     this.notification = this.notifications[this.currentIndex] || null;
+    this.markCurrentNotificationSeen();
   }
 
   public advance(): void {
@@ -98,5 +107,21 @@ export class NotificationsComponent {
 
     this.currentIndex += 1;
     this.notification = this.notifications[this.currentIndex] || null;
+    this.markCurrentNotificationSeen();
+  }
+
+  private markCurrentNotificationSeen(): void {
+    const notificationId = Number(this.notification?.id || 0);
+    if (!this.userId || !notificationId || this.seenNotificationIds.has(notificationId)) {
+      return;
+    }
+
+    this.seenNotificationIds.add(notificationId);
+    this.notificationsService.markSeen(notificationId, this.userId).subscribe({
+      error: (error) => {
+        console.log('[Notifications] markSeen error', error);
+        this.seenNotificationIds.delete(notificationId);
+      },
+    });
   }
 }

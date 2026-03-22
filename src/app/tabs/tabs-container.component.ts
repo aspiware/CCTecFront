@@ -179,17 +179,8 @@ export class TabsContainerComponent implements OnInit, AfterViewInit, OnDestroy 
         }
 
         this.hasShownNotifications = true;
-        const firstNotificationId = Number(notifications[0]?.id || 0);
-        if (firstNotificationId) {
-          this.notificationsService.markSeen(firstNotificationId, userId).subscribe({
-            error: (error) => {
-              console.log('[TabsContainer] markSeen error', error);
-            },
-          });
-        }
-
         const options: any = {
-          context: { notifications },
+          context: { notifications, userId },
           viewContainerRef: this.vcRef,
           animated: true,
           fullscreen: false,
