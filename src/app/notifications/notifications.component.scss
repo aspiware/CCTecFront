@@ -69,6 +69,15 @@
   padding: 8 2 4 2;
 }
 
+.message-scroll {
+  height: 220;
+  margin-top: 4;
+}
+
+.message-inline {
+  margin-top: 4;
+}
+
 .eyebrow {
   font-size: 11;
   letter-spacing: 1.2;
@@ -108,6 +117,10 @@
 }
 
 .actions-row {
+  margin-top: 22;
+}
+
+.single-action-btn {
   margin-top: 22;
 }
 

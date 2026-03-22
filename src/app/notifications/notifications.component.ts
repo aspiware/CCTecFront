@@ -55,6 +55,11 @@ export class NotificationsComponent {
     return `${this.currentIndex + 1} of ${Math.max(this.notifications.length, 1)}`;
   }
 
+  get shouldScrollMessage(): boolean {
+    const message = this.notificationMessage;
+    return message.length > 220 || message.includes('\n');
+  }
+
   get hasMultipleNotifications(): boolean {
     return this.notifications.length > 1;
   }
