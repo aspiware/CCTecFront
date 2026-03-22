@@ -117,6 +117,15 @@
         </GridLayout>
       </StackLayout>
 
+      <Label text="APP" class="category-title"></Label>
+      <StackLayout class="settings-card">
+        <GridLayout columns="auto,*,auto" class="settings-row settings-row-last">
+          <Label col="0" class="icon-tile fas" text="&#xf1de;"></Label>
+          <Label col="1" class="row-label" [text]="appVersionText"></Label>
+          <Label col="2" class="chevron fas" text=""></Label>
+        </GridLayout>
+      </StackLayout>
+
       <Label text="ACCOUNT" class="category-title"></Label>
       <StackLayout class="settings-card">
         <GridLayout columns="auto,*,auto" class="settings-row" (tap)="logout()">

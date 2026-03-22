@@ -20,6 +20,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   public isDarkTheme = Application.systemAppearance() === 'dark';
   public isSubscribed = false;
   public roleId = 0;
+  public appVersionText = 'Version unavailable';
   public subscriptionDateText = 'Billing date unavailable';
   public subscriptionPlanText = 'Plan: -';
   public subscriptionPriceIntervalText = '-';
@@ -42,6 +43,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.syncTheme();
     this.roleId = Number(this.usersService.getUser()?.roleId || 0);
+    this.appVersionText = this.resolveAppVersionText();
     this.appearanceChangedHandler = () => {
       this.syncTheme();
       this.cdr.detectChanges();
@@ -223,6 +225,34 @@ export class SettingsComponent implements OnInit, OnDestroy {
       day: 'numeric',
       year: 'numeric',
     });
+  }
+
+  private resolveAppVersionText(): string {
+    if (__IOS__) {
+      const info = NSBundle.mainBundle.infoDictionary;
+      const version = String(info?.objectForKey('CFBundleShortVersionString') || '').trim();
+      if (version) {
+        return `Version: ${version}`;
+      }
+    }
+
+    if (__ANDROID__) {
+      try {
+        const context = Application.android?.context;
+        const packageName = context?.getPackageName?.();
+        const packageManager = context?.getPackageManager?.();
+        const packageInfo = packageManager?.getPackageInfo?.(packageName, 0);
+        const packageInfoAny = packageInfo as any;
+        const versionName = String(packageInfoAny?.versionName || '').trim();
+        if (versionName) {
+          return `Version: ${versionName}`;
+        }
+      } catch {
+        // Ignore and fallback below.
+      }
+    }
+
+    return 'Version unavailable';
   }
 
   private showDeleteAccountConfirmIos(): void {
