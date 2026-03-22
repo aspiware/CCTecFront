@@ -194,19 +194,7 @@ export class TabsContainerComponent implements OnInit, AfterViewInit, OnDestroy 
 
         setTimeout(() => {
           this.modalService.showModal(NotificationsComponent, options)
-            .then((result: any) => {
-              if (!result?.dontShowAgain || !result?.notificationId) {
-                return;
-              }
-
-              this.notificationsService
-                .markDismissed(Number(result.notificationId), userId)
-                .subscribe({
-                  error: (error) => {
-                    console.log('[TabsContainer] markDismissed error', error);
-                  },
-                });
-            })
+            .then(() => {})
             .catch((error) => {
               console.log('[TabsContainer] show notifications modal error', error);
               this.hasShownNotifications = false;

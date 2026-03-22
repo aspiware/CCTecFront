@@ -18,6 +18,7 @@ export class NotificationsComponent {
   public currentIndex = 0;
   private userId = 0;
   private seenNotificationIds = new Set<number>();
+  private dismissedNotificationIds = new Set<number>();
   public mainMenu: Item = {
     name: 'Main Menu',
     options: [
@@ -83,15 +84,14 @@ export class NotificationsComponent {
     }
 
     if (event?.index === 1) {
-      this.modalParams.closeCallback({
-        dontShowAgain: true,
-        notificationId: this.notification?.id || null,
-      });
+      this.dismissCurrentNotification();
     }
   }
 
   public closeModal(): void {
-    this.modalParams.closeCallback();
+    this.modalParams.closeCallback({
+      dismissedNotificationIds: [...this.dismissedNotificationIds],
+    });
   }
 
   public showPrevious(): void {
@@ -128,5 +128,37 @@ export class NotificationsComponent {
         this.seenNotificationIds.delete(notificationId);
       },
     });
+  }
+
+  private dismissCurrentNotification(): void {
+    const notificationId = Number(this.notification?.id || 0);
+    if (notificationId && this.userId) {
+      this.dismissedNotificationIds.add(notificationId);
+      this.notificationsService.markDismissed(notificationId, this.userId).subscribe({
+        error: (error) => {
+          console.log('[Notifications] markDismissed error', error);
+          this.dismissedNotificationIds.delete(notificationId);
+        },
+      });
+    }
+
+    if (!this.notifications.length) {
+      this.closeModal();
+      return;
+    }
+
+    this.notifications.splice(this.currentIndex, 1);
+
+    if (!this.notifications.length) {
+      this.closeModal();
+      return;
+    }
+
+    if (this.currentIndex >= this.notifications.length) {
+      this.currentIndex = this.notifications.length - 1;
+    }
+
+    this.notification = this.notifications[this.currentIndex] || null;
+    this.markCurrentNotificationSeen();
   }
 }
