@@ -3,10 +3,12 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ModalDialogService, NativeScriptCommonModule, PageRouterOutlet } from '@nativescript/angular';
 import { Color, isAndroid, isIOS, TabView } from '@nativescript/core';
 import { Subscription } from 'rxjs';
+import { ForceUpdateComponent } from '../force-update/force-update.component';
 import { NotificationsComponent } from '../notifications/notifications.component';
 import { NotificationsService } from '../notifications/notifications.service';
 import { TodayJobsCountService } from '../shared/services/today-jobs-count.service';
 import { UsersService } from '../shared/services/users.service';
+import { VersionService } from '../shared/services/version.service';
 
 @Component({
   standalone: true,
@@ -25,6 +27,8 @@ export class TabsContainerComponent implements OnInit, AfterViewInit, OnDestroy 
   private readonly todayBadgeTextColor = new Color('#FFFFFF');
   private hasCheckedNotifications = false;
   private hasShownNotifications = false;
+  private hasCheckedVersion = false;
+  private hasShownForceUpdate = false;
 
   constructor(
     private router: Router,
@@ -32,6 +36,7 @@ export class TabsContainerComponent implements OnInit, AfterViewInit, OnDestroy 
     private todayJobsCountService: TodayJobsCountService,
     private usersService: UsersService,
     private notificationsService: NotificationsService,
+    private versionService: VersionService,
     private modalService: ModalDialogService,
     private vcRef: ViewContainerRef
   ) {}
@@ -51,7 +56,7 @@ export class TabsContainerComponent implements OnInit, AfterViewInit, OnDestroy 
       ],
       { relativeTo: this.activeRoute, replaceUrl: true }
     ).then(() => {
-      this.checkActiveNotifications();
+      this.checkRequiredUpdate();
     });
   }
 
@@ -204,6 +209,46 @@ export class TabsContainerComponent implements OnInit, AfterViewInit, OnDestroy 
       error: (error) => {
         console.log('[TabsContainer] findActive error', error);
       },
+    });
+  }
+
+  private checkRequiredUpdate(): void {
+    if (this.hasCheckedVersion) {
+      this.checkActiveNotifications();
+      return;
+    }
+
+    this.hasCheckedVersion = true;
+    this.versionService.checkAppStoreVersion().subscribe((status) => {
+      if (!status?.isUpdateAvailable || this.hasShownForceUpdate) {
+        this.checkActiveNotifications();
+        return;
+      }
+
+      this.hasShownForceUpdate = true;
+      const options: any = {
+        context: {
+          localVersion: status.localVersion,
+          storeVersion: status.storeVersion,
+          appStoreUrl: status.appStoreUrl,
+        },
+        viewContainerRef: this.vcRef,
+        animated: true,
+        fullscreen: false,
+        stretched: false,
+        cancelable: false,
+        dismissEnabled: false,
+        ios: {
+          presentationStyle: UIModalPresentationStyle.Custom,
+        },
+      };
+
+      setTimeout(() => {
+        this.modalService.showModal(ForceUpdateComponent, options).catch((error) => {
+          console.log('[TabsContainer] show force update modal error', error);
+          this.hasShownForceUpdate = false;
+        });
+      }, 200);
     });
   }
 

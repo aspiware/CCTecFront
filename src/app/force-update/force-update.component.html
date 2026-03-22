@@ -1,0 +1,18 @@
+<ModalStack dismissEnabled="false" class="modal-root">
+  <GridLayout rows="*" columns="*">
+    <StackLayout row="0" col="0" class="backdrop"></StackLayout>
+
+    <GridLayout row="0" col="0" rows="auto,auto" class="modal-card">
+      <GridLayout row="0" columns="*" class="header header-fixed">
+        <Label text="Update Required" class="title modal-title-text"></Label>
+      </GridLayout>
+
+      <StackLayout row="1" class="card">
+        <Label text="A newer version of the app is required to continue." class="headline" textWrap="true"></Label>
+        <Label [text]="'Current version: ' + (localVersion || '-')" class="detail-text" textWrap="true"></Label>
+        <Label [text]="'Required version: ' + (storeVersion || '-')" class="detail-text" textWrap="true"></Label>
+        <Button text="Update Now" class="primary-btn" (tap)="openUpdate()"></Button>
+      </StackLayout>
+    </GridLayout>
+  </GridLayout>
+</ModalStack>

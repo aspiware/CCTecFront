@@ -119,10 +119,34 @@
 
       <Label text="APP" class="category-title"></Label>
       <StackLayout class="settings-card">
-        <GridLayout columns="auto,*,auto" class="settings-row settings-row-last">
+        <GridLayout
+          columns="auto,*,auto"
+          class="settings-row"
+          [class.settings-row-last]="!updateStatusText">
           <Label col="0" class="icon-tile fas" text="&#xf1de;"></Label>
           <Label col="1" class="row-label" [text]="appVersionText"></Label>
           <Label col="2" class="chevron fas" text=""></Label>
+          <GridLayout
+            col="1"
+            colSpan="2"
+            class="row-divider"
+            [visibility]="updateStatusText ? 'visible' : 'collapse'">
+          </GridLayout>
+        </GridLayout>
+        <GridLayout
+          columns="auto,*,auto"
+          class="settings-row settings-row-last"
+          [visibility]="updateStatusText ? 'visible' : 'collapse'"
+          [class.settings-row-tappable]="isUpdateAvailable"
+          (tap)="openAppUpdate()">
+          <Label col="0" class="icon-tile fas" text="&#xf0aa;"></Label>
+          <Label
+            col="1"
+            class="row-label"
+            [class.row-label-accent]="isUpdateAvailable"
+            [text]="updateStatusText">
+          </Label>
+          <Label col="2" class="chevron fas" [text]="isUpdateAvailable ? '&#xf054;' : ''"></Label>
         </GridLayout>
       </StackLayout>
 

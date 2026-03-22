@@ -6,6 +6,7 @@ import { TodayJobsCountService } from '../shared/services/today-jobs-count.servi
 import { SubscriptionService } from '../shared/services/subscription.service';
 import { ConfigService } from '../shared/services/config.service';
 import { UsersService } from '../shared/services/users.service';
+import { VersionService } from '../shared/services/version.service';
 import { SettingsService } from './settings.service';
 
 @Component({
@@ -21,6 +22,9 @@ export class SettingsComponent implements OnInit, OnDestroy {
   public isSubscribed = false;
   public roleId = 0;
   public appVersionText = 'Version unavailable';
+  public updateStatusText = 'Checking App Store...';
+  public isUpdateAvailable = false;
+  private appStoreUrl = '';
   public subscriptionDateText = 'Billing date unavailable';
   public subscriptionPlanText = 'Plan: -';
   public subscriptionPriceIntervalText = '-';
@@ -34,6 +38,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     private settingsService: SettingsService,
     private todayJobsCountService: TodayJobsCountService,
     private usersService: UsersService,
+    private versionService: VersionService,
     private router: Router,
     private routerExtensions: RouterExtensions,
     private cdr: ChangeDetectorRef,
@@ -44,6 +49,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.syncTheme();
     this.roleId = Number(this.usersService.getUser()?.roleId || 0);
     this.appVersionText = this.resolveAppVersionText();
+    this.loadVersionStatus();
     this.appearanceChangedHandler = () => {
       this.syncTheme();
       this.cdr.detectChanges();
@@ -115,6 +121,13 @@ export class SettingsComponent implements OnInit, OnDestroy {
   public openTermsOfService(): void {
     // Utils.openUrl('https://cctec.aspiware.com/terms-of-service');
     Utils.openUrl('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/');
+  }
+
+  public openAppUpdate(): void {
+    if (!this.isUpdateAvailable || !this.appStoreUrl) {
+      return;
+    }
+    this.versionService.openAppStore(this.appStoreUrl);
   }
 
   public logout(): void {
@@ -219,6 +232,26 @@ export class SettingsComponent implements OnInit, OnDestroy {
     });
   }
 
+  private loadVersionStatus(): void {
+    this.versionService.checkAppStoreVersion().subscribe((status) => {
+      const localVersion = String(status?.localVersion || '').trim();
+      if (localVersion) {
+        this.appVersionText = `Version: ${localVersion}`;
+      }
+
+      this.isUpdateAvailable = !!status?.isUpdateAvailable;
+      this.appStoreUrl = String(status?.appStoreUrl || '').trim();
+
+      if (this.isUpdateAvailable && status?.storeVersion) {
+        this.updateStatusText = `Update available: ${status.storeVersion}`;
+      } else {
+        this.updateStatusText = '';
+      }
+
+      this.cdr.detectChanges();
+    });
+  }
+
   private formatDate(value: Date): string {
     return value.toLocaleDateString('en-US', {
       month: 'short',
@@ -228,31 +261,8 @@ export class SettingsComponent implements OnInit, OnDestroy {
   }
 
   private resolveAppVersionText(): string {
-    if (__IOS__) {
-      const info = NSBundle.mainBundle.infoDictionary;
-      const version = String(info?.objectForKey('CFBundleShortVersionString') || '').trim();
-      if (version) {
-        return `Version: ${version}`;
-      }
-    }
-
-    if (__ANDROID__) {
-      try {
-        const context = Application.android?.context;
-        const packageName = context?.getPackageName?.();
-        const packageManager = context?.getPackageManager?.();
-        const packageInfo = packageManager?.getPackageInfo?.(packageName, 0);
-        const packageInfoAny = packageInfo as any;
-        const versionName = String(packageInfoAny?.versionName || '').trim();
-        if (versionName) {
-          return `Version: ${versionName}`;
-        }
-      } catch {
-        // Ignore and fallback below.
-      }
-    }
-
-    return 'Version unavailable';
+    const version = this.versionService.getLocalVersion();
+    return version ? `Version: ${version}` : 'Version unavailable';
   }
 
   private showDeleteAccountConfirmIos(): void {
