@@ -1,8 +1,10 @@
-import { AfterViewInit, Component, ElementRef, NO_ERRORS_SCHEMA, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, NO_ERRORS_SCHEMA, OnDestroy, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { NativeScriptCommonModule, PageRouterOutlet } from '@nativescript/angular';
+import { ModalDialogService, NativeScriptCommonModule, PageRouterOutlet } from '@nativescript/angular';
 import { Color, isAndroid, isIOS, TabView } from '@nativescript/core';
 import { Subscription } from 'rxjs';
+import { NotificationsComponent } from '../notifications/notifications.component';
+import { NotificationsService } from '../notifications/notifications.service';
 import { TodayJobsCountService } from '../shared/services/today-jobs-count.service';
 
 @Component({
@@ -20,11 +22,16 @@ export class TabsContainerComponent implements OnInit, AfterViewInit, OnDestroy 
   private readonly todayTabIndex = 2;
   private readonly todayBadgeBgColor = new Color('#E57373');
   private readonly todayBadgeTextColor = new Color('#FFFFFF');
+  private hasCheckedNotifications = false;
+  private hasShownNotifications = false;
 
   constructor(
     private router: Router,
     private activeRoute: ActivatedRoute,
-    private todayJobsCountService: TodayJobsCountService
+    private todayJobsCountService: TodayJobsCountService,
+    private notificationsService: NotificationsService,
+    private modalService: ModalDialogService,
+    private vcRef: ViewContainerRef
   ) {}
 
   ngOnInit(): void {
@@ -41,7 +48,9 @@ export class TabsContainerComponent implements OnInit, AfterViewInit, OnDestroy 
         },
       ],
       { relativeTo: this.activeRoute, replaceUrl: true }
-    );
+    ).then(() => {
+      this.checkActiveNotifications();
+    });
   }
 
   ngAfterViewInit(): void {
@@ -147,5 +156,58 @@ export class TabsContainerComponent implements OnInit, AfterViewInit, OnDestroy 
     if (tabBar.scrollEdgeAppearance !== undefined) {
       tabBar.scrollEdgeAppearance = appearance;
     }
+  }
+
+  private checkActiveNotifications(): void {
+    if (this.hasCheckedNotifications) {
+      return;
+    }
+
+    this.hasCheckedNotifications = true;
+    this.notificationsService.findActive().subscribe({
+      next: (res: any) => {
+        const notifications = this.normalizeNotifications(res);
+        if (!notifications.length || this.hasShownNotifications) {
+          return;
+        }
+
+        this.hasShownNotifications = true;
+        const options: any = {
+          context: { notifications },
+          viewContainerRef: this.vcRef,
+          animated: true,
+          fullscreen: false,
+          stretched: false,
+          cancelable: true,
+          dismissEnabled: true,
+          ios: {
+            presentationStyle: UIModalPresentationStyle.Custom,
+          },
+        };
+
+        setTimeout(() => {
+          this.modalService.showModal(NotificationsComponent, options).catch((error) => {
+            console.log('[TabsContainer] show notifications modal error', error);
+            this.hasShownNotifications = false;
+          });
+        }, 250);
+      },
+      error: (error) => {
+        console.log('[TabsContainer] findActive error', error);
+      },
+    });
+  }
+
+  private normalizeNotifications(res: any): any[] {
+    if (Array.isArray(res)) {
+      return res;
+    }
+    if (Array.isArray(res?.data)) {
+      return res.data;
+    }
+    if (Array.isArray(res?.notifications)) {
+      return res.notifications;
+    }
+    return [];
   }
 }
