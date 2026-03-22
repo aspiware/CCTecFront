@@ -123,8 +123,7 @@ export class EditJobComponent implements OnInit {
       item.title = label;
       return item;
     });
-
-    console.log('[normalizedCustomJob]', this.job?.customJob);
+    this.selectedSegmentIndex = this.getInitialSegmentIndex();
   }
 
   ngOnInit(): void {
@@ -830,6 +829,31 @@ export class EditJobComponent implements OnInit {
         return 4;
       default:
         return 1;
+    }
+  }
+
+  private getInitialSegmentIndex(): number {
+    const categoryId = Number(
+      this.job?.categoryId ||
+      this.job?.jobCategoryId ||
+      this.job?.jobCategory?.id ||
+      this.job?.jobType?.jobCategoryId ||
+      this.job?.jobType?.jobCategory?.id ||
+      this.job?.jobType?.categoryId ||
+      1
+    );
+
+    switch (categoryId) {
+      case 1:
+        return 0;
+      case 2:
+        return 1;
+      case 3:
+        return 2;
+      case 4:
+        return 3;
+      default:
+        return 0;
     }
   }
 
