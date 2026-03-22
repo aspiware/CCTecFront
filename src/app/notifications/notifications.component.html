@@ -2,34 +2,40 @@
   <GridLayout rows="*" columns="*">
     <StackLayout row="0" col="0" class="backdrop"></StackLayout>
 
-    <GridLayout row="0" col="0" rows="auto,auto" class="modal-card">
+    <GridLayout row="0" col="0" rows="auto,*" class="modal-card">
       <GridLayout row="0" columns="*,auto" class="header header-fixed">
         <Label col="0" text="Notifications" class="title modal-title-text"></Label>
 
-        <Label
-          col="1"
-          text="Close"
-          class="close-text"
-          (tap)="closeModal()">
-        </Label>
+        <StackLayout col="1">
+          <MenuButton
+            [useSFIcon]="true"
+            style="background-color: transparent; height: 24; width: 35;"
+            [sfIconName]="'ellipsis.circle'"
+            [options]="mainMenu.options"
+            (selected)="onSelectedMainMenu($event)">
+          </MenuButton>
+        </StackLayout>
       </GridLayout>
 
-      <StackLayout row="1" class="card">
-        <GridLayout columns="*, auto" class="data-row">
-          <Label col="0" text="Title" class="label-key"></Label>
-          <Label col="1" [text]="notification?.title || notification?.name || '-'" class="label-value" textAlignment="right"></Label>
-        </GridLayout>
+      <ScrollView row="1">
+        <StackLayout class="card">
+          <StackLayout class="hero">
+            <Label text="System Notice" class="eyebrow"></Label>
+            <Label [text]="notificationCountLabel" class="count-badge"></Label>
+            <Label [text]="notificationTitle" class="headline" textWrap="true"></Label>
+            <Label [text]="notificationMessage" class="message" textWrap="true"></Label>
+          </StackLayout>
 
-        <GridLayout columns="*, auto" class="line-row data-row">
-          <Label col="0" text="Message" class="label-key"></Label>
-          <Label col="1" [text]="notification?.message || notification?.description || '-'" class="label-value" textAlignment="right"></Label>
-        </GridLayout>
+          <Label
+            [visibility]="notifications.length > 1 ? 'visible' : 'collapse'"
+            text="More active notifications are waiting in this batch."
+            class="support-copy"
+            textWrap="true">
+          </Label>
 
-        <GridLayout columns="*, auto" class="line-row data-row">
-          <Label col="0" text="Count" class="label-key"></Label>
-          <Label col="1" [text]="notifications.length ? (notifications.length | number:'1.0-0') : '0'" class="label-value" textAlignment="right"></Label>
-        </GridLayout>
-      </StackLayout>
+          <Button text="Got it" class="primary-btn" (tap)="closeModal()"></Button>
+        </StackLayout>
+      </ScrollView>
     </GridLayout>
   </GridLayout>
 </ModalStack>

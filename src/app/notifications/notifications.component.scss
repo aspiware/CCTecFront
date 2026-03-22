@@ -10,7 +10,7 @@
 }
 
 .modal-card {
-  padding: 10;
+  padding: 12;
   margin: 15;
   border-radius: 16;
   border-width: 1;
@@ -22,6 +22,8 @@
   background-color: #281d1d;
   vertical-align: middle;
   horizontal-align: center;
+  width: 100%;
+  max-width: 380;
 }
 
 .ns-light .modal-card {
@@ -35,7 +37,7 @@
 }
 
 .header {
-  margin-bottom: 8;
+  margin-bottom: 4;
 }
 
 .header-fixed {
@@ -57,34 +59,84 @@
 }
 
 .card {
-  padding: 14;
-  border-radius: 8;
-  background-color: rgba(126, 151, 185, 0.2);
+  padding: 18;
+  border-radius: 14;
+  background-color: rgba(126, 151, 185, 0.18);
 }
 
-.line-row {
-  width: 100%;
-  margin-top: 10;
-  padding-top: 10;
-  border-top-width: 1;
-  border-top-color: rgba(128, 128, 128, 0.24);
+.hero {
+  padding: 8 2 4 2;
 }
 
-.data-row {
-  width: 100%;
+.eyebrow {
+  font-size: 11;
+  letter-spacing: 1.2;
+  text-transform: uppercase;
+  color: #8dc7ff;
+  margin-bottom: 8;
 }
 
-.label-key,
-.label-value,
-.close-text {
-  font-size: 14;
+.count-badge {
+  horizontal-align: left;
+  padding: 4 10;
+  border-radius: 999;
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  font-size: 12;
+  font-weight: 600;
+  margin-bottom: 14;
 }
 
-.close-text {
-  color: #67b7ff;
-  vertical-align: middle;
+.headline {
+  font-size: 24;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 12;
 }
 
-.ns-light .close-text {
+.message {
+  font-size: 15;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.support-copy {
+  font-size: 13;
+  color: rgba(255, 255, 255, 0.68);
+  margin-top: 18;
+}
+
+.primary-btn {
+  margin-top: 22;
+  border-radius: 12;
+  background-color: #4ea1ff;
+  color: #ffffff;
+  font-size: 15;
+  font-weight: 600;
+  padding: 14 12;
+}
+
+.ns-light .eyebrow {
   color: #0a84ff;
+}
+
+.ns-light .count-badge {
+  background-color: rgba(10, 132, 255, 0.12);
+  color: #0a84ff;
+}
+
+.ns-light .headline {
+  color: #111111;
+}
+
+.ns-light .message {
+  color: rgba(17, 17, 17, 0.82);
+}
+
+.ns-light .support-copy {
+  color: rgba(17, 17, 17, 0.62);
+}
+
+.ns-light .primary-btn {
+  background-color: #0a84ff;
 }

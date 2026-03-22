@@ -12,13 +12,35 @@ export class NotificationsService {
     private usersService: UsersService
   ) {}
 
-  public findActive(): Observable<any[]> {
+  public findActiveByUser(userId: number): Observable<any[]> {
     if (this.usersService.isDemoUser(this.usersService.getUser())) {
       return of([]);
     }
 
     return this.httpClient.get<any[]>(
-      `${this.configService.getUrlBase()}/notifications/findActive`
+      `${this.configService.getUrlBase()}/notifications/findActive/${userId}`
+    );
+  }
+
+  public markDismissed(notificationId: number, userId: number): Observable<any> {
+    if (this.usersService.isDemoUser(this.usersService.getUser())) {
+      return of({ success: true });
+    }
+
+    return this.httpClient.post<any>(
+      `${this.configService.getUrlBase()}/notifications/markDismissed/${notificationId}/${userId}`,
+      null
+    );
+  }
+
+  public markSeen(notificationId: number, userId: number): Observable<any> {
+    if (this.usersService.isDemoUser(this.usersService.getUser())) {
+      return of({ success: true });
+    }
+
+    return this.httpClient.post<any>(
+      `${this.configService.getUrlBase()}/notifications/markSeen/${notificationId}/${userId}`,
+      null
     );
   }
 }

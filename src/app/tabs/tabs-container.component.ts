@@ -6,6 +6,7 @@ import { Subscription } from 'rxjs';
 import { NotificationsComponent } from '../notifications/notifications.component';
 import { NotificationsService } from '../notifications/notifications.service';
 import { TodayJobsCountService } from '../shared/services/today-jobs-count.service';
+import { UsersService } from '../shared/services/users.service';
 
 @Component({
   standalone: true,
@@ -29,6 +30,7 @@ export class TabsContainerComponent implements OnInit, AfterViewInit, OnDestroy 
     private router: Router,
     private activeRoute: ActivatedRoute,
     private todayJobsCountService: TodayJobsCountService,
+    private usersService: UsersService,
     private notificationsService: NotificationsService,
     private modalService: ModalDialogService,
     private vcRef: ViewContainerRef
@@ -163,8 +165,13 @@ export class TabsContainerComponent implements OnInit, AfterViewInit, OnDestroy 
       return;
     }
 
+    const userId = Number(this.usersService.getUser()?.userId || 0);
+    if (!userId) {
+      return;
+    }
+
     this.hasCheckedNotifications = true;
-    this.notificationsService.findActive().subscribe({
+    this.notificationsService.findActiveByUser(userId).subscribe({
       next: (res: any) => {
         const notifications = this.normalizeNotifications(res);
         if (!notifications.length || this.hasShownNotifications) {
@@ -172,6 +179,15 @@ export class TabsContainerComponent implements OnInit, AfterViewInit, OnDestroy 
         }
 
         this.hasShownNotifications = true;
+        const firstNotificationId = Number(notifications[0]?.id || 0);
+        if (firstNotificationId) {
+          this.notificationsService.markSeen(firstNotificationId, userId).subscribe({
+            error: (error) => {
+              console.log('[TabsContainer] markSeen error', error);
+            },
+          });
+        }
+
         const options: any = {
           context: { notifications },
           viewContainerRef: this.vcRef,
@@ -186,10 +202,24 @@ export class TabsContainerComponent implements OnInit, AfterViewInit, OnDestroy 
         };
 
         setTimeout(() => {
-          this.modalService.showModal(NotificationsComponent, options).catch((error) => {
-            console.log('[TabsContainer] show notifications modal error', error);
-            this.hasShownNotifications = false;
-          });
+          this.modalService.showModal(NotificationsComponent, options)
+            .then((result: any) => {
+              if (!result?.dontShowAgain || !result?.notificationId) {
+                return;
+              }
+
+              this.notificationsService
+                .markDismissed(Number(result.notificationId), userId)
+                .subscribe({
+                  error: (error) => {
+                    console.log('[TabsContainer] markDismissed error', error);
+                  },
+                });
+            })
+            .catch((error) => {
+              console.log('[TabsContainer] show notifications modal error', error);
+              this.hasShownNotifications = false;
+            });
         }, 250);
       },
       error: (error) => {
