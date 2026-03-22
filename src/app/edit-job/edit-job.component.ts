@@ -118,7 +118,7 @@ export class EditJobComponent implements OnInit {
         this.selectedCustomTypeMap.set(id, item);
       }
     });
-    this.segmentItems = ['Residential', 'XH', 'Business', 'Fiber'].map((label) => {
+    this.segmentItems = ['Residential', 'XH', 'Fiber', 'Business'].map((label) => {
       const item = new SegmentedBarItem();
       item.title = label;
       return item;
