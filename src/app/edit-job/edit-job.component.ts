@@ -32,6 +32,7 @@ export class EditJobComponent implements OnInit {
   public jobTypes: any[] = [];
   public jobTypeLabels: string[] = ['Loading job types...'];
   public selectedTypeIndex = 0;
+  private isSyncingTypePicker = false;
   public modemsQty = 0;
   public tvBoxesQty = 0;
   public camerasQty = 0;
@@ -155,6 +156,9 @@ export class EditJobComponent implements OnInit {
   }
 
   public onTypeChanged(event: any): void {
+    if (this.isSyncingTypePicker) {
+      return;
+    }
     const index = Number(event?.value);
     if (Number.isNaN(index) || index < 0 || index >= this.jobTypes.length) {
       return;
@@ -571,11 +575,16 @@ export class EditJobComponent implements OnInit {
       return;
     }
     const currentTypeId = Number(
-      this.jobTypes[this.selectedTypeIndex]?.id ||
       this.job?.jobTypeId ||
       this.job?.jobType?.id ||
+      this.jobTypes[this.selectedTypeIndex]?.id ||
       0
     );
+    const currentTypeName = String(
+      this.job?.jobType?.name ||
+      this.job?.jobType?.description ||
+      ''
+    ).trim().toLowerCase();
     const categoryId = this.getSelectedSegmentCategory();
     this.todayService.getJobPricesByUser(this.userId, categoryId).subscribe({
       next: (res: any) => {
@@ -587,14 +596,30 @@ export class EditJobComponent implements OnInit {
           id: Number(item?.jobTypeId || item?.id),
           name: item?.name || item?.description || '-',
         }));
+        let nextIndex = normalized.findIndex((item: any) => Number(item?.id) === currentTypeId);
+        if (nextIndex < 0 && currentTypeName) {
+          nextIndex = normalized.findIndex((item: any) =>
+            String(item?.name || '').trim().toLowerCase() === currentTypeName
+          );
+        }
+        const resolvedIndex = nextIndex >= 0 ? nextIndex : 0;
+
+        this.isSyncingTypePicker = true;
+        this.selectedTypeIndex = 0;
         this.jobTypes = normalized;
         this.jobTypeLabels = normalized.map((item: any) => item.name);
-        const nextIndex = normalized.findIndex((item: any) => Number(item?.id) === currentTypeId);
-        this.selectedTypeIndex = nextIndex >= 0 ? nextIndex : 0;
         this.cdr.detectChanges();
-        if (this.isUpdateJobTypeSelected) {
-          this.scheduleUpgradeDevicesSelectionRestore();
-        }
+
+        setTimeout(() => {
+          this.selectedTypeIndex = resolvedIndex;
+          this.cdr.detectChanges();
+          setTimeout(() => {
+            this.isSyncingTypePicker = false;
+            if (this.isUpdateJobTypeSelected) {
+              this.scheduleUpgradeDevicesSelectionRestore();
+            }
+          }, 0);
+        }, 0);
       },
       error: (error) => {
         console.log('[EditJob] loadPickerJobsBySegment error', error);
