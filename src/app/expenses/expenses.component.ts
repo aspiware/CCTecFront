@@ -130,7 +130,7 @@ export class ExpensesComponent implements OnInit, OnDestroy {
         icon: 'trash',
         destructive: true,
         confirm: {
-          title: 'Delete expense?',
+          title: 'Delete expense?\n\nThis action cannot be undone.',
           confirmText: 'Delete',
           cancelText: 'Cancel',
           presentation: 'anchor' as const,
