@@ -55,12 +55,24 @@
     height="100%" class="jobs-list">
     <ng-template tkListItemTemplate let-item="item">
       <StackLayout class="expense-card">
-        <GridLayout columns="auto,*,auto,auto" width="100%" class="expense-card-header">
-          <Label col="0" class="expense-icon fas" [text]="item.displayIcon"></Label>
-          <Label col="1" class="expense-title" [text]="item.displayTitle || 'Expense'"></Label>
-          <Label col="2" class="expense-amount" [text]="(item.amount || 0) | currency"></Label>
-          <GridLayout col="3" class="expense-menu-dot" width="56" height="56">
-            <Label class="fas expense-menu-dot-icon" text="&#xf141;"></Label>
+        <GridLayout columns="*,auto" width="100%" class="expense-card-header">
+          <GridLayout col="0" columns="auto,*" class="expense-left-block">
+            <Label col="0" class="expense-icon fas" [text]="item.displayIcon"></Label>
+            <Label col="1" class="expense-title" [text]="item.displayTitle || 'Expense'" textWrap="false"></Label>
+          </GridLayout>
+
+          <GridLayout col="1" columns="auto,35" class="expense-right-actions" horizontalAlignment="right">
+            <Label col="0" class="expense-amount" [text]="(item.amount || 0) | currency"></Label>
+            <StackLayout col="1" horizontalAlignment="right" verticalAlignment="middle">
+              <MenuButton
+                class="expense-menu-button"
+                style="background-color: transparent; height: 24; width: 35;"
+                [useSFIcon]="true"
+                [sfIconName]="'ellipsis.circle'"
+                [options]="getExpenseMenuOptions(item)"
+                (selected)="onSelectedExpenseMenu($event, item)">
+              </MenuButton>
+            </StackLayout>
           </GridLayout>
         </GridLayout>
 

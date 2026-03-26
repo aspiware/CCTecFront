@@ -87,6 +87,15 @@ TextField.custom-tf-inline {
   vertical-align: middle;
 }
 
+.expense-left-block {
+  vertical-align: middle;
+}
+
+.expense-right-actions {
+  horizontal-align: right;
+  vertical-align: middle;
+}
+
 .expense-icon {
   width: 44;
   font-size: 28;
@@ -96,11 +105,12 @@ TextField.custom-tf-inline {
 
 .expense-title {
   margin-left: 10;
-  margin-right: 10;
+  margin-right: 14;
   font-size: 25;
   font-weight: 700;
   color: #f5f7fb;
   vertical-align: middle;
+  text-overflow: ellipsis;
 }
 
 .expense-amount {
@@ -110,19 +120,14 @@ TextField.custom-tf-inline {
   color: #1a8cff;
   text-align: right;
   vertical-align: middle;
+  horizontal-align: right;
 }
 
-.expense-menu-dot {
-  border-radius: 28;
-  background-color: #222633;
-  vertical-align: middle;
-}
-
-.expense-menu-dot-icon {
-  font-size: 18;
+.expense-menu-button {
+  margin-left: 8;
   color: #f1f3f8;
-  text-align: center;
   vertical-align: middle;
+  horizontal-align: right;
 }
 
 .expense-divider {
@@ -133,9 +138,10 @@ TextField.custom-tf-inline {
 }
 
 .expense-subtitle {
-  font-size: 19;
-  line-height: 8;
-  color: rgba(220, 225, 238, 0.74);
+  font-size: 20;
+  margin-top: 2;
+  margin-bottom: 2;
+  color: #d8deea;
 }
 
 .expense-footer-row {

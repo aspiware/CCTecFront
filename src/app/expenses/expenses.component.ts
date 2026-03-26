@@ -5,6 +5,8 @@ import { NativeScriptUIListViewModule } from 'nativescript-ui-listview/angular';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CustomerInfoComponent } from '../customer-info/customer-info.component';
 import { DevicesComponent } from '../devices/devices.component';
+import { MenuEvent } from '../shared/components/menu-button/common';
+import { Item } from '../shared/components/menu-button/item';
 import { ExpensesService } from './expenses.service';
 import { AddExpenseComponent } from './add-expense/add-expense.component';
 import { EditJobComponent } from '../edit-job/edit-job.component';
@@ -115,6 +117,37 @@ export class ExpensesComponent implements OnInit, OnDestroy {
 
   public dismissKeyboard(): void {
     Utils.dismissKeyboard();
+  }
+
+  public getExpenseMenuOptions(item: any): Item['options'] {
+    const options: Item['options'] = [
+      {
+        name: 'Copy Amount',
+        icon: 'dollarsign.circle',
+      },
+    ];
+
+    if (String(item?.displaySubtitle || '').trim()) {
+      options.push({
+        name: 'Copy Details',
+        icon: 'doc.on.doc',
+      });
+    }
+
+    return options;
+  }
+
+  public onSelectedExpenseMenu(event: MenuEvent, item: any): void {
+    switch (Number(event?.index)) {
+      case 0:
+        Utils.copyToClipboard(String(item?.amount || 0));
+        break;
+      case 1:
+        Utils.copyToClipboard(String(item?.displaySubtitle || ''));
+        break;
+      default:
+        break;
+    }
   }
 
   public onExpensesListLoaded(event: any): void {
@@ -792,6 +825,9 @@ export class ExpensesComponent implements OnInit, OnDestroy {
 
   private buildExpenseTitle(expense: any): string {
     return String(
+      expense?.expenseCategoryName ||
+      expense?.expenseCategory?.name ||
+      expense?.categoryName ||
       expense?.expenseTypeName ||
       expense?.expenseType?.name ||
       expense?.typeName ||
@@ -803,9 +839,9 @@ export class ExpensesComponent implements OnInit, OnDestroy {
 
   private buildExpenseSubtitle(expense: any): string {
     const parts = [
-      expense?.expenseCategoryName ||
-      expense?.expenseCategory?.name ||
-      expense?.categoryName,
+      expense?.expenseTypeName ||
+      expense?.expenseType?.name ||
+      expense?.typeName,
       expense?.notes,
     ]
       .map((value) => String(value || '').trim())
@@ -833,10 +869,10 @@ export class ExpensesComponent implements OnInit, OnDestroy {
       return 'No date';
     }
 
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-    }).format(date);
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = months[date.getMonth()] || '';
+    const day = date.getDate();
+    return `${month} ${day}`;
   }
 
   public getExpenseAttachmentLabel(count: number): string {
