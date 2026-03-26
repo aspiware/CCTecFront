@@ -4,7 +4,7 @@
 
     <GridLayout row="0" col="0" rows="auto,*" class="modal-card">
       <GridLayout row="0" columns="*,auto,auto" class="header header-fixed">
-        <Label col="0" text="Add Expense" class="title modal-title-text"></Label>
+        <Label col="0" [text]="modalTitle" class="title modal-title-text"></Label>
 
         <StackLayout col="2">
           <MenuButton [useSFIcon]="true" style="background-color: transparent; height: 24; width: 35;"
@@ -70,7 +70,7 @@
             class="notes-input">
           </TextView>
 
-          <GridLayout columns="auto,*" class="attachments-header">
+          <GridLayout columns="auto,*" class="attachments-header" [visibility]="!isEditMode ? 'visible' : 'collapse'">
             <Button
               col="0"
               text="Attach Files"
@@ -88,7 +88,7 @@
 
           <StackLayout
             class="attachments-list"
-            [visibility]="selectedFiles.length ? 'visible' : 'collapse'">
+            [visibility]="!isEditMode && selectedFiles.length ? 'visible' : 'collapse'">
             <GridLayout
               *ngFor="let file of selectedFiles; let i = index"
               columns="*,auto"

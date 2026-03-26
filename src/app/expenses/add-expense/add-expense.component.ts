@@ -18,6 +18,8 @@ export class AddExpenseComponent {
   private static readonly MAX_ATTACHMENTS = 5;
   public isSaving = false;
   public viewReady = false;
+  public isEditMode = false;
+  public modalTitle = 'Add Expense';
   public noteText = '';
   public isLoadingCategories = false;
   public isLoadingTypes = false;
@@ -31,28 +33,14 @@ export class AddExpenseComponent {
   public selectedCategoryIndex = 0;
   public selectedTypeIndex = 0;
   public selectedFiles: ExpenseUploadFile[] = [];
-  public mainMenu: Item = {
-    name: 'Main Menu',
-    options: [
-      {
-        name: 'Save',
-        icon: 'checkmark.circle',
-        destructive: true,
-        confirm: {
-          title: 'Save expense?',
-          confirmText: 'Save',
-          cancelText: 'Cancel',
-          presentation: 'anchor',
-        },
-      }
-    ],
-  };
   public expenseForm = new FormGroup({
     expenseTypeId: new FormControl(0, { nonNullable: true, validators: [Validators.required] }),
     amount: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
   });
 
   private readonly userId: number;
+  private readonly expenseId: number;
+  private readonly existingExpense: any;
   private suppressDismissUntil = 0;
   private dismissKeyboardTimer?: ReturnType<typeof setTimeout>;
   private documentPickerDelegate?: any;
@@ -64,7 +52,12 @@ export class AddExpenseComponent {
     private cdr: ChangeDetectorRef
   ) {
     this.userId = Number(this.modalParams.context?.userId || 0);
+    this.existingExpense = this.modalParams.context?.expense || null;
+    this.expenseId = Number(this.existingExpense?.id || this.modalParams.context?.expenseId || 0);
+    this.isEditMode = !!this.expenseId;
+    this.modalTitle = this.isEditMode ? 'Edit Expense' : 'Add Expense';
     this.expenseForm.controls.amount.setValue(this.amountText);
+    this.hydrateExistingExpense();
   }
 
   ngOnInit(): void {
@@ -77,7 +70,19 @@ export class AddExpenseComponent {
   }
 
   get mainMenuOptions() {
-    return this.mainMenu.options;
+    return [
+      {
+        name: this.isEditMode ? 'Update' : 'Save',
+        icon: 'checkmark.circle',
+        destructive: true,
+        confirm: {
+          title: this.isEditMode ? 'Update expense?' : 'Save expense?',
+          confirmText: this.isEditMode ? 'Update' : 'Save',
+          cancelText: 'Cancel',
+          presentation: 'anchor' as const,
+        },
+      },
+    ];
   }
 
   public closeWithoutSave(): void {
@@ -145,26 +150,34 @@ export class AddExpenseComponent {
 
     this.isSaving = true;
     const notes = String(this.noteText || '').trim();
-    this.expensesService.create({
-      userId: this.userId,
-      expenseTypeId,
-      amount,
-      notes: notes || undefined,
-    }).subscribe({
+    const request$ = this.isEditMode
+      ? this.expensesService.update(this.expenseId, {
+          expenseTypeId,
+          amount,
+          notes: notes || undefined,
+        })
+      : this.expensesService.create({
+          userId: this.userId,
+          expenseTypeId,
+          amount,
+          notes: notes || undefined,
+        });
+
+    request$.subscribe({
       next: async (res) => {
-        const createdExpense = res || true;
+        const savedExpense = res || true;
         const createdExpenseId = this.extractExpenseId(res);
 
-        if (!this.selectedFiles.length || !createdExpenseId) {
+        if (this.isEditMode || !this.selectedFiles.length || !createdExpenseId) {
           this.isSaving = false;
-          this.modalParams.closeCallback(createdExpense);
+          this.modalParams.closeCallback(savedExpense);
           return;
         }
 
         this.expensesService.uploadFiles(createdExpenseId, this.selectedFiles).subscribe({
           next: () => {
             this.isSaving = false;
-            this.modalParams.closeCallback(createdExpense);
+            this.modalParams.closeCallback(savedExpense);
           },
           error: async (error) => {
             this.isSaving = false;
@@ -173,7 +186,7 @@ export class AddExpenseComponent {
               error?.message ||
               'Expense was created, but files could not be uploaded.';
             await this.showError(String(message));
-            this.modalParams.closeCallback(createdExpense);
+            this.modalParams.closeCallback(savedExpense);
           },
         });
       },
@@ -182,7 +195,7 @@ export class AddExpenseComponent {
         const message =
           error?.error?.message ||
           error?.message ||
-          'Could not create expense.';
+          this.isEditMode ? 'Could not update expense.' : 'Could not create expense.';
         await this.showError(String(message));
       },
     });
@@ -741,6 +754,7 @@ export class AddExpenseComponent {
       next: (res) => {
         const types = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [];
         this.allExpenseTypes = types;
+        this.syncInitialCategorySelection();
         this.applyExpenseTypeFilter();
         this.isLoadingTypes = false;
         this.cdr.detectChanges();
@@ -764,7 +778,7 @@ export class AddExpenseComponent {
           item.title = String(category?.name || category?.description || `Category ${category?.id || ''}`);
           return item;
         });
-        this.selectedCategoryIndex = 0;
+        this.syncInitialCategorySelection();
         this.applyExpenseTypeFilter();
         this.isLoadingCategories = false;
         this.cdr.detectChanges();
@@ -796,9 +810,17 @@ export class AddExpenseComponent {
       String(type?.name || type?.description || `Type ${type?.id || ''}`)
     );
 
+    const desiredExpenseTypeId = Number(
+      this.expenseForm.controls.expenseTypeId.value ||
+      this.existingExpense?.expenseTypeId ||
+      this.existingExpense?.expenseType?.id ||
+      0
+    );
+    const desiredIndex = this.expenseTypes.findIndex((type: any) => Number(type?.id || 0) === desiredExpenseTypeId);
+
     if (this.expenseTypes.length) {
-      this.selectedTypeIndex = 0;
-      this.expenseForm.controls.expenseTypeId.setValue(Number(this.expenseTypes[0]?.id || 0));
+      this.selectedTypeIndex = desiredIndex >= 0 ? desiredIndex : 0;
+      this.expenseForm.controls.expenseTypeId.setValue(Number(this.expenseTypes[this.selectedTypeIndex]?.id || 0));
     } else {
       this.selectedTypeIndex = 0;
       this.expenseForm.controls.expenseTypeId.setValue(0);
@@ -807,5 +829,35 @@ export class AddExpenseComponent {
     if (this.viewReady) {
       this.cdr.detectChanges();
     }
+  }
+
+  private hydrateExistingExpense(): void {
+    if (!this.isEditMode) {
+      return;
+    }
+
+    this.noteText = String(this.existingExpense?.notes || '');
+    this.amount = Number(this.existingExpense?.amount || 0);
+    this.amountText = this.formatPriceInput(this.amount);
+    this.expenseForm.controls.amount.setValue(this.amountText);
+    this.expenseForm.controls.expenseTypeId.setValue(
+      Number(this.existingExpense?.expenseTypeId || this.existingExpense?.expenseType?.id || 0)
+    );
+  }
+
+  private syncInitialCategorySelection(): void {
+    if (!this.isEditMode || !this.expenseCategories.length || !this.allExpenseTypes.length) {
+      if (!this.expenseCategories.length) {
+        return;
+      }
+      this.selectedCategoryIndex = this.selectedCategoryIndex || 0;
+      return;
+    }
+
+    const expenseTypeId = Number(this.existingExpense?.expenseTypeId || this.existingExpense?.expenseType?.id || 0);
+    const selectedType = this.allExpenseTypes.find((type: any) => Number(type?.id || 0) === expenseTypeId);
+    const categoryId = Number(selectedType?.expenseCategoryId ?? selectedType?.categoryId ?? 0);
+    const nextIndex = this.expenseCategories.findIndex((category: any) => Number(category?.id || 0) === categoryId);
+    this.selectedCategoryIndex = nextIndex >= 0 ? nextIndex : 0;
   }
 }

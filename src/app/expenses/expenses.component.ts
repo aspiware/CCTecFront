@@ -122,6 +122,10 @@ export class ExpensesComponent implements OnInit, OnDestroy {
   public getExpenseMenuOptions(item: any): Item['options'] {
     const options: Item['options'] = [
       {
+        name: 'Edit',
+        icon: 'pencil',
+      },
+      {
         name: 'Copy Amount',
         icon: 'dollarsign.circle',
       },
@@ -140,9 +144,12 @@ export class ExpensesComponent implements OnInit, OnDestroy {
   public onSelectedExpenseMenu(event: MenuEvent, item: any): void {
     switch (Number(event?.index)) {
       case 0:
-        Utils.copyToClipboard(String(item?.amount || 0));
+        this.editExpense(item);
         break;
       case 1:
+        Utils.copyToClipboard(String(item?.amount || 0));
+        break;
+      case 2:
         Utils.copyToClipboard(String(item?.displaySubtitle || ''));
         break;
       default:
@@ -168,13 +175,21 @@ export class ExpensesComponent implements OnInit, OnDestroy {
   }
 
   public addExpense(): void {
+    this.openExpenseModal();
+  }
+
+  public editExpense(expense: any): void {
+    this.openExpenseModal(expense);
+  }
+
+  private openExpenseModal(expense?: any): void {
     const userId = Number(this.user?.userId || 0);
     if (!userId) {
       return;
     }
 
     const options: any = {
-      context: { userId },
+      context: { userId, expense },
       viewContainerRef: this.vcRef,
       animated: true,
       fullscreen: false,
