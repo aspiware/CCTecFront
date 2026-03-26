@@ -825,9 +825,6 @@ export class ExpensesComponent implements OnInit, OnDestroy {
 
   private buildExpenseTitle(expense: any): string {
     return String(
-      expense?.expenseCategoryName ||
-      expense?.expenseCategory?.name ||
-      expense?.categoryName ||
       expense?.expenseTypeName ||
       expense?.expenseType?.name ||
       expense?.typeName ||
@@ -839,9 +836,6 @@ export class ExpensesComponent implements OnInit, OnDestroy {
 
   private buildExpenseSubtitle(expense: any): string {
     const parts = [
-      expense?.expenseTypeName ||
-      expense?.expenseType?.name ||
-      expense?.typeName,
       expense?.notes,
     ]
       .map((value) => String(value || '').trim())
@@ -876,7 +870,12 @@ export class ExpensesComponent implements OnInit, OnDestroy {
   }
 
   public getExpenseAttachmentLabel(count: number): string {
-    return String(Number(count || 0));
+    const total = Number(count || 0);
+    if (total === 1) {
+      return '1 file';
+    }
+
+    return `${total} files`;
   }
 
   private buildExpenseIcon(expense: any): string {
