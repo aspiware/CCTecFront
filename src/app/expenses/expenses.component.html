@@ -54,8 +54,8 @@
   <RadListView [items]="expenseList" [pullToRefresh]="!isSyncing" (loaded)="onExpensesListLoaded($event)" (tap)="dismissKeyboard()" (pullToRefreshInitiated)="onPullToRefresh($event)"
     height="100%" class="jobs-list">
     <ng-template tkListItemTemplate let-item="item">
-      <StackLayout class="expense-card">
-        <GridLayout columns="*,auto" width="100%" class="expense-card-header">
+      <GridLayout rows="auto,auto,auto,*,auto" class="expense-card">
+        <GridLayout row="0" columns="*,auto" width="100%" class="expense-card-header">
           <GridLayout col="0" columns="auto,*" class="expense-left-block">
             <Label col="0" class="expense-icon fas" [text]="item.displayIcon"></Label>
             <Label col="1" class="expense-title" [text]="item.displayTitle || 'Expense'" textWrap="false"></Label>
@@ -78,21 +78,23 @@
           </GridLayout>
         </GridLayout>
 
-        <StackLayout class="expense-divider"></StackLayout>
+        <StackLayout row="1" class="expense-divider"></StackLayout>
 
         <Label
           *ngIf="item.hasSubtitle"
+          row="2"
           class="expense-subtitle"
           [text]="item.displaySubtitle">
         </Label>
 
         <StackLayout
           *ngIf="item.hasSubtitle"
+          row="3"
           class="expense-divider"
           >
         </StackLayout>
 
-        <GridLayout columns="*,auto" class="expense-footer-row">
+        <GridLayout row="4" columns="*,auto" class="expense-footer-row">
           <Label
             col="0"
             class="expense-date"
@@ -108,7 +110,7 @@
             <Label col="1" class="expense-attachment-count" [text]="getExpenseAttachmentLabel(item.attachmentCount)"></Label>
           </GridLayout>
         </GridLayout>
-      </StackLayout>
+      </GridLayout>
     </ng-template>
   </RadListView>
 </StackLayout>
