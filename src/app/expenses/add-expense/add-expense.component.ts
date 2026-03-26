@@ -43,6 +43,11 @@ export class AddExpenseComponent {
   private readonly userId: number;
   private readonly expenseId: number;
   private readonly existingExpense: any;
+  private readonly initialExpenseTypeId: number;
+  private hasLoadedCategories = false;
+  private hasLoadedTypes = false;
+  private didApplyInitialExpenseSelection = false;
+  private isSyncingTypeSelection = false;
   private suppressDismissUntil = 0;
   private dismissKeyboardTimer?: ReturnType<typeof setTimeout>;
   private documentPickerDelegate?: any;
@@ -56,6 +61,7 @@ export class AddExpenseComponent {
     this.userId = Number(this.modalParams.context?.userId || 0);
     this.existingExpense = this.modalParams.context?.expense || null;
     this.expenseId = Number(this.existingExpense?.id || this.modalParams.context?.expenseId || 0);
+    this.initialExpenseTypeId = Number(this.existingExpense?.expenseTypeId || this.existingExpense?.expenseType?.id || 0);
     this.isEditMode = !!this.expenseId;
     this.modalTitle = this.isEditMode ? 'Edit Expense' : 'Add Expense';
     this.expenseForm.controls.amount.setValue(this.amountText);
@@ -204,7 +210,7 @@ export class AddExpenseComponent {
         const message =
           error?.error?.message ||
           error?.message ||
-          this.isEditMode ? 'Could not update expense.' : 'Could not create expense.';
+          (this.isEditMode ? 'Could not update expense.' : 'Could not create expense.');
         await this.showError(String(message));
       },
     });
@@ -304,6 +310,10 @@ export class AddExpenseComponent {
   }
 
   public onExpenseTypeChanged(event: any): void {
+    if (this.isSyncingTypeSelection) {
+      return;
+    }
+
     const index = Number(event?.value);
     if (Number.isNaN(index) || index < 0 || index >= this.expenseTypes.length) {
       this.expenseForm.controls.expenseTypeId.setValue(0);
@@ -322,6 +332,7 @@ export class AddExpenseComponent {
 
     this.selectedCategoryIndex = index;
     this.applyExpenseTypeFilter();
+    this.syncTypeSelection(0);
   }
 
   public onInputTap(): void {
@@ -776,8 +787,8 @@ export class AddExpenseComponent {
       next: (res) => {
         const types = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [];
         this.allExpenseTypes = types;
-        this.syncInitialCategorySelection();
-        this.applyExpenseTypeFilter();
+        this.hasLoadedTypes = true;
+        this.initializeExpenseSelection();
         this.isLoadingTypes = false;
         this.cdr.detectChanges();
       },
@@ -800,8 +811,8 @@ export class AddExpenseComponent {
           item.title = String(category?.name || category?.description || `Category ${category?.id || ''}`);
           return item;
         });
-        this.syncInitialCategorySelection();
-        this.applyExpenseTypeFilter();
+        this.hasLoadedCategories = true;
+        this.initializeExpenseSelection();
         this.isLoadingCategories = false;
         this.cdr.detectChanges();
       },
@@ -811,6 +822,20 @@ export class AddExpenseComponent {
         await this.showError('Could not load expense categories.');
       },
     });
+  }
+
+  private initializeExpenseSelection(): void {
+    if (!this.hasLoadedCategories || !this.hasLoadedTypes) {
+      return;
+    }
+
+    if (this.isEditMode && !this.didApplyInitialExpenseSelection) {
+      this.applyInitialExpenseSelection();
+      return;
+    }
+
+    this.applyExpenseTypeFilter();
+    this.syncTypeSelection(this.getCurrentFilteredExpenseTypeIndex());
   }
 
   private applyExpenseTypeFilter(): void {
@@ -831,26 +856,6 @@ export class AddExpenseComponent {
     this.expenseTypeLabels = this.expenseTypes.map((type: any) =>
       String(type?.name || type?.description || `Type ${type?.id || ''}`)
     );
-
-    const desiredExpenseTypeId = Number(
-      this.expenseForm.controls.expenseTypeId.value ||
-      this.existingExpense?.expenseTypeId ||
-      this.existingExpense?.expenseType?.id ||
-      0
-    );
-    const desiredIndex = this.expenseTypes.findIndex((type: any) => Number(type?.id || 0) === desiredExpenseTypeId);
-
-    if (this.expenseTypes.length) {
-      this.selectedTypeIndex = desiredIndex >= 0 ? desiredIndex : 0;
-      this.expenseForm.controls.expenseTypeId.setValue(Number(this.expenseTypes[this.selectedTypeIndex]?.id || 0));
-    } else {
-      this.selectedTypeIndex = 0;
-      this.expenseForm.controls.expenseTypeId.setValue(0);
-    }
-
-    if (this.viewReady) {
-      this.cdr.detectChanges();
-    }
   }
 
   private hydrateExistingExpense(): void {
@@ -863,9 +868,7 @@ export class AddExpenseComponent {
     this.amountText = this.formatPriceInput(this.amount);
     this.expenseDate = this.parseExistingExpenseDate(this.existingExpense?.expenseDate);
     this.expenseForm.controls.amount.setValue(this.amountText);
-    this.expenseForm.controls.expenseTypeId.setValue(
-      Number(this.existingExpense?.expenseTypeId || this.existingExpense?.expenseType?.id || 0)
-    );
+    this.expenseForm.controls.expenseTypeId.setValue(this.initialExpenseTypeId || this.getDesiredExpenseTypeId());
   }
 
   private parseExistingExpenseDate(value: any): Date {
@@ -890,10 +893,102 @@ export class AddExpenseComponent {
       return;
     }
 
-    const expenseTypeId = Number(this.existingExpense?.expenseTypeId || this.existingExpense?.expenseType?.id || 0);
-    const selectedType = this.allExpenseTypes.find((type: any) => Number(type?.id || 0) === expenseTypeId);
+    const expenseTypeId = this.getDesiredExpenseTypeId();
+    const selectedType = this.findExpenseTypeByIdOrName(this.allExpenseTypes, expenseTypeId);
     const categoryId = Number(selectedType?.expenseCategoryId ?? selectedType?.categoryId ?? 0);
     const nextIndex = this.expenseCategories.findIndex((category: any) => Number(category?.id || 0) === categoryId);
     this.selectedCategoryIndex = nextIndex >= 0 ? nextIndex : 0;
+  }
+
+  private applyInitialExpenseSelection(): void {
+    this.syncInitialCategorySelection();
+    this.applyExpenseTypeFilter();
+    this.didApplyInitialExpenseSelection = true;
+    this.syncTypeSelection(this.getDesiredExpenseTypeIndex(this.initialExpenseTypeId));
+  }
+
+  private getCurrentFilteredExpenseTypeIndex(): number {
+    const currentExpenseTypeId = Number(this.expenseForm.controls.expenseTypeId.value || 0);
+    const currentIndex = this.expenseTypes.findIndex((type: any) => Number(type?.id || 0) === currentExpenseTypeId);
+    if (currentIndex >= 0) {
+      return currentIndex;
+    }
+
+    return this.expenseTypes.length ? 0 : -1;
+  }
+
+  private syncTypeSelection(index: number): void {
+    const resolvedIndex = index >= 0 && index < this.expenseTypes.length ? index : (this.expenseTypes.length ? 0 : -1);
+    const resolvedExpenseTypeId = resolvedIndex >= 0
+      ? Number(this.expenseTypes[resolvedIndex]?.id || 0)
+      : 0;
+
+    this.isSyncingTypeSelection = true;
+    this.selectedTypeIndex = resolvedIndex >= 0 ? resolvedIndex : 0;
+    this.expenseForm.controls.expenseTypeId.setValue(resolvedExpenseTypeId);
+    this.cdr.detectChanges();
+
+    setTimeout(() => {
+      this.selectedTypeIndex = resolvedIndex >= 0 ? resolvedIndex : 0;
+      this.expenseForm.controls.expenseTypeId.setValue(resolvedExpenseTypeId);
+      this.cdr.detectChanges();
+      this.isSyncingTypeSelection = false;
+    }, 0);
+  }
+
+  private getDesiredExpenseTypeId(): number {
+    const directId = Number(
+      this.initialExpenseTypeId ||
+      0
+    );
+
+    if (directId) {
+      return directId;
+    }
+
+    const matchingType = this.findExpenseTypeByIdOrName(this.allExpenseTypes, 0);
+    return Number(matchingType?.id || 0);
+  }
+
+  private getDesiredExpenseTypeIndex(expenseTypeId: number): number {
+    const byIdIndex = this.expenseTypes.findIndex((type: any) => Number(type?.id || 0) === expenseTypeId);
+    if (byIdIndex >= 0) {
+      return byIdIndex;
+    }
+
+    const targetName = this.getExistingExpenseTypeName();
+    if (!targetName) {
+      return -1;
+    }
+
+    return this.expenseTypes.findIndex((type: any) => this.normalizeLabel(type?.name || type?.description) === targetName);
+  }
+
+  private findExpenseTypeByIdOrName(types: any[], expenseTypeId: number): any {
+    const byId = types.find((type: any) => Number(type?.id || 0) === expenseTypeId);
+    if (byId) {
+      return byId;
+    }
+
+    const targetName = this.getExistingExpenseTypeName();
+    if (!targetName) {
+      return null;
+    }
+
+    return types.find((type: any) => this.normalizeLabel(type?.name || type?.description) === targetName) || null;
+  }
+
+  private getExistingExpenseTypeName(): string {
+    return this.normalizeLabel(
+      this.existingExpense?.expenseTypeName ||
+      this.existingExpense?.expenseType?.name ||
+      this.existingExpense?.typeName ||
+      this.existingExpense?.displayTitle ||
+      ''
+    );
+  }
+
+  private normalizeLabel(value: any): string {
+    return String(value || '').trim().toLowerCase();
   }
 }
