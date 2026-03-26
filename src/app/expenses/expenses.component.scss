@@ -99,8 +99,8 @@ TextField.custom-tf-inline {
 }
 
 .expense-icon {
-  width: 44;
-  font-size: 28;
+  width: 36;
+  font-size: 22;
   color: #f27a1a;
   vertical-align: middle;
   horizontal-align: center;
@@ -121,7 +121,7 @@ TextField.custom-tf-inline {
   margin-right: 12;
   font-size: 18;
   font-weight: 700;
-  color: #1a8cff;
+  color: #f5f7fb;
   text-align: right;
   vertical-align: middle;
   horizontal-align: right;
@@ -147,7 +147,7 @@ TextField.custom-tf-inline {
   font-weight: 400;
   margin-top: 0;
   margin-bottom: 0;
-  color: #d8deea;
+  color: #aeb5c2;
 }
 
 .expense-footer-row {
@@ -157,7 +157,7 @@ TextField.custom-tf-inline {
 .expense-date {
   font-size: 13;
   font-weight: 400;
-  color: rgba(228, 232, 244, 0.8);
+  color: #878f9e;
 }
 
 .expense-attachments {
@@ -167,13 +167,13 @@ TextField.custom-tf-inline {
 .expense-attachment-icon {
   margin-right: 8;
   font-size: 18;
-  color: rgba(228, 232, 244, 0.8);
+  color: #878f9e;
 }
 
 .expense-attachment-count {
   font-size: 13;
   font-weight: 400;
-  color: rgba(228, 232, 244, 0.8);
+  color: #878f9e;
 }
 
 .ns-light .input-shell,
