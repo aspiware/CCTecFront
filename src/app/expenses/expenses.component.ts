@@ -120,25 +120,23 @@ export class ExpensesComponent implements OnInit, OnDestroy {
   }
 
   public getExpenseMenuOptions(item: any): Item['options'] {
-    const options: Item['options'] = [
+    return [
       {
         name: 'Edit',
         icon: 'pencil',
       },
       {
-        name: 'Copy Amount',
-        icon: 'dollarsign.circle',
+        name: 'Delete',
+        icon: 'trash',
+        destructive: true,
+        confirm: {
+          title: 'Delete expense?',
+          confirmText: 'Delete',
+          cancelText: 'Cancel',
+          presentation: 'anchor' as const,
+        },
       },
     ];
-
-    if (String(item?.displaySubtitle || '').trim()) {
-      options.push({
-        name: 'Copy Details',
-        icon: 'doc.on.doc',
-      });
-    }
-
-    return options;
   }
 
   public onSelectedExpenseMenu(event: MenuEvent, item: any): void {
@@ -147,10 +145,7 @@ export class ExpensesComponent implements OnInit, OnDestroy {
         this.editExpense(item);
         break;
       case 1:
-        Utils.copyToClipboard(String(item?.amount || 0));
-        break;
-      case 2:
-        Utils.copyToClipboard(String(item?.displaySubtitle || ''));
+        this.deleteExpense(item);
         break;
       default:
         break;
@@ -251,6 +246,30 @@ export class ExpensesComponent implements OnInit, OnDestroy {
 
   public editExpense(expense: any): void {
     this.openExpenseModal(expense);
+  }
+
+  public deleteExpense(expense: any): void {
+    const expenseId = Number(expense?.id || 0);
+    if (!expenseId) {
+      return;
+    }
+
+    this.expensesService.delete(expenseId).subscribe({
+      next: () => {
+        this.loadExpenses();
+      },
+      error: async (error) => {
+        const message =
+          error?.error?.message ||
+          error?.message ||
+          'Could not delete expense.';
+        await alert({
+          title: 'Expenses',
+          message: String(message),
+          okButtonText: 'OK',
+        });
+      },
+    });
   }
 
   private openExpenseModal(expense?: any): void {

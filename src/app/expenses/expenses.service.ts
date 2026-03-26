@@ -106,6 +106,20 @@ export class ExpensesService {
     );
   }
 
+  public delete(id: number): Observable<any> {
+    if (!id) {
+      return of(null);
+    }
+
+    if (this.usersService.isDemoUser()) {
+      return of({ id, deleted: true });
+    }
+
+    return this.httpClient.delete<any>(
+      `${this.configService.getUrlBase()}/expenses/${id}`
+    );
+  }
+
   public uploadFiles(expenseId: number, files: ExpenseUploadFile[]): Observable<any> {
     if (!expenseId || !files?.length) {
       return of(null);
