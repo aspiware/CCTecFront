@@ -853,22 +853,6 @@ export class ExpensesComponent implements OnInit, OnDestroy {
     );
   }
 
-  public formatExpenseCardDate(value: string): string {
-    if (!value) {
-      return 'No date';
-    }
-
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) {
-      return 'No date';
-    }
-
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const month = months[date.getMonth()] || '';
-    const day = date.getDate();
-    return `${month} ${day}`;
-  }
-
   public getExpenseAttachmentLabel(count: number): string {
     const total = Number(count || 0);
     if (total === 1) {

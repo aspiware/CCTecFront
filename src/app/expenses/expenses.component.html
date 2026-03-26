@@ -92,7 +92,7 @@
           <Label
             col="0"
             class="expense-date"
-            [text]="formatExpenseCardDate(item.displayTimestamp)">
+            [text]="item.displayTimestamp ? (item.displayTimestamp | date: 'MMM d') : 'No date'">
           </Label>
           <GridLayout col="1" columns="auto,auto" class="expense-attachments" [visibility]="item.attachmentCount ? 'visible' : 'collapse'">
             <Label col="0" class="fas expense-attachment-icon" text="&#xf0c6;"></Label>
