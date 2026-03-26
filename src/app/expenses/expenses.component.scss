@@ -107,7 +107,7 @@ TextField.custom-tf-inline {
 }
 
 .expense-title {
-  margin-left: 10;
+  margin-left: 1;
   margin-right: 14;
   font-size: 25;
   font-weight: 700;
@@ -137,15 +137,15 @@ TextField.custom-tf-inline {
 
 .expense-divider {
   height: 1;
-  margin-top: 16;
-  margin-bottom: 16;
+  margin-top: 8;
+  margin-bottom: 8;
   background-color: rgba(145, 153, 176, 0.28);
 }
 
 .expense-subtitle {
   font-size: 20;
-  margin-top: 2;
-  margin-bottom: 2;
+  margin-top: 0;
+  margin-bottom: 0;
   color: #d8deea;
 }
 
