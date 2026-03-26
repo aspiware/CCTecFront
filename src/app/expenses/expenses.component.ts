@@ -45,6 +45,8 @@ export class ExpensesComponent implements OnInit, OnDestroy {
   public isDemoMode = false;
   public isDarkTheme = Application.systemAppearance() === 'dark';
   public expensesSearch = '';
+  public expenseFilterKey: 'all' | 'with_files' | 'without_files' | 'with_notes' | 'without_notes' = 'all';
+  public selectedExpenseCategoryFilter = '';
 
   constructor(
     private usersService: UsersService,
@@ -118,6 +120,71 @@ export class ExpensesComponent implements OnInit, OnDestroy {
 
   public dismissKeyboard(): void {
     Utils.dismissKeyboard();
+  }
+
+  public get expenseFilterMenuOptions(): Item['options'] {
+    return [
+      { name: 'All Expenses', icon: 'line.3.horizontal.decrease.circle' },
+      { name: 'With Files', icon: 'paperclip' },
+      { name: 'Without Files', icon: 'paperclip.circle' },
+      { name: 'With Notes', icon: 'note.text' },
+      { name: 'Without Notes', icon: 'note.text.badge.plus' },
+      {
+        name: 'Category',
+        icon: 'square.grid.2x2',
+        children: [
+          { name: 'All Categories', icon: 'circle.grid.2x2' },
+          ...this.getAvailableExpenseCategories().map((category) => ({
+            name: category,
+            icon: 'tag',
+          })),
+        ],
+      },
+    ];
+  }
+
+  public onSelectedExpenseFilterMenu(event: MenuEvent): void {
+    const path = Array.isArray(event?.path) ? event.path : [Number(event?.index)];
+    const [rootIndex, childIndex] = path;
+
+    if (rootIndex === 5) {
+      if (childIndex === 0) {
+        this.selectedExpenseCategoryFilter = '';
+        this.applyExpensesFilter();
+      } else if (typeof childIndex === 'number' && childIndex > 0) {
+        const categories = this.getAvailableExpenseCategories();
+        this.selectedExpenseCategoryFilter = categories[childIndex - 1] || '';
+        this.applyExpensesFilter();
+      }
+      return;
+    }
+
+    switch (Number(rootIndex)) {
+      case 0:
+        this.expenseFilterKey = 'all';
+        this.selectedExpenseCategoryFilter = '';
+        break;
+      case 1:
+        this.expenseFilterKey = 'with_files';
+        this.selectedExpenseCategoryFilter = '';
+        break;
+      case 2:
+        this.expenseFilterKey = 'without_files';
+        this.selectedExpenseCategoryFilter = '';
+        break;
+      case 3:
+        this.expenseFilterKey = 'with_notes';
+        this.selectedExpenseCategoryFilter = '';
+        break;
+      case 4:
+        this.expenseFilterKey = 'without_notes';
+        this.selectedExpenseCategoryFilter = '';
+        break;
+      default:
+        return;
+    }
+
+    this.applyExpensesFilter();
   }
 
   public getExpenseMenuOptions(item: any): Item['options'] {
@@ -843,7 +910,7 @@ export class ExpensesComponent implements OnInit, OnDestroy {
 
   private applyExpensesFilter(): void {
     const query = this.expensesSearch.trim().toLowerCase();
-    const filteredJobs = !query
+    const searchFilteredJobs = !query
       ? [...this.allJobs]
       : this.allJobs.filter((job) => {
           const haystack = [
@@ -861,10 +928,48 @@ export class ExpensesComponent implements OnInit, OnDestroy {
           return haystack.includes(query);
         });
 
+    const filteredJobs = searchFilteredJobs.filter((job) => this.matchesExpenseFilter(job));
+
     this.expenseList = new ObservableArray(filteredJobs);
     this.totalAmount = this.usersService.isDemoUser(this.user)
       ? this.demoWeeklyTotal
       : filteredJobs.reduce((sum, job) => sum + Number(job?.amount || 0), 0);
+  }
+
+  private matchesExpenseFilter(expense: any): boolean {
+    const categoryMatches = !this.selectedExpenseCategoryFilter ||
+      this.normalizeExpenseCategoryName(expense?.expenseCategoryName) === this.normalizeExpenseCategoryName(this.selectedExpenseCategoryFilter);
+
+    if (!categoryMatches) {
+      return false;
+    }
+
+    switch (this.expenseFilterKey) {
+      case 'with_files':
+        return Number(expense?.attachmentCount || 0) > 0;
+      case 'without_files':
+        return Number(expense?.attachmentCount || 0) === 0;
+      case 'with_notes':
+        return !!this.getExpenseNotesText(expense);
+      case 'without_notes':
+        return !this.getExpenseNotesText(expense);
+      default:
+        return true;
+    }
+  }
+
+  private getAvailableExpenseCategories(): string[] {
+    const uniqueNames = new Set(
+      this.allJobs
+        .map((expense) => String(expense?.expenseCategoryName || '').trim())
+        .filter(Boolean)
+    );
+
+    return Array.from(uniqueNames).sort((a, b) => a.localeCompare(b));
+  }
+
+  private normalizeExpenseCategoryName(value: any): string {
+    return String(value || '').trim().toLowerCase();
   }
 
   private normalizeExpensesResponse(response: any): any[] {

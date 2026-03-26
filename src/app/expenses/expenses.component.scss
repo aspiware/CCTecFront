@@ -17,6 +17,28 @@
   vertical-align: middle;
 }
 
+.expense-filter-button-shell {
+  width: 44;
+  height: 44;
+  margin-top: 6;
+  margin-right: 10;
+  margin-bottom: 6;
+  border-radius: 22;
+  border-width: 1;
+  vertical-align: middle;
+  horizontal-align: center;
+}
+
+.expense-filter-button {
+  width: 44;
+  height: 37;
+  font-size: 20;
+  background-color: transparent;
+  vertical-align: middle;
+  horizontal-align: center;
+  text-align: center;
+}
+
 .date-filter-block {
   width: 150;
 }
@@ -209,7 +231,13 @@ TextField.custom-tf-inline {
 }
 
 .ns-light .input-shell,
+.ns-light .expense-filter-button-shell,
 .container.theme-light .input-shell {
+  background-color: #ffffff;
+  border-color: #d1d1d6;
+}
+
+.container.theme-light .expense-filter-button-shell {
   background-color: #ffffff;
   border-color: #d1d1d6;
 }
@@ -221,12 +249,20 @@ TextField.custom-tf-inline {
 }
 
 .ns-light .search-icon,
-.container.theme-light .search-icon {
+.container.theme-light .search-icon,
+.ns-light .expense-filter-button,
+.container.theme-light .expense-filter-button {
   color: #3a3a3c;
 }
 
 .ns-dark .input-shell,
+.ns-dark .expense-filter-button-shell,
 .container.theme-dark .input-shell {
+  background-color: rgba(128, 128, 128, 0.219) !important;
+  border-color: #48484a !important;
+}
+
+.container.theme-dark .expense-filter-button-shell {
   background-color: rgba(128, 128, 128, 0.219) !important;
   border-color: #48484a !important;
 }
@@ -280,6 +316,8 @@ TextField.custom-tf-inline {
 }
 
 .ns-dark .search-icon,
-.container.theme-dark .search-icon {
+.container.theme-dark .search-icon,
+.ns-dark .expense-filter-button,
+.container.theme-dark .expense-filter-button {
   color: #f2f2f7 !important;
 }

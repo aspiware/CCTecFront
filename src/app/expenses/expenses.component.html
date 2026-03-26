@@ -31,8 +31,18 @@
       </StackLayout>
     </GridLayout>
 
-    <GridLayout row="1" columns="*" class="search-row">
-      <GridLayout columns="*,auto" class="input-shell" width="100%">
+    <GridLayout row="1" columns="auto,*" class="search-row">
+      <GridLayout col="0" class="" horizontalAlignment="center" verticalAlignment="middle">
+        <MenuButton
+          class="expense-filter-button"
+          [useSFIcon]="true"
+          [sfIconName]="'line.3.horizontal.decrease.circle'"
+          [options]="expenseFilterMenuOptions"
+          (selected)="onSelectedExpenseFilterMenu($event)">
+        </MenuButton>
+      </GridLayout>
+
+      <GridLayout col="1" columns="*,auto" class="input-shell" width="100%">
         <TextField
           col="0"
           hint="Search by type, note, or category"
