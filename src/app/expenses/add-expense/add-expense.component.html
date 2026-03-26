@@ -33,6 +33,15 @@
             </SegmentedBar>
           </GridLayout>
 
+          <GridLayout columns="auto" class="expense-date-row">
+            <DatePicker
+              class="expense-date-picker"
+              [date]="expenseDate"
+              [maxDate]="todayDate"
+              (dateChange)="onExpenseDateChange($event)">
+            </DatePicker>
+          </GridLayout>
+
           <GridLayout columns="*,auto" class="field-block expense-entry-row">
             <ListPicker
               col="0"

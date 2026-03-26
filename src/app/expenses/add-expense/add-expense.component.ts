@@ -20,6 +20,8 @@ export class AddExpenseComponent {
   public viewReady = false;
   public isEditMode = false;
   public modalTitle = 'Add Expense';
+  public expenseDate = new Date();
+  public todayDate = new Date();
   public noteText = '';
   public isLoadingCategories = false;
   public isLoadingTypes = false;
@@ -137,6 +139,7 @@ export class AddExpenseComponent {
 
     const expenseTypeId = Number(this.expenseForm.controls.expenseTypeId.value);
     const amount = Number(this.amount);
+    const expenseDate = this.formatExpenseDateForPayload(this.expenseDate);
 
     if (!expenseTypeId || Number.isNaN(expenseTypeId)) {
       this.showError('Expense type is required.');
@@ -155,12 +158,14 @@ export class AddExpenseComponent {
           expenseTypeId,
           amount,
           notes: notes || undefined,
+          expenseDate,
         })
       : this.expensesService.create({
           userId: this.userId,
           expenseTypeId,
           amount,
           notes: notes || undefined,
+          expenseDate,
         });
 
     request$.subscribe({
@@ -186,9 +191,9 @@ export class AddExpenseComponent {
             const message =
               error?.error?.message ||
               error?.message ||
-              this.isEditMode
+              (this.isEditMode
                 ? 'Expense was updated, but files could not be uploaded.'
-                : 'Expense was created, but files could not be uploaded.';
+                : 'Expense was created, but files could not be uploaded.');
             await this.showError(String(message));
             this.modalParams.closeCallback(savedExpense);
           },
@@ -353,6 +358,11 @@ export class AddExpenseComponent {
     this.expenseForm.controls.amount.setValue(this.amountText);
   }
 
+  public onExpenseDateChange(event: any): void {
+    const nextDate = event?.value instanceof Date ? event.value : this.expenseDate;
+    this.expenseDate = nextDate;
+  }
+
   private showError(message: string): Promise<void> {
     return alert({
       title: 'Expenses',
@@ -378,6 +388,14 @@ export class AddExpenseComponent {
     const beforeDot = clean.slice(0, firstDot + 1);
     const afterDot = clean.slice(firstDot + 1).replace(/\./g, '');
     return `${beforeDot}${afterDot}`;
+  }
+
+  private formatExpenseDateForPayload(value: Date): string {
+    const date = value instanceof Date ? value : new Date(value);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   private isTextInputTap(event: any): boolean {
@@ -843,10 +861,24 @@ export class AddExpenseComponent {
     this.noteText = String(this.existingExpense?.notes || '');
     this.amount = Number(this.existingExpense?.amount || 0);
     this.amountText = this.formatPriceInput(this.amount);
+    this.expenseDate = this.parseExistingExpenseDate(this.existingExpense?.expenseDate);
     this.expenseForm.controls.amount.setValue(this.amountText);
     this.expenseForm.controls.expenseTypeId.setValue(
       Number(this.existingExpense?.expenseTypeId || this.existingExpense?.expenseType?.id || 0)
     );
+  }
+
+  private parseExistingExpenseDate(value: any): Date {
+    if (!value) {
+      return new Date();
+    }
+
+    const parsedDate = new Date(value);
+    if (!Number.isNaN(parsedDate.getTime())) {
+      return parsedDate;
+    }
+
+    return new Date();
   }
 
   private syncInitialCategorySelection(): void {

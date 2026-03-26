@@ -11,12 +11,14 @@ export type CreateExpenseDto = {
   expenseTypeId: number;
   amount: number;
   notes?: string;
+  expenseDate?: string;
 };
 
 export type UpdateExpenseDto = {
   expenseTypeId: number;
   amount: number;
   notes?: string;
+  expenseDate?: string;
 };
 
 export type ExpenseUploadFile = {
