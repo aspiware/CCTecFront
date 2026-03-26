@@ -124,19 +124,53 @@ export class ExpensesComponent implements OnInit, OnDestroy {
 
   public get expenseFilterMenuOptions(): Item['options'] {
     return [
-      { name: 'All Expenses', icon: 'line.3.horizontal.decrease.circle' },
-      { name: 'With Files', icon: 'paperclip' },
-      { name: 'Without Files', icon: 'paperclip.circle' },
-      { name: 'With Notes', icon: 'note.text' },
-      { name: 'Without Notes', icon: 'note.text.badge.plus' },
+      {
+        name: 'All Expenses',
+        icon: 'line.3.horizontal.decrease.circle',
+        toggle: true,
+        checked: this.expenseFilterKey === 'all' && !this.selectedExpenseCategoryFilter,
+      },
+      {
+        name: 'With Files',
+        icon: 'paperclip',
+        toggle: true,
+        checked: this.expenseFilterKey === 'with_files',
+      },
+      {
+        name: 'Without Files',
+        icon: 'paperclip.circle',
+        toggle: true,
+        checked: this.expenseFilterKey === 'without_files',
+      },
+      {
+        name: 'With Notes',
+        icon: 'note.text',
+        toggle: true,
+        checked: this.expenseFilterKey === 'with_notes',
+      },
+      {
+        name: 'Without Notes',
+        icon: 'note.text.badge.plus',
+        toggle: true,
+        checked: this.expenseFilterKey === 'without_notes',
+      },
       {
         name: 'Category',
         icon: 'square.grid.2x2',
+        toggle: true,
+        checked: !!this.selectedExpenseCategoryFilter,
         children: [
-          { name: 'All Categories', icon: 'circle.grid.2x2' },
+          {
+            name: 'All Categories',
+            icon: 'circle.grid.2x2',
+            toggle: true,
+            checked: !this.selectedExpenseCategoryFilter,
+          },
           ...this.getAvailableExpenseCategories().map((category) => ({
             name: category,
             icon: 'tag',
+            toggle: true,
+            checked: this.normalizeExpenseCategoryName(category) === this.normalizeExpenseCategoryName(this.selectedExpenseCategoryFilter),
           })),
         ],
       },

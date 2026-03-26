@@ -41,6 +41,10 @@ export class MenuButton extends MenuButtonBase {
         if (option.disabled) {
           item.setEnabled(false);
         }
+        if (option.toggle) {
+          item.setCheckable(true);
+          item.setChecked(!!option.checked);
+        }
       }
     };
 
