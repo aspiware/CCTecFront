@@ -85,6 +85,8 @@ TextField.custom-tf-inline {
 
 .expense-card-header {
   vertical-align: middle;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .expense-left-block {
@@ -101,6 +103,7 @@ TextField.custom-tf-inline {
   font-size: 28;
   color: #f27a1a;
   vertical-align: middle;
+  horizontal-align: center;
 }
 
 .expense-title {
@@ -110,6 +113,7 @@ TextField.custom-tf-inline {
   font-weight: 700;
   color: #f5f7fb;
   vertical-align: middle;
+  horizontal-align: left;
   text-overflow: ellipsis;
 }
 
@@ -125,9 +129,10 @@ TextField.custom-tf-inline {
 
 .expense-menu-button {
   margin-left: 8;
+  margin-top: 10;
   color: #f1f3f8;
   vertical-align: middle;
-  horizontal-align: right;
+  horizontal-align: center;
 }
 
 .expense-divider {

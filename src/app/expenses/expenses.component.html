@@ -63,16 +63,18 @@
 
           <GridLayout col="1" columns="auto,35" class="expense-right-actions" horizontalAlignment="right">
             <Label col="0" class="expense-amount" [text]="(item.amount || 0) | currency"></Label>
-            <StackLayout col="1" horizontalAlignment="right" verticalAlignment="middle">
+            <GridLayout col="1" width="35" horizontalAlignment="center" verticalAlignment="middle">
               <MenuButton
                 class="expense-menu-button"
                 style="background-color: transparent; height: 24; width: 35;"
+                verticalAlignment="middle"
+                horizontalAlignment="center"
                 [useSFIcon]="true"
                 [sfIconName]="'ellipsis.circle'"
                 [options]="getExpenseMenuOptions(item)"
                 (selected)="onSelectedExpenseMenu($event, item)">
               </MenuButton>
-            </StackLayout>
+            </GridLayout>
           </GridLayout>
         </GridLayout>
 
