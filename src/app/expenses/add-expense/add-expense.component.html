@@ -33,24 +33,25 @@
             </SegmentedBar>
           </GridLayout>
 
-          <GridLayout columns="auto" class="expense-date-row">
-            <DatePicker
-              class="expense-date-picker"
-              [date]="expenseDate"
-              [maxDate]="todayDate"
-              (dateChange)="onExpenseDateChange($event)">
-            </DatePicker>
-          </GridLayout>
-
-          <GridLayout columns="*,auto" class="field-block expense-entry-row">
+          <GridLayout columns="*" class="field-block">
             <ListPicker
-              col="0"
               class="job-type-picker"
               [items]="expenseTypeLabels"
               [selectedIndex]="selectedTypeIndex"
               [isEnabled]="!isSaving && !isLoadingTypes"
               (selectedIndexChange)="onExpenseTypeChanged($event)">
             </ListPicker>
+          </GridLayout>
+
+          <GridLayout columns="*,auto" class="field-block expense-entry-row">
+            <DatePicker
+              col="0"
+              horizontalAlignment="left"
+              class="expense-date-picker"
+              [date]="expenseDate"
+              [maxDate]="todayDate"
+              (dateChange)="onExpenseDateChange($event)">
+            </DatePicker>
 
             <GridLayout col="1" columns="auto,*" class="input-shell amount-input-shell">
               <Label col="0" class="currency-prefix" text="$"></Label>
@@ -66,7 +67,7 @@
                 (focus)="onAmountFocus()"
                 (blur)="onAmountBlur()">
               </TextField>
-            </GridLayout>
+            </GridLayout>  
           </GridLayout>
 
           <TextView
