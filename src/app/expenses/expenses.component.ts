@@ -629,6 +629,7 @@ export class ExpensesComponent implements OnInit, OnDestroy {
         displaySubtitle: this.buildExpenseSubtitle(expense),
         displayTimestamp: this.buildExpenseTimestamp(expense),
         attachmentCount: this.getAttachmentCount(expense),
+        displayIcon: this.buildExpenseIcon(expense),
       }))
       .sort((a, b) => {
         const aTime = new Date(a?.displayTimestamp || a?.createdAt || 0).getTime();
@@ -820,6 +821,55 @@ export class ExpensesComponent implements OnInit, OnDestroy {
       expense?.updatedAt ||
       ''
     );
+  }
+
+  public formatExpenseCardDate(value: string): string {
+    if (!value) {
+      return 'No date';
+    }
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return 'No date';
+    }
+
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+    }).format(date);
+  }
+
+  public getExpenseAttachmentLabel(count: number): string {
+    return String(Number(count || 0));
+  }
+
+  private buildExpenseIcon(expense: any): string {
+    const haystack = [
+      expense?.expenseTypeName,
+      expense?.expenseCategoryName,
+      expense?.notes,
+      expense?.description,
+    ]
+      .map((value) => String(value || '').trim().toLowerCase())
+      .join(' ');
+
+    if (haystack.includes('gas') || haystack.includes('fuel') || haystack.includes('gasoline')) {
+      return '\uf52f';
+    }
+
+    if (haystack.includes('food') || haystack.includes('meal') || haystack.includes('restaurant')) {
+      return '\uf2e7';
+    }
+
+    if (haystack.includes('hotel') || haystack.includes('lodging')) {
+      return '\uf594';
+    }
+
+    if (haystack.includes('tool') || haystack.includes('material') || haystack.includes('supply')) {
+      return '\uf1b3';
+    }
+
+    return '\uf555';
   }
 
   private getAttachmentCount(expense: any): number {

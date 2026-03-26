@@ -71,79 +71,97 @@ TextField.custom-tf-inline {
   height: 44;
 }
 
-.item-bag {
-  margin: 0 0 10 0;
-  padding: 10;
-  border-radius: 8;
-  background-color: rgba(126, 151, 185, 0.2);
-}
-
-.item-bag {
-  background-color: rgba(126, 151, 185, 0.308);
+.expense-card {
+  margin-top: 8;
   margin-left: 10;
   margin-right: 10;
-  border-radius: 5;
-  margin-top: 7;
+  margin-bottom: 8;
+  padding: 18 18 14 18;
+  border-radius: 18;
+  border-width: 1;
+  background-color: #10131b;
+  border-color: rgba(121, 129, 152, 0.35);
 }
 
-.status-icon {
-  width: 22;
-  font-size: 16;
-  margin-top: 2;
+.expense-card-header {
+  vertical-align: middle;
 }
 
-.floating-status {
-  horizontal-align: left;
-  vertical-align: top;
-  margin-left: 5;
-  margin-top: 0;
-  z-index: 10;
+.expense-icon {
+  width: 44;
+  font-size: 28;
+  color: #f27a1a;
+  vertical-align: middle;
 }
 
-.status-closed {
-  color: #65b56b;
-}
-
-.status-open {
-  color: #c79042;
-}
-
-.status-current {
-  color: #5a90d6;
-}
-
-.status-default {
-  color: #888;
-}
-
-.first-row {
-  font-size: 15;
+.expense-title {
+  margin-left: 10;
+  margin-right: 10;
+  font-size: 25;
   font-weight: 700;
+  color: #f5f7fb;
+  vertical-align: middle;
 }
 
-.amount {
+.expense-amount {
+  margin-right: 12;
+  font-size: 25;
+  font-weight: 700;
+  color: #1a8cff;
   text-align: right;
+  vertical-align: middle;
 }
 
-.second-row {
-  font-size: 12;
-  margin-top: 15;
+.expense-menu-dot {
+  border-radius: 28;
+  background-color: #222633;
+  vertical-align: middle;
 }
 
-.units {
-  text-align: right;
+.expense-menu-dot-icon {
+  font-size: 18;
+  color: #f1f3f8;
+  text-align: center;
+  vertical-align: middle;
 }
 
-.secondRow {
-  font-size: 12;
+.expense-divider {
+  height: 1;
+  margin-top: 16;
+  margin-bottom: 16;
+  background-color: rgba(145, 153, 176, 0.28);
 }
 
-.compact {
-  margin-top: 8;
+.expense-subtitle {
+  font-size: 19;
+  line-height: 8;
+  color: rgba(220, 225, 238, 0.74);
 }
 
-.expense-meta-row {
-  margin-top: 10;
+.expense-footer-row {
+  vertical-align: middle;
+}
+
+.expense-date {
+  font-size: 18;
+  font-weight: 600;
+  color: rgba(228, 232, 244, 0.8);
+}
+
+.expense-attachments {
+  vertical-align: middle;
+}
+
+.expense-attachment-icon {
+  margin-right: 8;
+  font-size: 18;
+  color: rgba(228, 232, 244, 0.8);
+}
+
+.expense-attachment-count {
+  font-size: 18;
+  font-weight: 600;
+  color: rgba(228, 232, 244, 0.8);
 }
 
 .ns-light .input-shell,

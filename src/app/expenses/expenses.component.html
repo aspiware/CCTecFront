@@ -54,29 +54,36 @@
   <RadListView [items]="expenseList" [pullToRefresh]="!isSyncing" (loaded)="onExpensesListLoaded($event)" (tap)="dismissKeyboard()" (pullToRefreshInitiated)="onPullToRefresh($event)"
     height="100%" class="jobs-list">
     <ng-template tkListItemTemplate let-item="item">
-      <StackLayout class="item-bag">
-        <GridLayout columns="*,auto" width="100%" class="item-header">
-          <Label col="0" class="first-row" [text]="item.displayTitle || 'Expense'"></Label>
-          <Label col="1" class="first-row amount" [text]="(item.amount || 0) | currency"></Label>
+      <StackLayout class="expense-card">
+        <GridLayout columns="auto,*,auto,auto" width="100%" class="expense-card-header">
+          <Label col="0" class="expense-icon fas" [text]="item.displayIcon"></Label>
+          <Label col="1" class="expense-title" [text]="item.displayTitle || 'Expense'"></Label>
+          <Label col="2" class="expense-amount" [text]="(item.amount || 0) | currency"></Label>
+          <GridLayout col="3" class="expense-menu-dot" width="56" height="56">
+            <Label class="fas expense-menu-dot-icon" text="&#xf141;"></Label>
+          </GridLayout>
         </GridLayout>
+
+        <StackLayout class="expense-divider"></StackLayout>
 
         <Label
           *ngIf="item.displaySubtitle"
-          class="second-row compact"
+          class="expense-subtitle"
           [text]="item.displaySubtitle">
         </Label>
 
-        <GridLayout columns="*,auto" class="expense-meta-row">
+        <StackLayout class="expense-divider"></StackLayout>
+
+        <GridLayout columns="*,auto" class="expense-footer-row">
           <Label
             col="0"
-            class="secondRow compact"
-            [text]="item.displayTimestamp ? (item.displayTimestamp | date: 'MMM d, y h:mm a') : 'No date'">
+            class="expense-date"
+            [text]="formatExpenseCardDate(item.displayTimestamp)">
           </Label>
-          <Label
-            col="1"
-            class="secondRow compact units"
-            [text]="item.attachmentCount ? (item.attachmentCount + ' file(s)') : 'No files'">
-          </Label>
+          <GridLayout col="1" columns="auto,auto" class="expense-attachments" [visibility]="item.attachmentCount ? 'visible' : 'collapse'">
+            <Label col="0" class="fas expense-attachment-icon" text="&#xf0c6;"></Label>
+            <Label col="1" class="expense-attachment-count" [text]="getExpenseAttachmentLabel(item.attachmentCount)"></Label>
+          </GridLayout>
         </GridLayout>
       </StackLayout>
     </ng-template>
