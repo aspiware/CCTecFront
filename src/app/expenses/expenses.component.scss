@@ -79,8 +79,6 @@ TextField.custom-tf-inline {
   padding: 18 18 14 18;
   border-radius: 18;
   border-width: 1;
-  background-color: #10131b;
-  border-color: rgba(121, 129, 152, 0.35);
 }
 
 .expense-card-header {
@@ -101,7 +99,6 @@ TextField.custom-tf-inline {
 .expense-icon {
   width: 36;
   font-size: 22;
-  color: #f27a1a;
   vertical-align: middle;
   horizontal-align: center;
 }
@@ -111,7 +108,6 @@ TextField.custom-tf-inline {
   margin-right: 14;
   font-size: 16;
   font-weight: 600;
-  color: #f5f7fb;
   vertical-align: middle;
   horizontal-align: left;
   text-overflow: ellipsis;
@@ -121,7 +117,6 @@ TextField.custom-tf-inline {
   margin-right: 12;
   font-size: 18;
   font-weight: 700;
-  color: #f5f7fb;
   text-align: right;
   vertical-align: middle;
   horizontal-align: right;
@@ -130,7 +125,6 @@ TextField.custom-tf-inline {
 .expense-menu-button {
   margin-left: 8;
   margin-top: 10;
-  color: #f1f3f8;
   vertical-align: middle;
   horizontal-align: center;
 }
@@ -139,7 +133,6 @@ TextField.custom-tf-inline {
   height: 1;
   margin-top: 8;
   margin-bottom: 8;
-  background-color: rgba(145, 153, 176, 0.28);
 }
 
 .expense-subtitle {
@@ -147,7 +140,6 @@ TextField.custom-tf-inline {
   font-weight: 400;
   margin-top: 0;
   margin-bottom: 0;
-  color: #aeb5c2;
 }
 
 .expense-footer-row {
@@ -157,7 +149,6 @@ TextField.custom-tf-inline {
 .expense-date {
   font-size: 13;
   font-weight: 400;
-  color: #878f9e;
 }
 
 .expense-attachments {
@@ -167,13 +158,53 @@ TextField.custom-tf-inline {
 .expense-attachment-icon {
   margin-right: 8;
   font-size: 18;
-  color: #878f9e;
 }
 
 .expense-attachment-count {
   font-size: 13;
   font-weight: 400;
-  color: #878f9e;
+}
+
+.ns-light .expense-card,
+.container.theme-light .expense-card {
+  background-color: #ffffff;
+  border-color: rgba(44, 62, 94, 0.12);
+}
+
+.ns-light .expense-icon,
+.container.theme-light .expense-icon {
+  color: #f27a1a;
+}
+
+.ns-light .expense-title,
+.container.theme-light .expense-title,
+.ns-light .expense-amount,
+.container.theme-light .expense-amount {
+  color: #1f2430;
+}
+
+.ns-light .expense-menu-button,
+.container.theme-light .expense-menu-button {
+  color: #5c6372;
+}
+
+.ns-light .expense-divider,
+.container.theme-light .expense-divider {
+  background-color: rgba(44, 62, 94, 0.1);
+}
+
+.ns-light .expense-subtitle,
+.container.theme-light .expense-subtitle {
+  color: #6b7280;
+}
+
+.ns-light .expense-date,
+.container.theme-light .expense-date,
+.ns-light .expense-attachment-icon,
+.container.theme-light .expense-attachment-icon,
+.ns-light .expense-attachment-count,
+.container.theme-light .expense-attachment-count {
+  color: #9ca3af;
 }
 
 .ns-light .input-shell,
@@ -197,6 +228,48 @@ TextField.custom-tf-inline {
 .container.theme-dark .input-shell {
   background-color: rgba(128, 128, 128, 0.219) !important;
   border-color: #48484a !important;
+}
+
+.ns-dark .expense-card,
+.container.theme-dark .expense-card {
+  background-color: #10131b;
+  border-color: rgba(121, 129, 152, 0.35);
+}
+
+.ns-dark .expense-icon,
+.container.theme-dark .expense-icon {
+  color: #f27a1a;
+}
+
+.ns-dark .expense-title,
+.container.theme-dark .expense-title,
+.ns-dark .expense-amount,
+.container.theme-dark .expense-amount {
+  color: #f5f7fb;
+}
+
+.ns-dark .expense-menu-button,
+.container.theme-dark .expense-menu-button {
+  color: #f1f3f8;
+}
+
+.ns-dark .expense-divider,
+.container.theme-dark .expense-divider {
+  background-color: rgba(145, 153, 176, 0.28);
+}
+
+.ns-dark .expense-subtitle,
+.container.theme-dark .expense-subtitle {
+  color: #aeb5c2;
+}
+
+.ns-dark .expense-date,
+.container.theme-dark .expense-date,
+.ns-dark .expense-attachment-icon,
+.container.theme-dark .expense-attachment-icon,
+.ns-dark .expense-attachment-count,
+.container.theme-dark .expense-attachment-count {
+  color: #878f9e;
 }
 
 .ns-dark TextField.custom-tf-inline,
