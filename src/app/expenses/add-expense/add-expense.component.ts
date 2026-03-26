@@ -219,6 +219,16 @@ export class AddExpenseComponent {
     }
   }
 
+  private async pickPhotos(): Promise<void> {
+    try {
+      const files = await this.openPhotoLibraryPicker();
+      await this.appendSelectedFiles(files);
+    } catch (error: any) {
+      const message = error?.message || 'Could not select photos.';
+      await this.showError(String(message));
+    }
+  }
+
   private async appendSelectedFiles(files: ExpenseUploadFile[]): Promise<void> {
     if (!files.length) {
       return;
@@ -441,6 +451,35 @@ export class AddExpenseComponent {
     });
   }
 
+  private openPhotoLibraryPicker(): Promise<ExpenseUploadFile[]> {
+    return new Promise((resolve, reject) => {
+      try {
+        if (!UIImagePickerController.isSourceTypeAvailable(UIImagePickerControllerSourceType.PhotoLibrary)) {
+          reject(new Error('Photos are not available on this device.'));
+          return;
+        }
+
+        const visibleViewController = this.getVisibleViewController();
+        if (!visibleViewController) {
+          reject(new Error('Could not present photo library.'));
+          return;
+        }
+
+        const picker = UIImagePickerController.new();
+        picker.sourceType = UIImagePickerControllerSourceType.PhotoLibrary;
+        picker.mediaTypes = NSArray.arrayWithObject('public.image');
+        picker.allowsEditing = false;
+
+        const delegate = this.createImagePickerDelegate(resolve, reject);
+        this.imagePickerDelegate = delegate;
+        picker.delegate = delegate;
+        visibleViewController.presentViewControllerAnimatedCompletion(picker, true, null);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
   private openAttachmentSourceMenu(sourceView?: UIView): void {
     const visibleViewController = this.getVisibleViewController();
     if (!visibleViewController) {
@@ -457,6 +496,12 @@ export class AddExpenseComponent {
     alertController.addAction(
       UIAlertAction.actionWithTitleStyleHandler('Camera', UIAlertActionStyle.Default, () => {
         void this.takePhoto();
+      })
+    );
+
+    alertController.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Photos', UIAlertActionStyle.Default, () => {
+        void this.pickPhotos();
       })
     );
 

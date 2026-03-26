@@ -8,6 +8,8 @@
 	<string>We need your location to provide better services</string>
 	<key>NSCameraUsageDescription</key>
 	<string>We need camera access so you can attach photos to expenses.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We need photo library access so you can attach photos to expenses.</string>
 	<key>TNSGoogleMapsAPIKey</key>
     <string>AIzaSyBNVIJXKHOqApWiY7MTkfNIphBBeE75jcI</string>
 	<key>CFBundleDevelopmentRegion</key>
