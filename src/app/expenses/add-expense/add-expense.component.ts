@@ -56,6 +56,7 @@ export class AddExpenseComponent {
   private suppressDismissUntil = 0;
   private dismissKeyboardTimer?: ReturnType<typeof setTimeout>;
   private documentPickerDelegate?: any;
+  private imagePickerDelegate?: any;
 
   constructor(
     private modalParams: ModalDialogParams,
@@ -187,7 +188,7 @@ export class AddExpenseComponent {
     });
   }
 
-  public async pickFiles(): Promise<void> {
+  public async pickFiles(event?: any): Promise<void> {
     this.onInputTap();
 
     if (!isIOS) {
@@ -195,34 +196,52 @@ export class AddExpenseComponent {
       return;
     }
 
+    this.openAttachmentSourceMenu(event?.object?.ios as UIView | undefined);
+  }
+
+  private async pickDocuments(): Promise<void> {
     try {
       const files = await this.openDocumentPicker();
-      if (!files.length) {
-        return;
-      }
-
-      const existingPaths = new Set(this.selectedFiles.map((file) => file.path));
-      const dedupedFiles = files.filter((file) => !existingPaths.has(file.path));
-      if (!dedupedFiles.length) {
-        return;
-      }
-
-      const availableSlots = AddExpenseComponent.MAX_ATTACHMENTS - this.selectedFiles.length;
-      if (availableSlots <= 0) {
-        await this.showError(`You can attach up to ${AddExpenseComponent.MAX_ATTACHMENTS} files.`);
-        return;
-      }
-
-      const filesToAdd = dedupedFiles.slice(0, availableSlots);
-      this.selectedFiles = [...this.selectedFiles, ...filesToAdd];
-      this.cdr.detectChanges();
-
-      if (dedupedFiles.length > availableSlots) {
-        await this.showError(`Only ${AddExpenseComponent.MAX_ATTACHMENTS} files can be attached.`);
-      }
+      await this.appendSelectedFiles(files);
     } catch (error: any) {
       const message = error?.message || 'Could not select files.';
       await this.showError(String(message));
+    }
+  }
+
+  private async takePhoto(): Promise<void> {
+    try {
+      const files = await this.openCameraPicker();
+      await this.appendSelectedFiles(files);
+    } catch (error: any) {
+      const message = error?.message || 'Could not capture photo.';
+      await this.showError(String(message));
+    }
+  }
+
+  private async appendSelectedFiles(files: ExpenseUploadFile[]): Promise<void> {
+    if (!files.length) {
+      return;
+    }
+
+    const existingPaths = new Set(this.selectedFiles.map((file) => file.path));
+    const dedupedFiles = files.filter((file) => !existingPaths.has(file.path));
+    if (!dedupedFiles.length) {
+      return;
+    }
+
+    const availableSlots = AddExpenseComponent.MAX_ATTACHMENTS - this.selectedFiles.length;
+    if (availableSlots <= 0) {
+      await this.showError(`You can attach up to ${AddExpenseComponent.MAX_ATTACHMENTS} files.`);
+      return;
+    }
+
+    const filesToAdd = dedupedFiles.slice(0, availableSlots);
+    this.selectedFiles = [...this.selectedFiles, ...filesToAdd];
+    this.cdr.detectChanges();
+
+    if (dedupedFiles.length > availableSlots) {
+      await this.showError(`Only ${AddExpenseComponent.MAX_ATTACHMENTS} files can be attached.`);
     }
   }
 
@@ -393,6 +412,81 @@ export class AddExpenseComponent {
     });
   }
 
+  private openCameraPicker(): Promise<ExpenseUploadFile[]> {
+    return new Promise((resolve, reject) => {
+      try {
+        if (!UIImagePickerController.isSourceTypeAvailable(UIImagePickerControllerSourceType.Camera)) {
+          reject(new Error('Camera is not available on this device.'));
+          return;
+        }
+
+        const visibleViewController = this.getVisibleViewController();
+        if (!visibleViewController) {
+          reject(new Error('Could not present camera.'));
+          return;
+        }
+
+        const picker = UIImagePickerController.new();
+        picker.sourceType = UIImagePickerControllerSourceType.Camera;
+        picker.mediaTypes = NSArray.arrayWithObject('public.image');
+        picker.allowsEditing = false;
+
+        const delegate = this.createImagePickerDelegate(resolve, reject);
+        this.imagePickerDelegate = delegate;
+        picker.delegate = delegate;
+        visibleViewController.presentViewControllerAnimatedCompletion(picker, true, null);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  private openAttachmentSourceMenu(sourceView?: UIView): void {
+    const visibleViewController = this.getVisibleViewController();
+    if (!visibleViewController) {
+      this.showError('Could not present attachment options.');
+      return;
+    }
+
+    const alertController = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
+      'Attach',
+      'Choose attachment source',
+      UIAlertControllerStyle.ActionSheet
+    );
+
+    alertController.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Camera', UIAlertActionStyle.Default, () => {
+        void this.takePhoto();
+      })
+    );
+
+    alertController.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Files', UIAlertActionStyle.Default, () => {
+        void this.pickDocuments();
+      })
+    );
+
+    alertController.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, null)
+    );
+
+    const popover = alertController.popoverPresentationController;
+    if (popover) {
+      popover.sourceView = sourceView || visibleViewController.view;
+      popover.sourceRect = sourceView
+        ? sourceView.bounds
+        : CGRectMake(
+            visibleViewController.view.bounds.size.width / 2,
+            visibleViewController.view.bounds.size.height / 2,
+            1,
+            1
+          );
+      popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
+    }
+
+    visibleViewController.presentViewControllerAnimatedCompletion(alertController, true, null);
+  }
+
   private getVisibleViewController(): UIViewController | null {
     const sharedApplication = UIApplication.sharedApplication;
     const keyWindow =
@@ -443,6 +537,42 @@ export class AddExpenseComponent {
     );
 
     return DelegateClass.new() as UIDocumentPickerDelegate;
+  }
+
+  private createImagePickerDelegate(
+    resolver: (files: ExpenseUploadFile[]) => void,
+    rejecter: (error: any) => void
+  ): UIImagePickerControllerDelegate & UINavigationControllerDelegate {
+    const owner = new WeakRef(this);
+    const DelegateClass = (NSObject as any).extend(
+      {
+        imagePickerControllerDidCancel(controller: UIImagePickerController) {
+          controller.dismissViewControllerAnimatedCompletion(true, null);
+          resolver([]);
+        },
+
+        imagePickerControllerDidFinishPickingMediaWithInfo(
+          controller: UIImagePickerController,
+          info: NSDictionary<any, any>
+        ) {
+          controller.dismissViewControllerAnimatedCompletion(true, null);
+          const component = owner.deref();
+          if (!component) {
+            resolver([]);
+            return;
+          }
+
+          const file = component.createCapturedImageFile(info);
+          resolver(file ? [file] : []);
+        },
+      },
+      {
+        protocols: [UIImagePickerControllerDelegate, UINavigationControllerDelegate],
+        name: 'ExpenseImagePickerDelegateImpl',
+      }
+    );
+
+    return DelegateClass.new() as UIImagePickerControllerDelegate & UINavigationControllerDelegate;
   }
 
   public handleDocumentPickerUrls(urls: NSArray<NSURL> | NSURL[]): ExpenseUploadFile[] {
@@ -505,6 +635,31 @@ export class AddExpenseComponent {
       path: tempPath,
       size: Number(copiedFile.size || 0),
       mimeType: this.getMimeType(fileName),
+    };
+  }
+
+  private createCapturedImageFile(info: NSDictionary<any, any>): ExpenseUploadFile | null {
+    const image =
+      info?.objectForKey(UIImagePickerControllerOriginalImage) ||
+      info?.objectForKey(UIImagePickerControllerEditedImage);
+    if (!image) {
+      return null;
+    }
+
+    const fileName = `photo-${Date.now()}.jpg`;
+    const tempPath = path.join(knownFolders.temp().path, fileName);
+    const imageData = UIImageJPEGRepresentation(image, 0.9);
+    if (!imageData) {
+      return null;
+    }
+
+    imageData.writeToFileAtomically(tempPath, true);
+    const savedFile = File.fromPath(tempPath);
+    return {
+      name: fileName,
+      path: tempPath,
+      size: Number(savedFile.size || 0),
+      mimeType: 'image/jpeg',
     };
   }
 
