@@ -94,7 +94,12 @@
             class="expense-date"
             [text]="item.displayTimestamp ? (item.displayTimestamp | date: 'MMM d') : 'No date'">
           </Label>
-          <GridLayout col="1" columns="auto,auto" class="expense-attachments" [visibility]="item.attachmentCount ? 'visible' : 'collapse'">
+          <GridLayout
+            col="1"
+            columns="auto,auto"
+            class="expense-attachments"
+            [visibility]="item.attachmentCount ? 'visible' : 'collapse'"
+            (tap)="showExpenseFiles($event, item)">
             <Label col="0" class="fas expense-attachment-icon" text="&#xf0c6;"></Label>
             <Label col="1" class="expense-attachment-count" [text]="getExpenseAttachmentLabel(item.attachmentCount)"></Label>
           </GridLayout>

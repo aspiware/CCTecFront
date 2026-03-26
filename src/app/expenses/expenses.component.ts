@@ -157,6 +157,77 @@ export class ExpensesComponent implements OnInit, OnDestroy {
     }
   }
 
+  public async showExpenseFiles(event: any, item: any): Promise<void> {
+    const files = Array.isArray(item?.files) ? item.files : [];
+    if (!files.length) {
+      return;
+    }
+
+    if (!__IOS__) {
+      const message = files
+        .map((file: any, index: number) => `${index + 1}. ${this.getExpenseFileName(file, index)}`)
+        .join('\n');
+      await alert({
+        title: 'Files',
+        message,
+        okButtonText: 'OK',
+      });
+      return;
+    }
+
+    let viewController = Application.ios?.rootController;
+    while (
+      viewController &&
+      viewController.presentedViewController &&
+      !viewController.presentedViewController.beingDismissed
+    ) {
+      viewController = viewController.presentedViewController;
+    }
+
+    if (!viewController?.view) {
+      return;
+    }
+
+    const alertController = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
+      'Files',
+      null,
+      UIAlertControllerStyle.ActionSheet
+    );
+
+    files.forEach((file: any, index: number) => {
+      const fileName = this.getExpenseFileName(file, index);
+      const fileUrl = this.getExpenseFileUrl(file);
+      alertController.addAction(
+        UIAlertAction.actionWithTitleStyleHandler(fileName, UIAlertActionStyle.Default, () => {
+          if (fileUrl) {
+            Utils.openUrl(encodeURI(fileUrl));
+          }
+        })
+      );
+    });
+
+    alertController.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, null)
+    );
+
+    const sourceView = event?.object?.ios as UIView | undefined;
+    const popover = alertController.popoverPresentationController;
+    if (popover) {
+      popover.sourceView = sourceView || viewController.view;
+      popover.sourceRect = sourceView
+        ? sourceView.bounds
+        : CGRectMake(
+            viewController.view.bounds.size.width / 2,
+            viewController.view.bounds.size.height / 2,
+            1,
+            1
+          );
+      popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
+    }
+
+    viewController.presentViewControllerAnimatedCompletion(alertController, true, null);
+  }
+
   public onExpensesListLoaded(event: any): void {
     if (!__IOS__) {
       return;
@@ -875,6 +946,72 @@ export class ExpensesComponent implements OnInit, OnDestroy {
     }
 
     return `${total} files`;
+  }
+
+  private getExpenseFileName(file: any, index: number): string {
+    const directName = String(
+      file?.name ||
+      file?.filename ||
+      file?.fileName ||
+      file?.originalFilename ||
+      file?.originalname ||
+      ''
+    ).trim();
+    if (directName) {
+      return directName;
+    }
+
+    const rawValue = String(
+      typeof file === 'string'
+        ? file
+        : file?.path ||
+          file?.filePath ||
+          file?.url ||
+          file?.uri ||
+          file?.file ||
+          ''
+    ).trim();
+
+    if (rawValue) {
+      const sanitized = rawValue.split('?')[0].split('#')[0];
+      const segments = sanitized.split('/');
+      const lastSegment = String(segments[segments.length - 1] || '').trim();
+      if (lastSegment) {
+        return decodeURIComponent(lastSegment);
+      }
+    }
+
+    return `Attachment ${index + 1}`;
+  }
+
+  private getExpenseFileUrl(file: any): string {
+    const directUrl = String(file?.url || file?.downloadUrl || file?.previewUrl || '').trim();
+    if (directUrl) {
+      return directUrl;
+    }
+
+    const rawPath = String(file?.filePath || file?.path || file?.uri || '').trim();
+    if (!rawPath) {
+      return '';
+    }
+
+    if (/^https?:\/\//i.test(rawPath)) {
+      return rawPath;
+    }
+
+    const uploadsIndex = rawPath.indexOf('/uploads/');
+    if (uploadsIndex < 0) {
+      return '';
+    }
+
+    const uploadsPath = rawPath.slice(uploadsIndex);
+    return `${this.getApiOrigin()}${uploadsPath}`;
+  }
+
+  private getApiOrigin(): string {
+    const baseUrl = String(this.configService.getUrlBase() || '').trim();
+    const match = baseUrl.match(/^(https?:\/\/[^/]+)/i);
+    return match?.[1] || baseUrl;
   }
 
   private buildExpenseIcon(expense: any): string {
