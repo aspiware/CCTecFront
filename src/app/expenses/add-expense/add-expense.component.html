@@ -70,7 +70,7 @@
             class="notes-input">
           </TextView>
 
-          <GridLayout columns="auto,*" class="attachments-header" [visibility]="!isEditMode ? 'visible' : 'collapse'">
+          <GridLayout columns="auto,*" class="attachments-header">
             <Button
               col="0"
               text="Attach Files"
@@ -88,7 +88,7 @@
 
           <StackLayout
             class="attachments-list"
-            [visibility]="!isEditMode && selectedFiles.length ? 'visible' : 'collapse'">
+            [visibility]="selectedFiles.length ? 'visible' : 'collapse'">
             <GridLayout
               *ngFor="let file of selectedFiles; let i = index"
               columns="*,auto"

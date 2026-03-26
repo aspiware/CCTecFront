@@ -166,15 +166,17 @@ export class AddExpenseComponent {
     request$.subscribe({
       next: async (res) => {
         const savedExpense = res || true;
-        const createdExpenseId = this.extractExpenseId(res);
+        const targetExpenseId = this.isEditMode
+          ? this.expenseId
+          : this.extractExpenseId(res);
 
-        if (this.isEditMode || !this.selectedFiles.length || !createdExpenseId) {
+        if (!this.selectedFiles.length || !targetExpenseId) {
           this.isSaving = false;
           this.modalParams.closeCallback(savedExpense);
           return;
         }
 
-        this.expensesService.uploadFiles(createdExpenseId, this.selectedFiles).subscribe({
+        this.expensesService.uploadFiles(targetExpenseId, this.selectedFiles).subscribe({
           next: () => {
             this.isSaving = false;
             this.modalParams.closeCallback(savedExpense);
@@ -184,7 +186,9 @@ export class AddExpenseComponent {
             const message =
               error?.error?.message ||
               error?.message ||
-              'Expense was created, but files could not be uploaded.';
+              this.isEditMode
+                ? 'Expense was updated, but files could not be uploaded.'
+                : 'Expense was created, but files could not be uploaded.';
             await this.showError(String(message));
             this.modalParams.closeCallback(savedExpense);
           },
