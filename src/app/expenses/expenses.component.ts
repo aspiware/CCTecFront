@@ -24,6 +24,7 @@ import { WifiConfigComponent } from '../wifi-config/wifi-config.component';
   styleUrl: './expenses.component.scss',
 })
 export class ExpensesComponent implements OnInit, OnDestroy {
+  private static readonly EXPENSE_NOTES_PREVIEW_LIMIT = 50;
   private readonly demoWeeklyTotal = 2062.75;
   private readonly demoJobs = this.buildDemoJobs();
   private readonly actionTapStates: Record<string, boolean> = {};
@@ -203,6 +204,66 @@ export class ExpensesComponent implements OnInit, OnDestroy {
 
     alertController.addAction(
       UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, null)
+    );
+
+    const sourceView = event?.object?.ios as UIView | undefined;
+    const popover = alertController.popoverPresentationController;
+    if (popover) {
+      popover.sourceView = sourceView || viewController.view;
+      popover.sourceRect = sourceView
+        ? sourceView.bounds
+        : CGRectMake(
+            viewController.view.bounds.size.width / 2,
+            viewController.view.bounds.size.height / 2,
+            1,
+            1
+          );
+      popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
+    }
+
+    viewController.presentViewControllerAnimatedCompletion(alertController, true, null);
+  }
+
+  public shouldExpandExpenseNotes(item: any): boolean {
+    return this.getExpenseNotesText(item).length > ExpensesComponent.EXPENSE_NOTES_PREVIEW_LIMIT;
+  }
+
+  public async showExpenseNotes(event: any, item: any): Promise<void> {
+    const notes = this.getExpenseNotesText(item);
+    if (!notes || !this.shouldExpandExpenseNotes(item)) {
+      return;
+    }
+
+    if (!__IOS__) {
+      await alert({
+        title: 'Notes',
+        message: notes,
+        okButtonText: 'Close',
+      });
+      return;
+    }
+
+    let viewController = Application.ios?.rootController;
+    while (
+      viewController &&
+      viewController.presentedViewController &&
+      !viewController.presentedViewController.beingDismissed
+    ) {
+      viewController = viewController.presentedViewController;
+    }
+
+    if (!viewController?.view) {
+      return;
+    }
+
+    const alertController = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
+      'Notes',
+      notes,
+      UIAlertControllerStyle.ActionSheet
+    );
+
+    alertController.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Close', UIAlertActionStyle.Cancel, null)
     );
 
     const sourceView = event?.object?.ios as UIView | undefined;
@@ -948,6 +1009,10 @@ export class ExpensesComponent implements OnInit, OnDestroy {
       .filter(Boolean);
 
     return parts.join(' • ');
+  }
+
+  private getExpenseNotesText(expense: any): string {
+    return String(expense?.notes || '').trim();
   }
 
   private hasExpenseSubtitle(expense: any): boolean {

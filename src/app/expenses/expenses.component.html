@@ -84,7 +84,9 @@
           *ngIf="item.hasSubtitle"
           row="2"
           class="expense-subtitle"
-          [text]="item.displaySubtitle">
+          [class.expense-subtitle-tappable]="shouldExpandExpenseNotes(item)"
+          [text]="item.displaySubtitle"
+          (tap)="showExpenseNotes($event, item)">
         </Label>
 
         <StackLayout
