@@ -156,44 +156,15 @@ export class MenuButton extends MenuButtonBase {
 
     for (let i = 0; i < options.length; i++) {
       const option = options[i];
-
-      const iconImage = option.icon ? UIImage.systemImageNamed(option.icon) : null;
-
-      const action = UIAction.actionWithTitleImageIdentifierHandler(
-        option.name,
-        iconImage,
-        null,
-        () => {
-          if (option.confirm) {
-            this.showConfirmSheet(iosButton, option, i);
-          } else {
-            this.notify({
-              eventName: 'selected',
-              object: this,
-              index: i,
-            });
-          }
-        }
-      );
-
-      let attributes = 0 as UIMenuElementAttributes;
-      if (option.disabled) {
-        attributes = (attributes | UIMenuElementAttributes.Disabled) as UIMenuElementAttributes;
-      }
-      if (option.destructive) {
-        attributes = (attributes | UIMenuElementAttributes.Destructive) as UIMenuElementAttributes;
-      }
-      if (attributes) {
-        action.attributes = attributes;
-      }
-      if (option.toggle) {
-        action.state = option.checked ? UIMenuElementState.On : UIMenuElementState.Off;
+      const element = this.createMenuElement(iosButton, option, [i]);
+      if (!element) {
+        continue;
       }
 
-      if (option.destructive) {
-        destructiveActions.push(action);
+      if (option.destructive && !option.children?.length) {
+        destructiveActions.push(element);
       } else {
-        regularActions.push(action);
+        regularActions.push(element);
       }
     }
 
@@ -239,6 +210,64 @@ export class MenuButton extends MenuButtonBase {
       );
     }
     iosButton.showsMenuAsPrimaryAction = true;
+  }
+
+  private createMenuElement(
+    iosButton: UIButton,
+    option: MenuButtonAction,
+    path: number[]
+  ): UIMenuElement | null {
+    const iconImage = option.icon ? UIImage.systemImageNamed(option.icon) : null;
+
+    if (option.children?.length) {
+      const children = option.children
+        .map((child, index) => this.createMenuElement(iosButton, child, [...path, index]))
+        .filter((child): child is UIMenuElement => !!child);
+
+      const submenu = UIMenu.menuWithTitleImageIdentifierOptionsChildren(
+        option.name,
+        iconImage,
+        null,
+        0 as UIMenuOptions,
+        children
+      );
+
+      return submenu;
+    }
+
+    const action = UIAction.actionWithTitleImageIdentifierHandler(
+      option.name,
+      iconImage,
+      null,
+      () => {
+        if (option.confirm) {
+          this.showConfirmSheet(iosButton, option, path);
+        } else {
+          this.notify({
+            eventName: 'selected',
+            object: this,
+            index: path[0],
+            path,
+          });
+        }
+      }
+    );
+
+    let attributes = 0 as UIMenuElementAttributes;
+    if (option.disabled) {
+      attributes = (attributes | UIMenuElementAttributes.Disabled) as UIMenuElementAttributes;
+    }
+    if (option.destructive) {
+      attributes = (attributes | UIMenuElementAttributes.Destructive) as UIMenuElementAttributes;
+    }
+    if (attributes) {
+      action.attributes = attributes;
+    }
+    if (option.toggle) {
+      action.state = option.checked ? UIMenuElementState.On : UIMenuElementState.Off;
+    }
+
+    return action;
   }
 
   private resolveInsets(
@@ -308,7 +337,7 @@ export class MenuButton extends MenuButtonBase {
     return UIColor.blackColor;
   }
 
-  private showConfirmSheet(iosButton: UIButton, option: MenuButtonAction, index: number) {
+  private showConfirmSheet(iosButton: UIButton, option: MenuButtonAction, path: number[]) {
     const confirmConfig =
       typeof option.confirm === 'object' ? option.confirm : {};
     const confirmText = confirmConfig.confirmText || option.name;
@@ -335,7 +364,8 @@ export class MenuButton extends MenuButtonBase {
         this.notify({
           eventName: 'selected',
           object: this,
-          index,
+          index: path[0],
+          path,
         });
       })
     );

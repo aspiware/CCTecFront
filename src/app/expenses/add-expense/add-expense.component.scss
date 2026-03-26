@@ -93,6 +93,22 @@
   margin-bottom: 8;
 }
 
+.expense-date-picker {
+  width: 130;
+  margin-top: 8;
+  margin-bottom: 4;
+  horizontal-align: left;
+  vertical-align: middle;
+}
+
+.expense-date-block {
+  width: 150;
+}
+
+.expense-date-filter-row {
+  width: 150;
+}
+
 .job-type-picker {
   margin-top: 8;
   margin-bottom: 4;
@@ -157,6 +173,14 @@ TextField.custom-tf-inline {
 .ns-dark .input-shell {
   border-color: #48484a;
   background-color: #25262c;
+}
+
+.ns-light .expense-date-picker {
+  color: #000000;
+}
+
+.ns-dark .expense-date-picker {
+  color: #f2f3f5;
 }
 
 .ns-dark .currency-prefix,

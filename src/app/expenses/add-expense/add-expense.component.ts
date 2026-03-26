@@ -18,6 +18,10 @@ export class AddExpenseComponent {
   private static readonly MAX_ATTACHMENTS = 5;
   public isSaving = false;
   public viewReady = false;
+  public isEditMode = false;
+  public modalTitle = 'Add Expense';
+  public expenseDate = new Date();
+  public todayDate = new Date();
   public noteText = '';
   public isLoadingCategories = false;
   public isLoadingTypes = false;
@@ -31,31 +35,23 @@ export class AddExpenseComponent {
   public selectedCategoryIndex = 0;
   public selectedTypeIndex = 0;
   public selectedFiles: ExpenseUploadFile[] = [];
-  public mainMenu: Item = {
-    name: 'Main Menu',
-    options: [
-      {
-        name: 'Save',
-        icon: 'checkmark.circle',
-        destructive: true,
-        confirm: {
-          title: 'Save expense?',
-          confirmText: 'Save',
-          cancelText: 'Cancel',
-          presentation: 'anchor',
-        },
-      }
-    ],
-  };
   public expenseForm = new FormGroup({
     expenseTypeId: new FormControl(0, { nonNullable: true, validators: [Validators.required] }),
     amount: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
   });
 
   private readonly userId: number;
+  private readonly expenseId: number;
+  private readonly existingExpense: any;
+  private readonly initialExpenseTypeId: number;
+  private hasLoadedCategories = false;
+  private hasLoadedTypes = false;
+  private didApplyInitialExpenseSelection = false;
+  private isSyncingTypeSelection = false;
   private suppressDismissUntil = 0;
   private dismissKeyboardTimer?: ReturnType<typeof setTimeout>;
   private documentPickerDelegate?: any;
+  private imagePickerDelegate?: any;
 
   constructor(
     private modalParams: ModalDialogParams,
@@ -63,7 +59,13 @@ export class AddExpenseComponent {
     private cdr: ChangeDetectorRef
   ) {
     this.userId = Number(this.modalParams.context?.userId || 0);
+    this.existingExpense = this.modalParams.context?.expense || null;
+    this.expenseId = Number(this.existingExpense?.id || this.modalParams.context?.expenseId || 0);
+    this.initialExpenseTypeId = Number(this.existingExpense?.expenseTypeId || this.existingExpense?.expenseType?.id || 0);
+    this.isEditMode = !!this.expenseId;
+    this.modalTitle = this.isEditMode ? 'Edit Expense' : 'Add Expense';
     this.expenseForm.controls.amount.setValue(this.amountText);
+    this.hydrateExistingExpense();
   }
 
   ngOnInit(): void {
@@ -76,7 +78,19 @@ export class AddExpenseComponent {
   }
 
   get mainMenuOptions() {
-    return this.mainMenu.options;
+    return [
+      {
+        name: this.isEditMode ? 'Update' : 'Save',
+        icon: 'checkmark.circle',
+        destructive: true,
+        confirm: {
+          title: this.isEditMode ? 'Update expense?' : 'Save expense?',
+          confirmText: this.isEditMode ? 'Update' : 'Save',
+          cancelText: 'Cancel',
+          presentation: 'anchor' as const,
+        },
+      },
+    ];
   }
 
   public closeWithoutSave(): void {
@@ -131,6 +145,7 @@ export class AddExpenseComponent {
 
     const expenseTypeId = Number(this.expenseForm.controls.expenseTypeId.value);
     const amount = Number(this.amount);
+    const expenseDate = this.formatExpenseDateForPayload(this.expenseDate);
 
     if (!expenseTypeId || Number.isNaN(expenseTypeId)) {
       this.showError('Expense type is required.');
@@ -144,35 +159,49 @@ export class AddExpenseComponent {
 
     this.isSaving = true;
     const notes = String(this.noteText || '').trim();
-    this.expensesService.create({
-      userId: this.userId,
-      expenseTypeId,
-      amount,
-      notes: notes || undefined,
-    }).subscribe({
-      next: async (res) => {
-        const createdExpense = res || true;
-        const createdExpenseId = this.extractExpenseId(res);
+    const request$ = this.isEditMode
+      ? this.expensesService.update(this.expenseId, {
+          expenseTypeId,
+          amount,
+          notes: notes || undefined,
+          expenseDate,
+        })
+      : this.expensesService.create({
+          userId: this.userId,
+          expenseTypeId,
+          amount,
+          notes: notes || undefined,
+          expenseDate,
+        });
 
-        if (!this.selectedFiles.length || !createdExpenseId) {
+    request$.subscribe({
+      next: async (res) => {
+        const savedExpense = res || true;
+        const targetExpenseId = this.isEditMode
+          ? this.expenseId
+          : this.extractExpenseId(res);
+
+        if (!this.selectedFiles.length || !targetExpenseId) {
           this.isSaving = false;
-          this.modalParams.closeCallback(createdExpense);
+          this.modalParams.closeCallback(savedExpense);
           return;
         }
 
-        this.expensesService.uploadFiles(createdExpenseId, this.selectedFiles).subscribe({
+        this.expensesService.uploadFiles(targetExpenseId, this.selectedFiles).subscribe({
           next: () => {
             this.isSaving = false;
-            this.modalParams.closeCallback(createdExpense);
+            this.modalParams.closeCallback(savedExpense);
           },
           error: async (error) => {
             this.isSaving = false;
             const message =
               error?.error?.message ||
               error?.message ||
-              'Expense was created, but files could not be uploaded.';
+              (this.isEditMode
+                ? 'Expense was updated, but files could not be uploaded.'
+                : 'Expense was created, but files could not be uploaded.');
             await this.showError(String(message));
-            this.modalParams.closeCallback(createdExpense);
+            this.modalParams.closeCallback(savedExpense);
           },
         });
       },
@@ -181,13 +210,13 @@ export class AddExpenseComponent {
         const message =
           error?.error?.message ||
           error?.message ||
-          'Could not create expense.';
+          (this.isEditMode ? 'Could not update expense.' : 'Could not create expense.');
         await this.showError(String(message));
       },
     });
   }
 
-  public async pickFiles(): Promise<void> {
+  public async pickFiles(event?: any): Promise<void> {
     this.onInputTap();
 
     if (!isIOS) {
@@ -195,34 +224,62 @@ export class AddExpenseComponent {
       return;
     }
 
+    this.openAttachmentSourceMenu(event?.object?.ios as UIView | undefined);
+  }
+
+  private async pickDocuments(): Promise<void> {
     try {
       const files = await this.openDocumentPicker();
-      if (!files.length) {
-        return;
-      }
-
-      const existingPaths = new Set(this.selectedFiles.map((file) => file.path));
-      const dedupedFiles = files.filter((file) => !existingPaths.has(file.path));
-      if (!dedupedFiles.length) {
-        return;
-      }
-
-      const availableSlots = AddExpenseComponent.MAX_ATTACHMENTS - this.selectedFiles.length;
-      if (availableSlots <= 0) {
-        await this.showError(`You can attach up to ${AddExpenseComponent.MAX_ATTACHMENTS} files.`);
-        return;
-      }
-
-      const filesToAdd = dedupedFiles.slice(0, availableSlots);
-      this.selectedFiles = [...this.selectedFiles, ...filesToAdd];
-      this.cdr.detectChanges();
-
-      if (dedupedFiles.length > availableSlots) {
-        await this.showError(`Only ${AddExpenseComponent.MAX_ATTACHMENTS} files can be attached.`);
-      }
+      await this.appendSelectedFiles(files);
     } catch (error: any) {
       const message = error?.message || 'Could not select files.';
       await this.showError(String(message));
+    }
+  }
+
+  private async takePhoto(): Promise<void> {
+    try {
+      const files = await this.openCameraPicker();
+      await this.appendSelectedFiles(files);
+    } catch (error: any) {
+      const message = error?.message || 'Could not capture photo.';
+      await this.showError(String(message));
+    }
+  }
+
+  private async pickPhotos(): Promise<void> {
+    try {
+      const files = await this.openPhotoLibraryPicker();
+      await this.appendSelectedFiles(files);
+    } catch (error: any) {
+      const message = error?.message || 'Could not select photos.';
+      await this.showError(String(message));
+    }
+  }
+
+  private async appendSelectedFiles(files: ExpenseUploadFile[]): Promise<void> {
+    if (!files.length) {
+      return;
+    }
+
+    const existingPaths = new Set(this.selectedFiles.map((file) => file.path));
+    const dedupedFiles = files.filter((file) => !existingPaths.has(file.path));
+    if (!dedupedFiles.length) {
+      return;
+    }
+
+    const availableSlots = AddExpenseComponent.MAX_ATTACHMENTS - this.selectedFiles.length;
+    if (availableSlots <= 0) {
+      await this.showError(`You can attach up to ${AddExpenseComponent.MAX_ATTACHMENTS} files.`);
+      return;
+    }
+
+    const filesToAdd = dedupedFiles.slice(0, availableSlots);
+    this.selectedFiles = [...this.selectedFiles, ...filesToAdd];
+    this.cdr.detectChanges();
+
+    if (dedupedFiles.length > availableSlots) {
+      await this.showError(`Only ${AddExpenseComponent.MAX_ATTACHMENTS} files can be attached.`);
     }
   }
 
@@ -253,6 +310,10 @@ export class AddExpenseComponent {
   }
 
   public onExpenseTypeChanged(event: any): void {
+    if (this.isSyncingTypeSelection) {
+      return;
+    }
+
     const index = Number(event?.value);
     if (Number.isNaN(index) || index < 0 || index >= this.expenseTypes.length) {
       this.expenseForm.controls.expenseTypeId.setValue(0);
@@ -271,6 +332,7 @@ export class AddExpenseComponent {
 
     this.selectedCategoryIndex = index;
     this.applyExpenseTypeFilter();
+    this.syncTypeSelection(0);
   }
 
   public onInputTap(): void {
@@ -307,6 +369,11 @@ export class AddExpenseComponent {
     this.expenseForm.controls.amount.setValue(this.amountText);
   }
 
+  public onExpenseDateChange(event: any): void {
+    const nextDate = event?.value instanceof Date ? event.value : this.expenseDate;
+    this.expenseDate = nextDate;
+  }
+
   private showError(message: string): Promise<void> {
     return alert({
       title: 'Expenses',
@@ -332,6 +399,14 @@ export class AddExpenseComponent {
     const beforeDot = clean.slice(0, firstDot + 1);
     const afterDot = clean.slice(firstDot + 1).replace(/\./g, '');
     return `${beforeDot}${afterDot}`;
+  }
+
+  private formatExpenseDateForPayload(value: Date): string {
+    const date = value instanceof Date ? value : new Date(value);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   private isTextInputTap(event: any): boolean {
@@ -393,6 +468,116 @@ export class AddExpenseComponent {
     });
   }
 
+  private openCameraPicker(): Promise<ExpenseUploadFile[]> {
+    return new Promise((resolve, reject) => {
+      try {
+        if (!UIImagePickerController.isSourceTypeAvailable(UIImagePickerControllerSourceType.Camera)) {
+          reject(new Error('Camera is not available on this device.'));
+          return;
+        }
+
+        const visibleViewController = this.getVisibleViewController();
+        if (!visibleViewController) {
+          reject(new Error('Could not present camera.'));
+          return;
+        }
+
+        const picker = UIImagePickerController.new();
+        picker.sourceType = UIImagePickerControllerSourceType.Camera;
+        picker.mediaTypes = NSArray.arrayWithObject('public.image');
+        picker.allowsEditing = false;
+
+        const delegate = this.createImagePickerDelegate(resolve, reject);
+        this.imagePickerDelegate = delegate;
+        picker.delegate = delegate;
+        visibleViewController.presentViewControllerAnimatedCompletion(picker, true, null);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  private openPhotoLibraryPicker(): Promise<ExpenseUploadFile[]> {
+    return new Promise((resolve, reject) => {
+      try {
+        if (!UIImagePickerController.isSourceTypeAvailable(UIImagePickerControllerSourceType.PhotoLibrary)) {
+          reject(new Error('Photos are not available on this device.'));
+          return;
+        }
+
+        const visibleViewController = this.getVisibleViewController();
+        if (!visibleViewController) {
+          reject(new Error('Could not present photo library.'));
+          return;
+        }
+
+        const picker = UIImagePickerController.new();
+        picker.sourceType = UIImagePickerControllerSourceType.PhotoLibrary;
+        picker.mediaTypes = NSArray.arrayWithObject('public.image');
+        picker.allowsEditing = false;
+
+        const delegate = this.createImagePickerDelegate(resolve, reject);
+        this.imagePickerDelegate = delegate;
+        picker.delegate = delegate;
+        visibleViewController.presentViewControllerAnimatedCompletion(picker, true, null);
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  private openAttachmentSourceMenu(sourceView?: UIView): void {
+    const visibleViewController = this.getVisibleViewController();
+    if (!visibleViewController) {
+      this.showError('Could not present attachment options.');
+      return;
+    }
+
+    const alertController = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
+      'Attach',
+      'Choose attachment source',
+      UIAlertControllerStyle.ActionSheet
+    );
+
+    alertController.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Camera', UIAlertActionStyle.Default, () => {
+        void this.takePhoto();
+      })
+    );
+
+    alertController.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Photos', UIAlertActionStyle.Default, () => {
+        void this.pickPhotos();
+      })
+    );
+
+    alertController.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Files', UIAlertActionStyle.Default, () => {
+        void this.pickDocuments();
+      })
+    );
+
+    alertController.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, null)
+    );
+
+    const popover = alertController.popoverPresentationController;
+    if (popover) {
+      popover.sourceView = sourceView || visibleViewController.view;
+      popover.sourceRect = sourceView
+        ? sourceView.bounds
+        : CGRectMake(
+            visibleViewController.view.bounds.size.width / 2,
+            visibleViewController.view.bounds.size.height / 2,
+            1,
+            1
+          );
+      popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
+    }
+
+    visibleViewController.presentViewControllerAnimatedCompletion(alertController, true, null);
+  }
+
   private getVisibleViewController(): UIViewController | null {
     const sharedApplication = UIApplication.sharedApplication;
     const keyWindow =
@@ -443,6 +628,42 @@ export class AddExpenseComponent {
     );
 
     return DelegateClass.new() as UIDocumentPickerDelegate;
+  }
+
+  private createImagePickerDelegate(
+    resolver: (files: ExpenseUploadFile[]) => void,
+    rejecter: (error: any) => void
+  ): UIImagePickerControllerDelegate & UINavigationControllerDelegate {
+    const owner = new WeakRef(this);
+    const DelegateClass = (NSObject as any).extend(
+      {
+        imagePickerControllerDidCancel(controller: UIImagePickerController) {
+          controller.dismissViewControllerAnimatedCompletion(true, null);
+          resolver([]);
+        },
+
+        imagePickerControllerDidFinishPickingMediaWithInfo(
+          controller: UIImagePickerController,
+          info: NSDictionary<any, any>
+        ) {
+          controller.dismissViewControllerAnimatedCompletion(true, null);
+          const component = owner.deref();
+          if (!component) {
+            resolver([]);
+            return;
+          }
+
+          const file = component.createCapturedImageFile(info);
+          resolver(file ? [file] : []);
+        },
+      },
+      {
+        protocols: [UIImagePickerControllerDelegate, UINavigationControllerDelegate],
+        name: 'ExpenseImagePickerDelegateImpl',
+      }
+    );
+
+    return DelegateClass.new() as UIImagePickerControllerDelegate & UINavigationControllerDelegate;
   }
 
   public handleDocumentPickerUrls(urls: NSArray<NSURL> | NSURL[]): ExpenseUploadFile[] {
@@ -508,6 +729,31 @@ export class AddExpenseComponent {
     };
   }
 
+  private createCapturedImageFile(info: NSDictionary<any, any>): ExpenseUploadFile | null {
+    const image =
+      info?.objectForKey(UIImagePickerControllerOriginalImage) ||
+      info?.objectForKey(UIImagePickerControllerEditedImage);
+    if (!image) {
+      return null;
+    }
+
+    const fileName = `photo-${Date.now()}.jpg`;
+    const tempPath = path.join(knownFolders.temp().path, fileName);
+    const imageData = UIImageJPEGRepresentation(image, 0.9);
+    if (!imageData) {
+      return null;
+    }
+
+    imageData.writeToFileAtomically(tempPath, true);
+    const savedFile = File.fromPath(tempPath);
+    return {
+      name: fileName,
+      path: tempPath,
+      size: Number(savedFile.size || 0),
+      mimeType: 'image/jpeg',
+    };
+  }
+
   private getMimeType(fileName: string): string {
     const extension = String(fileName.split('.').pop() || '').trim().toLowerCase();
     const map: Record<string, string> = {
@@ -541,7 +787,8 @@ export class AddExpenseComponent {
       next: (res) => {
         const types = Array.isArray(res) ? res : Array.isArray(res?.data) ? res.data : [];
         this.allExpenseTypes = types;
-        this.applyExpenseTypeFilter();
+        this.hasLoadedTypes = true;
+        this.initializeExpenseSelection();
         this.isLoadingTypes = false;
         this.cdr.detectChanges();
       },
@@ -564,8 +811,8 @@ export class AddExpenseComponent {
           item.title = String(category?.name || category?.description || `Category ${category?.id || ''}`);
           return item;
         });
-        this.selectedCategoryIndex = 0;
-        this.applyExpenseTypeFilter();
+        this.hasLoadedCategories = true;
+        this.initializeExpenseSelection();
         this.isLoadingCategories = false;
         this.cdr.detectChanges();
       },
@@ -575,6 +822,20 @@ export class AddExpenseComponent {
         await this.showError('Could not load expense categories.');
       },
     });
+  }
+
+  private initializeExpenseSelection(): void {
+    if (!this.hasLoadedCategories || !this.hasLoadedTypes) {
+      return;
+    }
+
+    if (this.isEditMode && !this.didApplyInitialExpenseSelection) {
+      this.applyInitialExpenseSelection();
+      return;
+    }
+
+    this.applyExpenseTypeFilter();
+    this.syncTypeSelection(this.getCurrentFilteredExpenseTypeIndex());
   }
 
   private applyExpenseTypeFilter(): void {
@@ -595,17 +856,139 @@ export class AddExpenseComponent {
     this.expenseTypeLabels = this.expenseTypes.map((type: any) =>
       String(type?.name || type?.description || `Type ${type?.id || ''}`)
     );
+  }
 
-    if (this.expenseTypes.length) {
-      this.selectedTypeIndex = 0;
-      this.expenseForm.controls.expenseTypeId.setValue(Number(this.expenseTypes[0]?.id || 0));
-    } else {
-      this.selectedTypeIndex = 0;
-      this.expenseForm.controls.expenseTypeId.setValue(0);
+  private hydrateExistingExpense(): void {
+    if (!this.isEditMode) {
+      return;
     }
 
-    if (this.viewReady) {
+    this.noteText = String(this.existingExpense?.notes || '');
+    this.amount = Number(this.existingExpense?.amount || 0);
+    this.amountText = this.formatPriceInput(this.amount);
+    this.expenseDate = this.parseExistingExpenseDate(this.existingExpense?.expenseDate);
+    this.expenseForm.controls.amount.setValue(this.amountText);
+    this.expenseForm.controls.expenseTypeId.setValue(this.initialExpenseTypeId || this.getDesiredExpenseTypeId());
+  }
+
+  private parseExistingExpenseDate(value: any): Date {
+    if (!value) {
+      return new Date();
+    }
+
+    const parsedDate = new Date(value);
+    if (!Number.isNaN(parsedDate.getTime())) {
+      return parsedDate;
+    }
+
+    return new Date();
+  }
+
+  private syncInitialCategorySelection(): void {
+    if (!this.isEditMode || !this.expenseCategories.length || !this.allExpenseTypes.length) {
+      if (!this.expenseCategories.length) {
+        return;
+      }
+      this.selectedCategoryIndex = this.selectedCategoryIndex || 0;
+      return;
+    }
+
+    const expenseTypeId = this.getDesiredExpenseTypeId();
+    const selectedType = this.findExpenseTypeByIdOrName(this.allExpenseTypes, expenseTypeId);
+    const categoryId = Number(selectedType?.expenseCategoryId ?? selectedType?.categoryId ?? 0);
+    const nextIndex = this.expenseCategories.findIndex((category: any) => Number(category?.id || 0) === categoryId);
+    this.selectedCategoryIndex = nextIndex >= 0 ? nextIndex : 0;
+  }
+
+  private applyInitialExpenseSelection(): void {
+    this.syncInitialCategorySelection();
+    this.applyExpenseTypeFilter();
+    this.didApplyInitialExpenseSelection = true;
+    this.syncTypeSelection(this.getDesiredExpenseTypeIndex(this.initialExpenseTypeId));
+  }
+
+  private getCurrentFilteredExpenseTypeIndex(): number {
+    const currentExpenseTypeId = Number(this.expenseForm.controls.expenseTypeId.value || 0);
+    const currentIndex = this.expenseTypes.findIndex((type: any) => Number(type?.id || 0) === currentExpenseTypeId);
+    if (currentIndex >= 0) {
+      return currentIndex;
+    }
+
+    return this.expenseTypes.length ? 0 : -1;
+  }
+
+  private syncTypeSelection(index: number): void {
+    const resolvedIndex = index >= 0 && index < this.expenseTypes.length ? index : (this.expenseTypes.length ? 0 : -1);
+    const resolvedExpenseTypeId = resolvedIndex >= 0
+      ? Number(this.expenseTypes[resolvedIndex]?.id || 0)
+      : 0;
+
+    this.isSyncingTypeSelection = true;
+    this.selectedTypeIndex = resolvedIndex >= 0 ? resolvedIndex : 0;
+    this.expenseForm.controls.expenseTypeId.setValue(resolvedExpenseTypeId);
+    this.cdr.detectChanges();
+
+    setTimeout(() => {
+      this.selectedTypeIndex = resolvedIndex >= 0 ? resolvedIndex : 0;
+      this.expenseForm.controls.expenseTypeId.setValue(resolvedExpenseTypeId);
       this.cdr.detectChanges();
+      this.isSyncingTypeSelection = false;
+    }, 0);
+  }
+
+  private getDesiredExpenseTypeId(): number {
+    const directId = Number(
+      this.initialExpenseTypeId ||
+      0
+    );
+
+    if (directId) {
+      return directId;
     }
+
+    const matchingType = this.findExpenseTypeByIdOrName(this.allExpenseTypes, 0);
+    return Number(matchingType?.id || 0);
+  }
+
+  private getDesiredExpenseTypeIndex(expenseTypeId: number): number {
+    const byIdIndex = this.expenseTypes.findIndex((type: any) => Number(type?.id || 0) === expenseTypeId);
+    if (byIdIndex >= 0) {
+      return byIdIndex;
+    }
+
+    const targetName = this.getExistingExpenseTypeName();
+    if (!targetName) {
+      return -1;
+    }
+
+    return this.expenseTypes.findIndex((type: any) => this.normalizeLabel(type?.name || type?.description) === targetName);
+  }
+
+  private findExpenseTypeByIdOrName(types: any[], expenseTypeId: number): any {
+    const byId = types.find((type: any) => Number(type?.id || 0) === expenseTypeId);
+    if (byId) {
+      return byId;
+    }
+
+    const targetName = this.getExistingExpenseTypeName();
+    if (!targetName) {
+      return null;
+    }
+
+    return types.find((type: any) => this.normalizeLabel(type?.name || type?.description) === targetName) || null;
+  }
+
+  private getExistingExpenseTypeName(): string {
+    return this.normalizeLabel(
+      this.existingExpense?.expenseTypeName ||
+      this.existingExpense?.expenseType?.name ||
+      this.existingExpense?.typeName ||
+      this.existingExpense?.displayTitle ||
+      ''
+    );
+  }
+
+  private normalizeLabel(value: any): string {
+    return String(value || '').trim().toLowerCase();
   }
 }

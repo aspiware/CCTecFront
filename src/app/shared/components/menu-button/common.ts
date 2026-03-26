@@ -1,6 +1,6 @@
 import { Button, Property } from '@nativescript/core';
 
-export type MenuEvent = { index: number };
+export type MenuEvent = { index: number; path?: number[] };
 export type MenuButtonAction = {
   name: string;
   icon?: string;
@@ -8,6 +8,7 @@ export type MenuButtonAction = {
   destructive?: boolean;
   toggle?: boolean;
   checked?: boolean;
+  children?: Array<MenuButtonAction>;
   confirm?: boolean | {
     title?: string;
     confirmText?: string;

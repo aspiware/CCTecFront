@@ -4,7 +4,7 @@
 
     <GridLayout row="0" col="0" rows="auto,*" class="modal-card">
       <GridLayout row="0" columns="*,auto,auto" class="header header-fixed">
-        <Label col="0" text="Add Expense" class="title modal-title-text"></Label>
+        <Label col="0" [text]="modalTitle" class="title modal-title-text"></Label>
 
         <StackLayout col="2">
           <MenuButton [useSFIcon]="true" style="background-color: transparent; height: 24; width: 35;"
@@ -33,17 +33,31 @@
             </SegmentedBar>
           </GridLayout>
 
-          <GridLayout columns="*,auto" class="field-block expense-entry-row">
+          <GridLayout columns="*" class="field-block">
             <ListPicker
-              col="0"
               class="job-type-picker"
               [items]="expenseTypeLabels"
               [selectedIndex]="selectedTypeIndex"
               [isEnabled]="!isSaving && !isLoadingTypes"
               (selectedIndexChange)="onExpenseTypeChanged($event)">
             </ListPicker>
+          </GridLayout>
 
-            <GridLayout col="1" columns="auto,*" class="input-shell amount-input-shell">
+          <GridLayout columns="auto,*" class="field-block expense-entry-row">
+            <GridLayout col="0" rows="auto" horizontalAlignment="left" class="expense-date-block">
+              <GridLayout row="0" columns="auto" class="expense-date-filter-row" horizontalAlignment="left">
+                <DatePicker
+                  col="0"
+                  horizontalAlignment="left"
+                  class="expense-date-picker"
+                  [date]="expenseDate"
+                  [maxDate]="todayDate"
+                  (dateChange)="onExpenseDateChange($event)">
+                </DatePicker>
+              </GridLayout>
+            </GridLayout>
+
+            <GridLayout col="1" columns="auto,*" class="input-shell amount-input-shell" horizontalAlignment="right">
               <Label col="0" class="currency-prefix" text="$"></Label>
               <TextField
                 col="1"
@@ -57,7 +71,7 @@
                 (focus)="onAmountFocus()"
                 (blur)="onAmountBlur()">
               </TextField>
-            </GridLayout>
+            </GridLayout>  
           </GridLayout>
 
           <TextView
@@ -76,7 +90,7 @@
               text="Attach Files"
               class="attach-button"
               [isEnabled]="!isSaving"
-              (tap)="pickFiles()">
+              (tap)="pickFiles($event)">
             </Button>
 
             <Label

@@ -5,6 +5,8 @@ import { NativeScriptUIListViewModule } from 'nativescript-ui-listview/angular';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CustomerInfoComponent } from '../customer-info/customer-info.component';
 import { DevicesComponent } from '../devices/devices.component';
+import { MenuEvent } from '../shared/components/menu-button/common';
+import { Item } from '../shared/components/menu-button/item';
 import { ExpensesService } from './expenses.service';
 import { AddExpenseComponent } from './add-expense/add-expense.component';
 import { EditJobComponent } from '../edit-job/edit-job.component';
@@ -22,6 +24,7 @@ import { WifiConfigComponent } from '../wifi-config/wifi-config.component';
   styleUrl: './expenses.component.scss',
 })
 export class ExpensesComponent implements OnInit, OnDestroy {
+  private static readonly EXPENSE_NOTES_PREVIEW_LIMIT = 50;
   private readonly demoWeeklyTotal = 2062.75;
   private readonly demoJobs = this.buildDemoJobs();
   private readonly actionTapStates: Record<string, boolean> = {};
@@ -42,6 +45,8 @@ export class ExpensesComponent implements OnInit, OnDestroy {
   public isDemoMode = false;
   public isDarkTheme = Application.systemAppearance() === 'dark';
   public expensesSearch = '';
+  public expenseFilterKey: 'all' | 'with_files' | 'without_files' | 'with_notes' | 'without_notes' = 'all';
+  public selectedExpenseCategoryFilter = '';
 
   constructor(
     private usersService: UsersService,
@@ -117,6 +122,269 @@ export class ExpensesComponent implements OnInit, OnDestroy {
     Utils.dismissKeyboard();
   }
 
+  public get expenseFilterMenuOptions(): Item['options'] {
+    return [
+      {
+        name: 'All Expenses',
+        icon: 'line.3.horizontal.decrease.circle',
+        toggle: true,
+        checked: this.expenseFilterKey === 'all' && !this.selectedExpenseCategoryFilter,
+      },
+      {
+        name: 'With Files',
+        icon: 'paperclip',
+        toggle: true,
+        checked: this.expenseFilterKey === 'with_files',
+      },
+      {
+        name: 'Without Files',
+        icon: 'paperclip.circle',
+        toggle: true,
+        checked: this.expenseFilterKey === 'without_files',
+      },
+      {
+        name: 'With Notes',
+        icon: 'note.text',
+        toggle: true,
+        checked: this.expenseFilterKey === 'with_notes',
+      },
+      {
+        name: 'Without Notes',
+        icon: 'note.text.badge.plus',
+        toggle: true,
+        checked: this.expenseFilterKey === 'without_notes',
+      },
+      {
+        name: 'Category',
+        icon: 'square.grid.2x2',
+        toggle: true,
+        checked: !!this.selectedExpenseCategoryFilter,
+        children: [
+          {
+            name: 'All Categories',
+            icon: 'circle.grid.2x2',
+            toggle: true,
+            checked: !this.selectedExpenseCategoryFilter,
+          },
+          ...this.getAvailableExpenseCategories().map((category) => ({
+            name: category,
+            icon: 'tag',
+            toggle: true,
+            checked: this.normalizeExpenseCategoryName(category) === this.normalizeExpenseCategoryName(this.selectedExpenseCategoryFilter),
+          })),
+        ],
+      },
+    ];
+  }
+
+  public onSelectedExpenseFilterMenu(event: MenuEvent): void {
+    const path = Array.isArray(event?.path) ? event.path : [Number(event?.index)];
+    const [rootIndex, childIndex] = path;
+
+    if (rootIndex === 5) {
+      if (childIndex === 0) {
+        this.selectedExpenseCategoryFilter = '';
+        this.applyExpensesFilter();
+      } else if (typeof childIndex === 'number' && childIndex > 0) {
+        const categories = this.getAvailableExpenseCategories();
+        this.selectedExpenseCategoryFilter = categories[childIndex - 1] || '';
+        this.applyExpensesFilter();
+      }
+      return;
+    }
+
+    switch (Number(rootIndex)) {
+      case 0:
+        this.expenseFilterKey = 'all';
+        this.selectedExpenseCategoryFilter = '';
+        break;
+      case 1:
+        this.expenseFilterKey = 'with_files';
+        this.selectedExpenseCategoryFilter = '';
+        break;
+      case 2:
+        this.expenseFilterKey = 'without_files';
+        this.selectedExpenseCategoryFilter = '';
+        break;
+      case 3:
+        this.expenseFilterKey = 'with_notes';
+        this.selectedExpenseCategoryFilter = '';
+        break;
+      case 4:
+        this.expenseFilterKey = 'without_notes';
+        this.selectedExpenseCategoryFilter = '';
+        break;
+      default:
+        return;
+    }
+
+    this.applyExpensesFilter();
+  }
+
+  public getExpenseMenuOptions(item: any): Item['options'] {
+    return [
+      {
+        name: 'Edit',
+        icon: 'pencil',
+      },
+      {
+        name: 'Delete',
+        icon: 'trash',
+        destructive: true,
+        confirm: {
+          title: 'Delete expense?\n\nThis action cannot be undone.',
+          confirmText: 'Delete',
+          cancelText: 'Cancel',
+          presentation: 'anchor' as const,
+        },
+      },
+    ];
+  }
+
+  public onSelectedExpenseMenu(event: MenuEvent, item: any): void {
+    switch (Number(event?.index)) {
+      case 0:
+        this.editExpense(item);
+        break;
+      case 1:
+        this.deleteExpense(item);
+        break;
+      default:
+        break;
+    }
+  }
+
+  public async showExpenseFiles(event: any, item: any): Promise<void> {
+    const files = Array.isArray(item?.files) ? item.files : [];
+    if (!files.length) {
+      return;
+    }
+
+    if (!__IOS__) {
+      const message = files
+        .map((file: any, index: number) => `${index + 1}. ${this.getExpenseFileName(file, index)}`)
+        .join('\n');
+      await alert({
+        title: 'Files',
+        message,
+        okButtonText: 'OK',
+      });
+      return;
+    }
+
+    let viewController = Application.ios?.rootController;
+    while (
+      viewController &&
+      viewController.presentedViewController &&
+      !viewController.presentedViewController.beingDismissed
+    ) {
+      viewController = viewController.presentedViewController;
+    }
+
+    if (!viewController?.view) {
+      return;
+    }
+
+    const alertController = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
+      'Files',
+      null,
+      UIAlertControllerStyle.ActionSheet
+    );
+
+    files.forEach((file: any, index: number) => {
+      const fileName = this.getExpenseFileName(file, index);
+      const fileUrl = this.getExpenseFileUrl(file);
+      alertController.addAction(
+        UIAlertAction.actionWithTitleStyleHandler(fileName, UIAlertActionStyle.Default, () => {
+          if (fileUrl) {
+            Utils.openUrl(encodeURI(fileUrl));
+          }
+        })
+      );
+    });
+
+    alertController.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, null)
+    );
+
+    const sourceView = event?.object?.ios as UIView | undefined;
+    const popover = alertController.popoverPresentationController;
+    if (popover) {
+      popover.sourceView = sourceView || viewController.view;
+      popover.sourceRect = sourceView
+        ? sourceView.bounds
+        : CGRectMake(
+            viewController.view.bounds.size.width / 2,
+            viewController.view.bounds.size.height / 2,
+            1,
+            1
+          );
+      popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
+    }
+
+    viewController.presentViewControllerAnimatedCompletion(alertController, true, null);
+  }
+
+  public shouldExpandExpenseNotes(item: any): boolean {
+    return this.getExpenseNotesText(item).length > ExpensesComponent.EXPENSE_NOTES_PREVIEW_LIMIT;
+  }
+
+  public async showExpenseNotes(event: any, item: any): Promise<void> {
+    const notes = this.getExpenseNotesText(item);
+    if (!notes || !this.shouldExpandExpenseNotes(item)) {
+      return;
+    }
+
+    if (!__IOS__) {
+      await alert({
+        title: 'Notes',
+        message: notes,
+        okButtonText: 'Close',
+      });
+      return;
+    }
+
+    let viewController = Application.ios?.rootController;
+    while (
+      viewController &&
+      viewController.presentedViewController &&
+      !viewController.presentedViewController.beingDismissed
+    ) {
+      viewController = viewController.presentedViewController;
+    }
+
+    if (!viewController?.view) {
+      return;
+    }
+
+    const alertController = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
+      'Notes',
+      notes,
+      UIAlertControllerStyle.ActionSheet
+    );
+
+    alertController.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Close', UIAlertActionStyle.Cancel, null)
+    );
+
+    const sourceView = event?.object?.ios as UIView | undefined;
+    const popover = alertController.popoverPresentationController;
+    if (popover) {
+      popover.sourceView = sourceView || viewController.view;
+      popover.sourceRect = sourceView
+        ? sourceView.bounds
+        : CGRectMake(
+            viewController.view.bounds.size.width / 2,
+            viewController.view.bounds.size.height / 2,
+            1,
+            1
+          );
+      popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
+    }
+
+    viewController.presentViewControllerAnimatedCompletion(alertController, true, null);
+  }
+
   public onExpensesListLoaded(event: any): void {
     if (!__IOS__) {
       return;
@@ -135,13 +403,45 @@ export class ExpensesComponent implements OnInit, OnDestroy {
   }
 
   public addExpense(): void {
+    this.openExpenseModal();
+  }
+
+  public editExpense(expense: any): void {
+    this.openExpenseModal(expense);
+  }
+
+  public deleteExpense(expense: any): void {
+    const expenseId = Number(expense?.id || 0);
+    if (!expenseId) {
+      return;
+    }
+
+    this.expensesService.delete(expenseId).subscribe({
+      next: () => {
+        this.loadExpenses();
+      },
+      error: async (error) => {
+        const message =
+          error?.error?.message ||
+          error?.message ||
+          'Could not delete expense.';
+        await alert({
+          title: 'Expenses',
+          message: String(message),
+          okButtonText: 'OK',
+        });
+      },
+    });
+  }
+
+  private openExpenseModal(expense?: any): void {
     const userId = Number(this.user?.userId || 0);
     if (!userId) {
       return;
     }
 
     const options: any = {
-      context: { userId },
+      context: { userId, expense },
       viewContainerRef: this.vcRef,
       animated: true,
       fullscreen: false,
@@ -626,9 +926,11 @@ export class ExpensesComponent implements OnInit, OnDestroy {
         amount: Number(expense?.amount || 0),
         files: this.parseJsonValue(expense?.files, []),
         displayTitle: this.buildExpenseTitle(expense),
+        hasSubtitle: this.hasExpenseSubtitle(expense),
         displaySubtitle: this.buildExpenseSubtitle(expense),
         displayTimestamp: this.buildExpenseTimestamp(expense),
         attachmentCount: this.getAttachmentCount(expense),
+        displayIcon: this.buildExpenseIcon(expense),
       }))
       .sort((a, b) => {
         const aTime = new Date(a?.displayTimestamp || a?.createdAt || 0).getTime();
@@ -642,7 +944,7 @@ export class ExpensesComponent implements OnInit, OnDestroy {
 
   private applyExpensesFilter(): void {
     const query = this.expensesSearch.trim().toLowerCase();
-    const filteredJobs = !query
+    const searchFilteredJobs = !query
       ? [...this.allJobs]
       : this.allJobs.filter((job) => {
           const haystack = [
@@ -660,10 +962,48 @@ export class ExpensesComponent implements OnInit, OnDestroy {
           return haystack.includes(query);
         });
 
+    const filteredJobs = searchFilteredJobs.filter((job) => this.matchesExpenseFilter(job));
+
     this.expenseList = new ObservableArray(filteredJobs);
     this.totalAmount = this.usersService.isDemoUser(this.user)
       ? this.demoWeeklyTotal
       : filteredJobs.reduce((sum, job) => sum + Number(job?.amount || 0), 0);
+  }
+
+  private matchesExpenseFilter(expense: any): boolean {
+    const categoryMatches = !this.selectedExpenseCategoryFilter ||
+      this.normalizeExpenseCategoryName(expense?.expenseCategoryName) === this.normalizeExpenseCategoryName(this.selectedExpenseCategoryFilter);
+
+    if (!categoryMatches) {
+      return false;
+    }
+
+    switch (this.expenseFilterKey) {
+      case 'with_files':
+        return Number(expense?.attachmentCount || 0) > 0;
+      case 'without_files':
+        return Number(expense?.attachmentCount || 0) === 0;
+      case 'with_notes':
+        return !!this.getExpenseNotesText(expense);
+      case 'without_notes':
+        return !this.getExpenseNotesText(expense);
+      default:
+        return true;
+    }
+  }
+
+  private getAvailableExpenseCategories(): string[] {
+    const uniqueNames = new Set(
+      this.allJobs
+        .map((expense) => String(expense?.expenseCategoryName || '').trim())
+        .filter(Boolean)
+    );
+
+    return Array.from(uniqueNames).sort((a, b) => a.localeCompare(b));
+  }
+
+  private normalizeExpenseCategoryName(value: any): string {
+    return String(value || '').trim().toLowerCase();
   }
 
   private normalizeExpensesResponse(response: any): any[] {
@@ -802,15 +1142,20 @@ export class ExpensesComponent implements OnInit, OnDestroy {
 
   private buildExpenseSubtitle(expense: any): string {
     const parts = [
-      expense?.expenseCategoryName ||
-      expense?.expenseCategory?.name ||
-      expense?.categoryName,
       expense?.notes,
     ]
       .map((value) => String(value || '').trim())
       .filter(Boolean);
 
     return parts.join(' • ');
+  }
+
+  private getExpenseNotesText(expense: any): string {
+    return String(expense?.notes || '').trim();
+  }
+
+  private hasExpenseSubtitle(expense: any): boolean {
+    return !!String(expense?.notes || '').trim();
   }
 
   private buildExpenseTimestamp(expense: any): string {
@@ -820,6 +1165,110 @@ export class ExpensesComponent implements OnInit, OnDestroy {
       expense?.updatedAt ||
       ''
     );
+  }
+
+  public getExpenseAttachmentLabel(count: number): string {
+    const total = Number(count || 0);
+    if (total === 1) {
+      return '1 file';
+    }
+
+    return `${total} files`;
+  }
+
+  private getExpenseFileName(file: any, index: number): string {
+    const directName = String(
+      file?.name ||
+      file?.filename ||
+      file?.fileName ||
+      file?.originalFilename ||
+      file?.originalname ||
+      ''
+    ).trim();
+    if (directName) {
+      return directName;
+    }
+
+    const rawValue = String(
+      typeof file === 'string'
+        ? file
+        : file?.path ||
+          file?.filePath ||
+          file?.url ||
+          file?.uri ||
+          file?.file ||
+          ''
+    ).trim();
+
+    if (rawValue) {
+      const sanitized = rawValue.split('?')[0].split('#')[0];
+      const segments = sanitized.split('/');
+      const lastSegment = String(segments[segments.length - 1] || '').trim();
+      if (lastSegment) {
+        return decodeURIComponent(lastSegment);
+      }
+    }
+
+    return `Attachment ${index + 1}`;
+  }
+
+  private getExpenseFileUrl(file: any): string {
+    const directUrl = String(file?.url || file?.downloadUrl || file?.previewUrl || '').trim();
+    if (directUrl) {
+      return directUrl;
+    }
+
+    const rawPath = String(file?.filePath || file?.path || file?.uri || '').trim();
+    if (!rawPath) {
+      return '';
+    }
+
+    if (/^https?:\/\//i.test(rawPath)) {
+      return rawPath;
+    }
+
+    const uploadsIndex = rawPath.indexOf('/uploads/');
+    if (uploadsIndex < 0) {
+      return '';
+    }
+
+    const uploadsPath = rawPath.slice(uploadsIndex);
+    return `${this.getApiOrigin()}${uploadsPath}`;
+  }
+
+  private getApiOrigin(): string {
+    const baseUrl = String(this.configService.getUrlBase() || '').trim();
+    const match = baseUrl.match(/^(https?:\/\/[^/]+)/i);
+    return match?.[1] || baseUrl;
+  }
+
+  private buildExpenseIcon(expense: any): string {
+    const haystack = [
+      expense?.expenseTypeName,
+      expense?.expenseCategoryName,
+      expense?.notes,
+      expense?.description,
+    ]
+      .map((value) => String(value || '').trim().toLowerCase())
+      .join(' ');
+
+    if (haystack.includes('gas') || haystack.includes('fuel') || haystack.includes('gasoline')) {
+      return '\uf52f';
+    }
+
+    if (haystack.includes('food') || haystack.includes('meal') || haystack.includes('restaurant')) {
+      return '\uf2e7';
+    }
+
+    if (haystack.includes('hotel') || haystack.includes('lodging')) {
+      return '\uf594';
+    }
+
+    if (haystack.includes('tool') || haystack.includes('material') || haystack.includes('supply')) {
+      return '\uf1b3';
+    }
+
+    return '\uf555';
   }
 
   private getAttachmentCount(expense: any): number {

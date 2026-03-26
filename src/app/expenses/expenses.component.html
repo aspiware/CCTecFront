@@ -31,8 +31,18 @@
       </StackLayout>
     </GridLayout>
 
-    <GridLayout row="1" columns="*" class="search-row">
-      <GridLayout columns="*,auto" class="input-shell" width="100%">
+    <GridLayout row="1" columns="auto,*" class="search-row">
+      <GridLayout col="0" class="" horizontalAlignment="center" verticalAlignment="middle">
+        <MenuButton
+          class="expense-filter-button"
+          [useSFIcon]="true"
+          [sfIconName]="'line.3.horizontal.decrease.circle'"
+          [options]="expenseFilterMenuOptions"
+          (selected)="onSelectedExpenseFilterMenu($event)">
+        </MenuButton>
+      </GridLayout>
+
+      <GridLayout col="1" columns="*,auto" class="input-shell" width="100%">
         <TextField
           col="0"
           hint="Search by type, note, or category"
@@ -54,31 +64,65 @@
   <RadListView [items]="expenseList" [pullToRefresh]="!isSyncing" (loaded)="onExpensesListLoaded($event)" (tap)="dismissKeyboard()" (pullToRefreshInitiated)="onPullToRefresh($event)"
     height="100%" class="jobs-list">
     <ng-template tkListItemTemplate let-item="item">
-      <StackLayout class="item-bag">
-        <GridLayout columns="*,auto" width="100%" class="item-header">
-          <Label col="0" class="first-row" [text]="item.displayTitle || 'Expense'"></Label>
-          <Label col="1" class="first-row amount" [text]="(item.amount || 0) | currency"></Label>
+      <GridLayout rows="auto,auto,auto,*,auto" class="expense-card">
+        <GridLayout row="0" columns="*,auto" width="100%" class="expense-card-header">
+          <GridLayout col="0" columns="auto,*" class="expense-left-block">
+            <Label col="0" class="expense-icon fas" [text]="item.displayIcon"></Label>
+            <Label col="1" class="expense-title" [text]="item.displayTitle || 'Expense'" textWrap="false"></Label>
+          </GridLayout>
+
+          <GridLayout col="1" columns="auto,27" class="expense-right-actions" horizontalAlignment="right">
+            <Label col="0" class="expense-amount" [text]="(item.amount || 0) | currency"></Label>
+            <GridLayout col="1" width="27" horizontalAlignment="center" verticalAlignment="middle">
+              <MenuButton
+                class="expense-menu-button"
+                style="background-color: transparent; height: 24; width: 35;"
+                verticalAlignment="middle"
+                horizontalAlignment="center"
+                [useSFIcon]="true"
+                [sfIconName]="'ellipsis.circle'"
+                [options]="getExpenseMenuOptions(item)"
+                (selected)="onSelectedExpenseMenu($event, item)">
+              </MenuButton>
+            </GridLayout>
+          </GridLayout>
         </GridLayout>
+
+        <StackLayout row="1" class="expense-divider"></StackLayout>
 
         <Label
-          *ngIf="item.displaySubtitle"
-          class="second-row compact"
-          [text]="item.displaySubtitle">
+          *ngIf="item.hasSubtitle"
+          row="2"
+          class="expense-subtitle"
+          [class.expense-subtitle-tappable]="shouldExpandExpenseNotes(item)"
+          [text]="item.displaySubtitle"
+          (tap)="showExpenseNotes($event, item)">
         </Label>
 
-        <GridLayout columns="*,auto" class="expense-meta-row">
+        <StackLayout
+          *ngIf="item.hasSubtitle"
+          row="3"
+          class="expense-divider"
+          >
+        </StackLayout>
+
+        <GridLayout row="4" columns="*,auto" class="expense-footer-row">
           <Label
             col="0"
-            class="secondRow compact"
-            [text]="item.displayTimestamp ? (item.displayTimestamp | date: 'MMM d, y h:mm a') : 'No date'">
+            class="expense-date"
+            [text]="item.displayTimestamp ? (item.displayTimestamp | date: 'MMM d') : 'No date'">
           </Label>
-          <Label
+          <GridLayout
             col="1"
-            class="secondRow compact units"
-            [text]="item.attachmentCount ? (item.attachmentCount + ' file(s)') : 'No files'">
-          </Label>
+            columns="auto,auto"
+            class="expense-attachments"
+            [visibility]="item.attachmentCount ? 'visible' : 'collapse'"
+            (tap)="showExpenseFiles($event, item)">
+            <Label col="0" class="fas expense-attachment-icon" text="&#xf0c6;"></Label>
+            <Label col="1" class="expense-attachment-count" [text]="getExpenseAttachmentLabel(item.attachmentCount)"></Label>
+          </GridLayout>
         </GridLayout>
-      </StackLayout>
+      </GridLayout>
     </ng-template>
   </RadListView>
 </StackLayout>

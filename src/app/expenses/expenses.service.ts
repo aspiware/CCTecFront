@@ -11,6 +11,14 @@ export type CreateExpenseDto = {
   expenseTypeId: number;
   amount: number;
   notes?: string;
+  expenseDate?: string;
+};
+
+export type UpdateExpenseDto = {
+  expenseTypeId: number;
+  amount: number;
+  notes?: string;
+  expenseDate?: string;
 };
 
 export type ExpenseUploadFile = {
@@ -78,6 +86,39 @@ export class ExpensesService {
     return this.httpClient.post<any>(
       `${this.configService.getUrlBase()}/expenses/create`,
       expense
+    );
+  }
+
+  public update(id: number, expense: UpdateExpenseDto): Observable<any> {
+    if (!id) {
+      return of(null);
+    }
+
+    if (this.usersService.isDemoUser()) {
+      return of({
+        id,
+        ...expense,
+        updatedAt: new Date().toISOString(),
+      });
+    }
+
+    return this.httpClient.put<any>(
+      `${this.configService.getUrlBase()}/expenses/${id}`,
+      expense
+    );
+  }
+
+  public delete(id: number): Observable<any> {
+    if (!id) {
+      return of(null);
+    }
+
+    if (this.usersService.isDemoUser()) {
+      return of({ id, deleted: true });
+    }
+
+    return this.httpClient.delete<any>(
+      `${this.configService.getUrlBase()}/expenses/${id}`
     );
   }
 
