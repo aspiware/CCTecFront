@@ -61,9 +61,9 @@
             <Label col="1" class="expense-title" [text]="item.displayTitle || 'Expense'" textWrap="false"></Label>
           </GridLayout>
 
-          <GridLayout col="1" columns="auto,35" class="expense-right-actions" horizontalAlignment="right">
+          <GridLayout col="1" columns="auto,27" class="expense-right-actions" horizontalAlignment="right">
             <Label col="0" class="expense-amount" [text]="(item.amount || 0) | currency"></Label>
-            <GridLayout col="1" width="35" horizontalAlignment="center" verticalAlignment="middle">
+            <GridLayout col="1" width="27" horizontalAlignment="center" verticalAlignment="middle">
               <MenuButton
                 class="expense-menu-button"
                 style="background-color: transparent; height: 24; width: 35;"
