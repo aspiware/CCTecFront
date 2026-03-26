@@ -764,6 +764,7 @@ export class ExpensesComponent implements OnInit, OnDestroy {
         amount: Number(expense?.amount || 0),
         files: this.parseJsonValue(expense?.files, []),
         displayTitle: this.buildExpenseTitle(expense),
+        hasSubtitle: this.hasExpenseSubtitle(expense),
         displaySubtitle: this.buildExpenseSubtitle(expense),
         displayTimestamp: this.buildExpenseTimestamp(expense),
         attachmentCount: this.getAttachmentCount(expense),
@@ -947,6 +948,10 @@ export class ExpensesComponent implements OnInit, OnDestroy {
       .filter(Boolean);
 
     return parts.join(' • ');
+  }
+
+  private hasExpenseSubtitle(expense: any): boolean {
+    return !!String(expense?.notes || '').trim();
   }
 
   private buildExpenseTimestamp(expense: any): string {

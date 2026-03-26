@@ -81,12 +81,16 @@
         <StackLayout class="expense-divider"></StackLayout>
 
         <Label
-          *ngIf="item.displaySubtitle"
+          *ngIf="item.hasSubtitle"
           class="expense-subtitle"
           [text]="item.displaySubtitle">
         </Label>
 
-        <StackLayout class="expense-divider"></StackLayout>
+        <StackLayout
+          *ngIf="item.hasSubtitle"
+          class="expense-divider"
+          >
+        </StackLayout>
 
         <GridLayout columns="*,auto" class="expense-footer-row">
           <Label
