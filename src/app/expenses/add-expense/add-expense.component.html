@@ -43,17 +43,21 @@
             </ListPicker>
           </GridLayout>
 
-          <GridLayout columns="*,auto" class="field-block expense-entry-row">
-            <DatePicker
-              col="0"
-              horizontalAlignment="left"
-              class="expense-date-picker"
-              [date]="expenseDate"
-              [maxDate]="todayDate"
-              (dateChange)="onExpenseDateChange($event)">
-            </DatePicker>
+          <GridLayout columns="auto,*" class="field-block expense-entry-row">
+            <GridLayout col="0" rows="auto" horizontalAlignment="left" class="expense-date-block">
+              <GridLayout row="0" columns="auto" class="expense-date-filter-row" horizontalAlignment="left">
+                <DatePicker
+                  col="0"
+                  horizontalAlignment="left"
+                  class="expense-date-picker"
+                  [date]="expenseDate"
+                  [maxDate]="todayDate"
+                  (dateChange)="onExpenseDateChange($event)">
+                </DatePicker>
+              </GridLayout>
+            </GridLayout>
 
-            <GridLayout col="1" columns="auto,*" class="input-shell amount-input-shell">
+            <GridLayout col="1" columns="auto,*" class="input-shell amount-input-shell" horizontalAlignment="right">
               <Label col="0" class="currency-prefix" text="$"></Label>
               <TextField
                 col="1"

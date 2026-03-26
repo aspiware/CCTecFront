@@ -94,11 +94,19 @@
 }
 
 .expense-date-picker {
-  width: 170;
+  width: 130;
   margin-top: 8;
   margin-bottom: 4;
   horizontal-align: left;
   vertical-align: middle;
+}
+
+.expense-date-block {
+  width: 150;
+}
+
+.expense-date-filter-row {
+  width: 150;
 }
 
 .job-type-picker {
