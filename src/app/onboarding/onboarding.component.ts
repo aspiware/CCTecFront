@@ -27,13 +27,13 @@ export class OnboardingComponent {
       art: 'prices',
     },
     {
-      title: 'Automatic Job Calculations',
-      description: 'CCTec calculates each job automatically.',
+      title: 'Track Your Earnings',
+      description: 'Automatically calculate your daily and weekly income.',
       art: 'calculations',
     },
     {
-      title: 'Track Every Job',
-      description: 'Save job details, notes, and history in one place.',
+      title: 'Manage Your Jobs',
+      description: 'View your job history and keep everything organized.',
       art: 'tracking',
     },
     {
