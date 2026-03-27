@@ -1,0 +1,106 @@
+.onboarding-root {
+  width: 100%;
+  height: 100%;
+}
+
+.onboarding-backdrop {
+  width: 100%;
+  height: 100%;
+  background-color: #10131b;
+}
+
+.onboarding-card {
+  width: 100%;
+  height: 100%;
+  padding: 26 22 28 22;
+  background-color: #10131b;
+}
+
+.onboarding-header {
+  margin-top: 10;
+}
+
+.onboarding-brand {
+  font-size: 18;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.onboarding-skip {
+  background-color: transparent;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 15;
+  padding: 0;
+}
+
+.onboarding-content {
+  padding-bottom: 24;
+}
+
+.onboarding-accent {
+  font-size: 13;
+  font-weight: 700;
+  letter-spacing: 0.4;
+  text-transform: uppercase;
+  color: #7dd3fc;
+  margin-bottom: 12;
+}
+
+.onboarding-title {
+  font-size: 30;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 14;
+}
+
+.onboarding-subtitle {
+  font-size: 16;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.onboarding-footer {
+  padding-bottom: 8;
+}
+
+.onboarding-dots {
+  margin-bottom: 18;
+}
+
+.onboarding-dot {
+  width: 22;
+  text-align: center;
+  font-size: 14;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.onboarding-primary-btn {
+  height: 48;
+  border-radius: 24;
+  background-color: #2d8cff;
+  color: #ffffff;
+  font-size: 16;
+  font-weight: 600;
+}
+
+.ns-light .onboarding-backdrop,
+.ns-light .onboarding-card {
+  background-color: #f2f2f7;
+}
+
+.ns-light .onboarding-brand,
+.ns-light .onboarding-title {
+  color: #1c1c1e;
+}
+
+.ns-light .onboarding-skip {
+  color: rgba(28, 28, 30, 0.6);
+}
+
+.ns-light .onboarding-subtitle {
+  color: rgba(28, 28, 30, 0.7);
+}
+
+.ns-light .onboarding-dot {
+  color: rgba(28, 28, 30, 0.45);
+}

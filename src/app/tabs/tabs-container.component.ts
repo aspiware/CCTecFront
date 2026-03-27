@@ -2,10 +2,12 @@ import { AfterViewInit, Component, ElementRef, NO_ERRORS_SCHEMA, OnDestroy, OnIn
 import { ActivatedRoute, Router } from '@angular/router';
 import { ModalDialogService, NativeScriptCommonModule, PageRouterOutlet } from '@nativescript/angular';
 import { Color, isAndroid, isIOS, TabView } from '@nativescript/core';
+import { getBoolean } from '@nativescript/core/application-settings';
 import { Subscription } from 'rxjs';
 import { ForceUpdateComponent } from '../force-update/force-update.component';
 import { NotificationsComponent } from '../notifications/notifications.component';
 import { NotificationsService } from '../notifications/notifications.service';
+import { OnboardingComponent } from '../onboarding/onboarding.component';
 import { TodayJobsCountService } from '../shared/services/today-jobs-count.service';
 import { UsersService } from '../shared/services/users.service';
 import { VersionService } from '../shared/services/version.service';
@@ -29,6 +31,8 @@ export class TabsContainerComponent implements OnInit, AfterViewInit, OnDestroy 
   private hasShownNotifications = false;
   private hasCheckedVersion = false;
   private hasShownForceUpdate = false;
+  private hasCheckedOnboarding = false;
+  private hasShownOnboarding = false;
 
   constructor(
     private router: Router,
@@ -214,14 +218,14 @@ export class TabsContainerComponent implements OnInit, AfterViewInit, OnDestroy 
 
   private checkRequiredUpdate(): void {
     if (this.hasCheckedVersion) {
-      this.checkActiveNotifications();
+      this.checkOnboarding();
       return;
     }
 
     this.hasCheckedVersion = true;
     this.versionService.checkAppStoreVersion().subscribe((status) => {
       if (!status?.isUpdateAvailable || this.hasShownForceUpdate) {
-        this.checkActiveNotifications();
+        this.checkOnboarding();
         return;
       }
 
@@ -250,6 +254,46 @@ export class TabsContainerComponent implements OnInit, AfterViewInit, OnDestroy 
         });
       }, 200);
     });
+  }
+
+  private checkOnboarding(): void {
+    if (this.hasCheckedOnboarding) {
+      this.checkActiveNotifications();
+      return;
+    }
+
+    this.hasCheckedOnboarding = true;
+    const hasSeenOnboarding = getBoolean('hasSeenOnboarding', false);
+    if (hasSeenOnboarding || this.hasShownOnboarding) {
+      this.checkActiveNotifications();
+      return;
+    }
+
+    this.hasShownOnboarding = true;
+    const options: any = {
+      context: {},
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: true,
+      stretched: true,
+      cancelable: false,
+      dismissEnabled: false,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.FullScreen,
+      },
+    };
+
+    setTimeout(() => {
+      this.modalService.showModal(OnboardingComponent, options)
+        .then(() => {
+          this.checkActiveNotifications();
+        })
+        .catch((error) => {
+          console.log('[TabsContainer] show onboarding modal error', error);
+          this.hasShownOnboarding = false;
+          this.checkActiveNotifications();
+        });
+    }, 220);
   }
 
   private normalizeNotifications(res: any): any[] {

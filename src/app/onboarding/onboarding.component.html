@@ -1,0 +1,36 @@
+<ModalStack dismissEnabled="false" class="onboarding-root">
+  <GridLayout rows="*" columns="*">
+    <StackLayout row="0" col="0" class="onboarding-backdrop"></StackLayout>
+
+    <GridLayout row="0" col="0" rows="auto,*,auto" class="onboarding-card">
+      <GridLayout row="0" columns="*,auto" class="onboarding-header">
+        <Label text="CCTec" class="onboarding-brand"></Label>
+        <Button text="Skip" class="onboarding-skip" (tap)="skip()"></Button>
+      </GridLayout>
+
+      <StackLayout row="1" verticalAlignment="middle" class="onboarding-content">
+        <Label [text]="slide.accent" class="onboarding-accent"></Label>
+        <Label [text]="slide.title" textWrap="true" class="onboarding-title"></Label>
+        <Label [text]="slide.description" textWrap="true" class="onboarding-subtitle"></Label>
+      </StackLayout>
+
+      <GridLayout row="2" rows="auto,auto" class="onboarding-footer">
+        <GridLayout row="0" columns="auto,auto,auto" horizontalAlignment="center" class="onboarding-dots">
+          <Label
+            *ngFor="let item of slides; let i = index"
+            [text]="i === currentIndex ? '●' : '○'"
+            class="onboarding-dot"
+            (tap)="goToSlide(i)">
+          </Label>
+        </GridLayout>
+
+        <Button
+          row="1"
+          [text]="primaryButtonText"
+          class="onboarding-primary-btn"
+          (tap)="advance()">
+        </Button>
+      </GridLayout>
+    </GridLayout>
+  </GridLayout>
+</ModalStack>
