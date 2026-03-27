@@ -25,6 +25,7 @@ export class TabsContainerComponent implements OnInit, AfterViewInit, OnDestroy 
   private todayCountSub?: Subscription;
   private todayJobsCount = 0;
   private readonly todayTabIndex = 2;
+  private readonly settingsTabIndex = 4;
   private readonly todayBadgeBgColor = new Color('#E57373');
   private readonly todayBadgeTextColor = new Color('#FFFFFF');
   private hasCheckedNotifications = false;
@@ -285,7 +286,10 @@ export class TabsContainerComponent implements OnInit, AfterViewInit, OnDestroy 
 
     setTimeout(() => {
       this.modalService.showModal(OnboardingComponent, options)
-        .then(() => {
+        .then((result) => {
+          if (result?.openSettings) {
+            this.mainTabsRef?.nativeElement && (this.mainTabsRef.nativeElement.selectedIndex = this.settingsTabIndex);
+          }
           this.checkActiveNotifications();
         })
         .catch((error) => {

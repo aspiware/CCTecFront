@@ -17,18 +17,29 @@ export class OnboardingComponent {
   public slides = [
     {
       title: 'Welcome to CCTec',
-      description: 'Track jobs, manage expenses, and keep your day organized from one place.',
-      accent: 'Today',
+      description: 'Track your jobs, equipment, and earnings in one place.',
+      eyebrow: 'Built for cable technicians',
+      art: 'welcome',
     },
     {
-      title: 'Manage Expenses Faster',
-      description: 'Add expenses with category, date, notes, and attachments so everything stays documented.',
-      accent: 'Expenses',
+      title: 'Set Your Prices First',
+      description: 'Before using the app, go to Settings and add your job prices and equipment prices.',
+      art: 'prices',
     },
     {
-      title: 'Stay Up to Date',
-      description: 'Check notifications, settings, and updates in-app so you do not miss important changes.',
-      accent: 'Settings',
+      title: 'Automatic Job Calculations',
+      description: 'CCTec calculates each job automatically.',
+      art: 'calculations',
+    },
+    {
+      title: 'Track Every Job',
+      description: 'Save job details, notes, and history in one place.',
+      art: 'tracking',
+    },
+    {
+      title: 'You’re Ready to Start',
+      description: 'Complete your setup in Settings and start tracking your work.',
+      art: 'ready',
     },
   ];
 
@@ -43,16 +54,20 @@ export class OnboardingComponent {
   }
 
   get primaryButtonText(): string {
-    return this.isLastSlide ? 'Get Started' : 'Next';
+    return this.isLastSlide ? 'Go to Settings' : 'Next';
+  }
+
+  get showSecondaryButton(): boolean {
+    return this.isLastSlide;
   }
 
   public skip(): void {
-    this.completeOnboarding();
+    this.completeOnboarding(false);
   }
 
   public advance(): void {
     if (this.isLastSlide) {
-      this.completeOnboarding();
+      this.completeOnboarding(true);
       return;
     }
 
@@ -67,8 +82,8 @@ export class OnboardingComponent {
     this.currentIndex = index;
   }
 
-  private completeOnboarding(): void {
+  private completeOnboarding(openSettings: boolean): void {
     setBoolean(OnboardingComponent.STORAGE_KEY, true);
-    this.modalParams.closeCallback(true);
+    this.modalParams.closeCallback({ completed: true, openSettings });
   }
 }

@@ -2,33 +2,82 @@
   <GridLayout rows="*" columns="*">
     <StackLayout row="0" col="0" class="onboarding-backdrop"></StackLayout>
 
-    <GridLayout row="0" col="0" rows="auto,*,auto" class="onboarding-card">
+    <GridLayout row="0" col="0" rows="auto,*,auto,auto" class="onboarding-card">
       <GridLayout row="0" columns="*,auto" class="onboarding-header">
         <Label text="CCTec" class="onboarding-brand"></Label>
         <Button text="Skip" class="onboarding-skip" (tap)="skip()"></Button>
       </GridLayout>
 
       <StackLayout row="1" verticalAlignment="middle" class="onboarding-content">
-        <Label [text]="slide.accent" class="onboarding-accent"></Label>
         <Label [text]="slide.title" textWrap="true" class="onboarding-title"></Label>
+
+        <GridLayout class="onboarding-art-shell">
+          <GridLayout class="art-orb"></GridLayout>
+
+          <GridLayout *ngIf="slide.art === 'welcome'" class="art-welcome">
+            <Label text="&#xf0b1;" class="fas art-primary-icon"></Label>
+            <Label text="&#xf5ae;" class="fas art-secondary-icon"></Label>
+          </GridLayout>
+
+          <GridLayout *ngIf="slide.art === 'prices'" class="art-phone">
+            <GridLayout rows="auto,auto,auto" class="phone-card">
+              <Label text="Settings" class="art-phone-header"></Label>
+              <Label text="Jobs" class="art-phone-row"></Label>
+              <Label text="Equipment Prices" class="art-phone-row"></Label>
+            </GridLayout>
+          </GridLayout>
+
+          <GridLayout *ngIf="slide.art === 'calculations'" class="art-phone">
+            <GridLayout rows="auto,auto,auto" class="phone-card phone-card-compact">
+              <Label text="Install" class="art-phone-row"></Label>
+              <Label text="Equipment" class="art-phone-row"></Label>
+              <Label text="Total: $220.00" class="art-phone-total"></Label>
+            </GridLayout>
+          </GridLayout>
+
+          <GridLayout *ngIf="slide.art === 'tracking'" class="art-clipboard">
+            <Label text="&#xf46d;" class="fas art-primary-icon"></Label>
+            <Label text="&#xf075;" class="fas art-secondary-icon art-badge-icon"></Label>
+          </GridLayout>
+
+          <GridLayout *ngIf="slide.art === 'ready'" class="art-clipboard">
+            <Label text="&#xf058;" class="fas art-primary-icon art-success-icon"></Label>
+            <Label text="&#xf013;" class="fas art-secondary-icon art-gear-icon"></Label>
+          </GridLayout>
+        </GridLayout>
+
         <Label [text]="slide.description" textWrap="true" class="onboarding-subtitle"></Label>
+        <Label
+          *ngIf="slide.eyebrow"
+          [text]="slide.eyebrow"
+          textWrap="true"
+          class="onboarding-eyebrow">
+        </Label>
       </StackLayout>
 
-      <GridLayout row="2" rows="auto,auto" class="onboarding-footer">
-        <GridLayout row="0" columns="auto,auto,auto" horizontalAlignment="center" class="onboarding-dots">
+      <GridLayout row="2" columns="auto,auto,auto,auto,auto" horizontalAlignment="center" class="onboarding-dots">
           <Label
             *ngFor="let item of slides; let i = index"
             [text]="i === currentIndex ? '●' : '○'"
             class="onboarding-dot"
             (tap)="goToSlide(i)">
           </Label>
-        </GridLayout>
+      </GridLayout>
 
+      <GridLayout row="3" rows="auto,auto" class="onboarding-actions">
         <Button
-          row="1"
+          row="0"
           [text]="primaryButtonText"
           class="onboarding-primary-btn"
           (tap)="advance()">
+        </Button>
+
+        <Button
+          *ngIf="showSecondaryButton"
+          row="1"
+          text="Skip for now"
+          class="onboarding-secondary-btn"
+          (tap)="skip()">
         </Button>
       </GridLayout>
     </GridLayout>
