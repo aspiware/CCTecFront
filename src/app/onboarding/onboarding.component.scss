@@ -408,14 +408,200 @@
   border-color: #cfd7e5;
 }
 
+.ns-light .onboarding-backdrop {
+  background-color: #dfe4ec;
+}
+
+.ns-light .onboarding-card {
+  background-color: #ffffff;
+}
+
+.ns-light .onboarding-brand {
+  color: #27457d;
+}
+
+.ns-light .onboarding-skip {
+  color: #6c7b93;
+}
+
+.ns-light .onboarding-title {
+  color: #234277;
+}
+
+.ns-light .onboarding-subtitle {
+  color: #30496f;
+}
+
+.ns-light .onboarding-eyebrow {
+  color: #5372a0;
+}
+
+.ns-light .onboarding-dot {
+  color: #4d75b1;
+}
+
+.ns-light .onboarding-primary-btn {
+  background-color: #1664c0;
+  color: #ffffff;
+}
+
+.ns-light .onboarding-secondary-btn {
+  background-color: #ffffff;
+  color: #3f4f67;
+  border-color: #cfd7e5;
+}
+
+.ns-light .art-orb {
+  background-color: rgba(115, 178, 237, 0.24);
+}
+
+.ns-light .job-list-glow,
+.ns-light .prices-panel-glow {
+  background-color: rgba(93, 136, 212, 0.1);
+}
+
+.ns-light .job-list-pill,
+.ns-light .job-list-card,
+.ns-light .job-list-card-secondary,
+.ns-light .job-list-action-icon,
+.ns-light .prices-panel,
+.ns-light .prices-panel-frame,
+.ns-light .prices-panel-row {
+  border-color: rgba(109, 142, 211, 0.24);
+}
+
 .ns-dark .onboarding-backdrop {
-  background-color: #12161f;
+  background-color: #0b1220;
 }
 
 .ns-dark .onboarding-card {
-  background-color: #f6f7fb;
+  background-color: #121b2c;
+  shadow-color: #000000;
+  shadow-opacity: 0.34;
+}
+
+.ns-dark .onboarding-brand {
+  color: #e6eefc;
+}
+
+.ns-dark .onboarding-skip {
+  color: #a7b8d6;
+}
+
+.ns-dark .onboarding-title {
+  color: #f4f8ff;
+}
+
+.ns-dark .onboarding-subtitle {
+  color: #c3d2ea;
+}
+
+.ns-dark .onboarding-eyebrow {
+  color: #8ea6cf;
 }
 
 .ns-dark .onboarding-dot {
-  color: #4d75b1;
+  color: #89aee8;
+}
+
+.ns-dark .onboarding-primary-btn {
+  background-color: #3a84eb;
+  color: #ffffff;
+}
+
+.ns-dark .onboarding-secondary-btn {
+  background-color: #172133;
+  color: #d8e3f8;
+  border-color: #32435f;
+}
+
+.ns-dark .art-orb {
+  background-color: rgba(74, 130, 212, 0.18);
+}
+
+.ns-dark .art-primary-icon,
+.ns-dark .art-gear-icon {
+  color: #8ab3f5;
+}
+
+.ns-dark .art-secondary-icon {
+  color: #ffd166;
+}
+
+.ns-dark .art-badge-icon {
+  color: #7fb2ff;
+}
+
+.ns-dark .art-success-icon {
+  color: #7bd88f;
+}
+
+.ns-dark .job-list-glow {
+  background-color: rgba(68, 115, 194, 0.16);
+}
+
+.ns-dark .job-list-pill {
+  background-color: #1a2b50;
+  color: #f4f8ff;
+  border-color: rgba(133, 165, 226, 0.22);
+}
+
+.ns-dark .job-list-card {
+  background-color: #142547;
+  border-color: rgba(121, 154, 219, 0.26);
+}
+
+.ns-dark .job-list-card-secondary {
+  background-color: #182b55;
+}
+
+.ns-dark .job-list-title,
+.ns-dark .job-list-amount {
+  color: #f6f9ff;
+}
+
+.ns-dark .job-list-meta,
+.ns-dark .job-list-detail,
+.ns-dark .job-list-time {
+  color: rgba(228, 237, 252, 0.88);
+}
+
+.ns-dark .job-list-action-icon {
+  background-color: #1b2f58;
+  border-color: rgba(104, 138, 205, 0.22);
+  color: #f4f8ff;
+}
+
+.ns-dark .prices-panel-glow {
+  background-color: rgba(68, 115, 194, 0.16);
+}
+
+.ns-dark .prices-panel-frame {
+  background-color: #101c36;
+  border-color: rgba(149, 176, 230, 0.32);
+}
+
+.ns-dark .prices-panel {
+  background-color: #15274b;
+  border-color: rgba(124, 157, 219, 0.26);
+}
+
+.ns-dark .prices-panel-row {
+  background-color: #1a2f59;
+  border-color: rgba(92, 128, 196, 0.18);
+}
+
+.ns-dark .prices-panel-row-active {
+  background-color: #27498d;
+  border-color: rgba(113, 187, 255, 0.88);
+}
+
+.ns-dark .prices-panel-icon {
+  background-color: #3b89f3;
+  border-color: rgba(208, 231, 255, 0.26);
+}
+
+.ns-dark .prices-panel-text,
+.ns-dark .prices-panel-arrow {
+  color: #f4f8ff;
 }
