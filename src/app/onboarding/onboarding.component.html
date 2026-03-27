@@ -2,7 +2,7 @@
   <GridLayout rows="*" columns="*">
     <StackLayout row="0" col="0" class="onboarding-backdrop"></StackLayout>
 
-    <GridLayout row="0" col="0" rows="auto,*,auto,auto" class="onboarding-card">
+    <GridLayout row="0" col="0" rows="auto,*,auto,auto" class="onboarding-card" (swipe)="onSwipe($event)">
       <GridLayout row="0" columns="*,auto" class="onboarding-header">
         <Label text="CCTec" class="onboarding-brand"></Label>
         <Button text="Skip" class="onboarding-skip" (tap)="skip()"></Button>

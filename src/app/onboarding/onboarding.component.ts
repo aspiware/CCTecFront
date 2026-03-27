@@ -1,5 +1,6 @@
 import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ModalDialogParams, NativeScriptCommonModule } from '@nativescript/angular';
+import { SwipeDirection, SwipeGestureEventData } from '@nativescript/core';
 import { setBoolean } from '@nativescript/core/application-settings';
 
 @Component({
@@ -80,6 +81,17 @@ export class OnboardingComponent {
     }
 
     this.currentIndex = index;
+  }
+
+  public onSwipe(args: SwipeGestureEventData): void {
+    if (args.direction === SwipeDirection.left && !this.isLastSlide) {
+      this.currentIndex += 1;
+      return;
+    }
+
+    if (args.direction === SwipeDirection.right && this.currentIndex > 0) {
+      this.currentIndex -= 1;
+    }
   }
 
   private completeOnboarding(openSettings: boolean): void {
