@@ -11,7 +11,10 @@
       <StackLayout row="1" verticalAlignment="middle" class="onboarding-content">
         <Label [text]="slide.title" textWrap="true" class="onboarding-title"></Label>
 
-        <GridLayout class="onboarding-art-shell" [class.onboarding-art-shell-prices]="slide.art === 'prices'">
+        <GridLayout
+          class="onboarding-art-shell"
+          [class.onboarding-art-shell-prices]="slide.art === 'prices'"
+          [class.onboarding-art-shell-calculations]="slide.art === 'calculations'">
           <GridLayout class="art-orb"></GridLayout>
 
           <GridLayout *ngIf="slide.art === 'welcome'" class="art-welcome">
@@ -46,11 +49,41 @@
             </GridLayout>
           </GridLayout>
 
-          <GridLayout *ngIf="slide.art === 'calculations'" class="art-phone">
-            <GridLayout rows="auto,auto,auto" class="phone-card phone-card-compact">
-              <Label text="Install" class="art-phone-row"></Label>
-              <Label text="Equipment" class="art-phone-row"></Label>
-              <Label text="Total: $220.00" class="art-phone-total"></Label>
+          <GridLayout *ngIf="slide.art === 'calculations'" class="art-phone art-job-list">
+            <GridLayout class="job-list-glow"></GridLayout>
+            <GridLayout rows="auto,auto,auto" class="job-list-panel">
+              <GridLayout row="0" columns="*,auto" class="job-list-summary">
+                <Label col="0" text="Today: $612.45" class="job-list-pill"></Label>
+                <Label col="1" text="Units: 168" class="job-list-pill job-list-pill-right"></Label>
+              </GridLayout>
+
+              <GridLayout row="1" rows="auto,auto,auto,auto" class="job-list-card">
+                <GridLayout row="0" columns="*,auto">
+                  <Label col="0" text="HSD OUT - Trouble Call" class="job-list-title"></Label>
+                  <Label col="1" text="$80.00" class="job-list-amount"></Label>
+                </GridLayout>
+                <Label row="1" text="15331 IRIS CROSSING LN, HOUSTON, TX" class="job-list-meta"></Label>
+                <GridLayout row="2" columns="*,auto" class="job-list-details">
+                  <Label col="0" text="Job# 665226" class="job-list-detail"></Label>
+                  <Label col="1" text="Units: 17" class="job-list-detail"></Label>
+                </GridLayout>
+                <GridLayout row="3" columns="auto,auto,auto" class="job-list-actions">
+                  <Label col="0" text="&#xf075;" class="fas job-list-action-icon"></Label>
+                  <Label col="1" text="&#xf005;" class="fas job-list-action-icon"></Label>
+                  <Label col="2" text="&#xf1eb;" class="fas job-list-action-icon"></Label>
+                </GridLayout>
+              </GridLayout>
+
+              <GridLayout row="2" rows="auto,auto" class="job-list-card job-list-card-secondary">
+                <GridLayout row="0" columns="*,auto">
+                  <Label col="0" text="TECH RECOVERY" class="job-list-title"></Label>
+                  <Label col="1" text="$52.33" class="job-list-amount"></Label>
+                </GridLayout>
+                <GridLayout row="1" columns="*,auto" class="job-list-details">
+                  <Label col="0" text="Job# 666203" class="job-list-detail"></Label>
+                  <Label col="1" text="Units: 20" class="job-list-detail"></Label>
+                </GridLayout>
+              </GridLayout>
             </GridLayout>
           </GridLayout>
 
