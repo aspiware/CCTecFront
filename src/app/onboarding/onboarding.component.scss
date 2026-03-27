@@ -66,9 +66,9 @@
 }
 
 .onboarding-art-shell-calculations {
-  height: 328;
-  margin-top: -2;
-  margin-bottom: 18;
+  height: 360;
+  margin-top: 0;
+  margin-bottom: 24;
 }
 
 .art-orb {
@@ -210,6 +210,20 @@
 
 .job-list-detail {
   color: rgba(230, 237, 250, 0.84);
+  font-size: 12;
+}
+
+.job-list-detail-units {
+  vertical-align: middle;
+  margin-left: 10;
+}
+
+.job-list-time-row {
+  margin-top: 10;
+}
+
+.job-list-time {
+  color: rgba(236, 242, 255, 0.9);
   font-size: 12;
 }
 
