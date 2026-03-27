@@ -116,6 +116,51 @@
   background-color: #1f2e46;
 }
 
+.prices-panel {
+  width: 250;
+  padding: 14 12;
+  border-radius: 22;
+  background-color: #0e1b35;
+  border-width: 1;
+  border-color: rgba(126, 182, 255, 0.28);
+  horizontal-align: center;
+  vertical-align: middle;
+}
+
+.prices-panel-row {
+  padding: 12 12;
+  margin-bottom: 8;
+  border-radius: 16;
+  background-color: #13264d;
+}
+
+.prices-panel-row-active {
+  border-width: 1;
+  border-color: #4ea1ff;
+  background-color: #193567;
+}
+
+.prices-panel-icon {
+  width: 28;
+  font-size: 20;
+  color: #ffffff;
+  vertical-align: middle;
+}
+
+.prices-panel-text {
+  font-size: 14;
+  font-weight: 600;
+  color: #ffffff;
+  margin-left: 10;
+  vertical-align: middle;
+}
+
+.prices-panel-arrow {
+  font-size: 16;
+  color: rgba(255, 255, 255, 0.82);
+  vertical-align: middle;
+}
+
 .art-phone-header {
   color: #ffffff;
   font-size: 15;

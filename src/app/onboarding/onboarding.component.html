@@ -20,10 +20,27 @@
           </GridLayout>
 
           <GridLayout *ngIf="slide.art === 'prices'" class="art-phone">
-            <GridLayout rows="auto,auto,auto" class="phone-card">
-              <Label text="Settings" class="art-phone-header"></Label>
-              <Label text="Jobs" class="art-phone-row"></Label>
-              <Label text="Equipment Prices" class="art-phone-row"></Label>
+            <GridLayout rows="auto,auto,auto,auto" class="prices-panel">
+              <GridLayout row="0" columns="auto,*,auto" class="prices-panel-row prices-panel-row-active">
+                <Label col="0" text="&#xf015;" class="fas prices-panel-icon"></Label>
+                <Label col="1" text="Residential Prices" class="prices-panel-text"></Label>
+                <Label col="2" text="&#xf054;" class="fas prices-panel-arrow"></Label>
+              </GridLayout>
+              <GridLayout row="1" columns="auto,*,auto" class="prices-panel-row">
+                <Label col="0" text="&#xf132;" class="fas prices-panel-icon"></Label>
+                <Label col="1" text="XH Prices" class="prices-panel-text"></Label>
+                <Label col="2" text="&#xf054;" class="fas prices-panel-arrow"></Label>
+              </GridLayout>
+              <GridLayout row="2" columns="auto,*,auto" class="prices-panel-row">
+                <Label col="0" text="&#xf1eb;" class="fas prices-panel-icon"></Label>
+                <Label col="1" text="Fiber Prices" class="prices-panel-text"></Label>
+                <Label col="2" text="&#xf054;" class="fas prices-panel-arrow"></Label>
+              </GridLayout>
+              <GridLayout row="3" columns="auto,*,auto" class="prices-panel-row">
+                <Label col="0" text="&#xf0b1;" class="fas prices-panel-icon"></Label>
+                <Label col="1" text="Business Prices" class="prices-panel-text"></Label>
+                <Label col="2" text="&#xf054;" class="fas prices-panel-arrow"></Label>
+              </GridLayout>
             </GridLayout>
           </GridLayout>
 
