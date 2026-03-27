@@ -11,7 +11,7 @@
       <StackLayout row="1" verticalAlignment="middle" class="onboarding-content">
         <Label [text]="slide.title" textWrap="true" class="onboarding-title"></Label>
 
-        <GridLayout class="onboarding-art-shell">
+        <GridLayout class="onboarding-art-shell" [class.onboarding-art-shell-prices]="slide.art === 'prices'">
           <GridLayout class="art-orb"></GridLayout>
 
           <GridLayout *ngIf="slide.art === 'welcome'" class="art-welcome">
@@ -20,6 +20,8 @@
           </GridLayout>
 
           <GridLayout *ngIf="slide.art === 'prices'" class="art-phone">
+            <GridLayout class="prices-panel-glow"></GridLayout>
+            <GridLayout class="prices-panel-frame"></GridLayout>
             <GridLayout rows="auto,auto,auto,auto" class="prices-panel">
               <GridLayout row="0" columns="auto,*,auto" class="prices-panel-row prices-panel-row-active">
                 <Label col="0" text="&#xf015;" class="fas prices-panel-icon"></Label>
@@ -27,12 +29,12 @@
                 <Label col="2" text="&#xf054;" class="fas prices-panel-arrow"></Label>
               </GridLayout>
               <GridLayout row="1" columns="auto,*,auto" class="prices-panel-row">
-                <Label col="0" text="&#xf132;" class="fas prices-panel-icon"></Label>
+                <Label col="0" text="&#xf3ed;" class="fas prices-panel-icon"></Label>
                 <Label col="1" text="XH Prices" class="prices-panel-text"></Label>
                 <Label col="2" text="&#xf054;" class="fas prices-panel-arrow"></Label>
               </GridLayout>
               <GridLayout row="2" columns="auto,*,auto" class="prices-panel-row">
-                <Label col="0" text="&#xf1eb;" class="fas prices-panel-icon"></Label>
+                <Label col="0" text="&#xf6ff;" class="fas prices-panel-icon"></Label>
                 <Label col="1" text="Fiber Prices" class="prices-panel-text"></Label>
                 <Label col="2" text="&#xf054;" class="fas prices-panel-arrow"></Label>
               </GridLayout>
