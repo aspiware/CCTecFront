@@ -1,6 +1,6 @@
-import { Component, NO_ERRORS_SCHEMA } from '@angular/core';
+import { Component, ElementRef, NO_ERRORS_SCHEMA, ViewChild } from '@angular/core';
 import { ModalDialogParams, NativeScriptCommonModule } from '@nativescript/angular';
-import { SwipeDirection, SwipeGestureEventData } from '@nativescript/core';
+import { SwipeDirection, SwipeGestureEventData, View } from '@nativescript/core';
 import { setBoolean } from '@nativescript/core/application-settings';
 
 @Component({
@@ -13,6 +13,8 @@ import { setBoolean } from '@nativescript/core/application-settings';
 })
 export class OnboardingComponent {
   private static readonly STORAGE_KEY = 'hasSeenOnboarding';
+
+  @ViewChild('slideContent', { static: false }) private slideContentRef?: ElementRef<View>;
 
   public currentIndex = 0;
   public slides = [
@@ -72,7 +74,7 @@ export class OnboardingComponent {
       return;
     }
 
-    this.currentIndex += 1;
+    this.setSlide(this.currentIndex + 1);
   }
 
   public goToSlide(index: number): void {
@@ -80,18 +82,44 @@ export class OnboardingComponent {
       return;
     }
 
-    this.currentIndex = index;
+    this.setSlide(index);
   }
 
   public onSwipe(args: SwipeGestureEventData): void {
     if (args.direction === SwipeDirection.left && !this.isLastSlide) {
-      this.currentIndex += 1;
+      this.setSlide(this.currentIndex + 1);
       return;
     }
 
     if (args.direction === SwipeDirection.right && this.currentIndex > 0) {
-      this.currentIndex -= 1;
+      this.setSlide(this.currentIndex - 1);
     }
+  }
+
+  private setSlide(index: number): void {
+    if (index < 0 || index >= this.slides.length || index === this.currentIndex) {
+      return;
+    }
+
+    this.currentIndex = index;
+    setTimeout(() => this.playSlideIn(), 0);
+  }
+
+  private playSlideIn(): void {
+    const view = this.slideContentRef?.nativeElement;
+    if (!view) {
+      return;
+    }
+
+    view.opacity = 0;
+    view.translateX = 18;
+
+    void view.animate({
+      opacity: 1,
+      translate: { x: 0, y: 0 },
+      duration: 180,
+      curve: 'easeOut',
+    });
   }
 
   private completeOnboarding(openSettings: boolean): void {
