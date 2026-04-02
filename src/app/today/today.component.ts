@@ -1116,6 +1116,14 @@ export class TodayComponent implements OnInit {
     });
   }
 
+  public goPHTScans(job?: any): void {
+    const queryParams = this.buildActivateServiceQueryParams(job);
+    this.router.navigate(['../xm-pht-scans'], {
+      queryParams,
+      relativeTo: this.activatedRoute,
+    });
+  }
+
   private buildActivateServiceQueryParams(job?: any): any {
     if (!job) {
       return {};

@@ -1,6 +1,8 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { NativeScriptCommonModule, NativeScriptFormsModule } from '@nativescript/angular';
-import { Application, CoreTypes, Page } from '@nativescript/core';
+import { Application, CoreTypes, Page, alert } from '@nativescript/core';
+import { getString } from '@nativescript/core/application-settings';
 import {
   CameraUpdate,
   GoogleMap,
@@ -11,6 +13,9 @@ import {
 import { GoogleMapsModule } from '@nativescript/google-maps/angular';
 import * as geolocation from '@nativescript/geolocation';
 import { QuantityStepperComponent } from '../shared/components/quantity-stepper/quantity-stepper.component';
+import { firstValueFrom } from 'rxjs';
+import { TodayService } from '../today/today.service';
+import { UsersService } from '../shared/services/users.service';
 
 @Component({
   standalone: true,
@@ -33,9 +38,11 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
   public selectedLatitude: number | null = null;
   public selectedLongitude: number | null = null;
   public selectedScanLocationIndex = 0;
+  public selectedTapPortIndex = 0;
   public selectedTapValueIndex = 0;
   public upstreamValue = 35;
   public downstreamValue = 8;
+  public isSending = false;
   public scanLocationList = [
     'Tap',
     'Ground Block',
@@ -58,16 +65,23 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
     4,
     8
   ];
+  public tapValueList = Array.from({ length: 27 }, (_, index) => index + 4);
 
   private appearanceChangedHandler?: () => void;
   private googleMap?: GoogleMap;
   private selectedMarker?: Marker;
   private currentLatitude?: number;
   private currentLongitude?: number;
+  private currentJob: any = null;
+  private userId = 0;
+  private bp = '';
 
   constructor(
+    private route: ActivatedRoute,
     private cdr: ChangeDetectorRef,
-    private page: Page
+    private page: Page,
+    private todayService: TodayService,
+    private usersService: UsersService
   ) {}
 
   ngOnInit(): void {
@@ -77,6 +91,11 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     };
     Application.on(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
+    this.userId = Number(this.usersService.getUser()?.userId || 0);
+    this.bp = getString('bp', '');
+    this.route.queryParams.subscribe((params) => {
+      this.currentJob = this.normalizeJobParams(params || {});
+    });
     void this.loadCurrentLocation();
   }
 
@@ -149,8 +168,20 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
     return this.scanLocationList[this.selectedScanLocationIndex] || this.scanLocationList[0];
   }
 
+  public get selectedTapPort(): string {
+    return String(this.tapPortList[this.selectedTapPortIndex] ?? this.tapPortList[0]);
+  }
+
   public get selectedTapValue(): string {
-    return String(this.tapPortList[this.selectedTapValueIndex] ?? this.tapPortList[0]);
+    return String(this.tapValueList[this.selectedTapValueIndex] ?? this.tapValueList[0]);
+  }
+
+  public get selectedTapValueNumber(): number {
+    return Number(this.tapValueList[this.selectedTapValueIndex] ?? this.tapValueList[0]);
+  }
+
+  public get selectedTapPortNumber(): number {
+    return Number(this.tapPortList[this.selectedTapPortIndex] ?? this.tapPortList[0]);
   }
 
   public onUpstreamValueChange(value: number): void {
@@ -159,6 +190,101 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
 
   public onDownstreamValueChange(value: number): void {
     this.downstreamValue = value;
+  }
+
+  public async sendPHT(): Promise<void> {
+    if (!this.userId || !String(this.currentJob?.workOrderNumber || '').trim()) {
+      await alert({
+        title: 'Missing Job',
+        message: 'Open XM PHT Scans from a job so the work order can be sent.',
+        okButtonText: 'OK',
+      });
+      return;
+    }
+
+    if (this.selectedLatitude === null || this.selectedLongitude === null) {
+      await alert({
+        title: 'Missing Location',
+        message: 'Select a point on the map before sending PHT data.',
+        okButtonText: 'OK',
+      });
+      return;
+    }
+
+    if (this.isSending) {
+      return;
+    }
+
+    this.isSending = true;
+    this.cdr.detectChanges();
+
+    try {
+      const payload = {
+        userId: this.userId,
+        bp: this.bp,
+        workOrderNumber: this.currentJob.workOrderNumber,
+        location: this.selectedScanLocation,
+        locationData: {
+          tapValue: this.selectedTapValueNumber,
+          tapPort: this.selectedTapPortNumber,
+        },
+        lat: this.selectedLatitude,
+        lon: this.selectedLongitude,
+        upstream: this.upstreamValue,
+        downstream: this.downstreamValue,
+      };
+
+      await firstValueFrom(this.todayService.sendPHTScans(payload));
+
+      await alert({
+        title: 'PHT Sent',
+        message: 'PHT scan data was sent successfully.',
+        okButtonText: 'OK',
+      });
+    } catch (error: any) {
+      console.log('XM PHT Scans send failed', error);
+      await alert({
+        title: 'Send Failed',
+        message: error?.message || 'Could not send PHT scan data.',
+        okButtonText: 'OK',
+      });
+    } finally {
+      this.isSending = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  private normalizeJobParams(params: any): any {
+    return {
+      ...params,
+      customer: this.parseJsonParam(params?.customer),
+      devices: this.parseJsonParam(params?.devices),
+      customJob: this.parseJsonParam(params?.customJob),
+    };
+  }
+
+  private parseJsonParam(value: any): any {
+    if (typeof value !== 'string') {
+      return value;
+    }
+
+    const text = value.trim();
+    if (!text || text === '[object Object]') {
+      return null;
+    }
+
+    const looksLikeJson =
+      (text.startsWith('{') && text.endsWith('}')) ||
+      (text.startsWith('[') && text.endsWith(']'));
+    if (!looksLikeJson) {
+      return value;
+    }
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      return value;
+    }
   }
 
   private async loadCurrentLocation(): Promise<void> {

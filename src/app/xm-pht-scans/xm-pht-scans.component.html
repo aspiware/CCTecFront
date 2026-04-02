@@ -1,11 +1,17 @@
-<ActionBar class="action-bar" title="XM PHT Scans"></ActionBar>
+<ActionBar class="action-bar" title="XM PHT Scans">
+  <ActionItem
+    ios.position="right"
+    [text]="isSending ? 'Sending...' : 'Send'"
+    (tap)="sendPHT()">
+  </ActionItem>
+</ActionBar>
 
 <GridLayout
   rows="*"
   [class]="'xm-pht-scans-root ' + (isDarkTheme ? 'theme-dark' : 'theme-light')"
   (loaded)="onRootLoaded()">
   <GridLayout row="0" rows="auto,auto,*">
-    <GridLayout row="0" columns="*,100" class="xm-pht-scans-picker-row">
+    <GridLayout row="0" columns="*,100,100" class="xm-pht-scans-picker-row">
       <StackLayout col="0" class="xm-pht-scans-picker-card xm-pht-scans-picker-card-left">
         <Label text="Scan Location" class="xm-pht-scans-picker-label"></Label>
         <ListPicker
@@ -20,11 +26,21 @@
         </Label>
       </StackLayout>
 
-      <StackLayout col="1" class="xm-pht-scans-picker-card">
-        <Label text="Tap Value" class="xm-pht-scans-picker-label"></Label>
+      <StackLayout col="1" class="xm-pht-scans-picker-card xm-pht-scans-picker-card-left">
+        <Label text="Tap Port" class="xm-pht-scans-picker-label"></Label>
         <ListPicker
           class="xm-pht-scans-picker"
           [items]="tapPortList"
+          [(ngModel)]="selectedTapPortIndex">
+        </ListPicker>
+        <Label [text]="selectedTapPort" class="xm-pht-scans-picker-value"></Label>
+      </StackLayout>
+
+      <StackLayout col="2" class="xm-pht-scans-picker-card">
+        <Label text="Tap Value" class="xm-pht-scans-picker-label"></Label>
+        <ListPicker
+          class="xm-pht-scans-picker"
+          [items]="tapValueList"
           [(ngModel)]="selectedTapValueIndex">
         </ListPicker>
         <Label [text]="selectedTapValue" class="xm-pht-scans-picker-value"></Label>
