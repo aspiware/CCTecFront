@@ -82,8 +82,6 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
   public onMapTap(args: MapTapEvent): void {
     const { lat, lng } = args.coordinate;
 
-    this.mapLat = lat;
-    this.mapLng = lng;
     this.selectedLatitude = lat;
     this.selectedLongitude = lng;
 
@@ -98,7 +96,6 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
       color: '#2563eb',
     });
 
-    this.googleMap?.moveCamera(CameraUpdate.fromCoordinate({ lat, lng }, this.mapZoom));
     this.cdr.detectChanges();
   }
 
