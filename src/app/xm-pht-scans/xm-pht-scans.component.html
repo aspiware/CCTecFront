@@ -4,7 +4,7 @@
   rows="*"
   [class]="'xm-pht-scans-root ' + (isDarkTheme ? 'theme-dark' : 'theme-light')"
   (loaded)="onRootLoaded()">
-  <GridLayout row="0" rows="auto,*">
+  <GridLayout row="0" rows="auto,auto,*">
     <GridLayout row="0" columns="*,100" class="xm-pht-scans-picker-row">
       <StackLayout col="0" class="xm-pht-scans-picker-card xm-pht-scans-picker-card-left">
         <Label text="Scan Location" class="xm-pht-scans-picker-label"></Label>
@@ -31,8 +31,32 @@
       </StackLayout>
     </GridLayout>
 
+    <GridLayout row="1" columns="*,*" class="xm-pht-scans-stepper-row">
+      <StackLayout col="0" class="xm-pht-scans-stepper-card xm-pht-scans-stepper-card-left">
+        <app-quantity-stepper
+          label="Upstream Value"
+          [value]="upstreamValue"
+          [min]="20"
+          [max]="55"
+          [step]="1"
+          (valueChange)="onUpstreamValueChange($event)">
+        </app-quantity-stepper>
+      </StackLayout>
+
+      <StackLayout col="1" class="xm-pht-scans-stepper-card">
+        <app-quantity-stepper
+          label="Downstream Value"
+          [value]="downstreamValue"
+          [min]="-25"
+          [max]="25"
+          [step]="1"
+          (valueChange)="onDownstreamValueChange($event)">
+        </app-quantity-stepper>
+      </StackLayout>
+    </GridLayout>
+
     <MapView
-      row="1"
+      row="2"
       class="xm-pht-scans-map"
       [lat]="mapLat"
       [lng]="mapLng"

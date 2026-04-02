@@ -45,6 +45,20 @@
   min-height: 32;
 }
 
+.xm-pht-scans-stepper-row {
+  margin-bottom: 14;
+}
+
+.xm-pht-scans-stepper-card {
+  padding: 14;
+  border-radius: 14;
+  background-color: #eef4ff;
+}
+
+.xm-pht-scans-stepper-card-left {
+  margin-right: 8;
+}
+
 .xm-pht-scans-map {
   border-radius: 16;
   min-height: 320;
@@ -66,6 +80,10 @@
 .xm-pht-scans-root.theme-dark .xm-pht-scans-picker,
 .xm-pht-scans-root.theme-dark .xm-pht-scans-picker-value {
   color: #eef4ff;
+}
+
+.xm-pht-scans-root.theme-dark .xm-pht-scans-stepper-card {
+  background-color: #111b2a;
 }
 
 .xm-pht-scans-root.theme-dark .xm-pht-scans-map {

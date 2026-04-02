@@ -10,11 +10,12 @@ import {
 } from '@nativescript/google-maps';
 import { GoogleMapsModule } from '@nativescript/google-maps/angular';
 import * as geolocation from '@nativescript/geolocation';
+import { QuantityStepperComponent } from '../shared/components/quantity-stepper/quantity-stepper.component';
 
 @Component({
   standalone: true,
   selector: 'app-xm-pht-scans',
-  imports: [NativeScriptCommonModule, NativeScriptFormsModule, GoogleMapsModule],
+  imports: [NativeScriptCommonModule, NativeScriptFormsModule, GoogleMapsModule, QuantityStepperComponent],
   schemas: [NO_ERRORS_SCHEMA],
   templateUrl: './xm-pht-scans.component.html',
   styleUrl: './xm-pht-scans.component.scss',
@@ -33,6 +34,8 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
   public selectedLongitude: number | null = null;
   public selectedScanLocationIndex = 0;
   public selectedTapValueIndex = 0;
+  public upstreamValue = 35;
+  public downstreamValue = 8;
   public scanLocationList = [
     'Tap',
     'Ground Block',
@@ -148,6 +151,14 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
 
   public get selectedTapValue(): string {
     return String(this.tapPortList[this.selectedTapValueIndex] ?? this.tapPortList[0]);
+  }
+
+  public onUpstreamValueChange(value: number): void {
+    this.upstreamValue = value;
+  }
+
+  public onDownstreamValueChange(value: number): void {
+    this.downstreamValue = value;
   }
 
   private async loadCurrentLocation(): Promise<void> {
