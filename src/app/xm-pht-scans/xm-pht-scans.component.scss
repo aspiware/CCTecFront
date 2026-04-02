@@ -51,41 +51,6 @@
   background-color: #d7e3f9;
 }
 
-.xm-pht-scans-coordinates {
-  margin-top: 16;
-  padding: 16;
-  border-radius: 14;
-  background-color: #eef4ff;
-}
-
-.xm-pht-scans-coordinate-block {
-  margin-right: 12;
-}
-
-.xm-pht-scans-coordinate-label {
-  font-size: 12;
-  font-weight: 600;
-  color: #5f7091;
-  text-transform: uppercase;
-}
-
-.xm-pht-scans-coordinate-value {
-  margin-top: 4;
-  font-size: 16;
-  font-weight: 700;
-  color: #16345e;
-}
-
-.xm-pht-scans-clear-button {
-  padding: 0 16;
-  height: 38;
-  border-radius: 999;
-  background-color: #dbe7ff;
-  color: #1f4db8;
-  font-size: 13;
-  font-weight: 700;
-}
-
 .xm-pht-scans-root.theme-dark {
   background-color: #0f1726;
 }
@@ -105,21 +70,4 @@
 
 .xm-pht-scans-root.theme-dark .xm-pht-scans-map {
   background-color: #101827;
-}
-
-.xm-pht-scans-root.theme-dark .xm-pht-scans-coordinates {
-  background-color: #111b2a;
-}
-
-.xm-pht-scans-root.theme-dark .xm-pht-scans-coordinate-label {
-  color: #91a5c9;
-}
-
-.xm-pht-scans-root.theme-dark .xm-pht-scans-coordinate-value {
-  color: #eef4ff;
-}
-
-.xm-pht-scans-root.theme-dark .xm-pht-scans-clear-button {
-  background-color: #20304a;
-  color: #dbe8ff;
 }

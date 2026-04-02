@@ -4,7 +4,7 @@
   rows="*"
   [class]="'xm-pht-scans-root ' + (isDarkTheme ? 'theme-dark' : 'theme-light')"
   (loaded)="onRootLoaded()">
-  <GridLayout row="0" rows="auto,*,auto">
+  <GridLayout row="0" rows="auto,*">
     <GridLayout row="0" columns="*,100" class="xm-pht-scans-picker-row">
       <StackLayout col="0" class="xm-pht-scans-picker-card xm-pht-scans-picker-card-left">
         <Label text="Scan Location" class="xm-pht-scans-picker-label"></Label>
@@ -40,25 +40,5 @@
       (ready)="onMapReady($event)"
       (mapTap)="onMapTap($event)">
     </MapView>
-
-    <GridLayout row="2" rows="auto,auto,auto" columns="*,auto" class="xm-pht-scans-coordinates">
-      <StackLayout row="0" col="0" class="xm-pht-scans-coordinate-block">
-        <Label text="Latitude" class="xm-pht-scans-coordinate-label"></Label>
-        <Label [text]="latitudeText" class="xm-pht-scans-coordinate-value"></Label>
-      </StackLayout>
-
-      <Button
-        row="0"
-        col="1"
-        text="Clear"
-        class="xm-pht-scans-clear-button"
-        (tap)="clearSelectedPoint()">
-      </Button>
-
-      <StackLayout row="1" col="0" colSpan="2" class="xm-pht-scans-coordinate-block">
-        <Label text="Longitude" class="xm-pht-scans-coordinate-label"></Label>
-        <Label [text]="longitudeText" class="xm-pht-scans-coordinate-value"></Label>
-      </StackLayout>
-    </GridLayout>
   </GridLayout>
 </GridLayout>
