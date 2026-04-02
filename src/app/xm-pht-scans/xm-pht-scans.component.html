@@ -1,8 +1,17 @@
 <ActionBar class="action-bar" title="XM PHT Scans">
-  <ActionItem
-    ios.position="right"
-    [text]="isSending ? 'Sending...' : 'Send'"
-    (tap)="sendPHT()">
+  <ActionItem ios.position="right" [visibility]="isSending ? 'collapse' : 'visible'">
+    <StackLayout>
+      <MenuButton
+        style="height: 48; width: 35; padding: 0; margin: 0;"
+        [useSFIcon]="true"
+        [sfIconName]="'icloud.and.arrow.up.fill'"
+        [isRightSide]="true"
+        (tap)="sendPHT()">
+      </MenuButton>
+    </StackLayout>
+  </ActionItem>
+  <ActionItem ios.position="right" [visibility]="isSending ? 'visible' : 'collapse'">
+    <ActivityIndicator [busy]="isSending" width="20" height="20"></ActivityIndicator>
   </ActionItem>
 </ActionBar>
 

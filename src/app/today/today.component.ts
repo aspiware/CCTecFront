@@ -947,6 +947,14 @@ export class TodayComponent implements OnInit {
 
   public selected(event: MenuEvent, item?: any): void {
     console.log('[Today] selected', event?.index, item);
+
+    switch (event?.index) {
+      case 1:
+        this.goPHTScans(item);
+        break;
+      default:
+        break;
+    }
   }
 
   public onPullToRefresh(event: any): void {
