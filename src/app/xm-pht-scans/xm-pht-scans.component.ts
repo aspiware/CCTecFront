@@ -195,7 +195,7 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
 
   public async sendPHT(): Promise<void> {
     const workOrderNumber = String(
-      XmPhtScansComponent.TEST_WORK_ORDER_NUMBER || this.currentJob?.workOrderNumber || ''
+      this.currentJob?.workOrderNumber || XmPhtScansComponent.TEST_WORK_ORDER_NUMBER || ''
     ).trim();
 
     if (!this.userId || !workOrderNumber) {

@@ -618,7 +618,7 @@ export class TodayComponent implements OnInit {
         { name: 'Location', icon: 'mappin.and.ellipse' },
         { name: 'Gate Codes', icon: 'square.grid.3x3' },
         { name: 'Customer Consent', icon: 'signature' },
-        { name: 'XM PHT Scans', icon: 'waveform.path.ecg.rectangle' },
+        // { name: 'XM PHT Scans', icon: 'waveform.path.ecg.rectangle' },
         { name: 'Report Bug', icon: 'bubble.left.and.exclamationmark.bubble.right' },
         {
           name: 'Log Out', icon: 'person.crop.circle.badge.xmark', destructive: true, confirm: {
@@ -909,7 +909,7 @@ export class TodayComponent implements OnInit {
         this.router.navigate(['/tabs', { outlets: { todayListTab: ['customer-consent'] } }]);
         break;
       case 3:
-        this.router.navigate(['/tabs', { outlets: { todayListTab: ['xm-pht-scans'] } }]);
+        // this.router.navigate(['/tabs', { outlets: { todayListTab: ['xm-pht-scans'] } }]);
         break;
       case 5:
         this.configService.logout();
