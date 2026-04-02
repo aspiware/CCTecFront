@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
-import { NativeScriptCommonModule } from '@nativescript/angular';
+import { NativeScriptCommonModule, NativeScriptFormsModule } from '@nativescript/angular';
 import { Application, CoreTypes, Page } from '@nativescript/core';
 import {
   CameraUpdate,
@@ -14,7 +14,7 @@ import * as geolocation from '@nativescript/geolocation';
 @Component({
   standalone: true,
   selector: 'app-xm-pht-scans',
-  imports: [NativeScriptCommonModule, GoogleMapsModule],
+  imports: [NativeScriptCommonModule, NativeScriptFormsModule, GoogleMapsModule],
   schemas: [NO_ERRORS_SCHEMA],
   templateUrl: './xm-pht-scans.component.html',
   styleUrl: './xm-pht-scans.component.scss',
@@ -31,6 +31,30 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
   public mapZoom = XmPhtScansComponent.DEFAULT_ZOOM;
   public selectedLatitude: number | null = null;
   public selectedLongitude: number | null = null;
+  public selectedScanLocationIndex = 0;
+  public selectedTapValueIndex = 0;
+  public scanLocationList = [
+    'Tap',
+    'Ground Block',
+    'Living Room',
+    'Family Room',
+    'Main Room',
+    'Media Box',
+    'Bedroom 1',
+    'Bedroom 2',
+    'Guest Room',
+    'Media Room',
+    'Basement',
+    'Den',
+    'Kitchen',
+    'Office',
+    'Other',
+  ];
+  public tapPortList = [
+    2,
+    4,
+    8
+  ];
 
   private appearanceChangedHandler?: () => void;
   private googleMap?: GoogleMap;
@@ -116,6 +140,14 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
 
   public get longitudeText(): string {
     return this.selectedLongitude === null ? 'Waiting for selection' : this.selectedLongitude.toFixed(6);
+  }
+
+  public get selectedScanLocation(): string {
+    return this.scanLocationList[this.selectedScanLocationIndex] || this.scanLocationList[0];
+  }
+
+  public get selectedTapValue(): string {
+    return String(this.tapPortList[this.selectedTapValueIndex] ?? this.tapPortList[0]);
   }
 
   private async loadCurrentLocation(): Promise<void> {
