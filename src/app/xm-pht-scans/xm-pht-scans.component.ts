@@ -30,6 +30,7 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
   private static readonly DEFAULT_LNG = -95.3698;
   private static readonly DEFAULT_ZOOM = 11;
   private static readonly CURRENT_LOCATION_ZOOM = 19;
+  private static readonly TEST_WORK_ORDER_NUMBER = '00000000000000000000';
 
   public isDarkTheme = Application.systemAppearance() === 'dark';
   public mapLat = XmPhtScansComponent.DEFAULT_LAT;
@@ -193,10 +194,14 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
   }
 
   public async sendPHT(): Promise<void> {
-    if (!this.userId || !String(this.currentJob?.workOrderNumber || '').trim()) {
+    const workOrderNumber = String(
+      XmPhtScansComponent.TEST_WORK_ORDER_NUMBER || this.currentJob?.workOrderNumber || ''
+    ).trim();
+
+    if (!this.userId || !workOrderNumber) {
       await alert({
         title: 'Missing Job',
-        message: 'Open XM PHT Scans from a job so the work order can be sent.',
+        message: 'Open XM PHT Scans from a job or set a valid work order number for testing.',
         okButtonText: 'OK',
       });
       return;
@@ -222,7 +227,7 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
       const payload = {
         userId: this.userId,
         bp: this.bp,
-        workOrderNumber: this.currentJob.workOrderNumber,
+        workOrderNumber,
         location: this.selectedScanLocation,
         locationData: {
           tapValue: this.selectedTapValueNumber,
