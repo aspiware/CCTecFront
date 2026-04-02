@@ -17,6 +17,7 @@
     "@angular/router": "~20.2.0",
     "@nativescript/angular": "^20.0.0",
     "@nativescript/core": "~9.0.0",
+    "@nativescript/geolocation": "^9.0.0",
     "@nativescript/google-maps": "^1.8.0",
     "nativescript-ui-listview": "^15.2.3",
     "rxjs": "~7.8.0",

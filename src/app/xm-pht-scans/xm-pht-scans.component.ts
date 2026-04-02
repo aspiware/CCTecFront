@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
 import { NativeScriptCommonModule } from '@nativescript/angular';
-import { Application, Page } from '@nativescript/core';
+import { Application, CoreTypes, Page } from '@nativescript/core';
 import {
   CameraUpdate,
   GoogleMap,
@@ -9,6 +9,7 @@ import {
   Marker,
 } from '@nativescript/google-maps';
 import { GoogleMapsModule } from '@nativescript/google-maps/angular';
+import * as geolocation from '@nativescript/geolocation';
 
 @Component({
   standalone: true,
@@ -19,16 +20,23 @@ import { GoogleMapsModule } from '@nativescript/google-maps/angular';
   styleUrl: './xm-pht-scans.component.scss',
 })
 export class XmPhtScansComponent implements OnInit, OnDestroy {
+  private static readonly DEFAULT_LAT = 29.7604;
+  private static readonly DEFAULT_LNG = -95.3698;
+  private static readonly DEFAULT_ZOOM = 11;
+  private static readonly CURRENT_LOCATION_ZOOM = 19;
+
   public isDarkTheme = Application.systemAppearance() === 'dark';
-  public mapLat = 29.7604;
-  public mapLng = -95.3698;
-  public mapZoom = 11;
+  public mapLat = XmPhtScansComponent.DEFAULT_LAT;
+  public mapLng = XmPhtScansComponent.DEFAULT_LNG;
+  public mapZoom = XmPhtScansComponent.DEFAULT_ZOOM;
   public selectedLatitude: number | null = null;
   public selectedLongitude: number | null = null;
 
   private appearanceChangedHandler?: () => void;
   private googleMap?: GoogleMap;
   private selectedMarker?: Marker;
+  private currentLatitude?: number;
+  private currentLongitude?: number;
 
   constructor(
     private cdr: ChangeDetectorRef,
@@ -42,6 +50,7 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     };
     Application.on(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
+    void this.loadCurrentLocation();
   }
 
   ngOnDestroy(): void {
@@ -57,6 +66,16 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
 
   public onMapReady(args: MapReadyEvent): void {
     this.googleMap = args.map;
+    this.googleMap.myLocationEnabled = true;
+
+    if (this.currentLatitude !== undefined && this.currentLongitude !== undefined) {
+      this.centerMap(
+        this.currentLatitude,
+        this.currentLongitude,
+        XmPhtScansComponent.CURRENT_LOCATION_ZOOM
+      );
+    }
+
     this.cdr.detectChanges();
   }
 
@@ -79,7 +98,7 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
       color: '#2563eb',
     });
 
-    this.googleMap?.animateCamera(CameraUpdate.fromCoordinate({ lat, lng }, this.mapZoom));
+    this.googleMap?.moveCamera(CameraUpdate.fromCoordinate({ lat, lng }, this.mapZoom));
     this.cdr.detectChanges();
   }
 
@@ -100,6 +119,43 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
 
   public get longitudeText(): string {
     return this.selectedLongitude === null ? 'Waiting for selection' : this.selectedLongitude.toFixed(6);
+  }
+
+  private async loadCurrentLocation(): Promise<void> {
+    try {
+      await geolocation.enableLocationRequest(false, true);
+
+      const location = await geolocation.getCurrentLocation({
+        desiredAccuracy: CoreTypes.Accuracy.high,
+        maximumAge: 10000,
+        timeout: 15000,
+      });
+
+      if (!location) {
+        return;
+      }
+
+      this.currentLatitude = location.latitude;
+      this.currentLongitude = location.longitude;
+      this.centerMap(
+        location.latitude,
+        location.longitude,
+        XmPhtScansComponent.CURRENT_LOCATION_ZOOM
+      );
+    } catch (error) {
+      console.log('XM PHT Scans location unavailable', error);
+    }
+  }
+
+  private centerMap(lat: number, lng: number, zoom = this.mapZoom): void {
+    this.mapLat = lat;
+    this.mapLng = lng;
+    this.mapZoom = zoom;
+    this.googleMap?.moveCamera(CameraUpdate.fromCoordinate({ lat, lng }, zoom));
+    setTimeout(() => {
+      this.googleMap?.moveCamera(CameraUpdate.fromCoordinate({ lat, lng }, zoom));
+    }, 150);
+    this.cdr.detectChanges();
   }
 
   private syncTheme(): void {
