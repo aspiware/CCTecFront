@@ -1,0 +1,607 @@
+.onboarding-root {
+  width: 100%;
+  height: 100%;
+}
+
+.onboarding-backdrop {
+  width: 100%;
+  height: 100%;
+  background-color: #dfe4ec;
+}
+
+.onboarding-card {
+  width: 86%;
+  max-width: 420;
+  padding: 18 22 22 22;
+  border-radius: 18;
+  background-color: #ffffff;
+  vertical-align: middle;
+  horizontal-align: center;
+  shadow-color: #6d7686;
+  shadow-offset: 0 8;
+  shadow-opacity: 0.18;
+  shadow-radius: 22;
+}
+
+.onboarding-header {
+  margin-top: 2;
+}
+
+.onboarding-brand {
+  font-size: 17;
+  font-weight: 700;
+  color: #27457d;
+}
+
+.onboarding-skip {
+  background-color: transparent;
+  color: #6c7b93;
+  font-size: 14;
+  padding: 0;
+}
+
+.onboarding-content {
+  padding-top: 12;
+  padding-bottom: 10;
+}
+
+.onboarding-title {
+  text-align: center;
+  font-size: 22;
+  font-weight: 700;
+  color: #234277;
+  margin-bottom: 18;
+}
+
+.onboarding-art-shell {
+  width: 100%;
+  height: 220;
+  margin-bottom: 18;
+}
+
+.onboarding-art-shell-prices {
+  height: 244;
+  margin-top: -2;
+  margin-bottom: 12;
+}
+
+.onboarding-art-shell-calculations {
+  height: 360;
+  margin-top: 0;
+  margin-bottom: 24;
+}
+
+.art-orb {
+  width: 170;
+  height: 170;
+  border-radius: 85;
+  background-color: rgba(115, 178, 237, 0.24);
+  horizontal-align: center;
+  vertical-align: middle;
+}
+
+.art-welcome,
+.art-phone,
+.art-clipboard {
+  width: 100%;
+  height: 100%;
+}
+
+.art-job-list {
+  margin-top: 0;
+}
+
+.art-primary-icon {
+  font-size: 92;
+  color: #2e5d9f;
+  horizontal-align: center;
+  vertical-align: middle;
+}
+
+.art-secondary-icon {
+  font-size: 34;
+  color: #ffb62a;
+  horizontal-align: right;
+  vertical-align: middle;
+  margin-right: 44;
+  margin-top: 88;
+}
+
+.art-badge-icon {
+  color: #4b88d3;
+}
+
+.art-success-icon {
+  color: #43a047;
+}
+
+.art-gear-icon {
+  color: #2e5d9f;
+}
+
+.phone-card {
+  width: 170;
+  padding: 14 12;
+  border-radius: 22;
+  background-color: #23395d;
+  horizontal-align: center;
+  vertical-align: middle;
+}
+
+.phone-card-compact {
+  background-color: #1f2e46;
+}
+
+.job-list-glow {
+  width: 304;
+  height: 232;
+  border-radius: 34;
+  background-color: rgba(93, 136, 212, 0.1);
+  horizontal-align: center;
+  vertical-align: middle;
+}
+
+.job-list-panel {
+  width: 294;
+  padding: 12 0;
+  horizontal-align: center;
+  vertical-align: middle;
+}
+
+.job-list-summary {
+  margin-bottom: 10;
+}
+
+.job-list-pill {
+  padding: 10 14;
+  border-radius: 16;
+  background-color: #16264a;
+  color: #f5f8ff;
+  font-size: 14;
+  font-weight: 700;
+  border-width: 1;
+  border-color: rgba(106, 140, 206, 0.16);
+}
+
+.job-list-pill-right {
+  margin-left: 8;
+}
+
+.job-list-card {
+  padding: 14 14 12 14;
+  border-radius: 24;
+  background-color: #0f1d3d;
+  border-width: 1;
+  border-color: rgba(109, 142, 211, 0.24);
+  shadow-color: #07101f;
+  shadow-offset: 0 10;
+  shadow-opacity: 0.2;
+  shadow-radius: 16;
+}
+
+.job-list-card-secondary {
+  margin-top: 10;
+  padding-top: 12;
+  padding-bottom: 12;
+  background-color: #13244a;
+}
+
+.job-list-title {
+  color: #f8fbff;
+  font-size: 16;
+  font-weight: 700;
+}
+
+.job-list-amount {
+  color: #f8fbff;
+  font-size: 16;
+  font-weight: 700;
+}
+
+.job-list-meta {
+  margin-top: 8;
+  color: rgba(236, 242, 255, 0.88);
+  font-size: 11;
+}
+
+.job-list-details {
+  margin-top: 10;
+}
+
+.job-list-detail {
+  color: rgba(230, 237, 250, 0.84);
+  font-size: 12;
+}
+
+.job-list-detail-units {
+  vertical-align: middle;
+  margin-left: 10;
+}
+
+.job-list-time-row {
+  margin-top: 10;
+}
+
+.job-list-time {
+  color: rgba(236, 242, 255, 0.9);
+  font-size: 12;
+}
+
+.job-list-actions {
+  margin-top: 12;
+}
+
+.job-list-action-icon {
+  width: 30;
+  height: 30;
+  margin-right: 6;
+  padding-top: 6;
+  text-align: center;
+  font-size: 14;
+  color: #f4f8ff;
+  border-radius: 11;
+  background-color: #15274d;
+  border-width: 1;
+  border-color: rgba(72, 107, 181, 0.16);
+}
+
+.prices-panel-glow {
+  width: 314;
+  height: 214;
+  border-radius: 36;
+  background-color: rgba(103, 145, 219, 0.12);
+  horizontal-align: center;
+  vertical-align: middle;
+}
+
+.prices-panel-frame {
+  width: 306;
+  height: 206;
+  border-radius: 34;
+  background-color: #0b1631;
+  border-width: 1.5;
+  border-color: rgba(133, 161, 221, 0.34);
+  horizontal-align: center;
+  vertical-align: middle;
+  shadow-color: #07101f;
+  shadow-offset: 0 14;
+  shadow-opacity: 0.32;
+  shadow-radius: 22;
+}
+
+.prices-panel {
+  width: 294;
+  padding: 16 14 10 14;
+  border-radius: 30;
+  background-color: #0f1d3d;
+  border-width: 1;
+  border-color: rgba(109, 142, 211, 0.24);
+  horizontal-align: center;
+  vertical-align: middle;
+}
+
+.prices-panel-row {
+  height: 40;
+  padding: 0 14 0 10;
+  margin-bottom: 10;
+  border-radius: 16;
+  background-color: #15274d;
+  border-width: 1;
+  border-color: rgba(72, 107, 181, 0.16);
+  shadow-color: #09142a;
+  shadow-offset: 0 4;
+  shadow-opacity: 0.16;
+  shadow-radius: 8;
+}
+
+.prices-panel-row-active {
+  border-width: 1.5;
+  border-color: rgba(98, 178, 255, 0.82);
+  background-color: #213d77;
+  shadow-color: #4b90eb;
+  shadow-offset: 0 0;
+  shadow-opacity: 0.3;
+  shadow-radius: 14;
+}
+
+.prices-panel-icon {
+  width: 34;
+  height: 34;
+  padding-top: 6;
+  text-align: center;
+  font-size: 17;
+  color: #ffffff;
+  vertical-align: middle;
+  border-radius: 12;
+  background-color: #2e78e5;
+  border-width: 1;
+  border-color: rgba(204, 227, 255, 0.24);
+  shadow-color: #255ec7;
+  shadow-offset: 0 2;
+  shadow-opacity: 0.22;
+  shadow-radius: 6;
+}
+
+.prices-panel-text {
+  font-size: 15;
+  font-weight: 700;
+  color: #f5f8ff;
+  margin-left: 13;
+  vertical-align: middle;
+}
+
+.prices-panel-arrow {
+  font-size: 17;
+  color: rgba(241, 246, 255, 0.88);
+  vertical-align: middle;
+  padding-right: 4;
+}
+
+.art-phone-header {
+  color: #ffffff;
+  font-size: 15;
+  font-weight: 700;
+  margin-bottom: 10;
+}
+
+.art-phone-row {
+  background-color: #ffffff;
+  color: #26354f;
+  font-size: 13;
+  padding: 10 12;
+  border-radius: 10;
+  margin-bottom: 8;
+}
+
+.art-phone-total {
+  background-color: #ffffff;
+  color: #26354f;
+  font-size: 13;
+  font-weight: 700;
+  padding: 10 12;
+  border-radius: 10;
+}
+
+.onboarding-subtitle {
+  text-align: center;
+  font-size: 16;
+  line-height: 1.4;
+  color: #30496f;
+}
+
+.onboarding-eyebrow {
+  text-align: center;
+  font-size: 12;
+  font-weight: 600;
+  color: #5372a0;
+  margin-top: 14;
+}
+
+.onboarding-dots {
+  margin-top: 4;
+  margin-bottom: 14;
+}
+
+.onboarding-dot {
+  width: 22;
+  text-align: center;
+  font-size: 14;
+  color: #4d75b1;
+}
+
+.onboarding-primary-btn {
+  height: 48;
+  border-radius: 10;
+  background-color: #1664c0;
+  color: #ffffff;
+  font-size: 16;
+  font-weight: 600;
+}
+
+.onboarding-secondary-btn {
+  height: 44;
+  margin-top: 10;
+  border-radius: 10;
+  background-color: #ffffff;
+  color: #3f4f67;
+  border-width: 1;
+  border-color: #cfd7e5;
+}
+
+.ns-light .onboarding-backdrop {
+  background-color: #dfe4ec;
+}
+
+.ns-light .onboarding-card {
+  background-color: #ffffff;
+}
+
+.ns-light .onboarding-brand {
+  color: #27457d;
+}
+
+.ns-light .onboarding-skip {
+  color: #6c7b93;
+}
+
+.ns-light .onboarding-title {
+  color: #234277;
+}
+
+.ns-light .onboarding-subtitle {
+  color: #30496f;
+}
+
+.ns-light .onboarding-eyebrow {
+  color: #5372a0;
+}
+
+.ns-light .onboarding-dot {
+  color: #4d75b1;
+}
+
+.ns-light .onboarding-primary-btn {
+  background-color: #1664c0;
+  color: #ffffff;
+}
+
+.ns-light .onboarding-secondary-btn {
+  background-color: #ffffff;
+  color: #3f4f67;
+  border-color: #cfd7e5;
+}
+
+.ns-light .art-orb {
+  background-color: rgba(115, 178, 237, 0.24);
+}
+
+.ns-light .job-list-glow,
+.ns-light .prices-panel-glow {
+  background-color: rgba(93, 136, 212, 0.1);
+}
+
+.ns-light .job-list-pill,
+.ns-light .job-list-card,
+.ns-light .job-list-card-secondary,
+.ns-light .job-list-action-icon,
+.ns-light .prices-panel,
+.ns-light .prices-panel-frame,
+.ns-light .prices-panel-row {
+  border-color: rgba(109, 142, 211, 0.24);
+}
+
+.ns-dark .onboarding-backdrop {
+  background-color: #0b1220;
+}
+
+.ns-dark .onboarding-card {
+  background-color: #121b2c;
+  shadow-color: #000000;
+  shadow-opacity: 0.34;
+}
+
+.ns-dark .onboarding-brand {
+  color: #e6eefc;
+}
+
+.ns-dark .onboarding-skip {
+  color: #a7b8d6;
+}
+
+.ns-dark .onboarding-title {
+  color: #f4f8ff;
+}
+
+.ns-dark .onboarding-subtitle {
+  color: #c3d2ea;
+}
+
+.ns-dark .onboarding-eyebrow {
+  color: #8ea6cf;
+}
+
+.ns-dark .onboarding-dot {
+  color: #89aee8;
+}
+
+.ns-dark .onboarding-primary-btn {
+  background-color: #3a84eb;
+  color: #ffffff;
+}
+
+.ns-dark .onboarding-secondary-btn {
+  background-color: #172133;
+  color: #d8e3f8;
+  border-color: #32435f;
+}
+
+.ns-dark .art-orb {
+  background-color: rgba(74, 130, 212, 0.18);
+}
+
+.ns-dark .art-primary-icon,
+.ns-dark .art-gear-icon {
+  color: #8ab3f5;
+}
+
+.ns-dark .art-secondary-icon {
+  color: #ffd166;
+}
+
+.ns-dark .art-badge-icon {
+  color: #7fb2ff;
+}
+
+.ns-dark .art-success-icon {
+  color: #7bd88f;
+}
+
+.ns-dark .job-list-glow {
+  background-color: rgba(68, 115, 194, 0.16);
+}
+
+.ns-dark .job-list-pill {
+  background-color: #1a2b50;
+  color: #f4f8ff;
+  border-color: rgba(133, 165, 226, 0.22);
+}
+
+.ns-dark .job-list-card {
+  background-color: #142547;
+  border-color: rgba(121, 154, 219, 0.26);
+}
+
+.ns-dark .job-list-card-secondary {
+  background-color: #182b55;
+}
+
+.ns-dark .job-list-title,
+.ns-dark .job-list-amount {
+  color: #f6f9ff;
+}
+
+.ns-dark .job-list-meta,
+.ns-dark .job-list-detail,
+.ns-dark .job-list-time {
+  color: rgba(228, 237, 252, 0.88);
+}
+
+.ns-dark .job-list-action-icon {
+  background-color: #1b2f58;
+  border-color: rgba(104, 138, 205, 0.22);
+  color: #f4f8ff;
+}
+
+.ns-dark .prices-panel-glow {
+  background-color: rgba(68, 115, 194, 0.16);
+}
+
+.ns-dark .prices-panel-frame {
+  background-color: #101c36;
+  border-color: rgba(149, 176, 230, 0.32);
+}
+
+.ns-dark .prices-panel {
+  background-color: #15274b;
+  border-color: rgba(124, 157, 219, 0.26);
+}
+
+.ns-dark .prices-panel-row {
+  background-color: #1a2f59;
+  border-color: rgba(92, 128, 196, 0.18);
+}
+
+.ns-dark .prices-panel-row-active {
+  background-color: #27498d;
+  border-color: rgba(113, 187, 255, 0.88);
+}
+
+.ns-dark .prices-panel-icon {
+  background-color: #3b89f3;
+  border-color: rgba(208, 231, 255, 0.26);
+}
+
+.ns-dark .prices-panel-text,
+.ns-dark .prices-panel-arrow {
+  color: #f4f8ff;
+}

@@ -1,0 +1,151 @@
+<ModalStack dismissEnabled="false" class="onboarding-root">
+  <GridLayout rows="*" columns="*">
+    <StackLayout row="0" col="0" class="onboarding-backdrop"></StackLayout>
+
+    <GridLayout row="0" col="0" rows="auto,*,auto,auto" class="onboarding-card" (swipe)="onSwipe($event)">
+      <GridLayout row="0" columns="*,auto" class="onboarding-header">
+        <Label text="CCTec" class="onboarding-brand"></Label>
+        <Button text="Skip" class="onboarding-skip" (tap)="skip()"></Button>
+      </GridLayout>
+
+      <ScrollView row="1" scrollBarIndicatorVisible="false">
+        <StackLayout #slideContent verticalAlignment="middle" class="onboarding-content">
+          <Label [text]="slide.title" textWrap="true" class="onboarding-title"></Label>
+
+          <GridLayout
+            class="onboarding-art-shell"
+            [class.onboarding-art-shell-prices]="slide.art === 'prices'"
+            [class.onboarding-art-shell-calculations]="slide.art === 'calculations'">
+            <GridLayout class="art-orb"></GridLayout>
+
+            <GridLayout *ngIf="slide.art === 'welcome'" class="art-welcome">
+              <Label text="&#xf0b1;" class="fas art-primary-icon"></Label>
+              <Label text="&#xf5ae;" class="fas art-secondary-icon"></Label>
+            </GridLayout>
+
+            <GridLayout *ngIf="slide.art === 'prices'" class="art-phone">
+              <GridLayout class="prices-panel-glow"></GridLayout>
+              <GridLayout class="prices-panel-frame"></GridLayout>
+              <GridLayout rows="auto,auto,auto,auto" class="prices-panel">
+                <GridLayout row="0" columns="auto,*,auto" class="prices-panel-row prices-panel-row-active">
+                  <Label col="0" text="&#xf015;" class="fas prices-panel-icon"></Label>
+                  <Label col="1" text="Residential Prices" class="prices-panel-text"></Label>
+                  <Label col="2" text="&#xf054;" class="fas prices-panel-arrow"></Label>
+                </GridLayout>
+                <GridLayout row="1" columns="auto,*,auto" class="prices-panel-row">
+                  <Label col="0" text="&#xf3ed;" class="fas prices-panel-icon"></Label>
+                  <Label col="1" text="XH Prices" class="prices-panel-text"></Label>
+                  <Label col="2" text="&#xf054;" class="fas prices-panel-arrow"></Label>
+                </GridLayout>
+                <GridLayout row="2" columns="auto,*,auto" class="prices-panel-row">
+                  <Label col="0" text="&#xf6ff;" class="fas prices-panel-icon"></Label>
+                  <Label col="1" text="Fiber Prices" class="prices-panel-text"></Label>
+                  <Label col="2" text="&#xf054;" class="fas prices-panel-arrow"></Label>
+                </GridLayout>
+                <GridLayout row="3" columns="auto,*,auto" class="prices-panel-row">
+                  <Label col="0" text="&#xf0b1;" class="fas prices-panel-icon"></Label>
+                  <Label col="1" text="Business Prices" class="prices-panel-text"></Label>
+                  <Label col="2" text="&#xf054;" class="fas prices-panel-arrow"></Label>
+                </GridLayout>
+              </GridLayout>
+            </GridLayout>
+
+            <GridLayout *ngIf="slide.art === 'calculations'" class="art-phone art-job-list">
+              <GridLayout class="job-list-glow"></GridLayout>
+              <GridLayout rows="auto,auto,auto" class="job-list-panel">
+                <GridLayout row="0" columns="*,auto" class="job-list-summary">
+                  <Label col="0" text="Today: $350.45" class="job-list-pill"></Label>
+                  <Label col="1" text="Week: $1,114.10" class="job-list-pill job-list-pill-right"></Label>
+                </GridLayout>
+
+                <GridLayout row="1" rows="auto,auto,auto,auto,auto" class="job-list-card">
+                  <GridLayout row="0" columns="*,auto">
+                    <Label col="0" text="HSD OUT - Trouble Call" class="job-list-title"></Label>
+                    <Label col="1" text="$37.40" class="job-list-amount"></Label>
+                  </GridLayout>
+                  <Label row="1" text="1234 DEMO AVE, SAMPLE CITY, TX" class="job-list-meta"></Label>
+                  <GridLayout row="2" columns="*,auto" class="job-list-details">
+                    <Label row="0" col="0" text="Job# 482731   Account# 7031845269014837" class="job-list-detail"></Label>
+                  </GridLayout>
+                  <GridLayout row="3" columns="*,auto" class="job-list-time-row">
+                    <Label col="0" text="10:00 AM - 12:00 PM" class="job-list-time"></Label>
+                    <Label col="1" text="Units: 17" class="job-list-detail job-list-detail-units"></Label>
+                  </GridLayout>
+                  <GridLayout row="4" columns="auto,auto,auto,auto,auto,auto,auto,auto" class="job-list-actions">
+                    <Label col="0" text="&#xf075;" class="fas job-list-action-icon"></Label>
+                    <Label col="1" text="&#xf005;" class="fas job-list-action-icon"></Label>
+                    <Label col="2" text="&#xf1eb;" class="fas job-list-action-icon"></Label>
+                    <Label col="3" text="&#xf303;" class="fas job-list-action-icon"></Label>
+                    <Label col="4" text="&#xf007;" class="fas job-list-action-icon"></Label>
+                    <Label col="5" text="&#xf108;" class="fas job-list-action-icon"></Label>
+                    <Label col="6" text="&#xf015;" class="fas job-list-action-icon"></Label>
+                    <Label col="7" text="&#xf0ee;" class="fas job-list-action-icon"></Label>
+                  </GridLayout>
+                </GridLayout>
+
+                <GridLayout row="2" rows="auto,auto,auto" class="job-list-card job-list-card-secondary">
+                  <GridLayout row="0" columns="*,auto">
+                    <Label col="0" text="TECH RECOVERY" class="job-list-title"></Label>
+                    <Label col="1" text="$52.33" class="job-list-amount"></Label>
+                  </GridLayout>
+                  <GridLayout row="1" columns="*,auto" class="job-list-details">
+                    <Label row="0" col="0" text="Job# 517904   Account# 8426159037741268" class="job-list-detail"></Label>
+                  </GridLayout>
+                  <GridLayout row="2" columns="*,auto" class="job-list-time-row">
+                    <Label col="0" text="10:00 AM - 12:00 PM" class="job-list-time"></Label>
+                    <Label col="1" text="Units: 20" class="job-list-detail job-list-detail-units"></Label>
+                  </GridLayout>
+                </GridLayout>
+              </GridLayout>
+            </GridLayout>
+
+            <GridLayout *ngIf="slide.art === 'tracking'" class="art-clipboard">
+              <Label text="&#xf46d;" class="fas art-primary-icon"></Label>
+              <Label text="&#xf075;" class="fas art-secondary-icon art-badge-icon"></Label>
+            </GridLayout>
+
+            <GridLayout *ngIf="slide.art === 'ready'" class="art-clipboard">
+              <Label text="&#xf058;" class="fas art-primary-icon art-success-icon"></Label>
+              <Label text="&#xf013;" class="fas art-secondary-icon art-gear-icon"></Label>
+            </GridLayout>
+          </GridLayout>
+
+          <Label [text]="slide.description" textWrap="true" class="onboarding-subtitle"></Label>
+          <Label
+            *ngIf="slide.eyebrow"
+            [text]="slide.eyebrow"
+            textWrap="true"
+            class="onboarding-eyebrow">
+          </Label>
+        </StackLayout>
+      </ScrollView>
+
+      <GridLayout row="2" columns="auto,auto,auto,auto,auto" horizontalAlignment="center" class="onboarding-dots">
+          <Label
+            *ngFor="let item of slides; let i = index"
+            [col]="i"
+            [text]="i === currentIndex ? '●' : '○'"
+            class="onboarding-dot"
+            (tap)="goToSlide(i)">
+          </Label>
+      </GridLayout>
+
+      <GridLayout row="3" rows="auto,auto" class="onboarding-actions">
+        <Button
+          row="0"
+          [text]="primaryButtonText"
+          class="onboarding-primary-btn"
+          (tap)="advance()">
+        </Button>
+
+        <Button
+          *ngIf="showSecondaryButton"
+          row="1"
+          text="Skip for now"
+          class="onboarding-secondary-btn"
+          (tap)="skip()">
+        </Button>
+      </GridLayout>
+    </GridLayout>
+  </GridLayout>
+</ModalStack>
