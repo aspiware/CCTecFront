@@ -1,0 +1,47 @@
+<ActionBar class="action-bar" title="XM PHT Scans"></ActionBar>
+
+<GridLayout
+  rows="*"
+  [class]="'xm-pht-scans-root ' + (isDarkTheme ? 'theme-dark' : 'theme-light')"
+  (loaded)="onRootLoaded()">
+  <GridLayout row="0" rows="auto,*,auto" class="xm-pht-scans-card">
+    <StackLayout row="0" class="xm-pht-scans-header">
+      <Label text="Tap To Add A Marker" class="xm-pht-scans-title"></Label>
+      <Label
+        text="Select the scan point on the map. We will keep the latest latitude and longitude."
+        textWrap="true"
+        class="xm-pht-scans-message">
+      </Label>
+    </StackLayout>
+
+    <MapView
+      row="1"
+      class="xm-pht-scans-map"
+      [lat]="mapLat"
+      [lng]="mapLng"
+      [zoom]="mapZoom"
+      (ready)="onMapReady($event)"
+      (mapTap)="onMapTap($event)">
+    </MapView>
+
+    <GridLayout row="2" rows="auto,auto,auto" columns="*,auto" class="xm-pht-scans-coordinates">
+      <StackLayout row="0" col="0" class="xm-pht-scans-coordinate-block">
+        <Label text="Latitude" class="xm-pht-scans-coordinate-label"></Label>
+        <Label [text]="latitudeText" class="xm-pht-scans-coordinate-value"></Label>
+      </StackLayout>
+
+      <Button
+        row="0"
+        col="1"
+        text="Clear"
+        class="xm-pht-scans-clear-button"
+        (tap)="clearSelectedPoint()">
+      </Button>
+
+      <StackLayout row="1" col="0" colSpan="2" class="xm-pht-scans-coordinate-block">
+        <Label text="Longitude" class="xm-pht-scans-coordinate-label"></Label>
+        <Label [text]="longitudeText" class="xm-pht-scans-coordinate-value"></Label>
+      </StackLayout>
+    </GridLayout>
+  </GridLayout>
+</GridLayout>
