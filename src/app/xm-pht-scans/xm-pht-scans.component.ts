@@ -71,6 +71,7 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
   private appearanceChangedHandler?: () => void;
   private googleMap?: GoogleMap;
   private selectedMarker?: Marker;
+  private scanLocationMarkers = new Map<string, { marker: Marker; lat: number; lng: number }>();
   private currentLatitude?: number;
   private currentLongitude?: number;
   private currentJob: any = null;
@@ -128,20 +129,36 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
 
   public onMapTap(args: MapTapEvent): void {
     const { lat, lng } = args.coordinate;
+    const scanLocation = this.selectedScanLocation;
+    const existingEntry = this.scanLocationMarkers.get(scanLocation);
 
     this.selectedLatitude = lat;
     this.selectedLongitude = lng;
+    this.selectedMarker?.hideInfoWindow();
 
-    if (this.selectedMarker) {
-      this.googleMap?.removeMarker(this.selectedMarker);
+    if (existingEntry) {
+      existingEntry.lat = lat;
+      existingEntry.lng = lng;
+      existingEntry.marker.position = { lat, lng };
+      existingEntry.marker.title = scanLocation;
+      existingEntry.marker.snippet = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+      this.selectedMarker = existingEntry.marker;
+    } else {
+      const marker = this.googleMap?.addMarker({
+        position: { lat, lng },
+        title: scanLocation,
+        snippet: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+        color: '#2563eb',
+      });
+
+      if (!marker) {
+        this.cdr.detectChanges();
+        return;
+      }
+
+      this.scanLocationMarkers.set(scanLocation, { marker, lat, lng });
+      this.selectedMarker = marker;
     }
-
-    this.selectedMarker = this.googleMap?.addMarker({
-      position: { lat, lng },
-      title: this.selectedScanLocation,
-      snippet: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
-      color: '#2563eb',
-    });
 
     this.selectedMarker?.showInfoWindow();
 
@@ -149,17 +166,30 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
   }
 
   public onScanLocationChange(): void {
-    if (!this.selectedMarker) {
+    const scanLocation = this.selectedScanLocation;
+    const existingEntry = this.scanLocationMarkers.get(scanLocation);
+
+    this.selectedMarker?.hideInfoWindow();
+
+    if (!existingEntry) {
+      this.selectedMarker = undefined;
+      this.selectedLatitude = null;
+      this.selectedLongitude = null;
+      this.cdr.detectChanges();
       return;
     }
 
-    this.selectedMarker.title = this.selectedScanLocation;
+    this.selectedMarker = existingEntry.marker;
+    this.selectedLatitude = existingEntry.lat;
+    this.selectedLongitude = existingEntry.lng;
+    this.selectedMarker.title = scanLocation;
     this.selectedMarker.showInfoWindow();
     this.cdr.detectChanges();
   }
 
   public clearSelectedPoint(): void {
     if (this.selectedMarker) {
+      this.scanLocationMarkers.delete(this.selectedScanLocation);
       this.googleMap?.removeMarker(this.selectedMarker);
       this.selectedMarker = undefined;
     }
