@@ -32,6 +32,10 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
   private static readonly DEFAULT_ZOOM = 11;
   private static readonly CURRENT_LOCATION_ZOOM = 19;
   private static readonly TEST_WORK_ORDER_NUMBER = '00000000000000000000';
+  private static readonly DEFAULT_UPSTREAM = 35;
+  private static readonly DEFAULT_DOWNSTREAM = 8;
+  private static readonly DEFAULT_TAP_PORT = 2;
+  private static readonly DEFAULT_TAP_VALUE = 4;
 
   public isDarkTheme = Application.systemAppearance() === 'dark';
   public mapLat = XmPhtScansComponent.DEFAULT_LAT;
@@ -42,8 +46,8 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
   public selectedScanLocationIndex = 0;
   public selectedTapPortIndex = 0;
   public selectedTapValueIndex = 0;
-  public upstreamValue = 35;
-  public downstreamValue = 8;
+  public upstreamValue = XmPhtScansComponent.DEFAULT_UPSTREAM;
+  public downstreamValue = XmPhtScansComponent.DEFAULT_DOWNSTREAM;
   public isSending = false;
   public scanLocationList = [
     'Tap',
@@ -183,6 +187,8 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
       this.selectedMarker = undefined;
       this.selectedLatitude = null;
       this.selectedLongitude = null;
+      this.restoreScanLevelsForSelectedLocation();
+      this.restoreTapConfig();
       this.persistMarkerState();
       this.cdr.detectChanges();
       return;
@@ -193,6 +199,8 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
     this.selectedLongitude = existingEntry.lng;
     this.selectedMarker.title = scanLocation;
     this.selectedMarker.showInfoWindow();
+    this.restoreScanLevelsForSelectedLocation();
+    this.restoreTapConfig();
     this.persistMarkerState();
     this.cdr.detectChanges();
   }
@@ -238,6 +246,10 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
     return Number(this.tapPortList[this.selectedTapPortIndex] ?? this.tapPortList[0]);
   }
 
+  public get isTapScanLocation(): boolean {
+    return this.selectedScanLocation === 'Tap';
+  }
+
   public onUpstreamValueChange(value: number): void {
     this.upstreamValue = value;
   }
@@ -277,22 +289,27 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
 
     try {
-      const payload = {
+      const payload: any = {
         userId: this.userId,
         bp: this.bp,
         workOrderNumber,
         location: this.selectedScanLocation,
-        locationData: {
-          tapValue: this.selectedTapValueNumber,
-          tapPort: this.selectedTapPortNumber,
-        },
         lat: this.selectedLatitude,
         lon: this.selectedLongitude,
         upstream: this.upstreamValue,
         downstream: this.downstreamValue,
       };
 
+      if (this.isTapScanLocation) {
+        payload.locationData = {
+          tapValue: this.selectedTapValueNumber,
+          tapPort: this.selectedTapPortNumber,
+        };
+      }
+
       await firstValueFrom(this.todayService.sendPHTScans(payload));
+      this.persistScanLevelsForSelectedLocation();
+      this.persistTapConfig();
 
       await alert({
         title: 'PHT Sent',
@@ -413,6 +430,8 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
   private restorePersistedState(): void {
     const persisted = this.configService.getXmPhtScanState(this.storageKey);
     if (!persisted) {
+      this.restoreScanLevelsForSelectedLocation();
+      this.restoreTapConfig();
       return;
     }
 
@@ -423,6 +442,8 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
 
     this.renderPersistedMarkers(persisted.markers || {});
     this.syncSelectedMarkerFromLocation();
+    this.restoreScanLevelsForSelectedLocation();
+    this.restoreTapConfig();
     this.cdr.detectChanges();
   }
 
@@ -479,6 +500,7 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
   }
 
   private persistMarkerState(): void {
+    const existingState = this.configService.getXmPhtScanState(this.storageKey) || {};
     const markers = Array.from(this.scanLocationMarkers.entries()).reduce(
       (acc, [location, entry]) => {
         acc[location] = { lat: entry.lat, lng: entry.lng };
@@ -492,6 +514,75 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
       {
         selectedScanLocation: this.selectedScanLocation,
         markers,
+        scanLevels: existingState.scanLevels || {},
+        tapConfig: existingState.tapConfig,
+      }
+    );
+  }
+
+  private restoreScanLevelsForSelectedLocation(): void {
+    const scanLevels = this.configService.getXmPhtScanState(this.storageKey)?.scanLevels || {};
+    const savedLevels = scanLevels[this.selectedScanLocation];
+
+    this.upstreamValue = savedLevels?.upstream ?? XmPhtScansComponent.DEFAULT_UPSTREAM;
+    this.downstreamValue = savedLevels?.downstream ?? XmPhtScansComponent.DEFAULT_DOWNSTREAM;
+  }
+
+  private persistScanLevelsForSelectedLocation(): void {
+    const existingState = this.configService.getXmPhtScanState(this.storageKey) || {};
+    const scanLevels = {
+      ...(existingState.scanLevels || {}),
+      [this.selectedScanLocation]: {
+        upstream: this.upstreamValue,
+        downstream: this.downstreamValue,
+      },
+    };
+
+    this.configService.setXmPhtScanState(
+      this.storageKey,
+      {
+        selectedScanLocation: this.selectedScanLocation,
+        markers: existingState.markers || {},
+        scanLevels,
+        tapConfig: existingState.tapConfig,
+      }
+    );
+  }
+
+  private restoreTapConfig(): void {
+    if (!this.isTapScanLocation) {
+      return;
+    }
+
+    const tapConfig = this.configService.getXmPhtScanState(this.storageKey)?.tapConfig;
+    const tapPortIndex = this.tapPortList.indexOf(
+      tapConfig?.tapPort ?? XmPhtScansComponent.DEFAULT_TAP_PORT
+    );
+    const tapValueIndex = this.tapValueList.indexOf(
+      tapConfig?.tapValue ?? XmPhtScansComponent.DEFAULT_TAP_VALUE
+    );
+
+    this.selectedTapPortIndex = tapPortIndex >= 0 ? tapPortIndex : 0;
+    this.selectedTapValueIndex = tapValueIndex >= 0 ? tapValueIndex : 0;
+  }
+
+  private persistTapConfig(): void {
+    if (!this.isTapScanLocation) {
+      return;
+    }
+
+    const existingState = this.configService.getXmPhtScanState(this.storageKey) || {};
+
+    this.configService.setXmPhtScanState(
+      this.storageKey,
+      {
+        selectedScanLocation: this.selectedScanLocation,
+        markers: existingState.markers || {},
+        scanLevels: existingState.scanLevels || {},
+        tapConfig: {
+          tapPort: this.selectedTapPortNumber,
+          tapValue: this.selectedTapValueNumber,
+        },
       }
     );
   }

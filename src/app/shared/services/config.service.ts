@@ -43,9 +43,21 @@ interface IXmPhtScanMarker {
   lng: number;
 }
 
+interface IXmPhtScanLevels {
+  upstream: number;
+  downstream: number;
+}
+
+interface IXmPhtTapConfig {
+  tapPort: number;
+  tapValue: number;
+}
+
 interface IXmPhtScanState {
   selectedScanLocation?: string;
   markers?: { [scanLocation: string]: IXmPhtScanMarker };
+  scanLevels?: { [scanLocation: string]: IXmPhtScanLevels };
+  tapConfig?: IXmPhtTapConfig;
 }
 
 @Injectable({
