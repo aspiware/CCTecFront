@@ -26,7 +26,8 @@
         <ListPicker
           class="xm-pht-scans-picker"
           [items]="scanLocationList"
-          [(ngModel)]="selectedScanLocationIndex">
+          [(ngModel)]="selectedScanLocationIndex"
+          (ngModelChange)="onScanLocationChange()">
         </ListPicker>
         <Label
           [text]="selectedScanLocation"

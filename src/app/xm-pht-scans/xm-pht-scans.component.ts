@@ -138,11 +138,23 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
 
     this.selectedMarker = this.googleMap?.addMarker({
       position: { lat, lng },
-      title: 'Selected scan point',
+      title: this.selectedScanLocation,
       snippet: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
       color: '#2563eb',
     });
 
+    this.selectedMarker?.showInfoWindow();
+
+    this.cdr.detectChanges();
+  }
+
+  public onScanLocationChange(): void {
+    if (!this.selectedMarker) {
+      return;
+    }
+
+    this.selectedMarker.title = this.selectedScanLocation;
+    this.selectedMarker.showInfoWindow();
     this.cdr.detectChanges();
   }
 
