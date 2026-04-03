@@ -15,6 +15,7 @@ import * as geolocation from '@nativescript/geolocation';
 import { QuantityStepperComponent } from '../shared/components/quantity-stepper/quantity-stepper.component';
 import { firstValueFrom } from 'rxjs';
 import { TodayService } from '../today/today.service';
+import { ConfigService } from '../shared/services/config.service';
 import { UsersService } from '../shared/services/users.service';
 
 @Component({
@@ -83,6 +84,7 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private page: Page,
     private todayService: TodayService,
+    private configService: ConfigService,
     private usersService: UsersService
   ) {}
 
@@ -97,6 +99,8 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
     this.bp = getString('bp', '');
     this.route.queryParams.subscribe((params) => {
       this.currentJob = this.normalizeJobParams(params || {});
+      this.resetMarkerState();
+      this.restorePersistedState();
     });
     void this.loadCurrentLocation();
   }
@@ -115,6 +119,9 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
   public onMapReady(args: MapReadyEvent): void {
     this.googleMap = args.map;
     this.googleMap.myLocationEnabled = true;
+
+    this.renderPersistedMarkers();
+    this.syncSelectedMarkerFromLocation();
 
     if (this.currentLatitude !== undefined && this.currentLongitude !== undefined) {
       this.centerMap(
@@ -161,6 +168,7 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
     }
 
     this.selectedMarker?.showInfoWindow();
+    this.persistMarkerState();
 
     this.cdr.detectChanges();
   }
@@ -175,6 +183,7 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
       this.selectedMarker = undefined;
       this.selectedLatitude = null;
       this.selectedLongitude = null;
+      this.persistMarkerState();
       this.cdr.detectChanges();
       return;
     }
@@ -184,6 +193,7 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
     this.selectedLongitude = existingEntry.lng;
     this.selectedMarker.title = scanLocation;
     this.selectedMarker.showInfoWindow();
+    this.persistMarkerState();
     this.cdr.detectChanges();
   }
 
@@ -196,6 +206,7 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
 
     this.selectedLatitude = null;
     this.selectedLongitude = null;
+    this.persistMarkerState();
     this.cdr.detectChanges();
   }
 
@@ -380,5 +391,108 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
 
     const pageClassName = String(this.page.className || '');
     this.isDarkTheme = pageClassName.includes('ns-dark');
+  }
+
+  private resetMarkerState(): void {
+    for (const entry of this.scanLocationMarkers.values()) {
+      this.googleMap?.removeMarker(entry.marker);
+    }
+
+    this.scanLocationMarkers.clear();
+    this.selectedMarker = undefined;
+    this.selectedLatitude = null;
+    this.selectedLongitude = null;
+  }
+
+  private get storageKey(): string {
+    return String(
+      this.currentJob?.workOrderNumber || XmPhtScansComponent.TEST_WORK_ORDER_NUMBER || ''
+    ).trim();
+  }
+
+  private restorePersistedState(): void {
+    const persisted = this.configService.getXmPhtScanState(this.storageKey);
+    if (!persisted) {
+      return;
+    }
+
+    if (persisted.selectedScanLocation) {
+      const selectedIndex = this.scanLocationList.indexOf(persisted.selectedScanLocation);
+      this.selectedScanLocationIndex = selectedIndex >= 0 ? selectedIndex : 0;
+    }
+
+    this.renderPersistedMarkers(persisted.markers || {});
+    this.syncSelectedMarkerFromLocation();
+    this.cdr.detectChanges();
+  }
+
+  private renderPersistedMarkers(
+    markers: Record<string, { lat: number; lng: number }> = this.readPersistedMarkers()
+  ): void {
+    if (!this.googleMap) {
+      return;
+    }
+
+    for (const [location, coords] of Object.entries(markers)) {
+      if (!coords || typeof coords.lat !== 'number' || typeof coords.lng !== 'number') {
+        continue;
+      }
+
+      const existingEntry = this.scanLocationMarkers.get(location);
+      if (existingEntry) {
+        existingEntry.lat = coords.lat;
+        existingEntry.lng = coords.lng;
+        existingEntry.marker.position = { lat: coords.lat, lng: coords.lng };
+        existingEntry.marker.title = location;
+        existingEntry.marker.snippet = `${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}`;
+        continue;
+      }
+
+      const marker = this.googleMap.addMarker({
+        position: { lat: coords.lat, lng: coords.lng },
+        title: location,
+        snippet: `${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}`,
+        color: '#2563eb',
+      });
+
+      this.scanLocationMarkers.set(location, { marker, lat: coords.lat, lng: coords.lng });
+    }
+  }
+
+  private readPersistedMarkers(): Record<string, { lat: number; lng: number }> {
+    return this.configService.getXmPhtScanState(this.storageKey)?.markers || {};
+  }
+
+  private syncSelectedMarkerFromLocation(): void {
+    const existingEntry = this.scanLocationMarkers.get(this.selectedScanLocation);
+    if (!existingEntry) {
+      this.selectedMarker = undefined;
+      this.selectedLatitude = null;
+      this.selectedLongitude = null;
+      return;
+    }
+
+    this.selectedMarker = existingEntry.marker;
+    this.selectedLatitude = existingEntry.lat;
+    this.selectedLongitude = existingEntry.lng;
+    this.selectedMarker.showInfoWindow();
+  }
+
+  private persistMarkerState(): void {
+    const markers = Array.from(this.scanLocationMarkers.entries()).reduce(
+      (acc, [location, entry]) => {
+        acc[location] = { lat: entry.lat, lng: entry.lng };
+        return acc;
+      },
+      {} as Record<string, { lat: number; lng: number }>
+    );
+
+    this.configService.setXmPhtScanState(
+      this.storageKey,
+      {
+        selectedScanLocation: this.selectedScanLocation,
+        markers,
+      }
+    );
   }
 }

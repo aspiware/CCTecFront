@@ -38,6 +38,16 @@ interface JobLocations {
   surveySent?: boolean;
 }
 
+interface IXmPhtScanMarker {
+  lat: number;
+  lng: number;
+}
+
+interface IXmPhtScanState {
+  selectedScanLocation?: string;
+  markers?: { [scanLocation: string]: IXmPhtScanMarker };
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -46,6 +56,7 @@ export class ConfigService {
     (globalThis as any).API_BASE_URL || "https://cctec.aspiware.com/v1";
   private readonly STORAGE_KEY = 'jobLocations';
   private readonly STARRED_KEY = 'starredJobs';
+  private readonly XM_PHT_SCANS_KEY = 'xmPhtScans';
   private readonly LAST_CLEAN_DATE_KEY = 'lastCleanDate';
   private dataSubject = new Subject<any>();
   data$ = this.dataSubject.asObservable();
@@ -87,6 +98,7 @@ export class ConfigService {
     if (lastCleanDate !== today) {
       this.clearLocations();
       this.clearStarredJobs();
+      this.clearXmPhtScans();
       ApplicationSettings.setString(this.LAST_CLEAN_DATE_KEY, today);
     }
   }
@@ -279,5 +291,28 @@ export class ConfigService {
 
   public clearStarredJobs(): void {
     ApplicationSettings.remove(this.STARRED_KEY);
+  }
+
+  public getXmPhtScans(): { [jobNumber: string]: IXmPhtScanState } {
+    const stored = ApplicationSettings.getString(this.XM_PHT_SCANS_KEY, '{}');
+    return JSON.parse(stored);
+  }
+
+  public getXmPhtScanState(jobNumber: string): IXmPhtScanState | undefined {
+    return this.getXmPhtScans()[jobNumber];
+  }
+
+  public setXmPhtScanState(jobNumber: string, state: IXmPhtScanState): void {
+    if (!jobNumber) {
+      return;
+    }
+
+    const scans = this.getXmPhtScans();
+    scans[jobNumber] = state;
+    ApplicationSettings.setString(this.XM_PHT_SCANS_KEY, JSON.stringify(scans));
+  }
+
+  public clearXmPhtScans(): void {
+    ApplicationSettings.remove(this.XM_PHT_SCANS_KEY);
   }
 }
