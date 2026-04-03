@@ -142,7 +142,7 @@ export class XhJobPricesComponent implements OnInit, OnDestroy {
     const jobTypePrices = this.jobTypes.map((item: any) => ({
       userId,
       id: Number(item?.id || 0),
-      jobTypeId: Number(item?.id || 0),
+      jobTypeId: Number(item?.jobTypeId || 0),
       price: Number(item?.price || 0),
     }));
 
@@ -238,7 +238,8 @@ export class XhJobPricesComponent implements OnInit, OnDestroy {
       next: (res: any) => {
         const list = Array.isArray(res) ? res : [];
         this.jobTypes = list.map((item: any) => ({
-          id: Number(item?.jobTypeId || item?.id || 0),
+          id: Number(item?.userJobTypePriceId || 0),
+          jobTypeId: Number(item?.jobTypeId || 0),
           name: item?.name || item?.description || '-',
           price: Number(item?.price || 0),
           editablePrice: this.formatPriceInput(item?.price),
