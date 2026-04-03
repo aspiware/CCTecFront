@@ -5,6 +5,7 @@ import { Application, Page } from '@nativescript/core';
 import { getNumber } from '@nativescript/core/application-settings';
 import { CustomerInfoComponent } from '../customer-info/customer-info.component';
 import { TodayService } from '../today/today.service';
+import { WifiConfigComponent } from '../wifi-config/wifi-config.component';
 
 @Component({
   standalone: true,
@@ -96,6 +97,27 @@ export class ActivateServiceComponent implements OnInit, OnDestroy {
     };
 
     this.modalService.showModal(CustomerInfoComponent, options);
+  }
+
+  public showWifiConfig(): void {
+    if (!this.currentJob) {
+      return;
+    }
+
+    const options: any = {
+      context: this.currentJob,
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: false,
+      stretched: false,
+      cancelable: true,
+      dismissEnabled: true,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.Custom,
+      },
+    };
+
+    this.modalService.showModal(WifiConfigComponent, options);
   }
 
   private normalizeJobParams(params: any): any {
