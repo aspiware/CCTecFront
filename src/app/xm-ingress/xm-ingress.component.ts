@@ -64,6 +64,7 @@ export class XmIngressComponent implements OnInit, OnDestroy {
   private googleMap?: GoogleMap;
   private selectedMarker?: Marker;
   private scanLocationMarkers = new Map<string, { marker: Marker; lat: number; lng: number }>();
+  private preferredCameraTarget?: { lat: number; lng: number; zoom: number };
   private currentLatitude?: number;
   private currentLongitude?: number;
   private currentJob: any = null;
@@ -114,6 +115,11 @@ export class XmIngressComponent implements OnInit, OnDestroy {
 
     this.renderPersistedMarkers();
     this.syncSelectedMarkerFromLocation();
+
+    if (this.applyPreferredCameraTarget()) {
+      this.cdr.detectChanges();
+      return;
+    }
 
     if (this.currentLatitude !== undefined && this.currentLongitude !== undefined) {
       this.centerMap(
@@ -185,6 +191,8 @@ export class XmIngressComponent implements OnInit, OnDestroy {
     this.selectedLongitude = existingEntry.lng;
     this.selectedMarker.title = scanLocation;
     this.selectedMarker.showInfoWindow();
+    this.updatePreferredCameraTarget(existingEntry.lat, existingEntry.lng);
+    this.applyPreferredCameraTarget();
     this.persistMarkerState();
     this.cdr.detectChanges();
   }
@@ -340,6 +348,11 @@ export class XmIngressComponent implements OnInit, OnDestroy {
 
       this.currentLatitude = location.latitude;
       this.currentLongitude = location.longitude;
+
+      if (this.preferredCameraTarget) {
+        return;
+      }
+
       this.centerMap(
         location.latitude,
         location.longitude,
@@ -381,6 +394,7 @@ export class XmIngressComponent implements OnInit, OnDestroy {
     this.selectedMarker = undefined;
     this.selectedLatitude = null;
     this.selectedLongitude = null;
+    this.preferredCameraTarget = undefined;
   }
 
   private get storageKey(): string {
@@ -400,8 +414,10 @@ export class XmIngressComponent implements OnInit, OnDestroy {
       this.selectedScanLocationIndex = selectedIndex >= 0 ? selectedIndex : 0;
     }
 
+    this.setPreferredCameraTargetFromPersistedMarkers(persisted.markers || {});
     this.renderPersistedMarkers(persisted.markers || {});
     this.syncSelectedMarkerFromLocation();
+    this.applyPreferredCameraTarget();
     this.cdr.detectChanges();
   }
 
@@ -455,6 +471,7 @@ export class XmIngressComponent implements OnInit, OnDestroy {
     this.selectedLatitude = existingEntry.lat;
     this.selectedLongitude = existingEntry.lng;
     this.selectedMarker.showInfoWindow();
+    this.updatePreferredCameraTarget(existingEntry.lat, existingEntry.lng);
   }
 
   private persistMarkerState(): void {
@@ -475,6 +492,45 @@ export class XmIngressComponent implements OnInit, OnDestroy {
         tapConfig: existingState.tapConfig,
       }
     );
+  }
+
+  private setPreferredCameraTargetFromPersistedMarkers(
+    markers: Record<string, { lat: number; lng: number }>
+  ): void {
+    const selectedLocationMarker = markers[this.selectedScanLocation];
+    if (selectedLocationMarker) {
+      this.updatePreferredCameraTarget(selectedLocationMarker.lat, selectedLocationMarker.lng);
+      return;
+    }
+
+    const firstMarker = Object.values(markers)[0];
+    if (firstMarker) {
+      this.updatePreferredCameraTarget(firstMarker.lat, firstMarker.lng);
+    }
+  }
+
+  private updatePreferredCameraTarget(lat: number, lng: number): void {
+    this.preferredCameraTarget = {
+      lat,
+      lng,
+      zoom: XmIngressComponent.CURRENT_LOCATION_ZOOM,
+    };
+    this.mapLat = lat;
+    this.mapLng = lng;
+    this.mapZoom = XmIngressComponent.CURRENT_LOCATION_ZOOM;
+  }
+
+  private applyPreferredCameraTarget(): boolean {
+    if (!this.preferredCameraTarget) {
+      return false;
+    }
+
+    this.centerMap(
+      this.preferredCameraTarget.lat,
+      this.preferredCameraTarget.lng,
+      this.preferredCameraTarget.zoom
+    );
+    return true;
   }
 
   private setRandomSampleCount(): void {
