@@ -50,7 +50,7 @@ interface IXmPhtScanLevels {
 
 interface IXmPhtTapConfig {
   tapPort: number;
-  tapValue: number;
+  tapValue?: number;
 }
 
 interface IXmPhtScanState {

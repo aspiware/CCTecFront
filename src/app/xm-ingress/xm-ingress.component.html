@@ -1,0 +1,62 @@
+<ActionBar class="action-bar" title="XM Ingress">
+  <ActionItem ios.position="right" [visibility]="isSending ? 'collapse' : 'visible'">
+    <StackLayout>
+      <MenuButton
+        style="height: 48; width: 35; padding: 0; margin: 0;"
+        [useSFIcon]="true"
+        [sfIconName]="'icloud.and.arrow.up.fill'"
+        [isRightSide]="true"
+        (tap)="sendPHT()">
+      </MenuButton>
+    </StackLayout>
+  </ActionItem>
+  <ActionItem ios.position="right" [visibility]="isSending ? 'visible' : 'collapse'">
+    <ActivityIndicator [busy]="isSending" width="20" height="20"></ActivityIndicator>
+  </ActionItem>
+</ActionBar>
+
+<GridLayout
+  rows="*"
+  [class]="'xm-ingress-root ' + (isDarkTheme ? 'theme-dark' : 'theme-light')"
+  (loaded)="onRootLoaded()">
+  <GridLayout row="0" rows="auto,*">
+    <GridLayout row="0" columns="*,140" class="xm-ingress-picker-row">
+      <StackLayout col="0" class="xm-ingress-picker-card xm-ingress-picker-card-left">
+        <Label text="Scan Location" class="xm-ingress-picker-label"></Label>
+        <ListPicker
+          class="xm-ingress-picker"
+          [items]="scanLocationList"
+          [(ngModel)]="selectedScanLocationIndex"
+          (ngModelChange)="onScanLocationChange()">
+        </ListPicker>
+        <Label
+          [text]="selectedScanLocation"
+          textWrap="true"
+          class="xm-ingress-picker-value xm-ingress-picker-value-wrap">
+        </Label>
+      </StackLayout>
+
+      <StackLayout col="1" class="xm-ingress-picker-card">
+        <Label text="Sample Count" class="xm-ingress-picker-label"></Label>
+        <TextField
+          class="xm-ingress-text-field"
+          keyboardType="number"
+          autocorrect="false"
+          autocapitalizationType="none"
+          hint="Port"
+          [(ngModel)]="tapPortInput">
+        </TextField>
+      </StackLayout>
+    </GridLayout>
+
+    <MapView
+      row="1"
+      class="xm-ingress-map"
+      [lat]="mapLat"
+      [lng]="mapLng"
+      [zoom]="mapZoom"
+      (ready)="onMapReady($event)"
+      (mapTap)="onMapTap($event)">
+    </MapView>
+  </GridLayout>
+</GridLayout>

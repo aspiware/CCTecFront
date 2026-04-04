@@ -949,6 +949,9 @@ export class TodayComponent implements OnInit {
     console.log('[Today] selected', event?.index, item);
 
     switch (event?.index) {
+      case 0:
+        this.goXmIngress(item);
+        break;
       case 1:
         this.goPHTScans(item);
         break;
@@ -1119,6 +1122,14 @@ export class TodayComponent implements OnInit {
   public goToActivateService(job?: any): void {
     const queryParams = this.buildActivateServiceQueryParams(job);
     this.router.navigate(['../activate-service'], {
+      queryParams,
+      relativeTo: this.activatedRoute,
+    });
+  }
+
+  public goXmIngress(job?: any): void {
+    const queryParams = this.buildActivateServiceQueryParams(job);
+    this.router.navigate(['../xm-ingress'], {
       queryParams,
       relativeTo: this.activatedRoute,
     });
