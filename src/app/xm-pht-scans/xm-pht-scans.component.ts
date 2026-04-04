@@ -9,7 +9,6 @@ import {
   MapReadyEvent,
   MapTapEvent,
   Marker,
-  Polyline,
 } from '@nativescript/google-maps';
 import { GoogleMapsModule } from '@nativescript/google-maps/angular';
 import * as geolocation from '@nativescript/geolocation';
@@ -80,7 +79,6 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
   private appearanceChangedHandler?: () => void;
   private googleMap?: GoogleMap;
   private selectedMarker?: Marker;
-  private tapGroundBlockLine?: Polyline;
   private scanLocationMarkers = new Map<string, { marker: Marker; lat: number; lng: number }>();
   private preferredCameraTarget?: { lat: number; lng: number; zoom: number };
   private currentLatitude?: number;
@@ -465,7 +463,6 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
     this.selectedLatitude = null;
     this.selectedLongitude = null;
     this.preferredCameraTarget = undefined;
-    this.removeTapGroundBlockLine();
     this.tapGroundBlockDistanceText = '';
   }
 
@@ -645,7 +642,6 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
 
     if (!tapMarker || !groundBlockMarker) {
       this.tapGroundBlockDistanceText = '';
-      this.removeTapGroundBlockLine();
       return;
     }
 
@@ -657,32 +653,6 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
         groundBlockMarker.lng
       )
     );
-
-    if (!this.googleMap) {
-      return;
-    }
-
-    this.removeTapGroundBlockLine();
-    this.tapGroundBlockLine = this.googleMap.addPolyline({
-      points: [
-        { lat: tapMarker.lat, lng: tapMarker.lng },
-        { lat: groundBlockMarker.lat, lng: groundBlockMarker.lng },
-      ],
-      color: '#22c55e',
-      width: 4,
-      geodesic: true,
-      zIndex: 2,
-    });
-  }
-
-  private removeTapGroundBlockLine(): void {
-    if (!this.tapGroundBlockLine || !this.googleMap) {
-      this.tapGroundBlockLine = undefined;
-      return;
-    }
-
-    this.googleMap.removePolyline(this.tapGroundBlockLine);
-    this.tapGroundBlockLine = undefined;
   }
 
   private calculateDistanceInFeet(
@@ -709,10 +679,10 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
 
   private formatDistanceLabel(distanceFeet: number): string {
     if (distanceFeet >= 5280) {
-      return `Tap ↔ GB: ${(distanceFeet / 5280).toFixed(2)} mi`;
+      return `TAP ↔ GB: ${(distanceFeet / 5280).toFixed(2)} mi`;
     }
 
-    return `Tap ↔ GB: ${distanceFeet.toFixed(1)} ft`;
+    return `TAP ↔ GB: ${distanceFeet.toFixed(1)} ft`;
   }
 
   private setPreferredCameraTargetFromPersistedMarkers(
