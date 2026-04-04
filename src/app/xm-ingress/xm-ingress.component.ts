@@ -134,41 +134,26 @@ export class XmIngressComponent implements OnInit, OnDestroy {
 
   public onMapTap(args: MapTapEvent): void {
     const { lat, lng } = args.coordinate;
-    const scanLocation = this.selectedScanLocation;
-    const existingEntry = this.scanLocationMarkers.get(scanLocation);
+    this.placeMarkerAtCoordinates(lat, lng);
+  }
 
-    this.selectedLatitude = lat;
-    this.selectedLongitude = lng;
-    this.selectedMarker?.hideInfoWindow();
-
-    if (existingEntry) {
-      existingEntry.lat = lat;
-      existingEntry.lng = lng;
-      existingEntry.marker.position = { lat, lng };
-      existingEntry.marker.title = scanLocation;
-      existingEntry.marker.snippet = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-      this.selectedMarker = existingEntry.marker;
-    } else {
-      const marker = this.googleMap?.addMarker({
-        position: { lat, lng },
-        title: scanLocation,
-        snippet: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
-        color: '#2563eb',
-      });
-
-      if (!marker) {
-        this.cdr.detectChanges();
-        return;
-      }
-
-      this.scanLocationMarkers.set(scanLocation, { marker, lat, lng });
-      this.selectedMarker = marker;
+  public async useCurrentLocationForMarker(): Promise<void> {
+    if (this.currentLatitude === undefined || this.currentLongitude === undefined) {
+      await this.loadCurrentLocation();
     }
 
-    this.selectedMarker?.showInfoWindow();
-    this.persistMarkerState();
+    if (this.currentLatitude === undefined || this.currentLongitude === undefined) {
+      await alert({
+        title: 'Location Unavailable',
+        message: 'Could not get your current location.',
+        okButtonText: 'OK',
+      });
+      return;
+    }
 
-    this.cdr.detectChanges();
+    this.placeMarkerAtCoordinates(this.currentLatitude, this.currentLongitude);
+    this.updatePreferredCameraTarget(this.currentLatitude, this.currentLongitude);
+    this.applyPreferredCameraTarget();
   }
 
   public onScanLocationChange(): void {
@@ -371,6 +356,43 @@ export class XmIngressComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       this.googleMap?.moveCamera(CameraUpdate.fromCoordinate({ lat, lng }, zoom));
     }, 150);
+    this.cdr.detectChanges();
+  }
+
+  private placeMarkerAtCoordinates(lat: number, lng: number): void {
+    const scanLocation = this.selectedScanLocation;
+    const existingEntry = this.scanLocationMarkers.get(scanLocation);
+
+    this.selectedLatitude = lat;
+    this.selectedLongitude = lng;
+    this.selectedMarker?.hideInfoWindow();
+
+    if (existingEntry) {
+      existingEntry.lat = lat;
+      existingEntry.lng = lng;
+      existingEntry.marker.position = { lat, lng };
+      existingEntry.marker.title = scanLocation;
+      existingEntry.marker.snippet = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+      this.selectedMarker = existingEntry.marker;
+    } else {
+      const marker = this.googleMap?.addMarker({
+        position: { lat, lng },
+        title: scanLocation,
+        snippet: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+        color: '#2563eb',
+      });
+
+      if (!marker) {
+        this.cdr.detectChanges();
+        return;
+      }
+
+      this.scanLocationMarkers.set(scanLocation, { marker, lat, lng });
+      this.selectedMarker = marker;
+    }
+
+    this.selectedMarker?.showInfoWindow();
+    this.persistMarkerState();
     this.cdr.detectChanges();
   }
 
