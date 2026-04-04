@@ -9,6 +9,7 @@ import {
   MapReadyEvent,
   MapTapEvent,
   Marker,
+  Polyline,
 } from '@nativescript/google-maps';
 import { GoogleMapsModule } from '@nativescript/google-maps/angular';
 import * as geolocation from '@nativescript/geolocation';
@@ -27,6 +28,8 @@ import { UsersService } from '../shared/services/users.service';
   styleUrl: './xm-pht-scans.component.scss',
 })
 export class XmPhtScansComponent implements OnInit, OnDestroy {
+  private static readonly TAP_LOCATION = 'Tap';
+  private static readonly GROUND_BLOCK_LOCATION = 'Ground Block';
   private static readonly DEFAULT_LAT = 29.7604;
   private static readonly DEFAULT_LNG = -95.3698;
   private static readonly DEFAULT_ZOOM = 11;
@@ -49,6 +52,7 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
   public upstreamValue = XmPhtScansComponent.DEFAULT_UPSTREAM;
   public downstreamValue = XmPhtScansComponent.DEFAULT_DOWNSTREAM;
   public isSending = false;
+  public tapGroundBlockDistanceText = '';
   public scanLocationList = [
     'Tap',
     'Ground Block',
@@ -76,6 +80,7 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
   private appearanceChangedHandler?: () => void;
   private googleMap?: GoogleMap;
   private selectedMarker?: Marker;
+  private tapGroundBlockLine?: Polyline;
   private scanLocationMarkers = new Map<string, { marker: Marker; lat: number; lng: number }>();
   private preferredCameraTarget?: { lat: number; lng: number; zoom: number };
   private currentLatitude?: number;
@@ -127,6 +132,7 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
 
     this.renderPersistedMarkers();
     this.syncSelectedMarkerFromLocation();
+    this.refreshTapGroundBlockVisuals();
 
     if (this.applyPreferredCameraTarget()) {
       this.cdr.detectChanges();
@@ -181,6 +187,7 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
       this.restoreScanLevelsForSelectedLocation();
       this.restoreTapConfig();
       this.persistMarkerState();
+      this.refreshTapGroundBlockVisuals();
       this.cdr.detectChanges();
       return;
     }
@@ -195,6 +202,7 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
     this.restoreScanLevelsForSelectedLocation();
     this.restoreTapConfig();
     this.persistMarkerState();
+    this.refreshTapGroundBlockVisuals();
     this.cdr.detectChanges();
   }
 
@@ -208,6 +216,7 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
     this.selectedLatitude = null;
     this.selectedLongitude = null;
     this.persistMarkerState();
+    this.refreshTapGroundBlockVisuals();
     this.cdr.detectChanges();
   }
 
@@ -431,6 +440,7 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
 
     this.selectedMarker?.showInfoWindow();
     this.persistMarkerState();
+    this.refreshTapGroundBlockVisuals();
     this.cdr.detectChanges();
   }
 
@@ -455,6 +465,8 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
     this.selectedLatitude = null;
     this.selectedLongitude = null;
     this.preferredCameraTarget = undefined;
+    this.removeTapGroundBlockLine();
+    this.tapGroundBlockDistanceText = '';
   }
 
   private get storageKey(): string {
@@ -482,6 +494,7 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
     this.applyPreferredCameraTarget();
     this.restoreScanLevelsForSelectedLocation();
     this.restoreTapConfig();
+    this.refreshTapGroundBlockVisuals();
     this.cdr.detectChanges();
   }
 
@@ -624,6 +637,82 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
         },
       }
     );
+  }
+
+  private refreshTapGroundBlockVisuals(): void {
+    const tapMarker = this.scanLocationMarkers.get(XmPhtScansComponent.TAP_LOCATION);
+    const groundBlockMarker = this.scanLocationMarkers.get(XmPhtScansComponent.GROUND_BLOCK_LOCATION);
+
+    if (!tapMarker || !groundBlockMarker) {
+      this.tapGroundBlockDistanceText = '';
+      this.removeTapGroundBlockLine();
+      return;
+    }
+
+    this.tapGroundBlockDistanceText = this.formatDistanceLabel(
+      this.calculateDistanceInFeet(
+        tapMarker.lat,
+        tapMarker.lng,
+        groundBlockMarker.lat,
+        groundBlockMarker.lng
+      )
+    );
+
+    if (!this.googleMap) {
+      return;
+    }
+
+    this.removeTapGroundBlockLine();
+    this.tapGroundBlockLine = this.googleMap.addPolyline({
+      points: [
+        { lat: tapMarker.lat, lng: tapMarker.lng },
+        { lat: groundBlockMarker.lat, lng: groundBlockMarker.lng },
+      ],
+      color: '#22c55e',
+      width: 4,
+      geodesic: true,
+      zIndex: 2,
+    });
+  }
+
+  private removeTapGroundBlockLine(): void {
+    if (!this.tapGroundBlockLine || !this.googleMap) {
+      this.tapGroundBlockLine = undefined;
+      return;
+    }
+
+    this.googleMap.removePolyline(this.tapGroundBlockLine);
+    this.tapGroundBlockLine = undefined;
+  }
+
+  private calculateDistanceInFeet(
+    startLat: number,
+    startLng: number,
+    endLat: number,
+    endLng: number
+  ): number {
+    const toRadians = (value: number) => (value * Math.PI) / 180;
+    const earthRadiusMeters = 6371000;
+    const deltaLat = toRadians(endLat - startLat);
+    const deltaLng = toRadians(endLng - startLng);
+    const originLat = toRadians(startLat);
+    const targetLat = toRadians(endLat);
+
+    const a =
+      Math.sin(deltaLat / 2) ** 2 +
+      Math.cos(originLat) * Math.cos(targetLat) * Math.sin(deltaLng / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const meters = earthRadiusMeters * c;
+
+    return meters * 3.28084;
+  }
+
+  private formatDistanceLabel(distanceFeet: number): string {
+    if (distanceFeet >= 5280) {
+      return `Tap ↔ GB: ${(distanceFeet / 5280).toFixed(2)} mi`;
+    }
+
+    return `Tap ↔ GB: ${distanceFeet.toFixed(1)} ft`;
   }
 
   private setPreferredCameraTargetFromPersistedMarkers(

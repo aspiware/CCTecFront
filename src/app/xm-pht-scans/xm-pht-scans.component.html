@@ -94,6 +94,19 @@
       </MapView>
 
       <StackLayout
+        *ngIf="tapGroundBlockDistanceText"
+        row="0"
+        col="0"
+        class="distance-badge-wrap"
+        horizontalAlignment="center"
+        verticalAlignment="top">
+        <Label
+          [text]="tapGroundBlockDistanceText"
+          class="distance-badge">
+        </Label>
+      </StackLayout>
+
+      <StackLayout
         row="0"
         col="0"
         class="current-location-btn-wrap"

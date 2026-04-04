@@ -66,6 +66,19 @@
   background-color: #d7e3f9;
 }
 
+.distance-badge-wrap {
+  margin-top: 12;
+}
+
+.distance-badge {
+  padding: 8 14;
+  border-radius: 16;
+  font-size: 13;
+  font-weight: 700;
+  color: #16345e;
+  background-color: rgba(255, 255, 255, 0.92);
+}
+
 .current-location-btn-wrap {
   margin-top: 12;
   margin-right: 12;
@@ -101,6 +114,11 @@
 
 .xm-pht-scans-root.theme-dark .xm-pht-scans-stepper-card {
   background-color: #111b2a;
+}
+
+.xm-pht-scans-root.theme-dark .distance-badge {
+  color: #eef4ff;
+  background-color: rgba(16, 24, 39, 0.78);
 }
 
 .xm-pht-scans-root.theme-dark .current-location-btn {
