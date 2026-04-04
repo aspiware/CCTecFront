@@ -25,6 +25,7 @@ export class JobsComponent implements OnInit, OnDestroy {
   private readonly demoJobs = this.buildDemoJobs();
   private readonly actionTapStates: Record<string, boolean> = {};
   private readonly actionTapTimers: Record<string, any> = {};
+  private datePickersReady = false;
   private messageComposeDelegate: any;
   private isCopyMenuOpen = false;
   private lastCopyMenuTs = 0;
@@ -74,10 +75,16 @@ export class JobsComponent implements OnInit, OnDestroy {
 
   public onRootLoaded(): void {
     this.syncTheme();
+    setTimeout(() => {
+      this.datePickersReady = true;
+    }, 0);
     this.cdr.detectChanges();
   }
 
   public onStartDateChange(event: any): void {
+    if (!this.datePickersReady) {
+      return;
+    }
     const nextDate = event?.value instanceof Date ? event.value : this.startDate;
     this.startDate = nextDate;
     if (this.startDate > this.endDate) {
@@ -87,6 +94,9 @@ export class JobsComponent implements OnInit, OnDestroy {
   }
 
   public onEndDateChange(event: any): void {
+    if (!this.datePickersReady) {
+      return;
+    }
     const nextDate = event?.value instanceof Date ? event.value : this.endDate;
     this.endDate = nextDate;
     if (this.endDate < this.startDate) {
