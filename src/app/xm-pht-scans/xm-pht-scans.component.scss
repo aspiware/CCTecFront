@@ -66,6 +66,22 @@
   background-color: #d7e3f9;
 }
 
+.current-location-btn-wrap {
+  margin-top: 12;
+  margin-right: 12;
+}
+
+.current-location-btn {
+  width: 42;
+  height: 42;
+  padding: 0;
+  border-radius: 21;
+  font-size: 18;
+  font-weight: 700;
+  color: #16345e;
+  background-color: rgba(255, 255, 255, 0.92);
+}
+
 .xm-pht-scans-root.theme-dark {
   background-color: #0f1726;
 }
@@ -85,6 +101,11 @@
 
 .xm-pht-scans-root.theme-dark .xm-pht-scans-stepper-card {
   background-color: #111b2a;
+}
+
+.xm-pht-scans-root.theme-dark .current-location-btn {
+  color: #eef4ff;
+  background-color: rgba(16, 24, 39, 0.524);
 }
 
 .xm-pht-scans-root.theme-dark .xm-pht-scans-map {

@@ -81,14 +81,30 @@
       </StackLayout>
     </GridLayout>
 
-    <MapView
-      row="2"
-      class="xm-pht-scans-map"
-      [lat]="mapLat"
-      [lng]="mapLng"
-      [zoom]="mapZoom"
-      (ready)="onMapReady($event)"
-      (mapTap)="onMapTap($event)">
-    </MapView>
+    <GridLayout row="2" rows="*" columns="*">
+      <MapView
+        row="0"
+        col="0"
+        class="xm-pht-scans-map"
+        [lat]="mapLat"
+        [lng]="mapLng"
+        [zoom]="mapZoom"
+        (ready)="onMapReady($event)"
+        (mapTap)="onMapTap($event)">
+      </MapView>
+
+      <StackLayout
+        row="0"
+        col="0"
+        class="current-location-btn-wrap"
+        horizontalAlignment="right"
+        verticalAlignment="top">
+        <Button
+          class="current-location-btn"
+          text="◎"
+          (tap)="useCurrentLocationForMarker()">
+        </Button>
+      </StackLayout>
+    </GridLayout>
   </GridLayout>
 </GridLayout>
