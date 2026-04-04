@@ -17,6 +17,7 @@ import { FiberJobPricesComponent } from './fiber-job-prices/fiber-job-prices.com
 import { BusinessJobPricesComponent } from './business-job-prices/business-job-prices.component';
 import { PayrollComponent } from './payroll/payroll.component';
 import { XmUpdateTokenComponent } from './xm-update-token/xm-update-token.component';
+import { XmPhtScansComponent } from './xm-pht-scans/xm-pht-scans.component';
 import { SmsSurveyComponent } from './sms-survey/sms-survey.component';
 import { SmsAvailabilityComponent } from './sms-availability/sms-availability.component';
 
@@ -73,6 +74,11 @@ export const routes: Routes = [
         path: 'activate-service',
         outlet: 'todayListTab',
         component: ActivateServiceComponent,
+      },
+      {
+        path: 'xm-pht-scans',
+        outlet: 'todayListTab',
+        component: XmPhtScansComponent,
       },
       {
         path: 'settings',

@@ -2,7 +2,7 @@
   <GridLayout rows="*" columns="*">
     <StackLayout row="0" col="0" class="backdrop" (tap)="closeModal()"></StackLayout>
 
-    <GridLayout row="0" col="0" rows="auto,*" class="modal-card" (tap)="dismissNotesKeyboard()">
+    <GridLayout row="0" col="0" rows="auto,*" class="modal-card" (tap)="dismissNotesKeyboard($event)">
       <GridLayout row="0" columns="*,auto,auto" class="header header-fixed">
         <Label col="0" text="Edit Job" class="title modal-title-text"></Label>
         <Label
@@ -30,7 +30,7 @@
         row="1"
         class="form-scroll"
         [class.form-scroll-custom]="isCustomJobTypeSelected || isUpdateJobTypeSelected"
-        (tap)="dismissNotesKeyboard()">
+        >
       <StackLayout class="content" [class.content-notes-focused]="isNotesFocused">
         <ActivityIndicator
           [busy]="isLoadingTypes"
@@ -218,6 +218,8 @@
           hint="Notes"
           [text]="notes"
           (textChange)="onNotesChanged($event.value)"
+          (touch)="onNotesTouch()"
+          (tap)="onNotesTap($event)"
           (focus)="onNotesFocus()"
           (blur)="onNotesBlur()"
           class="notes-input">

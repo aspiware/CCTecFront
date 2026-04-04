@@ -300,13 +300,21 @@ export class DevicesComponent implements OnInit, OnDestroy {
           );
           const canActivate = friendlyName === 'Fully Manageable';
 
-          this.showGatewayStatusMessage(message, anchor, canActivate);
+          this.showGatewayStatusMessage(
+            message,
+            anchor,
+            canActivate,
+            0,
+            () => this.gatewayStatus(item, anchor)
+          );
         },
         error: (error) => {
           this.showGatewayStatusMessage(
             String(error?.error?.message || error?.message || 'Failed to check gateway status.'),
             anchor,
-            false
+            false,
+            0,
+            () => this.gatewayStatus(item, anchor)
           );
         },
       });
@@ -352,7 +360,13 @@ export class DevicesComponent implements OnInit, OnDestroy {
     this.showGatewayStatusMessage(`Video status: ${status}`, anchor);
   }
 
-  private showGatewayStatusMessage(message: string, anchor?: any, canActivate = false): void {
+  private showGatewayStatusMessage(
+    message: string,
+    anchor?: any,
+    canActivate = false,
+    autoDismissMs = 2000,
+    onRetry?: () => void
+  ): void {
     const title = 'Gateway Status';
 
     if (!__IOS__) {
@@ -383,6 +397,17 @@ export class DevicesComponent implements OnInit, OnDestroy {
       message,
       UIAlertControllerStyle.ActionSheet
     );
+    if (onRetry) {
+      const retryAction = UIAlertAction.actionWithTitleStyleHandler(
+        'Retry',
+        UIAlertActionStyle.Default,
+        () => {
+          onRetry();
+        }
+      );
+      retryAction.setValueForKey(UIImage.systemImageNamed('arrow.clockwise'), 'image');
+      alert.addAction(retryAction);
+    }
     if (canActivate) {
       const activateAction = UIAlertAction.actionWithTitleStyleHandler(
         'Activate',
@@ -411,11 +436,13 @@ export class DevicesComponent implements OnInit, OnDestroy {
 
     viewController.presentViewControllerAnimatedCompletion(alert, true, null);
 
-    setTimeout(() => {
-      if (alert.presentingViewController && !alert.beingDismissed) {
-        alert.dismissViewControllerAnimatedCompletion(true, null);
-      }
-    }, 2000);
+    if (autoDismissMs > 0) {
+      setTimeout(() => {
+        if (alert.presentingViewController && !alert.beingDismissed) {
+          alert.dismissViewControllerAnimatedCompletion(true, null);
+        }
+      }, autoDismissMs);
+    }
   }
 
   private syncTheme(): void {

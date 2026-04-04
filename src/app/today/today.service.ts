@@ -216,4 +216,11 @@ export class TodayService {
     );
   }
 
+  public sendPHTScans(data: any): Observable<any> {
+    return this.httpClient.post<string>(
+      this.configService.getUrlBase() + `/jobs/c/sendPHTScans`,
+      data
+    );
+  }
+
 }

@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, ElementRef, NO_ERRORS_SCHEMA, OnInit, ViewChild } from '@angular/core';
 import { ModalDialogParams, NativeScriptCommonModule } from '@nativescript/angular';
-import { Dialogs, ScrollView, Utils } from '@nativescript/core';
+import { Dialogs, ScrollView, Utils, isAndroid, isIOS } from '@nativescript/core';
 import { getNumber } from '@nativescript/core/application-settings';
 import { SegmentedBarItem } from '@nativescript/core';
 import { ObservableArray } from '@nativescript/core';
@@ -21,6 +21,7 @@ import { TodayService } from '../today/today.service';
   styleUrl: './edit-job.component.scss',
 })
 export class EditJobComponent implements OnInit {
+  private static readonly NOTES_TOUCH_GUARD_MS = 350;
   public job: any;
   private userId = 0;
   public notes = '';
@@ -50,6 +51,7 @@ export class EditJobComponent implements OnInit {
   public customEquipmentRows: any[][] = [];
   private initialCustomEquipmentSelections: any[] = [];
   private customEquipmentStateByCategory = new Map<number, any[]>();
+  private lastNotesTouchAt = 0;
   public updateDeviceItems: Array<{ label: string; selected: boolean; raw: any }> = [];
   public selectedUpgradeDeviceKeys = new Set<string>();
   public changedDeviceIds: number[] = [];
@@ -213,7 +215,23 @@ export class EditJobComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  public dismissNotesKeyboard(): void {
+  public onNotesTap(event: any): void {
+    if (event) {
+      event.cancelBubble = true;
+    }
+  }
+
+  public onNotesTouch(): void {
+    this.lastNotesTouchAt = Date.now();
+  }
+
+  public dismissNotesKeyboard(event?: any): void {
+    if (this.isTextInputTap(event)) {
+      return;
+    }
+    if (Date.now() - this.lastNotesTouchAt < EditJobComponent.NOTES_TOUCH_GUARD_MS) {
+      return;
+    }
     if (!this.isNotesFocused) {
       return;
     }
@@ -1228,4 +1246,21 @@ export class EditJobComponent implements OnInit {
     }
     return '';
   }
+
+  private isTextInputTap(event: any): boolean {
+    if (isIOS) {
+      const iosView = event?.ios?.view;
+      const className = String(iosView?.className || '');
+      return className.includes('UITextField') || className.includes('UITextView');
+    }
+
+    if (isAndroid) {
+      const androidView = event?.android?.view;
+      const className = String(androidView?.getClass?.()?.getName?.() || '');
+      return className.includes('EditText');
+    }
+
+    return false;
+  }
+
 }
