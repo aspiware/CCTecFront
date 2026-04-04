@@ -93,31 +93,37 @@
         (mapTap)="onMapTap($event)">
       </MapView>
 
-      <StackLayout
-        *ngIf="tapGroundBlockDistanceText"
+      <GridLayout
         row="0"
         col="0"
-        class="distance-badge-wrap"
-        horizontalAlignment="center"
+        columns="*,auto"
+        class="map-overlay-row"
+        horizontalAlignment="stretch"
         verticalAlignment="top">
-        <Label
-          [text]="tapGroundBlockDistanceText"
-          class="distance-badge">
-        </Label>
-      </StackLayout>
+        <StackLayout
+          col="0"
+          class="distance-badge-wrap"
+          horizontalAlignment="left"
+          verticalAlignment="top">
+          <Label
+            *ngIf="tapGroundBlockDistanceText"
+            [text]="tapGroundBlockDistanceText"
+            class="distance-badge">
+          </Label>
+        </StackLayout>
 
-      <StackLayout
-        row="0"
-        col="0"
-        class="current-location-btn-wrap"
-        horizontalAlignment="right"
-        verticalAlignment="top">
-        <Button
-          class="current-location-btn"
-          text="◎"
-          (tap)="useCurrentLocationForMarker()">
-        </Button>
-      </StackLayout>
+        <StackLayout
+          col="1"
+          class="current-location-btn-wrap"
+          horizontalAlignment="right"
+          verticalAlignment="top">
+          <Button
+            class="current-location-btn"
+            text="◎"
+            (tap)="useCurrentLocationForMarker()">
+          </Button>
+        </StackLayout>
+      </GridLayout>
     </GridLayout>
   </GridLayout>
 </GridLayout>

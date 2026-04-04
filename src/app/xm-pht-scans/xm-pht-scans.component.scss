@@ -66,8 +66,14 @@
   background-color: #d7e3f9;
 }
 
-.distance-badge-wrap {
+.map-overlay-row {
   margin-top: 12;
+  margin-left: 12;
+  margin-right: 12;
+}
+
+.distance-badge-wrap {
+  margin-right: 12;
 }
 
 .distance-badge {
@@ -80,8 +86,7 @@
 }
 
 .current-location-btn-wrap {
-  margin-top: 12;
-  margin-right: 12;
+  margin-left: 12;
 }
 
 .current-location-btn {
