@@ -22,7 +22,7 @@
   <GridLayout row="0" rows="auto,*">
     <GridLayout row="0" columns="*,140" class="xm-ingress-picker-row">
       <StackLayout col="0" class="xm-ingress-picker-card xm-ingress-picker-card-left">
-        <Label text="Scan Location" class="xm-ingress-picker-label"></Label>
+        <Label text="Ingress Location" class="xm-ingress-picker-label"></Label>
         <ListPicker
           class="xm-ingress-picker"
           [items]="scanLocationList"
@@ -38,14 +38,17 @@
 
       <StackLayout col="1" class="xm-ingress-picker-card">
         <Label text="Sample Count" class="xm-ingress-picker-label"></Label>
-        <TextField
-          class="xm-ingress-text-field"
-          keyboardType="number"
-          autocorrect="false"
-          autocapitalizationType="none"
-          hint="Port"
-          [(ngModel)]="tapPortInput">
-        </TextField>
+        <GridLayout col="1" columns="*" class="input-shell item-input-shell">
+          <TextField
+            col="0"
+            class="custom-tf-inline item-price-input"
+            [text]="sampleCount"
+            keyboardType="decimal"
+            textAlignment="center"
+            hint="0"
+            (textChange)="onSampleCountChange($event)">
+          </TextField>
+        </GridLayout>
       </StackLayout>
     </GridLayout>
 

@@ -34,13 +34,39 @@
   color: #16345e;
 }
 
-.xm-ingress-text-field {
-  margin: 8 14 0 14;
-  padding: 10 12;
-  border-radius: 10;
+.input-shell {
+  margin-left: 14;
+  margin-right: 14;
+  margin-top: 8;
+  height: 44;
+  border-radius: 22;
+  border-width: 1;
+}
+
+.item-input-shell {
+  width: 108;
   background-color: #ffffff;
-  color: #16345e;
-  font-size: 16;
+  border-color: #d1d1d6;
+}
+
+TextField.custom-tf-inline {
+  height: 44;
+  font-size: 17;
+  padding-left: 12;
+  padding-right: 12;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin: 0;
+  border-width: 0;
+  background-color: transparent;
+  vertical-align: middle;
+  color: #000000;
+  placeholder-color: #8e8e93;
+}
+
+.item-price-input {
+  width: 96;
+  padding-left: 4;
 }
 
 .xm-ingress-picker-value {
@@ -78,9 +104,24 @@
   color: #eef4ff;
 }
 
-.xm-ingress-root.theme-dark .xm-ingress-text-field {
-  background-color: #0b1220;
-  color: #eef4ff;
+.xm-ingress-root.theme-light .input-shell {
+  background-color: #ffffff;
+  border-color: #d1d1d6;
+}
+
+.xm-ingress-root.theme-dark .input-shell {
+  background-color: #2c2c2e;
+  border-color: #48484a;
+}
+
+.xm-ingress-root.theme-light TextField.custom-tf-inline {
+  color: #000000;
+  placeholder-color: #8e8e93;
+}
+
+.xm-ingress-root.theme-dark TextField.custom-tf-inline {
+  color: #ffffff;
+  placeholder-color: #aeaeb2;
 }
 
 .xm-ingress-root.theme-dark .xm-ingress-map {

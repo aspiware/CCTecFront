@@ -40,7 +40,7 @@ export class XmIngressComponent implements OnInit, OnDestroy {
   public selectedLatitude: number | null = null;
   public selectedLongitude: number | null = null;
   public selectedScanLocationIndex = 0;
-  public tapPortInput = XmIngressComponent.DEFAULT_SAMPLE_COUNT;
+  public sampleCount = XmIngressComponent.DEFAULT_SAMPLE_COUNT;
   public isSending = false;
   public scanLocationList = [
     'Tap',
@@ -175,7 +175,6 @@ export class XmIngressComponent implements OnInit, OnDestroy {
       this.selectedMarker = undefined;
       this.selectedLatitude = null;
       this.selectedLongitude = null;
-      this.restoreTapConfig();
       this.persistMarkerState();
       this.cdr.detectChanges();
       return;
@@ -186,7 +185,6 @@ export class XmIngressComponent implements OnInit, OnDestroy {
     this.selectedLongitude = existingEntry.lng;
     this.selectedMarker.title = scanLocation;
     this.selectedMarker.showInfoWindow();
-    this.restoreTapConfig();
     this.persistMarkerState();
     this.cdr.detectChanges();
   }
@@ -216,12 +214,20 @@ export class XmIngressComponent implements OnInit, OnDestroy {
     return this.scanLocationList[this.selectedScanLocationIndex] || this.scanLocationList[0];
   }
 
-  public get selectedTapPortNumber(): number {
-    return Number(String(this.tapPortInput || '').trim() || XmIngressComponent.DEFAULT_SAMPLE_COUNT);
+  public get selectedSampleCountNumber(): number {
+    return Number(String(this.sampleCount || '').trim() || XmIngressComponent.DEFAULT_SAMPLE_COUNT);
   }
 
   public get isTapScanLocation(): boolean {
     return this.selectedScanLocation === 'Tap';
+  }
+
+  public onSampleCountChange(event: any): void {
+    const nextValue = String(event?.value ?? event ?? '')
+      .replace(/\D+/g, '')
+      .trim();
+
+    this.sampleCount = nextValue;
   }
 
   public async sendPHT(): Promise<void> {
@@ -256,22 +262,16 @@ export class XmIngressComponent implements OnInit, OnDestroy {
 
     try {
       const payload: any = {
-        userId: this.userId,
         bp: this.bp,
-        workOrderNumber,
         location: this.selectedScanLocation,
-        lat: this.selectedLatitude,
-        lon: this.selectedLongitude,
+        sampleCount: this.selectedSampleCountNumber,
+        latitude: this.selectedLatitude,
+        longitude: this.selectedLongitude,
       };
 
-      if (this.isTapScanLocation) {
-        payload.locationData = {
-          tapPort: this.selectedTapPortNumber,
-        };
-      }
-
-      await firstValueFrom(this.todayService.sendPHTScans(payload));
-      this.persistTapConfig();
+      await firstValueFrom(
+        this.todayService.sendXMIngress(this.userId, workOrderNumber, payload)
+      );
 
       await alert({
         title: 'Ingress Sent',
@@ -392,7 +392,6 @@ export class XmIngressComponent implements OnInit, OnDestroy {
   private restorePersistedState(): void {
     const persisted = this.configService.getXmPhtScanState(this.storageKey);
     if (!persisted) {
-      this.restoreTapConfig();
       return;
     }
 
@@ -403,7 +402,6 @@ export class XmIngressComponent implements OnInit, OnDestroy {
 
     this.renderPersistedMarkers(persisted.markers || {});
     this.syncSelectedMarkerFromLocation();
-    this.restoreTapConfig();
     this.cdr.detectChanges();
   }
 
@@ -479,33 +477,8 @@ export class XmIngressComponent implements OnInit, OnDestroy {
     );
   }
 
-  private restoreTapConfig(): void {
-    if (!this.isTapScanLocation) {
-      return;
-    }
-  }
-
-  private persistTapConfig(): void {
-    if (!this.isTapScanLocation) {
-      return;
-    }
-
-    const existingState = this.configService.getXmPhtScanState(this.storageKey) || {};
-
-    this.configService.setXmPhtScanState(
-      this.storageKey,
-      {
-        selectedScanLocation: this.selectedScanLocation,
-        markers: existingState.markers || {},
-        tapConfig: {
-          tapPort: this.selectedTapPortNumber,
-        },
-      }
-    );
-  }
-
   private setRandomSampleCount(): void {
     const randomSamples = Math.floor(Math.random() * (300 - 200 + 1)) + 250;
-    this.tapPortInput = String(randomSamples);
+    this.sampleCount = String(randomSamples);
   }
 }
