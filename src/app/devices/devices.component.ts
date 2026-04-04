@@ -53,6 +53,8 @@ export class DevicesComponent implements OnInit, OnDestroy {
     this.job = context;
     this.devices = Array.isArray(this.job?.devices) ? this.job.devices : [];
     this.userId = Number(this.usersService.getUser()?.userId || 0);
+
+    console.log('DEVICES', this.devices[1].connectionStatus);
   }
 
   ngOnInit(): void {
@@ -145,6 +147,26 @@ export class DevicesComponent implements OnInit, OnDestroy {
   public isVideoType(item: any): boolean {
     const type = String(item?.type || '').toUpperCase();
     return type === 'STB' || type === 'IPSTB';
+  }
+
+  public isDeviceConnected(item: any): boolean {
+    const rawStatus = item?.connectionStatus;
+    if (typeof rawStatus === 'boolean') {
+      return rawStatus;
+    }
+
+    const status = String(rawStatus || '').trim().toLowerCase();
+    if (!status) {
+      return false;
+    }
+
+    return (
+      status === 'true' ||
+      status === '1' ||
+      status === 'active' ||
+      status === 'connected' ||
+      status === 'online'
+    );
   }
 
   public getDeviceMenuIcon(item: any): string {
@@ -356,7 +378,7 @@ export class DevicesComponent implements OnInit, OnDestroy {
   }
 
   private showVideoStatus(item: any, anchor?: any): void {
-    const status = item?.connectionStatus ? 'Connected' : 'Disconnected';
+    const status = this.isDeviceConnected(item) ? 'Connected' : 'Disconnected';
     this.showGatewayStatusMessage(`Video status: ${status}`, anchor);
   }
 
