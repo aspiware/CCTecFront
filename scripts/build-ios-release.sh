@@ -8,16 +8,30 @@ cd "$ROOT_DIR"
 BUILD_CONFIG_FILE="App_Resources/iOS/build.xcconfig"
 NEXT_VERSION="${1:-}"
 
+increment_marketing_version() {
+  local version="$1"
+  IFS='.' read -r major minor patch <<< "$version"
+
+  if [[ -z "${major:-}" || -z "${minor:-}" || -z "${patch:-}" ]]; then
+    echo "Unable to increment MARKETING_VERSION: expected semantic version, got '$version'"
+    exit 1
+  fi
+
+  echo "${major}.${minor}.$((patch + 1))"
+}
+
 if [[ -f "$BUILD_CONFIG_FILE" ]]; then
-  if [[ -n "$NEXT_VERSION" ]]; then
-    current_version="$(sed -n 's/^MARKETING_VERSION = \(.*\)$/\1/p' "$BUILD_CONFIG_FILE")"
-    if [[ -n "${current_version:-}" ]]; then
-      sed -i '' "s/^MARKETING_VERSION = ${current_version}$/MARKETING_VERSION = ${NEXT_VERSION}/" "$BUILD_CONFIG_FILE"
-      echo "MARKETING_VERSION updated: ${current_version} -> ${NEXT_VERSION}"
-    else
-      echo "MARKETING_VERSION not found in $BUILD_CONFIG_FILE"
-      exit 1
+  current_version="$(sed -n 's/^MARKETING_VERSION = \(.*\)$/\1/p' "$BUILD_CONFIG_FILE")"
+  if [[ -n "${current_version:-}" ]]; then
+    if [[ -z "$NEXT_VERSION" ]]; then
+      NEXT_VERSION="$(increment_marketing_version "$current_version")"
     fi
+
+    sed -i '' "s/^MARKETING_VERSION = ${current_version}$/MARKETING_VERSION = ${NEXT_VERSION}/" "$BUILD_CONFIG_FILE"
+    echo "MARKETING_VERSION updated: ${current_version} -> ${NEXT_VERSION}"
+  else
+    echo "MARKETING_VERSION not found in $BUILD_CONFIG_FILE"
+    exit 1
   fi
 
   current_build="$(sed -n 's/^CURRENT_PROJECT_VERSION = \([0-9][0-9]*\)$/\1/p' "$BUILD_CONFIG_FILE")"
