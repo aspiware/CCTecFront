@@ -201,6 +201,13 @@ TextField.custom-tf-inline {
   font-size: 12;
 }
 
+.reorder-handle {
+  font-size: 15;
+  opacity: 0.8;
+  margin-left: 4;
+  margin-right: 4;
+}
+
 .modem-status-icon {
   font-size: 12;
   vertical-align: middle;
@@ -218,6 +225,16 @@ TextField.custom-tf-inline {
   height: 100%;
   margin-top: 4;
   margin-bottom: 10;
+}
+
+.ns-light .reorder-handle,
+.modal-root.theme-light .reorder-handle {
+  color: #8e8e93;
+}
+
+.ns-dark .reorder-handle,
+.modal-root.theme-dark .reorder-handle {
+  color: rgb(160, 160, 160);
 }
 
 .modems-stepper {

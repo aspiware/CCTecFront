@@ -295,6 +295,11 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
     return !!this.loadingStates[this.getDeviceKey(item)];
   }
 
+  public onDevicesReordered(): void {
+    this.syncDevices(this.devices);
+    this.cdr.detectChanges();
+  }
+
   public gatewayStatus(item: any, anchor?: any): void {
     const key = this.getDeviceKey(item);
     if (!key || this.loadingStates[key]) {

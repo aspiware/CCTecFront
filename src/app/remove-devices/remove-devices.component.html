@@ -21,28 +21,39 @@
       </GridLayout>
 
       <GridLayout row="1" class="update-devices-list-wrap">
-        <RadListView [items]="devices" selectionBehavior="None" class="custom-types-list">
+        <RadListView
+          [items]="devices"
+          selectionBehavior="None"
+          [itemReorder]="true"
+          reorderMode="HoldAndDrag"
+          (itemReordered)="onDevicesReordered()"
+          class="custom-types-list">
           <ng-template tkListItemTemplate let-item="item">
             <GridLayout rows="auto" columns="*, auto"
               style="margin-left: 10; margin-right: 10; margin-top: 6; margin-bottom: 6;">
                 <GridLayout orientation="horizontal" class="item-bag" col="0" columns="*, auto">
-                <GridLayout col="0" columns="28,60,*,auto,30">
-                  <Label *ngIf="isDeviceConnected(item)" class="fas device-status-icon" text="&#xf058;" col="0"></Label>
+                <GridLayout col="0" columns="20,28,60,*,auto,30">
+                  <Label col="0"
+                    class="fas reorder-handle"
+                    text="&#xf7a5;"
+                    verticalAlignment="middle"
+                    horizontalAlignment="center"></Label>
+                  <Label *ngIf="isDeviceConnected(item)" class="fas device-status-icon" text="&#xf058;" col="1"></Label>
                   <Label *ngIf="!isDeviceConnected(item)" class="fas device-status-icon device-status-icon-muted"
-                    text="&#xf05e;" col="0"></Label>
-                  <Label col="1" class="device-type" horizontalAlignment="left"
+                    text="&#xf05e;" col="1"></Label>
+                  <Label col="2" class="device-type" horizontalAlignment="left"
                     [text]="item.type == 'STB' || item.type == 'IPSTB' ? 'VIDEO' : item.type == 'MTA' || item.type == 'HSI' || item.type == 'CM' ? 'MODEM' : item.type"
                     [class.device-text-muted]="!isDeviceConnected(item)"></Label>
-                  <StackLayout col="2" verticalAlignment="middle">
+                  <StackLayout col="3" verticalAlignment="middle">
                     <Label class="device-name" verticalAlignment="middle" [text]="item.name || item.deviceName"
                       [class.device-text-muted]="!isDeviceConnected(item)"></Label>
                   </StackLayout>
-                  <StackLayout col="3" verticalAlignment="middle">
+                  <StackLayout col="4" verticalAlignment="middle">
                     <Label class="device-serial" verticalAlignment="middle"
                       [text]="item.serialNumber || item.deviceSerialNumber"
                       [class.device-text-muted]="!isDeviceConnected(item)"></Label>
                   </StackLayout>
-                  <MenuButton col="4" #deviceMenuBtn
+                  <MenuButton col="5" #deviceMenuBtn
                     class="device-status-button"
                     style="font-size: 16px; height: 60px; width: 100px;"
                     [showSpinner]="isJobMenuLoading(item)"
