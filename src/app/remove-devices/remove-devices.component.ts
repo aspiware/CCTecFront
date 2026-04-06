@@ -43,6 +43,10 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
         // },
       },
       {
+        name: 'Reorder Outlets',
+        icon: 'arrow.up.arrow.down.circle',
+      },
+      {
         name: 'Add Place Holder',
         icon: 'plus.rectangle.on.rectangle',
         children: [
@@ -114,6 +118,9 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
         this.refreshDevices();
         break;
       case 1:
+        this.onReorderOutlets();
+        break;
+      case 2:
         switch (menuPath?.[1]) {
           case 0:
             this.onAddPlaceholder('HSD');
@@ -131,6 +138,14 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
       default:
         break;
     }
+  }
+
+  private onReorderOutlets(): void {
+    Dialogs.alert({
+      title: 'Reorder Outlets',
+      message: 'Reorder outlets selected.',
+      okButtonText: 'OK',
+    });
   }
 
   private onAddPlaceholder(type: 'HSD' | 'VIDEO' | 'CDV'): void {
