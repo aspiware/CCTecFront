@@ -51,7 +51,7 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
             icon: 'wifi',
           },
           {
-            name: 'TV',
+            name: 'VIDEO',
             icon: 'tv',
           },
           {
@@ -119,10 +119,10 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
             this.onAddPlaceholder('HSD');
             break;
           case 1:
-            this.onAddPlaceholder('TV');
+            this.onAddPlaceholder('VIDEO');
             break;
           case 2:
-            this.onAddPlaceholder('VOICE');
+            this.onAddPlaceholder('CDV');
             break;
           default:
             break;
@@ -133,7 +133,7 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
     }
   }
 
-  private onAddPlaceholder(type: 'HSD' | 'TV' | 'VOICE'): void {
+  private onAddPlaceholder(type: 'HSD' | 'VIDEO' | 'CDV'): void {
     const workOrderNumber = this.job?.workOrderNumber;
     const placeholderData = this.buildAddPlaceholderPayload(type);
 
@@ -169,12 +169,12 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
       });
   }
 
-  private buildAddPlaceholderPayload(type: 'HSD' | 'TV' | 'VOICE'): any {
+  private buildAddPlaceholderPayload(type: 'HSD' | 'VIDEO' | 'CDV'): any {
     return {
       locationId: this.workOrder?.locationID,
       equipment: [
         {
-          equipTypeCd: 'J',
+          equipTypeCd: this.getPlaceholderEquipTypeCd(type),
           outlet: 'A',
           ownerCd: 'N',
           action: 'ADD',
@@ -188,6 +188,19 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
       accountNumber: this.workOrder?.accountNumber,
       isWriteBackToDwbEnabled: false,
     };
+  }
+
+  private getPlaceholderEquipTypeCd(type: 'HSD' | 'VIDEO' | 'CDV'): string {
+    switch (type) {
+      case 'HSD':
+        return 'J';
+      case 'VIDEO':
+        return 'N';
+      case 'CDV':
+        return 'W';
+      default:
+        return 'J';
+    }
   }
 
   private generatePlaceholderSerialNumber(): string {
