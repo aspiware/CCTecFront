@@ -141,11 +141,56 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
   }
 
   private onReorderOutlets(): void {
-    Dialogs.alert({
-      title: 'Reorder Outlets',
-      message: 'Reorder outlets selected.',
-      okButtonText: 'OK',
-    });
+    const workOrderNumber = this.job?.workOrderNumber;
+    const reorderOutletsData = this.buildReorderOutletsPayload();
+
+    if (!this.userId || !workOrderNumber || !reorderOutletsData || this.isRefreshingMainMenu) {
+      return;
+    }
+
+    this.isRefreshingMainMenu = true;
+    this.cdr.detectChanges();
+
+    this.todayService
+      .reorderOutlets(this.userId, workOrderNumber, reorderOutletsData)
+      .pipe(
+        concatMap(() => this.todayService.refreshOrderDetail(this.userId, workOrderNumber)),
+        concatMap(() => this.todayService.getWorkOrderDetails(this.userId, workOrderNumber)),
+        finalize(() => {
+          this.isRefreshingMainMenu = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (details: any) => {
+          this.applyWorkOrderDetails(details);
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          Dialogs.alert({
+            title: 'Reorder Outlets',
+            message: String(error?.error?.message || error?.message || 'Failed to reorder outlets.'),
+            okButtonText: 'OK',
+          });
+        },
+      });
+  }
+
+  private buildReorderOutletsPayload(): any {
+    return {
+      BusinessUnit: this.workOrder?.Job?.BusinessUnit,
+      WFXTechLogin: this.workOrder?.techInfo?.techNum,
+      WorkOrderNum: this.workOrder?.workOrderNumber,
+      JobEquipmentList: Array.isArray(this.workOrder?.JobEquipmentList)
+        ? this.workOrder.JobEquipmentList.map((device: any) => ({
+          ActionCd: device?.ActionCd,
+          SerialNum: device?.SerialNum,
+          Command: 'reorder',
+          OwnerCd: device?.OwnerCd,
+          EquipTypeCd: device?.EquipTypeCd,
+        }))
+        : [],
+    };
   }
 
   private onAddPlaceholder(type: 'HSD' | 'VIDEO' | 'CDV'): void {

@@ -230,6 +230,13 @@ export class TodayService {
     );
   }
 
+  public reorderOutlets(userId: number, workOrderNumber: any, data: any): Observable<any> {
+    return this.httpClient.put<void>(
+      `${this.configService.getUrlBase()}/jobs/c/reorderOutlets/${userId}/${workOrderNumber}/`,
+      data
+    );
+  }
+
   public sendXMIngress(userId: number, workOrderNumber: any, data: any): Observable<any> {
     return this.httpClient.post<string>(
       this.configService.getUrlBase() + `/jobs/c/sendXMIngress/${userId}/${workOrderNumber}`, data
