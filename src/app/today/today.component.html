@@ -221,7 +221,7 @@
                   (tap)="markJobActionTap(item, 'activate-service'); goToActivateService(item)">
                 </MenuButton>
 
-                <MenuButton *ngIf="(item.status == 'OPEN' && item.isCurrent) && user.roleId == 2"
+                <MenuButton 
                   class="fas job-action-button" [class.job-action-tapped]="isJobActionTapped(item, 'remove-devices')"
                   style="font-size: 14px; height: 70px; width: 100px; margin-right: 6" text="&#xf2ed;"
                   (tap)="markJobActionTap(item, 'remove-devices'); showRemoveDevicesModal(item)">
