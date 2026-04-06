@@ -295,36 +295,8 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
     return !!this.loadingStates[this.getDeviceKey(item)];
   }
 
-  public onDevicesReordered(event: any): void {
-    const fromIndex = Number(event?.index);
-    const toIndex = Number(event?.data?.targetIndex);
-
-    if (
-      !Array.isArray(this.devices) ||
-      Number.isNaN(fromIndex) ||
-      Number.isNaN(toIndex) ||
-      fromIndex < 0 ||
-      toIndex < 0 ||
-      fromIndex >= this.devices.length ||
-      toIndex >= this.devices.length ||
-      fromIndex === toIndex
-    ) {
-      this.syncDevices(this.devices);
-      this.cdr.detectChanges();
-      return;
-    }
-
-    const reorderedDevices = [...this.devices];
-    const [movedDevice] = reorderedDevices.splice(fromIndex, 1);
-
-    if (!movedDevice) {
-      this.syncDevices(this.devices);
-      this.cdr.detectChanges();
-      return;
-    }
-
-    reorderedDevices.splice(toIndex, 0, movedDevice);
-    this.syncDevices(reorderedDevices);
+  public onDevicesReordered(): void {
+    this.syncDevices(this.devices);
     this.cdr.detectChanges();
   }
 

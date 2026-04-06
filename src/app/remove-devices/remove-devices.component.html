@@ -26,7 +26,7 @@
           selectionBehavior="None"
           [itemReorder]="true"
           reorderMode="HoldAndDrag"
-          (itemReordered)="onDevicesReordered($event)"
+          (itemReordered)="onDevicesReordered()"
           class="custom-types-list">
           <ng-template tkListItemTemplate let-item="item">
             <GridLayout rows="auto" columns="*, auto"
