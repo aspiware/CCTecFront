@@ -156,20 +156,26 @@ TextField.custom-tf-inline {
 .item-bag {
   background-color: rgba(126, 151, 185, 0.2);
   border-radius: 8;
-  padding-top: 12;
   padding-right: 12;
-  padding-bottom: 12;
+  padding-top: 0;
+  padding-bottom: 0;
   padding-left: 0;
   border-width: 1;
   border-color: rgba(255, 255, 255, 0.12);
 }
 
+.device-row-content {
+  padding-top: 12;
+  padding-bottom: 12;
+}
+
 .reorder-handle-wrap {
   width: 24;
   height: 100%;
-  margin-right: 8;
+  margin-right: 10;
   horizontal-align: left;
   vertical-align: stretch;
+  justify-content: center;
 }
 
 .custom-list-wrap {
@@ -216,7 +222,7 @@ TextField.custom-tf-inline {
   font-size: 15;
   opacity: 0.8;
   width: 24;
-  height: 100%;
+  height: auto;
   margin: 0;
   padding: 0;
   text-align: center;
