@@ -51,10 +51,8 @@ export class DevicesComponent implements OnInit, OnDestroy {
   ) {
     const context = this.modalParams.context || {};
     this.job = context;
-    this.devices = Array.isArray(this.job?.devices) ? this.job.devices : [];
+    this.syncDevices(Array.isArray(this.job?.devices) ? this.job.devices : []);
     this.userId = Number(this.usersService.getUser()?.userId || 0);
-
-    console.log('DEVICES', this.devices[1].connectionStatus);
   }
 
   ngOnInit(): void {
@@ -82,7 +80,9 @@ export class DevicesComponent implements OnInit, OnDestroy {
   }
 
   public closeWithoutSave(): void {
-    this.modalParams.closeCallback();
+    this.modalParams.closeCallback({
+      job: this.job,
+    });
   }
 
   public onSelectedMainMenu(event: MenuEvent, _menuStatus?: any): void {
@@ -125,8 +125,7 @@ export class DevicesComponent implements OnInit, OnDestroy {
           const refreshedDevices =
             details?.devices?.existingDevices?.deviceList ?? [];
 
-          this.devices = Array.isArray(refreshedDevices) ? [...refreshedDevices] : [];
-          this.job = { ...this.job, devices: this.devices };
+          this.syncDevices(Array.isArray(refreshedDevices) ? refreshedDevices : []);
           this.cdr.detectChanges();
         },
         error: (error) => {
@@ -264,6 +263,15 @@ export class DevicesComponent implements OnInit, OnDestroy {
       navigateToActivateService: true,
       job: this.job,
     });
+  }
+
+  private syncDevices(devices: any[]): void {
+    const mirroredDevices = Array.isArray(devices) ? [...devices] : [];
+    this.devices = mirroredDevices;
+
+    if (this.job && typeof this.job === 'object') {
+      this.job.devices = mirroredDevices;
+    }
   }
 
   public markJobActionTap(item: any, action: string, autoClearMs = 140): void {
