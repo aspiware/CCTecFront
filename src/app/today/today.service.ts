@@ -223,6 +223,13 @@ export class TodayService {
     );
   }
 
+  public addPlaceHolder(userId: number, workOrderNumber: any, data: any): Observable<any> {
+    return this.httpClient.patch<void>(
+      `${this.configService.getUrlBase()}/jobs/c/addPlaceHolder/${userId}/${workOrderNumber}/`,
+      data
+    );
+  }
+
   public sendXMIngress(userId: number, workOrderNumber: any, data: any): Observable<any> {
     return this.httpClient.post<string>(
       this.configService.getUrlBase() + `/jobs/c/sendXMIngress/${userId}/${workOrderNumber}`, data

@@ -19,6 +19,7 @@ import { concatMap, finalize } from 'rxjs/operators';
 export class RemoveDevicesComponent implements OnInit, OnDestroy {
   public isDarkTheme = Application.systemAppearance() === 'dark';
   public job: any;
+  public workOrder: any;
   public devices: any[] = [];
   public isRefreshingMainMenu = false;
   public removingDeviceKeys: { [key: string]: boolean } = {};
@@ -70,6 +71,7 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
   ) {
     const context = this.modalParams.context || {};
     this.job = context;
+    this.workOrder = context;
     this.syncDevices(Array.isArray(this.job?.devices) ? this.job.devices : []);
     this.userId = Number(this.usersService.getUser()?.userId || 0);
   }
@@ -132,11 +134,65 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
   }
 
   private onAddPlaceholder(type: 'HSD' | 'TV' | 'VOICE'): void {
-    Dialogs.alert({
-      title: 'Add Place Holder',
-      message: `Selected ${type}.`,
-      okButtonText: 'OK',
-    });
+    const workOrderNumber = this.job?.workOrderNumber;
+    const placeholderData = this.buildAddPlaceholderPayload(type);
+
+    if (!this.userId || !workOrderNumber || !placeholderData || this.isRefreshingMainMenu) {
+      return;
+    }
+
+    this.isRefreshingMainMenu = true;
+    this.cdr.detectChanges();
+
+    this.todayService
+      .addPlaceHolder(this.userId, workOrderNumber, placeholderData)
+      .pipe(
+        concatMap(() => this.todayService.refreshOrderDetail(this.userId, workOrderNumber)),
+        concatMap(() => this.todayService.getWorkOrderDetails(this.userId, workOrderNumber)),
+        finalize(() => {
+          this.isRefreshingMainMenu = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (details: any) => {
+          this.applyWorkOrderDetails(details);
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          Dialogs.alert({
+            title: 'Add Place Holder',
+            message: String(error?.error?.message || error?.message || 'Failed to add placeholder.'),
+            okButtonText: 'OK',
+          });
+        },
+      });
+  }
+
+  private buildAddPlaceholderPayload(type: 'HSD' | 'TV' | 'VOICE'): any {
+    return {
+      locationId: this.workOrder?.locationID,
+      equipment: [
+        {
+          equipTypeCd: 'J',
+          outlet: 'A',
+          ownerCd: 'N',
+          action: 'ADD',
+          model: '',
+          deviceType: '',
+          lob: type,
+          serialNumber: this.generatePlaceholderSerialNumber(),
+          deviceName: '',
+        },
+      ],
+      accountNumber: this.workOrder?.accountNumber,
+      isWriteBackToDwbEnabled: false,
+    };
+  }
+
+  private generatePlaceholderSerialNumber(): string {
+    const randomDigits = Math.floor(1000 + Math.random() * 9000);
+    return `*${randomDigits}`;
   }
 
   private refreshDevices(): void {
@@ -168,10 +224,7 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (details: any) => {
-          const refreshedDevices =
-            details?.devices?.existingDevices?.deviceList ?? [];
-
-          this.syncDevices(Array.isArray(refreshedDevices) ? refreshedDevices : []);
+          this.applyWorkOrderDetails(details);
           this.cdr.detectChanges();
         },
         error: (error) => {
@@ -386,10 +439,7 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (details: any) => {
-          const refreshedDevices =
-            details?.devices?.existingDevices?.deviceList ?? [];
-
-          this.syncDevices(Array.isArray(refreshedDevices) ? refreshedDevices : []);
+          this.applyWorkOrderDetails(details);
           this.cdr.detectChanges();
         },
         error: (error) => {
@@ -400,6 +450,14 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
           });
         },
       });
+  }
+
+  private applyWorkOrderDetails(details: any): void {
+    this.workOrder = details;
+    const refreshedDevices =
+      details?.devices?.existingDevices?.deviceList ?? [];
+
+    this.syncDevices(Array.isArray(refreshedDevices) ? refreshedDevices : []);
   }
 
   private buildRemoveDevicePayload(device: any): any {
