@@ -26,20 +26,20 @@
           selectionBehavior="None"
           [itemReorder]="true"
           reorderMode="HoldAndDrag"
-          (itemReordered)="onDevicesReordered()"
+          (itemReordered)="onDevicesReordered($event)"
           class="custom-types-list">
           <ng-template tkListItemTemplate let-item="item">
             <GridLayout rows="auto" columns="*, auto"
               style="margin-left: 10; margin-right: 10; margin-top: 6; margin-bottom: 6;">
-                <GridLayout orientation="horizontal" class="item-bag" col="0" columns="auto,*">
-                <StackLayout col="0" class="reorder-handle-wrap">
+                <FlexboxLayout class="item-bag" col="0">
+                <GridLayout class="reorder-handle-wrap">
                   <Label
                     class="fas reorder-handle"
                     text="&#xf7a5;"
                     verticalAlignment="middle"
                     horizontalAlignment="center"></Label>
-                </StackLayout>
-                <GridLayout col="1" columns="28,60,*,auto,30" class="device-row-content">
+                </GridLayout>
+                <GridLayout columns="28,60,*,auto,30" class="device-row-content">
                   <Label *ngIf="isDeviceConnected(item)" class="fas device-status-icon" text="&#xf058;" col="0"></Label>
                   <Label *ngIf="!isDeviceConnected(item)" class="fas device-status-icon device-status-icon-muted"
                     text="&#xf05e;" col="0"></Label>
@@ -66,7 +66,7 @@
                   </MenuButton>
 
                 </GridLayout>
-              </GridLayout>
+              </FlexboxLayout>
             </GridLayout>
           </ng-template>
         </RadListView>
