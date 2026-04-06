@@ -21,6 +21,7 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
   public job: any;
   public devices: any[] = [];
   public isRefreshingMainMenu = false;
+  public removingDeviceKeys: { [key: string]: boolean } = {};
   private userId = 0;
   private appearanceChangedHandler?: () => void;
   private actionTapStates: { [key: string]: boolean } = {};
@@ -39,7 +40,25 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
         //   cancelText: 'Cancel',
         //   presentation: 'anchor',
         // },
-      }
+      },
+      {
+        name: 'Add Place Holder',
+        icon: 'plus.rectangle.on.rectangle',
+        children: [
+          {
+            name: 'HSD',
+            icon: 'wifi',
+          },
+          {
+            name: 'TV',
+            icon: 'tv',
+          },
+          {
+            name: 'VOICE',
+            icon: 'phone',
+          },
+        ],
+      },
     ],
   };
 
@@ -86,11 +105,38 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
   }
 
   public onSelectedMainMenu(event: MenuEvent, _menuStatus?: any): void {
-    switch (event?.index) {
+    const menuPath = event?.path || [event?.index];
+
+    switch (menuPath?.[0]) {
       case 0:
         this.refreshDevices();
         break;
+      case 1:
+        switch (menuPath?.[1]) {
+          case 0:
+            this.onAddPlaceholder('HSD');
+            break;
+          case 1:
+            this.onAddPlaceholder('TV');
+            break;
+          case 2:
+            this.onAddPlaceholder('VOICE');
+            break;
+          default:
+            break;
+        }
+        break;
+      default:
+        break;
     }
+  }
+
+  private onAddPlaceholder(type: 'HSD' | 'TV' | 'VOICE'): void {
+    Dialogs.alert({
+      title: 'Add Place Holder',
+      message: `Selected ${type}.`,
+      okButtonText: 'OK',
+    });
   }
 
   private refreshDevices(): void {
@@ -193,6 +239,17 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
           name: 'Reboot Modem',
           icon: 'power',
         },
+        {
+          name: 'Remove',
+          icon: 'trash',
+          destructive: true,
+          confirm: {
+            title: 'Remove device?',
+            confirmText: 'Remove',
+            cancelText: 'Cancel',
+            presentation: 'anchor',
+          },
+        },
       ];
     }
 
@@ -206,6 +263,17 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
           name: 'Send Hit',
           icon: 'dot.radiowaves.left.and.right',
         },
+        {
+          name: 'Remove',
+          icon: 'trash',
+          destructive: true,
+          confirm: {
+            title: 'Remove device?',
+            confirmText: 'Remove',
+            cancelText: 'Cancel',
+            presentation: 'anchor',
+          },
+        },
       ];
     }
 
@@ -213,6 +281,17 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
       {
         name: 'Device Info',
         icon: 'info.circle',
+      },
+      {
+        name: 'Remove',
+        icon: 'trash',
+        destructive: true,
+        confirm: {
+          title: 'Remove device?',
+          confirmText: 'Remove',
+          cancelText: 'Cancel',
+          presentation: 'anchor',
+        },
       },
     ];
   }
@@ -229,6 +308,9 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
         case 2:
           this.rebootGateway(item, anchor);
           break;
+        case 3:
+          this.removeDevice(item);
+          break;
         default:
           break;
       }
@@ -243,6 +325,9 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
         case 1:
           this.showVideoStatus(item, anchor);
           break;
+        case 2:
+          this.removeDevice(item);
+          break;
         default:
           break;
       }
@@ -252,6 +337,9 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
     switch (event?.index) {
       case 0:
         this.showDeviceInfo(item, anchor);
+        break;
+      case 1:
+        this.removeDevice(item);
         break;
       default:
         break;
@@ -274,6 +362,83 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
     }
   }
 
+  private removeDevice(item: any): void {
+    const workOrderNumber = this.job?.workOrderNumber;
+    const deviceKey = this.getDeviceKey(item);
+    const deviceData = this.buildRemoveDevicePayload(item);
+
+    if (!this.userId || !workOrderNumber || !deviceKey || !deviceData || this.removingDeviceKeys[deviceKey]) {
+      return;
+    }
+
+    this.removingDeviceKeys[deviceKey] = true;
+    this.cdr.detectChanges();
+
+    this.todayService
+      .removeDevice(this.userId, workOrderNumber, deviceData)
+      .pipe(
+        concatMap(() => this.todayService.refreshOrderDetail(this.userId, workOrderNumber)),
+        concatMap(() => this.todayService.getWorkOrderDetails(this.userId, workOrderNumber)),
+        finalize(() => {
+          delete this.removingDeviceKeys[deviceKey];
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (details: any) => {
+          const refreshedDevices =
+            details?.devices?.existingDevices?.deviceList ?? [];
+
+          this.syncDevices(Array.isArray(refreshedDevices) ? refreshedDevices : []);
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          Dialogs.alert({
+            title: 'Remove Device',
+            message: String(error?.error?.message || error?.message || 'Failed to remove device.'),
+            okButtonText: 'OK',
+          });
+        },
+      });
+  }
+
+  private buildRemoveDevicePayload(device: any): any {
+    return {
+      houseKey: this.job?.houseKey,
+      customerId: this.job?.customerId,
+      houseMiscKey: '',
+      locationId: this.job?.locationId,
+      jobClassCd: this.job?.Job?.JobClassCd,
+      operation: '',
+      isWriteBackToDwbEnabled: false,
+      orderManagementSystem: 'ACP',
+      equipment: [
+        {
+          deviceName: device?.deviceName || device?.name || '',
+          designId: [],
+          ownerCd: 'P',
+          armObjectName: '',
+          model: '',
+          serviceServiceId: [],
+          deviceType: device?.type || '',
+          outlet: device?.outlet,
+          equipTypeCd: device?.equipTypeCd,
+          serviceTypes: [],
+          action: 'REMOVE',
+          serialNumber: device?.deviceSerialNumber || device?.serialNumber || '',
+          isDoorbell: false,
+          isIndoorCamera: false,
+        },
+      ],
+      operations: ['REMOVE'],
+      isWifiReadyJob: false,
+      cameras: [],
+      accessories: [],
+      isSmartOfficeJob: false,
+      accountNumber: this.job?.accountNumber,
+    };
+  }
+
   public markJobActionTap(item: any, action: string, autoClearMs = 140): void {
     const key = this.getActionKey(item, action);
     this.actionTapStates[key] = true;
@@ -292,7 +457,8 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
   }
 
   public isJobMenuLoading(item: any): boolean {
-    return !!this.loadingStates[this.getDeviceKey(item)];
+    const key = this.getDeviceKey(item);
+    return !!this.loadingStates[key] || !!this.removingDeviceKeys[key];
   }
 
   public onDevicesReordered(): void {

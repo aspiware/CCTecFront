@@ -216,6 +216,13 @@ export class TodayService {
     );
   }
 
+  public removeDevice(userId: number, workOrderId: any, device: any): Observable<any> {
+    return this.httpClient.post<void>(
+      this.configService.getUrlBase() + "/jobs/c/removeDevice",
+      { userId, workOrderId, device }
+    );
+  }
+
   public sendXMIngress(userId: number, workOrderNumber: any, data: any): Observable<any> {
     return this.httpClient.post<string>(
       this.configService.getUrlBase() + `/jobs/c/sendXMIngress/${userId}/${workOrderNumber}`, data
