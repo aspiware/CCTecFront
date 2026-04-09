@@ -38,6 +38,8 @@
             <TextField
               col="0"
               hint="Search resolution codes"
+              autocorrect="false"
+              autocapitalizationType="none"
               [text]="resolutionSearch"
               (textChange)="onResolutionSearchChange($event.value)"
               class="custom-tf-inline">
