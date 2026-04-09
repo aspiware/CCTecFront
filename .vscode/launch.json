@@ -1,0 +1,23 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Launch on iOS",
+      "type": "nativescript",
+      "request": "launch",
+      "platform": "ios",
+      "appRoot": "${workspaceFolder}",
+      "sourceMaps": true,
+      "watch": true
+    },
+    {
+      "name": "Attach on iOS",
+      "type": "nativescript",
+      "request": "attach",
+      "platform": "ios",
+      "appRoot": "${workspaceFolder}",
+      "sourceMaps": true,
+      "watch": false
+    }
+  ]
+}

@@ -16,6 +16,7 @@ import { CustomerInfoComponent } from '../customer-info/customer-info.component'
 import { EditJobComponent } from '../edit-job/edit-job.component';
 import { CompleteJobComponent } from '../complete-job/complete-job.component';
 import { DevicesComponent } from '../devices/devices.component';
+import { RemoveDevicesComponent } from '../remove-devices/remove-devices.component';
 
 @Component({
   standalone: true,
@@ -949,6 +950,9 @@ export class TodayComponent implements OnInit {
     console.log('[Today] selected', event?.index, item);
 
     switch (event?.index) {
+      case 0:
+        this.goXmIngress(item);
+        break;
       case 1:
         this.goPHTScans(item);
         break;
@@ -1116,9 +1120,46 @@ export class TodayComponent implements OnInit {
     });
   }
 
+  public showRemoveDevicesModal(job: any): void {
+    if (!job) {
+      return;
+    }
+
+    const options: any = {
+      context: job,
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: false,
+      stretched: false,
+      cancelable: true,
+      dismissEnabled: true,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.Custom,
+      },
+    };
+
+    this.modalService.showModal(RemoveDevicesComponent, options).then((result: any) => {
+      if (result?.navigateToActivateService) {
+        setTimeout(() => {
+          this.goToActivateService(result?.job || job);
+        }, 0);
+        return;
+      }
+      this.clearJobActionTap(job, 'remove-devices');
+    });
+  }
+
   public goToActivateService(job?: any): void {
     const queryParams = this.buildActivateServiceQueryParams(job);
     this.router.navigate(['../activate-service'], {
+      queryParams,
+      relativeTo: this.activatedRoute,
+    });
+  }
+
+  public goXmIngress(job?: any): void {
+    const queryParams = this.buildActivateServiceQueryParams(job);
+    this.router.navigate(['../xm-ingress'], {
       queryParams,
       relativeTo: this.activatedRoute,
     });

@@ -216,6 +216,33 @@ export class TodayService {
     );
   }
 
+  public removeDevice(userId: number, workOrderId: any, device: any): Observable<any> {
+    return this.httpClient.post<void>(
+      this.configService.getUrlBase() + "/jobs/c/removeDevice",
+      { userId, workOrderId, device }
+    );
+  }
+
+  public addPlaceHolder(userId: number, workOrderNumber: any, data: any): Observable<any> {
+    return this.httpClient.patch<void>(
+      `${this.configService.getUrlBase()}/jobs/c/addPlaceHolder/${userId}/${workOrderNumber}/`,
+      data
+    );
+  }
+
+  public reorderOutlets(userId: number, workOrderNumber: any, data: any): Observable<any> {
+    return this.httpClient.put<void>(
+      `${this.configService.getUrlBase()}/jobs/c/reorderOutlets/${userId}/${workOrderNumber}/`,
+      data
+    );
+  }
+
+  public sendXMIngress(userId: number, workOrderNumber: any, data: any): Observable<any> {
+    return this.httpClient.post<string>(
+      this.configService.getUrlBase() + `/jobs/c/sendXMIngress/${userId}/${workOrderNumber}`, data
+    );
+  }
+
   public sendPHTScans(data: any): Observable<any> {
     return this.httpClient.post<string>(
       this.configService.getUrlBase() + `/jobs/c/sendPHTScans`,

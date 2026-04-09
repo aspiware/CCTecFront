@@ -12,7 +12,6 @@ import {
 } from '@nativescript/google-maps';
 import { GoogleMapsModule } from '@nativescript/google-maps/angular';
 import * as geolocation from '@nativescript/geolocation';
-import { QuantityStepperComponent } from '../shared/components/quantity-stepper/quantity-stepper.component';
 import { firstValueFrom } from 'rxjs';
 import { TodayService } from '../today/today.service';
 import { ConfigService } from '../shared/services/config.service';
@@ -20,38 +19,29 @@ import { UsersService } from '../shared/services/users.service';
 
 @Component({
   standalone: true,
-  selector: 'app-xm-pht-scans',
-  imports: [NativeScriptCommonModule, NativeScriptFormsModule, GoogleMapsModule, QuantityStepperComponent],
+  selector: 'app-xm-ingress',
+  imports: [NativeScriptCommonModule, NativeScriptFormsModule, GoogleMapsModule],
   schemas: [NO_ERRORS_SCHEMA],
-  templateUrl: './xm-pht-scans.component.html',
-  styleUrl: './xm-pht-scans.component.scss',
+  templateUrl: './xm-ingress.component.html',
+  styleUrl: './xm-ingress.component.scss',
 })
-export class XmPhtScansComponent implements OnInit, OnDestroy {
-  private static readonly TAP_LOCATION = 'Tap';
-  private static readonly GROUND_BLOCK_LOCATION = 'Ground Block';
+export class XmIngressComponent implements OnInit, OnDestroy {
   private static readonly DEFAULT_LAT = 29.7604;
   private static readonly DEFAULT_LNG = -95.3698;
   private static readonly DEFAULT_ZOOM = 11;
   private static readonly CURRENT_LOCATION_ZOOM = 19;
   private static readonly TEST_WORK_ORDER_NUMBER = '00000000000000000000';
-  private static readonly DEFAULT_UPSTREAM = 35;
-  private static readonly DEFAULT_DOWNSTREAM = 8;
-  private static readonly DEFAULT_TAP_PORT = 2;
-  private static readonly DEFAULT_TAP_VALUE = 4;
+  private static readonly DEFAULT_SAMPLE_COUNT = '250';
 
   public isDarkTheme = Application.systemAppearance() === 'dark';
-  public mapLat = XmPhtScansComponent.DEFAULT_LAT;
-  public mapLng = XmPhtScansComponent.DEFAULT_LNG;
-  public mapZoom = XmPhtScansComponent.DEFAULT_ZOOM;
+  public mapLat = XmIngressComponent.DEFAULT_LAT;
+  public mapLng = XmIngressComponent.DEFAULT_LNG;
+  public mapZoom = XmIngressComponent.DEFAULT_ZOOM;
   public selectedLatitude: number | null = null;
   public selectedLongitude: number | null = null;
   public selectedScanLocationIndex = 0;
-  public selectedTapPortIndex = 0;
-  public selectedTapValueIndex = 0;
-  public upstreamValue = XmPhtScansComponent.DEFAULT_UPSTREAM;
-  public downstreamValue = XmPhtScansComponent.DEFAULT_DOWNSTREAM;
+  public sampleCount = XmIngressComponent.DEFAULT_SAMPLE_COUNT;
   public isSending = false;
-  public tapGroundBlockDistanceText = '';
   public scanLocationList = [
     'Tap',
     'Ground Block',
@@ -69,12 +59,6 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
     'Office',
     'Other',
   ];
-  public tapPortList = [
-    2,
-    4,
-    8
-  ];
-  public tapValueList = Array.from({ length: 27 }, (_, index) => index + 4);
 
   private appearanceChangedHandler?: () => void;
   private googleMap?: GoogleMap;
@@ -108,6 +92,7 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
     this.route.queryParams.subscribe((params) => {
       this.currentJob = this.normalizeJobParams(params || {});
       this.resetMarkerState();
+      this.setRandomSampleCount();
       this.restorePersistedState();
     });
     void this.loadCurrentLocation();
@@ -130,7 +115,6 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
 
     this.renderPersistedMarkers();
     this.syncSelectedMarkerFromLocation();
-    this.refreshTapGroundBlockVisuals();
 
     if (this.applyPreferredCameraTarget()) {
       this.cdr.detectChanges();
@@ -141,7 +125,7 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
       this.centerMap(
         this.currentLatitude,
         this.currentLongitude,
-        XmPhtScansComponent.CURRENT_LOCATION_ZOOM
+        XmIngressComponent.CURRENT_LOCATION_ZOOM
       );
     }
 
@@ -182,10 +166,7 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
       this.selectedMarker = undefined;
       this.selectedLatitude = null;
       this.selectedLongitude = null;
-      this.restoreScanLevelsForSelectedLocation();
-      this.restoreTapConfig();
       this.persistMarkerState();
-      this.refreshTapGroundBlockVisuals();
       this.cdr.detectChanges();
       return;
     }
@@ -197,10 +178,7 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
     this.selectedMarker.showInfoWindow();
     this.updatePreferredCameraTarget(existingEntry.lat, existingEntry.lng);
     this.applyPreferredCameraTarget();
-    this.restoreScanLevelsForSelectedLocation();
-    this.restoreTapConfig();
     this.persistMarkerState();
-    this.refreshTapGroundBlockVisuals();
     this.cdr.detectChanges();
   }
 
@@ -214,7 +192,6 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
     this.selectedLatitude = null;
     this.selectedLongitude = null;
     this.persistMarkerState();
-    this.refreshTapGroundBlockVisuals();
     this.cdr.detectChanges();
   }
 
@@ -230,43 +207,31 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
     return this.scanLocationList[this.selectedScanLocationIndex] || this.scanLocationList[0];
   }
 
-  public get selectedTapPort(): string {
-    return String(this.tapPortList[this.selectedTapPortIndex] ?? this.tapPortList[0]);
-  }
-
-  public get selectedTapValue(): string {
-    return String(this.tapValueList[this.selectedTapValueIndex] ?? this.tapValueList[0]);
-  }
-
-  public get selectedTapValueNumber(): number {
-    return Number(this.tapValueList[this.selectedTapValueIndex] ?? this.tapValueList[0]);
-  }
-
-  public get selectedTapPortNumber(): number {
-    return Number(this.tapPortList[this.selectedTapPortIndex] ?? this.tapPortList[0]);
+  public get selectedSampleCountNumber(): number {
+    return Number(String(this.sampleCount || '').trim() || XmIngressComponent.DEFAULT_SAMPLE_COUNT);
   }
 
   public get isTapScanLocation(): boolean {
     return this.selectedScanLocation === 'Tap';
   }
 
-  public onUpstreamValueChange(value: number): void {
-    this.upstreamValue = value;
-  }
+  public onSampleCountChange(event: any): void {
+    const nextValue = String(event?.value ?? event ?? '')
+      .replace(/\D+/g, '')
+      .trim();
 
-  public onDownstreamValueChange(value: number): void {
-    this.downstreamValue = value;
+    this.sampleCount = nextValue;
   }
 
   public async sendPHT(): Promise<void> {
     const workOrderNumber = String(
-      this.currentJob?.workOrderNumber || XmPhtScansComponent.TEST_WORK_ORDER_NUMBER || ''
+      this.currentJob?.workOrderNumber || XmIngressComponent.TEST_WORK_ORDER_NUMBER || ''
     ).trim();
 
     if (!this.userId || !workOrderNumber) {
       await alert({
         title: 'Missing Job',
-        message: 'Open XM PHT Scans from a job or set a valid work order number for testing.',
+        message: 'Open XM Ingress from a job or set a valid work order number for testing.',
         okButtonText: 'OK',
       });
       return;
@@ -275,7 +240,7 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
     if (this.selectedLatitude === null || this.selectedLongitude === null) {
       await alert({
         title: 'Missing Location',
-        message: 'Select a point on the map before sending PHT data.',
+        message: 'Select a point on the map before sending ingress data.',
         okButtonText: 'OK',
       });
       return;
@@ -290,37 +255,27 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
 
     try {
       const payload: any = {
-        userId: this.userId,
         bp: this.bp,
-        workOrderNumber,
         location: this.selectedScanLocation,
-        lat: this.selectedLatitude,
-        lon: this.selectedLongitude,
-        upstream: this.upstreamValue,
-        downstream: this.downstreamValue,
+        sampleCount: this.selectedSampleCountNumber,
+        latitude: this.selectedLatitude,
+        longitude: this.selectedLongitude,
       };
 
-      if (this.isTapScanLocation) {
-        payload.locationData = {
-          tapValue: this.selectedTapValueNumber,
-          tapPort: this.selectedTapPortNumber,
-        };
-      }
-
-      await firstValueFrom(this.todayService.sendPHTScans(payload));
-      this.persistScanLevelsForSelectedLocation();
-      this.persistTapConfig();
+      await firstValueFrom(
+        this.todayService.sendXMIngress(this.userId, workOrderNumber, payload)
+      );
 
       await alert({
-        title: 'PHT Sent',
-        message: 'PHT scan data was sent successfully.',
+        title: 'Ingress Sent',
+        message: 'Ingress scan data was sent successfully.',
         okButtonText: 'OK',
       });
     } catch (error: any) {
-      console.log('XM PHT Scans send failed', error);
+      console.log('XM Ingress send failed', error);
       await alert({
         title: 'Send Failed',
-        message: error?.message || 'Could not send PHT scan data.',
+        message: error?.message || 'Could not send ingress scan data.',
         okButtonText: 'OK',
       });
     } finally {
@@ -386,10 +341,10 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
       this.centerMap(
         location.latitude,
         location.longitude,
-        XmPhtScansComponent.CURRENT_LOCATION_ZOOM
+        XmIngressComponent.CURRENT_LOCATION_ZOOM
       );
     } catch (error) {
-      console.log('XM PHT Scans location unavailable', error);
+      console.log('XM Ingress location unavailable', error);
     }
   }
 
@@ -438,7 +393,6 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
 
     this.selectedMarker?.showInfoWindow();
     this.persistMarkerState();
-    this.refreshTapGroundBlockVisuals();
     this.cdr.detectChanges();
   }
 
@@ -463,20 +417,17 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
     this.selectedLatitude = null;
     this.selectedLongitude = null;
     this.preferredCameraTarget = undefined;
-    this.tapGroundBlockDistanceText = '';
   }
 
   private get storageKey(): string {
     return String(
-      this.currentJob?.workOrderNumber || XmPhtScansComponent.TEST_WORK_ORDER_NUMBER || ''
+      this.currentJob?.workOrderNumber || XmIngressComponent.TEST_WORK_ORDER_NUMBER || ''
     ).trim();
   }
 
   private restorePersistedState(): void {
     const persisted = this.configService.getXmPhtScanState(this.storageKey);
     if (!persisted) {
-      this.restoreScanLevelsForSelectedLocation();
-      this.restoreTapConfig();
       return;
     }
 
@@ -489,9 +440,6 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
     this.renderPersistedMarkers(persisted.markers || {});
     this.syncSelectedMarkerFromLocation();
     this.applyPreferredCameraTarget();
-    this.restoreScanLevelsForSelectedLocation();
-    this.restoreTapConfig();
-    this.refreshTapGroundBlockVisuals();
     this.cdr.detectChanges();
   }
 
@@ -558,131 +506,14 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
       {} as Record<string, { lat: number; lng: number }>
     );
 
-    this.configService.setXmPhtScanState(
+      this.configService.setXmPhtScanState(
       this.storageKey,
       {
         selectedScanLocation: this.selectedScanLocation,
         markers,
-        scanLevels: existingState.scanLevels || {},
         tapConfig: existingState.tapConfig,
       }
     );
-  }
-
-  private restoreScanLevelsForSelectedLocation(): void {
-    const scanLevels = this.configService.getXmPhtScanState(this.storageKey)?.scanLevels || {};
-    const savedLevels = scanLevels[this.selectedScanLocation];
-
-    this.upstreamValue = savedLevels?.upstream ?? XmPhtScansComponent.DEFAULT_UPSTREAM;
-    this.downstreamValue = savedLevels?.downstream ?? XmPhtScansComponent.DEFAULT_DOWNSTREAM;
-  }
-
-  private persistScanLevelsForSelectedLocation(): void {
-    const existingState = this.configService.getXmPhtScanState(this.storageKey) || {};
-    const scanLevels = {
-      ...(existingState.scanLevels || {}),
-      [this.selectedScanLocation]: {
-        upstream: this.upstreamValue,
-        downstream: this.downstreamValue,
-      },
-    };
-
-    this.configService.setXmPhtScanState(
-      this.storageKey,
-      {
-        selectedScanLocation: this.selectedScanLocation,
-        markers: existingState.markers || {},
-        scanLevels,
-        tapConfig: existingState.tapConfig,
-      }
-    );
-  }
-
-  private restoreTapConfig(): void {
-    if (!this.isTapScanLocation) {
-      return;
-    }
-
-    const tapConfig = this.configService.getXmPhtScanState(this.storageKey)?.tapConfig;
-    const tapPortIndex = this.tapPortList.indexOf(
-      tapConfig?.tapPort ?? XmPhtScansComponent.DEFAULT_TAP_PORT
-    );
-    const tapValueIndex = this.tapValueList.indexOf(
-      tapConfig?.tapValue ?? XmPhtScansComponent.DEFAULT_TAP_VALUE
-    );
-
-    this.selectedTapPortIndex = tapPortIndex >= 0 ? tapPortIndex : 0;
-    this.selectedTapValueIndex = tapValueIndex >= 0 ? tapValueIndex : 0;
-  }
-
-  private persistTapConfig(): void {
-    if (!this.isTapScanLocation) {
-      return;
-    }
-
-    const existingState = this.configService.getXmPhtScanState(this.storageKey) || {};
-
-    this.configService.setXmPhtScanState(
-      this.storageKey,
-      {
-        selectedScanLocation: this.selectedScanLocation,
-        markers: existingState.markers || {},
-        scanLevels: existingState.scanLevels || {},
-        tapConfig: {
-          tapPort: this.selectedTapPortNumber,
-          tapValue: this.selectedTapValueNumber,
-        },
-      }
-    );
-  }
-
-  private refreshTapGroundBlockVisuals(): void {
-    const tapMarker = this.scanLocationMarkers.get(XmPhtScansComponent.TAP_LOCATION);
-    const groundBlockMarker = this.scanLocationMarkers.get(XmPhtScansComponent.GROUND_BLOCK_LOCATION);
-
-    if (!tapMarker || !groundBlockMarker) {
-      this.tapGroundBlockDistanceText = '';
-      return;
-    }
-
-    this.tapGroundBlockDistanceText = this.formatDistanceLabel(
-      this.calculateDistanceInFeet(
-        tapMarker.lat,
-        tapMarker.lng,
-        groundBlockMarker.lat,
-        groundBlockMarker.lng
-      )
-    );
-  }
-
-  private calculateDistanceInFeet(
-    startLat: number,
-    startLng: number,
-    endLat: number,
-    endLng: number
-  ): number {
-    const toRadians = (value: number) => (value * Math.PI) / 180;
-    const earthRadiusMeters = 6371000;
-    const deltaLat = toRadians(endLat - startLat);
-    const deltaLng = toRadians(endLng - startLng);
-    const originLat = toRadians(startLat);
-    const targetLat = toRadians(endLat);
-
-    const a =
-      Math.sin(deltaLat / 2) ** 2 +
-      Math.cos(originLat) * Math.cos(targetLat) * Math.sin(deltaLng / 2) ** 2;
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    const meters = earthRadiusMeters * c;
-
-    return meters * 3.28084;
-  }
-
-  private formatDistanceLabel(distanceFeet: number): string {
-    if (distanceFeet >= 5280) {
-      return `TAP ↔ GB: ${(distanceFeet / 5280).toFixed(2)} mi`;
-    }
-
-    return `TAP ↔ GB: ${distanceFeet.toFixed(1)} ft`;
   }
 
   private setPreferredCameraTargetFromPersistedMarkers(
@@ -704,11 +535,11 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
     this.preferredCameraTarget = {
       lat,
       lng,
-      zoom: XmPhtScansComponent.CURRENT_LOCATION_ZOOM,
+      zoom: XmIngressComponent.CURRENT_LOCATION_ZOOM,
     };
     this.mapLat = lat;
     this.mapLng = lng;
-    this.mapZoom = XmPhtScansComponent.CURRENT_LOCATION_ZOOM;
+    this.mapZoom = XmIngressComponent.CURRENT_LOCATION_ZOOM;
   }
 
   private applyPreferredCameraTarget(): boolean {
@@ -722,5 +553,10 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
       this.preferredCameraTarget.zoom
     );
     return true;
+  }
+
+  private setRandomSampleCount(): void {
+    const randomSamples = Math.floor(Math.random() * (300 - 200 + 1)) + 250;
+    this.sampleCount = String(randomSamples);
   }
 }

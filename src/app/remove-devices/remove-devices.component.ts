@@ -10,17 +10,19 @@ import { concatMap, finalize } from 'rxjs/operators';
 
 @Component({
   standalone: true,
-  selector: 'app-devices',
+  selector: 'app-remove-devices',
   imports: [NativeScriptCommonModule, NativeScriptUIListViewModule],
   schemas: [NO_ERRORS_SCHEMA],
-  templateUrl: './devices.component.html',
-  styleUrl: './devices.component.scss',
+  templateUrl: './remove-devices.component.html',
+  styleUrl: './remove-devices.component.scss',
 })
-export class DevicesComponent implements OnInit, OnDestroy {
+export class RemoveDevicesComponent implements OnInit, OnDestroy {
   public isDarkTheme = Application.systemAppearance() === 'dark';
   public job: any;
+  public workOrder: any;
   public devices: any[] = [];
   public isRefreshingMainMenu = false;
+  public removingDeviceKeys: { [key: string]: boolean } = {};
   private userId = 0;
   private appearanceChangedHandler?: () => void;
   private actionTapStates: { [key: string]: boolean } = {};
@@ -39,7 +41,29 @@ export class DevicesComponent implements OnInit, OnDestroy {
         //   cancelText: 'Cancel',
         //   presentation: 'anchor',
         // },
-      }
+      },
+      {
+        name: 'Reorder Outlets',
+        icon: 'arrow.up.arrow.down.circle',
+      },
+      {
+        name: 'Add Place Holder',
+        icon: 'plus.rectangle.on.rectangle',
+        children: [
+          {
+            name: 'HSD',
+            icon: 'wifi',
+          },
+          {
+            name: 'VIDEO',
+            icon: 'tv',
+          },
+          {
+            name: 'VOICE',
+            icon: 'phone',
+          },
+        ],
+      },
     ],
   };
 
@@ -51,6 +75,7 @@ export class DevicesComponent implements OnInit, OnDestroy {
   ) {
     const context = this.modalParams.context || {};
     this.job = context;
+    this.workOrder = context?.orderDetails;
     this.syncDevices(Array.isArray(this.job?.devices) ? this.job.devices : []);
     this.userId = Number(this.usersService.getUser()?.userId || 0);
   }
@@ -85,12 +110,170 @@ export class DevicesComponent implements OnInit, OnDestroy {
     });
   }
 
-  public onSelectedMainMenu(event: MenuEvent, _menuStatus?: any): void {
-    switch (event?.index) {
+  public onSelectedMainMenu(event: MenuEvent, menuStatus?: any): void {
+    const menuPath = event?.path || [event?.index];
+
+    switch (menuPath?.[0]) {
       case 0:
         this.refreshDevices();
         break;
+      case 1:
+        this.onReorderOutlets(menuStatus);
+        break;
+      case 2:
+        switch (menuPath?.[1]) {
+          case 0:
+            this.onAddPlaceholder('HSD');
+            break;
+          case 1:
+            this.onAddPlaceholder('VIDEO');
+            break;
+          case 2:
+            this.onAddPlaceholder('CDV');
+            break;
+          default:
+            break;
+        }
+        break;
+      default:
+        break;
     }
+  }
+
+  private onReorderOutlets(anchor?: any): void {
+    const workOrderNumber = this.job?.workOrderNumber;
+    const reorderOutletsData = this.buildReorderOutletsPayload();
+
+    if (!this.userId || !workOrderNumber || !reorderOutletsData || this.isRefreshingMainMenu) {
+      return;
+    }
+
+    this.isRefreshingMainMenu = true;
+    this.cdr.detectChanges();
+
+    this.todayService
+      .reorderOutlets(this.userId, workOrderNumber, reorderOutletsData)
+      .pipe(
+        concatMap(() => this.todayService.refreshOrderDetail(this.userId, workOrderNumber)),
+        concatMap(() => this.todayService.getWorkOrderDetails(this.userId, workOrderNumber)),
+        finalize(() => {
+          this.isRefreshingMainMenu = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (details: any) => {
+          this.applyWorkOrderDetails(details);
+          this.showGatewayStatusMessage(
+            'Reorder outlets completed successfully.',
+            anchor,
+            false,
+            0,
+            () => this.onReorderOutlets(anchor),
+            'Reorder Outlets'
+          );
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          Dialogs.alert({
+            title: 'Reorder Outlets',
+            message: String(error?.error?.message || error?.message || 'Failed to reorder outlets.'),
+            okButtonText: 'OK',
+          });
+        },
+      });
+  }
+
+  private buildReorderOutletsPayload(): any {
+    return {
+      BusinessUnit: this.workOrder?.Job?.BusinessUnit,
+      WFXTechLogin: this.workOrder?.techInfo?.techNum,
+      WorkOrderNum: this.workOrder?.workOrderNumber,
+      JobEquipmentList: Array.isArray(this.devices)
+        ? this.devices.map((device: any) => ({
+          ActionCd: 'NONE',
+          SerialNum: device?.SerialNum || device?.serialNumber || device?.deviceSerialNumber,
+          Command: 'reorder',
+          OwnerCd: device?.ownershipCD,
+          EquipTypeCd: device?.EquipTypeCd || device?.equipTypeCd,
+        }))
+        : [],
+    };
+  }
+
+  private onAddPlaceholder(type: 'HSD' | 'VIDEO' | 'CDV'): void {
+    const workOrderNumber = this.job?.workOrderNumber;
+    const placeholderData = this.buildAddPlaceholderPayload(type);
+
+    if (!this.userId || !workOrderNumber || !placeholderData || this.isRefreshingMainMenu) {
+      return;
+    }
+
+    this.isRefreshingMainMenu = true;
+    this.cdr.detectChanges();
+
+    this.todayService
+      .addPlaceHolder(this.userId, workOrderNumber, placeholderData)
+      .pipe(
+        concatMap(() => this.todayService.refreshOrderDetail(this.userId, workOrderNumber)),
+        concatMap(() => this.todayService.getWorkOrderDetails(this.userId, workOrderNumber)),
+        finalize(() => {
+          this.isRefreshingMainMenu = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (details: any) => {
+          this.applyWorkOrderDetails(details);
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          Dialogs.alert({
+            title: 'Add Place Holder',
+            message: String(error?.error?.message || error?.message || 'Failed to add placeholder.'),
+            okButtonText: 'OK',
+          });
+        },
+      });
+  }
+
+  private buildAddPlaceholderPayload(type: 'HSD' | 'VIDEO' | 'CDV'): any {
+    return {
+      locationId: this.workOrder?.locationID,
+      equipment: [
+        {
+          equipTypeCd: this.getPlaceholderEquipTypeCd(type),
+          outlet: 'A',
+          ownerCd: 'N',
+          action: 'ADD',
+          model: '',
+          deviceType: '',
+          lob: type,
+          serialNumber: this.generatePlaceholderSerialNumber(),
+          deviceName: '',
+        },
+      ],
+      accountNumber: this.workOrder?.accountNumber,
+      isWriteBackToDwbEnabled: false,
+    };
+  }
+
+  private getPlaceholderEquipTypeCd(type: 'HSD' | 'VIDEO' | 'CDV'): string {
+    switch (type) {
+      case 'HSD':
+        return 'J';
+      case 'VIDEO':
+        return 'N';
+      case 'CDV':
+        return 'W';
+      default:
+        return 'J';
+    }
+  }
+
+  private generatePlaceholderSerialNumber(): string {
+    const randomDigits = Math.floor(1000 + Math.random() * 9000);
+    return `*${randomDigits}`;
   }
 
   private refreshDevices(): void {
@@ -122,10 +305,7 @@ export class DevicesComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (details: any) => {
-          const refreshedDevices =
-            details?.devices?.existingDevices?.deviceList ?? [];
-
-          this.syncDevices(Array.isArray(refreshedDevices) ? refreshedDevices : []);
+          this.applyWorkOrderDetails(details);
           this.cdr.detectChanges();
         },
         error: (error) => {
@@ -193,6 +373,17 @@ export class DevicesComponent implements OnInit, OnDestroy {
           name: 'Reboot Modem',
           icon: 'power',
         },
+        {
+          name: 'Remove',
+          icon: 'trash',
+          destructive: true,
+          confirm: {
+            title: 'Remove device?',
+            confirmText: 'Remove',
+            cancelText: 'Cancel',
+            presentation: 'anchor',
+          },
+        },
       ];
     }
 
@@ -206,6 +397,17 @@ export class DevicesComponent implements OnInit, OnDestroy {
           name: 'Send Hit',
           icon: 'dot.radiowaves.left.and.right',
         },
+        {
+          name: 'Remove',
+          icon: 'trash',
+          destructive: true,
+          confirm: {
+            title: 'Remove device?',
+            confirmText: 'Remove',
+            cancelText: 'Cancel',
+            presentation: 'anchor',
+          },
+        },
       ];
     }
 
@@ -213,6 +415,17 @@ export class DevicesComponent implements OnInit, OnDestroy {
       {
         name: 'Device Info',
         icon: 'info.circle',
+      },
+      {
+        name: 'Remove',
+        icon: 'trash',
+        destructive: true,
+        confirm: {
+          title: 'Remove device?',
+          confirmText: 'Remove',
+          cancelText: 'Cancel',
+          presentation: 'anchor',
+        },
       },
     ];
   }
@@ -229,6 +442,9 @@ export class DevicesComponent implements OnInit, OnDestroy {
         case 2:
           this.rebootGateway(item, anchor);
           break;
+        case 3:
+          this.removeDevice(item);
+          break;
         default:
           break;
       }
@@ -243,6 +459,9 @@ export class DevicesComponent implements OnInit, OnDestroy {
         case 1:
           this.showVideoStatus(item, anchor);
           break;
+        case 2:
+          this.removeDevice(item);
+          break;
         default:
           break;
       }
@@ -252,6 +471,9 @@ export class DevicesComponent implements OnInit, OnDestroy {
     switch (event?.index) {
       case 0:
         this.showDeviceInfo(item, anchor);
+        break;
+      case 1:
+        this.removeDevice(item);
         break;
       default:
         break;
@@ -274,6 +496,88 @@ export class DevicesComponent implements OnInit, OnDestroy {
     }
   }
 
+  private removeDevice(item: any): void {
+    const workOrderNumber = this.job?.workOrderNumber;
+    const deviceKey = this.getDeviceKey(item);
+    const deviceData = this.buildRemoveDevicePayload(item);
+
+    if (!this.userId || !workOrderNumber || !deviceKey || !deviceData || this.removingDeviceKeys[deviceKey]) {
+      return;
+    }
+
+    this.removingDeviceKeys[deviceKey] = true;
+    this.cdr.detectChanges();
+
+    this.todayService
+      .removeDevice(this.userId, workOrderNumber, deviceData)
+      .pipe(
+        concatMap(() => this.todayService.refreshOrderDetail(this.userId, workOrderNumber)),
+        concatMap(() => this.todayService.getWorkOrderDetails(this.userId, workOrderNumber)),
+        finalize(() => {
+          delete this.removingDeviceKeys[deviceKey];
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (details: any) => {
+          this.applyWorkOrderDetails(details);
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          Dialogs.alert({
+            title: 'Remove Device',
+            message: String(error?.error?.message || error?.message || 'Failed to remove device.'),
+            okButtonText: 'OK',
+          });
+        },
+      });
+  }
+
+  private applyWorkOrderDetails(details: any): void {
+    this.workOrder = details;
+    const refreshedDevices =
+      details?.devices?.existingDevices?.deviceList ?? [];
+
+    this.syncDevices(Array.isArray(refreshedDevices) ? refreshedDevices : []);
+  }
+
+  private buildRemoveDevicePayload(device: any): any {
+    return {
+      houseKey: this.job?.houseKey,
+      customerId: this.job?.customerId,
+      houseMiscKey: '',
+      locationId: this.job?.locationId,
+      jobClassCd: this.job?.Job?.JobClassCd,
+      operation: '',
+      isWriteBackToDwbEnabled: false,
+      orderManagementSystem: 'ACP',
+      equipment: [
+        {
+          deviceName: device?.deviceName || device?.name || '',
+          designId: [],
+          ownerCd: 'P',
+          armObjectName: '',
+          model: '',
+          serviceServiceId: [],
+          deviceType: device?.type || '',
+          outlet: device?.outlet,
+          equipTypeCd: device?.equipTypeCd,
+          serviceTypes: [],
+          action: 'REMOVE',
+          serialNumber: device?.deviceSerialNumber || device?.serialNumber || '',
+          isDoorbell: false,
+          isIndoorCamera: false,
+        },
+      ],
+      operations: ['REMOVE'],
+      isWifiReadyJob: false,
+      cameras: [],
+      accessories: [],
+      isSmartOfficeJob: false,
+      accountNumber: this.job?.accountNumber,
+    };
+  }
+
   public markJobActionTap(item: any, action: string, autoClearMs = 140): void {
     const key = this.getActionKey(item, action);
     this.actionTapStates[key] = true;
@@ -292,7 +596,13 @@ export class DevicesComponent implements OnInit, OnDestroy {
   }
 
   public isJobMenuLoading(item: any): boolean {
-    return !!this.loadingStates[this.getDeviceKey(item)];
+    const key = this.getDeviceKey(item);
+    return !!this.loadingStates[key] || !!this.removingDeviceKeys[key];
+  }
+
+  public onDevicesReordered(): void {
+    this.syncDevices(this.devices);
+    this.cdr.detectChanges();
   }
 
   public gatewayStatus(item: any, anchor?: any): void {
@@ -395,10 +705,9 @@ export class DevicesComponent implements OnInit, OnDestroy {
     anchor?: any,
     canActivate = false,
     autoDismissMs = 2000,
-    onRetry?: () => void
+    onRetry?: () => void,
+    title = 'Gateway Status'
   ): void {
-    const title = 'Gateway Status';
-
     if (!__IOS__) {
       Dialogs.alert({
         title,
