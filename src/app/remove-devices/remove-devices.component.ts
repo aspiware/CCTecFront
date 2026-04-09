@@ -75,7 +75,7 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
   ) {
     const context = this.modalParams.context || {};
     this.job = context;
-    this.workOrder = context;
+    this.workOrder = context?.orderDetails;
     this.syncDevices(Array.isArray(this.job?.devices) ? this.job.devices : []);
     this.userId = Number(this.usersService.getUser()?.userId || 0);
   }
@@ -144,6 +144,8 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
     const workOrderNumber = this.job?.workOrderNumber;
     const reorderOutletsData = this.buildReorderOutletsPayload();
 
+    console.log('reorderOutletsData', reorderOutletsData)
+
     if (!this.userId || !workOrderNumber || !reorderOutletsData || this.isRefreshingMainMenu) {
       return;
     }
@@ -181,13 +183,13 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
       BusinessUnit: this.workOrder?.Job?.BusinessUnit,
       WFXTechLogin: this.workOrder?.techInfo?.techNum,
       WorkOrderNum: this.workOrder?.workOrderNumber,
-      JobEquipmentList: Array.isArray(this.workOrder?.JobEquipmentList)
-        ? this.workOrder.JobEquipmentList.map((device: any) => ({
-          ActionCd: device?.ActionCd,
-          SerialNum: device?.SerialNum,
+      JobEquipmentList: Array.isArray(this.devices)
+        ? this.devices.map((device: any) => ({
+          ActionCd: 'NONE',
+          SerialNum: device?.SerialNum || device?.serialNumber || device?.deviceSerialNumber,
           Command: 'reorder',
-          OwnerCd: device?.OwnerCd,
-          EquipTypeCd: device?.EquipTypeCd,
+          OwnerCd: device?.ownershipCD,
+          EquipTypeCd: device?.EquipTypeCd || device?.equipTypeCd,
         }))
         : [],
     };
