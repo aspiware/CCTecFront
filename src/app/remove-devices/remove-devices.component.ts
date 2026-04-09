@@ -110,7 +110,7 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
     });
   }
 
-  public onSelectedMainMenu(event: MenuEvent, _menuStatus?: any): void {
+  public onSelectedMainMenu(event: MenuEvent, menuStatus?: any): void {
     const menuPath = event?.path || [event?.index];
 
     switch (menuPath?.[0]) {
@@ -118,7 +118,7 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
         this.refreshDevices();
         break;
       case 1:
-        this.onReorderOutlets();
+        this.onReorderOutlets(menuStatus);
         break;
       case 2:
         switch (menuPath?.[1]) {
@@ -140,11 +140,9 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
     }
   }
 
-  private onReorderOutlets(): void {
+  private onReorderOutlets(anchor?: any): void {
     const workOrderNumber = this.job?.workOrderNumber;
     const reorderOutletsData = this.buildReorderOutletsPayload();
-
-    console.log('reorderOutletsData', reorderOutletsData)
 
     if (!this.userId || !workOrderNumber || !reorderOutletsData || this.isRefreshingMainMenu) {
       return;
@@ -166,6 +164,14 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (details: any) => {
           this.applyWorkOrderDetails(details);
+          this.showGatewayStatusMessage(
+            'Reorder outlets completed successfully.',
+            anchor,
+            false,
+            0,
+            () => this.onReorderOutlets(anchor),
+            'Reorder Outlets'
+          );
           this.cdr.detectChanges();
         },
         error: (error) => {
@@ -699,10 +705,9 @@ export class RemoveDevicesComponent implements OnInit, OnDestroy {
     anchor?: any,
     canActivate = false,
     autoDismissMs = 2000,
-    onRetry?: () => void
+    onRetry?: () => void,
+    title = 'Gateway Status'
   ): void {
-    const title = 'Gateway Status';
-
     if (!__IOS__) {
       Dialogs.alert({
         title,
