@@ -11,6 +11,7 @@ export type MenuButtonAction = {
   children?: Array<MenuButtonAction>;
   confirm?: boolean | {
     title?: string;
+    message?: string;
     confirmText?: string;
     cancelText?: string;
     presentation?: 'center' | 'anchor';

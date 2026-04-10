@@ -110,8 +110,19 @@
 
         <GridLayout
           row="3"
-          columns="*,*"
+          rows="auto,auto"
           class="footer-actions">
+          <StackLayout
+            row="0"
+            class="single-complete-message"
+            [visibility]="shouldShowSingleCompleteButton ? 'visible' : 'collapse'">
+            <Label text="Complete job?" class="single-complete-title"></Label>
+            <Label [text]="singleSelectedCodeText" class="single-complete-code"></Label>
+          </StackLayout>
+
+          <GridLayout
+            row="1"
+            columns="*,*">
           <Button
             col="0"
             text="Back"
@@ -126,10 +137,19 @@
             (tap)="goNextStep()"></Button>
           <Button
             col="1"
+            [visibility]="shouldShowSingleCompleteButton ? 'visible' : 'collapse'"
+            class="footer-button footer-button-primary"
+            text="Complete"
+            (tap)="openSingleCompleteConfirm(singleCompleteBtn)"
+            #singleCompleteBtn>
+          </Button>
+          <Button
+            col="1"
             text="Complete"
             class="footer-button footer-button-primary"
             [visibility]="isReviewStep ? 'visible' : 'collapse'"
             (tap)="goNextStep()"></Button>
+          </GridLayout>
         </GridLayout>
       </GridLayout>
     </GridLayout>

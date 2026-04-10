@@ -343,6 +343,7 @@ export class MenuButton extends MenuButtonBase {
     const confirmText = confirmConfig.confirmText || option.name;
     const cancelText = confirmConfig.cancelText || 'Cancel';
     const confirmTitle = confirmConfig.title || option.name;
+    const confirmMessage = confirmConfig.message || null;
     const presentation = confirmConfig.presentation || 'anchor';
 
     const alertStyle =
@@ -351,7 +352,7 @@ export class MenuButton extends MenuButtonBase {
         : UIAlertControllerStyle.ActionSheet;
     const alert = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
       confirmTitle,
-      null,
+      confirmMessage,
       alertStyle
     );
 

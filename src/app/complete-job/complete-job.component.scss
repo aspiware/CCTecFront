@@ -180,7 +180,24 @@ TextField.custom-tf-inline {
 .footer-actions {
   margin-top: 12;
   column-gap: 10;
-  height: 44;
+  min-height: 44;
+}
+
+.single-complete-message {
+  margin-bottom: 8;
+  horizontal-align: center;
+}
+
+.single-complete-title {
+  font-size: 13;
+  text-align: center;
+  opacity: 0.8;
+}
+
+.single-complete-code {
+  font-size: 15;
+  font-weight: 600;
+  text-align: center;
 }
 
 .footer-button {

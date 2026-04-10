@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, ElementRef, NO_ERRORS_SCHEMA, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
 import { ModalDialogParams, ModalDialogService, NativeScriptCommonModule } from '@nativescript/angular';
-import { Dialogs, ScrollView, Utils } from '@nativescript/core';
+import { Application, Dialogs, ScrollView, Utils } from '@nativescript/core';
 import { getNumber } from '@nativescript/core/application-settings';
 import { SegmentedBarItem } from '@nativescript/core';
 import { ObservableArray } from '@nativescript/core';
@@ -84,7 +84,6 @@ export class CompleteJobComponent implements OnInit {
       },
     ],
   };
-
   get mainMenuOptions() {
     return this.mainMenu.options;
   }
@@ -295,6 +294,82 @@ export class CompleteJobComponent implements OnInit {
 
   public get shouldShowReviewStepButton(): boolean {
     return !this.isReviewStep && this.selectedJobType.length > 1;
+  }
+
+  public get shouldShowSingleCompleteButton(): boolean {
+    return !this.isReviewStep && this.selectedJobType.length === 1;
+  }
+
+  public get singleSelectedCodeText(): string {
+    if (!this.shouldShowSingleCompleteButton) {
+      return '';
+    }
+    const item = this.selectedJobType[0];
+    return String(item?.code || '');
+  }
+
+  public openSingleCompleteConfirm(anchor?: any): void {
+    const message = this.singleSelectedCodeText || '';
+
+    if (!__IOS__) {
+      Dialogs.confirm({
+        title: 'Complete job?',
+        message,
+        okButtonText: 'Complete',
+        cancelButtonText: 'Cancel',
+      }).then((confirmed) => {
+        if (confirmed) {
+          this.goNextStep();
+        }
+      });
+      return;
+    }
+
+    let viewController = Application.ios?.rootController;
+    while (
+      viewController &&
+      viewController.presentedViewController &&
+      !viewController.presentedViewController.beingDismissed
+    ) {
+      viewController = viewController.presentedViewController;
+    }
+
+    if (!viewController?.view) {
+      return;
+    }
+
+    const sourceView = (anchor as any)?.ios as UIView | undefined;
+    const alert = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
+      'Complete job?',
+      message,
+      UIAlertControllerStyle.ActionSheet
+    );
+
+    alert.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Complete', UIAlertActionStyle.Destructive, () => {
+        this.goNextStep();
+      })
+    );
+
+    alert.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, null)
+    );
+
+    const popover = alert.popoverPresentationController;
+    if (popover) {
+      popover.sourceView = sourceView || viewController.view;
+      popover.sourceRect = sourceView
+        ? sourceView.bounds
+        : CGRectMake(
+          viewController.view.bounds.size.width / 2,
+          viewController.view.bounds.size.height / 2,
+          1,
+          1
+        );
+      popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
+    }
+
+    viewController.presentViewControllerAnimatedCompletion(alert, true, null);
   }
 
   public onUpgradeDevicesListLoaded(): void {
