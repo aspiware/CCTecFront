@@ -376,9 +376,13 @@ export class CompleteJobComponent implements OnInit {
 
     this.reviewResolutionCodes.splice(0);
     this.reviewResolutionCodes.push(...this.selectedJobType);
-    const firstSelected = this.selectedJobType[0];
-    const firstSelectedId = Number(firstSelected?.jobTypeId || firstSelected?.id);
-    this.selectedReviewCodeId = Number.isFinite(firstSelectedId) && firstSelectedId > 0 ? firstSelectedId : null;
+    if (this.selectedJobType.length === 1) {
+      const firstSelected = this.selectedJobType[0];
+      const firstSelectedId = Number(firstSelected?.jobTypeId || firstSelected?.id);
+      this.selectedReviewCodeId = Number.isFinite(firstSelectedId) && firstSelectedId > 0 ? firstSelectedId : null;
+    } else {
+      this.selectedReviewCodeId = null;
+    }
     this.isReviewStep = true;
     this.cdr.detectChanges();
     setTimeout(() => this.syncSingleReviewSelection(), 0);
