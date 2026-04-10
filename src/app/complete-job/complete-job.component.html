@@ -112,16 +112,8 @@
           row="3"
           rows="auto,auto"
           class="footer-actions">
-          <StackLayout
-            row="0"
-            class="single-complete-message"
-            [visibility]="shouldShowSingleCompleteButton ? 'visible' : 'collapse'">
-            <Label text="Complete job?" class="single-complete-title"></Label>
-            <Label [text]="singleSelectedCodeText" class="single-complete-code"></Label>
-          </StackLayout>
-
           <GridLayout
-            row="1"
+            row="0"
             columns="*,*">
           <Button
             col="0"
