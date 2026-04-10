@@ -177,6 +177,26 @@ TextField.custom-tf-inline {
   height: 100%;
 }
 
+.footer-actions {
+  margin-top: 12;
+  column-gap: 10;
+}
+
+.footer-button {
+  height: 44;
+  border-radius: 12;
+  font-size: 15;
+  font-weight: 600;
+}
+
+.footer-button-secondary {
+  margin-right: 6;
+}
+
+.footer-button-primary {
+  margin-left: 6;
+}
+
 .custom-type-row {
   padding: 10;
   border-radius: 10;

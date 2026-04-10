@@ -25,7 +25,7 @@
         </StackLayout>
       </GridLayout>
 
-      <GridLayout row="1" rows="auto,auto,*" class="modal-body">
+      <GridLayout row="1" rows="auto,auto,*,auto" class="modal-body">
         <Label
           row="0"
           [text]="emptyMessage"
@@ -80,6 +80,11 @@
               </GridLayout>
             </ng-template>
           </RadListView>
+        </GridLayout>
+
+        <GridLayout row="3" columns="*,*" class="footer-actions">
+          <Button col="0" text="Back" class="footer-button footer-button-secondary" (tap)="closeModal()"></Button>
+          <Button col="1" text="Next" class="footer-button footer-button-primary" (tap)="saveJobChanges()"></Button>
         </GridLayout>
       </GridLayout>
     </GridLayout>
