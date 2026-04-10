@@ -108,9 +108,28 @@
           </RadListView>
         </GridLayout>
 
-        <GridLayout row="3" columns="*,*" class="footer-actions">
-          <Button col="0" text="Back" class="footer-button footer-button-secondary" (tap)="goBackStep()"></Button>
-          <Button col="1" [text]="isReviewStep ? 'Complete' : 'Next'" class="footer-button footer-button-primary" (tap)="goNextStep()"></Button>
+        <GridLayout
+          row="3"
+          columns="*,*"
+          class="footer-actions">
+          <Button
+            col="0"
+            text="Back"
+            class="footer-button footer-button-secondary"
+            [visibility]="isReviewStep ? 'visible' : 'collapse'"
+            (tap)="goBackStep()"></Button>
+          <Button
+            col="1"
+            text="Next"
+            class="footer-button footer-button-primary"
+            [visibility]="shouldShowReviewStepButton ? 'visible' : 'collapse'"
+            (tap)="goNextStep()"></Button>
+          <Button
+            col="1"
+            text="Complete"
+            class="footer-button footer-button-primary"
+            [visibility]="isReviewStep ? 'visible' : 'collapse'"
+            (tap)="goNextStep()"></Button>
         </GridLayout>
       </GridLayout>
     </GridLayout>

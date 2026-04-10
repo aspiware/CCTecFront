@@ -293,6 +293,10 @@ export class CompleteJobComponent implements OnInit {
     return selectedName.includes('upgrade') || currentName.includes('upgrade');
   }
 
+  public get shouldShowReviewStepButton(): boolean {
+    return !this.isReviewStep && this.selectedJobType.length > 1;
+  }
+
   public onUpgradeDevicesListLoaded(): void {
     this.tryRestoreUpgradeDevicesSelection();
   }
@@ -374,15 +378,17 @@ export class CompleteJobComponent implements OnInit {
       return;
     }
 
-    this.reviewResolutionCodes.splice(0);
-    this.reviewResolutionCodes.push(...this.selectedJobType);
     if (this.selectedJobType.length === 1) {
       const firstSelected = this.selectedJobType[0];
       const firstSelectedId = Number(firstSelected?.jobTypeId || firstSelected?.id);
       this.selectedReviewCodeId = Number.isFinite(firstSelectedId) && firstSelectedId > 0 ? firstSelectedId : null;
-    } else {
-      this.selectedReviewCodeId = null;
+      this.saveJobChanges();
+      return;
     }
+
+    this.reviewResolutionCodes.splice(0);
+    this.reviewResolutionCodes.push(...this.selectedJobType);
+    this.selectedReviewCodeId = null;
     this.isReviewStep = true;
     this.cdr.detectChanges();
     setTimeout(() => this.syncSingleReviewSelection(), 0);
