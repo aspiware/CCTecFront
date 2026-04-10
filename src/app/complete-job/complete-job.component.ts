@@ -23,6 +23,7 @@ import { AddNoteComponent } from '../add-note/add-note.component';
 })
 export class CompleteJobComponent implements OnInit {
   public job: any;
+  public isReviewStep = false;
   private userId = 0;
   public notes = '';
   public isNotesFocused = false;
@@ -45,6 +46,8 @@ export class CompleteJobComponent implements OnInit {
   public allResolutionCodes: any[] = [];
   public resolutionSearch = '';
   public selectedJobType: any[] = [];
+  public reviewResolutionCodes = new ObservableArray<any>([]);
+  public selectedReviewCodeId: number | null = null;
   public selectedCustomTypeIds = new Set<number>();
   public selectedCustomTypeMap = new Map<number, any>();
   public customTypeEmptyMessage = '';
@@ -330,6 +333,53 @@ export class CompleteJobComponent implements OnInit {
     this.recalculateCustomTotal();
   }
 
+  public onReviewItemSelected(args: ListViewEventData): void {
+    const item = this.reviewResolutionCodes.getItem(args?.index);
+    const id = Number(item?.jobTypeId || item?.id);
+    this.selectedReviewCodeId = Number.isFinite(id) && id > 0 ? id : null;
+  }
+
+  public goBackStep(): void {
+    if (this.isReviewStep) {
+      this.isReviewStep = false;
+      this.cdr.detectChanges();
+      return;
+    }
+    this.closeModal();
+  }
+
+  public goNextStep(): void {
+    if (this.isReviewStep) {
+      if (!this.selectedReviewCodeId) {
+        Dialogs.alert({
+          title: 'Resolution Code',
+          message: 'Select one resolution code to continue.',
+          okButtonText: 'OK',
+        });
+        return;
+      }
+      this.saveJobChanges();
+      return;
+    }
+
+    if (!this.selectedJobType.length) {
+      Dialogs.alert({
+        title: 'Resolution Codes',
+        message: 'Select at least one resolution code before continuing.',
+        okButtonText: 'OK',
+      });
+      return;
+    }
+
+    this.reviewResolutionCodes.splice(0);
+    this.reviewResolutionCodes.push(...this.selectedJobType);
+    const firstSelected = this.selectedJobType[0];
+    const firstSelectedId = Number(firstSelected?.jobTypeId || firstSelected?.id);
+    this.selectedReviewCodeId = Number.isFinite(firstSelectedId) && firstSelectedId > 0 ? firstSelectedId : null;
+    this.isReviewStep = true;
+    this.cdr.detectChanges();
+  }
+
   private loadJobTypes(): void {
     this.isLoadingTypes = true;
     this.setLoading(true);
@@ -493,6 +543,19 @@ export class CompleteJobComponent implements OnInit {
   private saveJobChanges(): void {
     if (this.isLoading || !this.job) {
       return;
+    }
+
+    if (this.isReviewStep && this.selectedReviewCodeId) {
+      this.selectedCustomTypeIds = new Set([this.selectedReviewCodeId]);
+      this.selectedJobType = this.selectedJobType.filter((entry) => {
+        const id = Number(entry?.jobTypeId || entry?.id);
+        return id === this.selectedReviewCodeId;
+      });
+      this.selectedCustomTypeMap.forEach((_value, key) => {
+        if (key !== this.selectedReviewCodeId) {
+          this.selectedCustomTypeMap.delete(key);
+        }
+      });
     }
 
     const selectedType = this.jobTypes[this.selectedTypeIndex];

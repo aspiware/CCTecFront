@@ -33,7 +33,7 @@
           class="empty-message">
         </Label>
 
-        <GridLayout row="1" columns="*" class="segment-row">
+        <GridLayout row="1" columns="*" class="segment-row" [visibility]="!isReviewStep ? 'visible' : 'collapse'">
           <GridLayout columns="*,auto" class="input-shell" width="100%">
             <TextField
               col="0"
@@ -54,7 +54,7 @@
           </GridLayout>
         </GridLayout>
 
-        <GridLayout row="2" class="custom-list-wrap">
+        <GridLayout row="2" class="custom-list-wrap" [visibility]="!isReviewStep ? 'visible' : 'collapse'">
           <Label
             class="empty-message"
             [text]="customTypeEmptyMessage"
@@ -82,9 +82,35 @@
           </RadListView>
         </GridLayout>
 
+        <GridLayout row="2" class="custom-list-wrap" [visibility]="isReviewStep ? 'visible' : 'collapse'">
+          <Label
+            class="empty-message"
+            text="Select one resolution code to complete the job."
+            [visibility]="reviewResolutionCodes.length ? 'visible' : 'collapse'">
+          </Label>
+          <RadListView
+            #reviewListView
+            (itemSelected)="onReviewItemSelected($event)"
+            [items]="reviewResolutionCodes"
+            selectionBehavior="Press"
+            multipleSelection="false"
+            class="custom-types-list">
+            <ng-template tkListItemTemplate let-item="item">
+              <GridLayout rows="auto" columns="*, auto" style="margin-left: 40; margin-right: 20; margin-top: 6; margin-bottom: 6;">
+                <GridLayout orientation="horizontal" class="item-bag" col="0" columns="*, auto">
+                  <GridLayout col="0" columns="70,*">
+                    <Label col="0" [text]="item.code" horizontalAlignment="left" style="margin-right: 10;"></Label>
+                    <Label col="1" [text]="item.description" horizontalAlignment="right" textAlignment="right"></Label>
+                  </GridLayout>
+                </GridLayout>
+              </GridLayout>
+            </ng-template>
+          </RadListView>
+        </GridLayout>
+
         <GridLayout row="3" columns="*,*" class="footer-actions">
-          <Button col="0" text="Back" class="footer-button footer-button-secondary" (tap)="closeModal()"></Button>
-          <Button col="1" text="Next" class="footer-button footer-button-primary" (tap)="saveJobChanges()"></Button>
+          <Button col="0" text="Back" class="footer-button footer-button-secondary" (tap)="goBackStep()"></Button>
+          <Button col="1" [text]="isReviewStep ? 'Complete' : 'Next'" class="footer-button footer-button-primary" (tap)="goNextStep()"></Button>
         </GridLayout>
       </GridLayout>
     </GridLayout>
