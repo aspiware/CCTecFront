@@ -305,7 +305,19 @@ export class CompleteJobComponent implements OnInit {
       return '';
     }
     const item = this.selectedJobType[0];
-    return String(item?.code || '');
+    const code = String(item?.code || '').trim();
+    const description = String(item?.description || '').trim();
+
+    if (code && description) {
+      return `Code: ${code}\nDescription: ${description}`;
+    }
+    if (code) {
+      return `Code: ${code}`;
+    }
+    if (description) {
+      return `Description: ${description}`;
+    }
+    return '';
   }
 
   public openSingleCompleteConfirm(anchor?: any): void {
