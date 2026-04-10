@@ -58,6 +58,8 @@ export class CompleteJobComponent implements OnInit {
   public customTotalPrice = 0;
   @ViewChild('listView', { static: false, read: RadListViewComponent })
   public listViewRef?: RadListViewComponent;
+  @ViewChild('reviewListView', { static: false, read: RadListViewComponent })
+  public reviewListViewRef?: RadListViewComponent;
   @ViewChild('upgradeDevicesListView', { static: false, read: RadListViewComponent })
   public upgradeDevicesListViewRef?: RadListViewComponent;
   @ViewChild('bodyScroll', { static: false })
@@ -337,6 +339,7 @@ export class CompleteJobComponent implements OnInit {
     const item = this.reviewResolutionCodes.getItem(args?.index);
     const id = Number(item?.jobTypeId || item?.id);
     this.selectedReviewCodeId = Number.isFinite(id) && id > 0 ? id : null;
+    this.syncSingleReviewSelection(args?.index);
   }
 
   public goBackStep(): void {
@@ -378,6 +381,7 @@ export class CompleteJobComponent implements OnInit {
     this.selectedReviewCodeId = Number.isFinite(firstSelectedId) && firstSelectedId > 0 ? firstSelectedId : null;
     this.isReviewStep = true;
     this.cdr.detectChanges();
+    setTimeout(() => this.syncSingleReviewSelection(), 0);
   }
 
   private loadJobTypes(): void {
@@ -1053,5 +1057,28 @@ export class CompleteJobComponent implements OnInit {
       return `sn:${serial}`;
     }
     return '';
+  }
+
+  private syncSingleReviewSelection(selectedIndex?: number): void {
+    const listView = this.reviewListViewRef?.listView;
+    if (!listView || !this.reviewResolutionCodes?.length) {
+      return;
+    }
+
+    let targetIndex = typeof selectedIndex === 'number' ? selectedIndex : -1;
+    if (targetIndex < 0 && this.selectedReviewCodeId) {
+      targetIndex = this.reviewResolutionCodes.findIndex((item: any) => {
+        const id = Number(item?.jobTypeId || item?.id);
+        return id === this.selectedReviewCodeId;
+      });
+    }
+
+    for (let i = 0; i < this.reviewResolutionCodes.length; i++) {
+      if (i === targetIndex) {
+        listView.selectItemAt(i);
+      } else {
+        listView.deselectItemAt(i);
+      }
+    }
   }
 }
