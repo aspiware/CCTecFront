@@ -588,6 +588,7 @@ export class TodayComponent implements OnInit {
       options: [
         { name: 'Go Enroute', icon: 'car.fill' },
         { name: 'Go On Job', icon: 'wrench.fill' },
+        { name: 'Run PHT', icon: 'chart.bar.xaxis' },
         { name: 'Complete Job', icon: 'checkmark.circle.fill' },
         // { name: 'Set ETC', icon: 'clock.fill' },
         { name: 'Set Location', icon: 'mappin.and.ellipse' },
@@ -1578,9 +1579,12 @@ export class TodayComponent implements OnInit {
         this.goOnjob(job);
         break;
       case 2:
-        this.completeJob(job);
+        this.runPHT(job);
         break;
       case 3:
+        this.completeJob(job);
+        break;
+      case 4:
         this.updateLocation(job);
         break;
     }
@@ -1708,6 +1712,39 @@ export class TodayComponent implements OnInit {
         this.getWorkOrders();
       }
       this.clearJobActionTap(job, 'job-menu');
+    });
+  }
+
+  public async runPHT(job: any) {
+    if (!job) {
+      return;
+    }
+
+    this.todayService.runPHT(
+      this.user?.userId,
+      {
+        accountNumber: job?.accountNumber,
+        workOrderNumber: job?.workOrderNumber,
+        customerId: job?.customerId,
+        jobLat: job?.latitude,
+        jobLong: job?.longitude,
+      }
+    ).subscribe({
+      next: (res) => {
+        console.log('RUNPHT-RES', res);
+      }, error: (error) => {
+        this.setJobMenuLoading(job, false);
+        console.log(error);
+
+        alert({
+          title: 'Error',
+          message: String(error.error.message),
+          okButtonText: 'OK',
+        });
+      },
+      complete: () => {
+        this.setJobMenuLoading(job, false);
+      }
     });
   }
 

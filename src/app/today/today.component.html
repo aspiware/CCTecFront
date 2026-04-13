@@ -257,7 +257,7 @@
                   </MenuButton>
                 </StackLayout>
 
-                <StackLayout  class="job-action-button"
+                <StackLayout *ngIf="item.status == 'OPEN' && user.roleId == 2" class="job-action-button"
                   style="width: 100px; height: 70px;">
                   <MenuButton class="fas" [class.job-action-tapped]="isJobActionTapped(item, 'job-menu')"
                     style="font-size: 16px; height: 70px; width: 100px;" [showSpinner]="isJobMenuLoading(item)"

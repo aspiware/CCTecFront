@@ -109,6 +109,13 @@ export class TodayService {
     );
   }
 
+  public runPHT(userId: number, data: any): Observable<any> {
+    return this.httpClient.post<any>(
+      `${this.configService.getUrlBase()}/jobs/c/runPHT/${userId}`,
+      data
+    );
+  }
+
   public updateTechStatus(
     userId: number,
     accountNumber: number | string,
