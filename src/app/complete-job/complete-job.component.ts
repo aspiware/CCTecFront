@@ -56,6 +56,7 @@ export class CompleteJobComponent implements OnInit {
   public changedDeviceIds: number[] = [];
   public settings: any;
   public customTotalPrice = 0;
+  private isSyncingReviewSelection = false;
   @ViewChild('listView', { static: false, read: RadListViewComponent })
   public listViewRef?: RadListViewComponent;
   @ViewChild('reviewListView', { static: false, read: RadListViewComponent })
@@ -331,6 +332,15 @@ export class CompleteJobComponent implements OnInit {
   }
 
   public openSingleCompleteConfirm(anchor?: any): void {
+    if (this.isReviewStep && !this.selectedReviewCodeId) {
+      Dialogs.alert({
+        title: 'Primary Resolution Code',
+        message: 'You must select one resolution code as primary before completing the job.',
+        okButtonText: 'OK',
+      });
+      return;
+    }
+
     const message = this.completeConfirmationMessage || '';
 
     if (!__IOS__) {
@@ -481,10 +491,26 @@ export class CompleteJobComponent implements OnInit {
   }
 
   public onReviewItemSelected(args: ListViewEventData): void {
+    if (this.isSyncingReviewSelection) {
+      return;
+    }
+
     const item = this.reviewResolutionCodes.getItem(args?.index);
     const id = Number(item?.jobTypeId || item?.id);
     this.selectedReviewCodeId = Number.isFinite(id) && id > 0 ? id : null;
     this.syncSingleReviewSelection(args?.index);
+  }
+
+  public onReviewItemDeselected(args: ListViewEventData): void {
+    if (this.isSyncingReviewSelection) {
+      return;
+    }
+
+    const item = this.reviewResolutionCodes.getItem(args?.index);
+    const id = Number(item?.jobTypeId || item?.id);
+    if (Number.isFinite(id) && id > 0 && id === this.selectedReviewCodeId) {
+      this.selectedReviewCodeId = null;
+    }
   }
 
   public goBackStep(): void {
@@ -1257,12 +1283,17 @@ export class CompleteJobComponent implements OnInit {
       });
     }
 
-    for (let i = 0; i < this.reviewResolutionCodes.length; i++) {
-      if (i === targetIndex) {
-        listView.selectItemAt(i);
-      } else {
-        listView.deselectItemAt(i);
+    this.isSyncingReviewSelection = true;
+    try {
+      for (let i = 0; i < this.reviewResolutionCodes.length; i++) {
+        if (i === targetIndex) {
+          listView.selectItemAt(i);
+        } else {
+          listView.deselectItemAt(i);
+        }
       }
+    } finally {
+      this.isSyncingReviewSelection = false;
     }
   }
 }

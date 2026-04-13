@@ -91,6 +91,7 @@
           <RadListView
             #reviewListView
             (itemSelected)="onReviewItemSelected($event)"
+            (itemDeselected)="onReviewItemDeselected($event)"
             [items]="reviewResolutionCodes"
             selectionBehavior="Press"
             multipleSelection="true"
@@ -140,7 +141,8 @@
             text="Complete"
             class="footer-button footer-button-primary"
             [visibility]="isReviewStep ? 'visible' : 'collapse'"
-            (tap)="goNextStep()"></Button>
+            (tap)="openSingleCompleteConfirm(reviewCompleteBtn)"
+            #reviewCompleteBtn></Button>
           </GridLayout>
         </GridLayout>
       </GridLayout>
