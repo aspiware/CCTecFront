@@ -86,7 +86,9 @@ export class CompleteJobComponent implements OnInit {
       }
       return {
         ...option,
-        disabled: this.selectedJobType.length === 0,
+        disabled:
+          this.selectedJobType.length === 0 ||
+          (this.selectedJobType.length > 1 && !this.selectedReviewCodeId),
       };
     });
   }
@@ -303,28 +305,33 @@ export class CompleteJobComponent implements OnInit {
     return !this.isReviewStep && this.selectedJobType.length === 1;
   }
 
-  public get singleSelectedCodeText(): string {
-    if (!this.shouldShowSingleCompleteButton) {
+  public get completeConfirmationMessage(): string {
+    if (!this.selectedJobType.length) {
       return '';
     }
-    const item = this.selectedJobType[0];
-    const code = String(item?.code || '').trim();
-    const description = String(item?.description || '').trim();
+    const primaryId = this.getPrimaryResolutionCodeId();
 
-    if (code && description) {
-      return `Code: ${code}\nDescription: ${description}`;
-    }
-    if (code) {
-      return `Code: ${code}`;
-    }
-    if (description) {
-      return `Description: ${description}`;
-    }
-    return '';
+    return this.selectedJobType
+      .map((item) => {
+        const id = Number(item?.jobTypeId || item?.id || item?.resolCodeId || item?.codeId || 0);
+        const code = String(item?.code || '').trim();
+        const description = String(item?.description || '').trim();
+        const isPrimary = !!primaryId && id === primaryId;
+
+        const lines = [
+          code ? `Code: ${code}` : '',
+          description ? `Description: ${description}` : '',
+          isPrimary ? 'Primary' : '',
+        ].filter(Boolean);
+
+        return lines.join('\n');
+      })
+      .filter(Boolean)
+      .join('\n\n');
   }
 
   public openSingleCompleteConfirm(anchor?: any): void {
-    const message = this.singleSelectedCodeText || '';
+    const message = this.completeConfirmationMessage || '';
 
     if (!__IOS__) {
       Dialogs.confirm({
