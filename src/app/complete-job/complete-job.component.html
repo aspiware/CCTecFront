@@ -54,13 +54,15 @@
           </GridLayout>
         </GridLayout>
 
-        <GridLayout row="2" class="custom-list-wrap" [visibility]="!isReviewStep ? 'visible' : 'collapse'">
+        <GridLayout row="2" rows="auto,*" class="custom-list-wrap" [visibility]="!isReviewStep ? 'visible' : 'collapse'">
           <Label
+            row="0"
             class="empty-message"
             [text]="customTypeEmptyMessage"
             [visibility]="(!isLoadingTypes && !jobUserTypesList.length && customTypeEmptyMessage) ? 'visible' : 'collapse'">
           </Label>
           <RadListView
+            row="1"
             #listView
             (loaded)="onListLoaded()"
             (itemSelected)="onItemSelected($event)"
@@ -82,13 +84,15 @@
           </RadListView>
         </GridLayout>
 
-        <GridLayout row="2" class="custom-list-wrap" [visibility]="isReviewStep ? 'visible' : 'collapse'">
+        <GridLayout row="2" rows="auto,*" class="custom-list-wrap" [visibility]="isReviewStep ? 'visible' : 'collapse'">
           <Label
-            class="empty-message"
-            text="Select one resolution code to complete the job."
+            row="0"
+            class="empty-message review-step-message"
+            text="Select one resolution code as primary."
             [visibility]="reviewResolutionCodes.length ? 'visible' : 'collapse'">
           </Label>
           <RadListView
+            row="1"
             #reviewListView
             (itemSelected)="onReviewItemSelected($event)"
             (itemDeselected)="onReviewItemDeselected($event)"

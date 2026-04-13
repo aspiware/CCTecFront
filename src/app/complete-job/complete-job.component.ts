@@ -312,7 +312,7 @@ export class CompleteJobComponent implements OnInit {
     }
     const primaryId = this.getPrimaryResolutionCodeId();
 
-    return this.selectedJobType
+    return this.getOrderedSelectedCodes()
       .map((item) => {
         const id = Number(item?.jobTypeId || item?.id || item?.resolCodeId || item?.codeId || 0);
         const code = String(item?.code || '').trim();
@@ -410,10 +410,7 @@ export class CompleteJobComponent implements OnInit {
     }
 
     const resolutionCodes = this.buildSelectedResolutionCodes();
-    const updatedJob = {
-      ...this.job,
-      resolutionCodes,
-    };
+    console.log(resolutionCodes)
 
     const saveResolCodes$ = this.todayService.saveResolCodes(
       this.userId,
@@ -849,18 +846,41 @@ export class CompleteJobComponent implements OnInit {
   }
 
   private buildSelectedResolutionCodes(): any[] {
-    const selectedCodes = Array.isArray(this.selectedJobType) ? this.selectedJobType : [];
+    const selectedCodes = this.getOrderedSelectedCodes();
     const primaryId = this.getPrimaryResolutionCodeId();
 
     return selectedCodes.map((code) => {
       const id = Number(code?.jobTypeId || code?.id || code?.resolCodeId || code?.codeId || 0);
 
       return {
-        ...code,
+        code: code?.code,
+        description: code?.description,
         isPrimaryResolutionCode: !!primaryId && id === primaryId,
         isDisablePreSelection: false,
         isDisableOverride: false,
       };
+    });
+  }
+
+  private getOrderedSelectedCodes(): any[] {
+    const selectedCodes = Array.isArray(this.selectedJobType) ? [...this.selectedJobType] : [];
+    const primaryId = this.getPrimaryResolutionCodeId();
+
+    if (!primaryId) {
+      return selectedCodes;
+    }
+
+    return selectedCodes.sort((left, right) => {
+      const leftId = Number(left?.jobTypeId || left?.id || left?.resolCodeId || left?.codeId || 0);
+      const rightId = Number(right?.jobTypeId || right?.id || right?.resolCodeId || right?.codeId || 0);
+
+      if (leftId === primaryId && rightId !== primaryId) {
+        return -1;
+      }
+      if (rightId === primaryId && leftId !== primaryId) {
+        return 1;
+      }
+      return 0;
     });
   }
 
