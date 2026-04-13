@@ -10,7 +10,7 @@ import { Item } from '../shared/components/menu-button/item';
 import { MenuEvent } from '../shared/components/menu-button';
 import { SettingsService } from '../settings/settings.service';
 import { TodayService } from '../today/today.service';
-import { lastValueFrom } from 'rxjs';
+import { concat, lastValueFrom } from 'rxjs';
 import { AddNoteComponent } from '../add-note/add-note.component';
 
 @Component({
@@ -137,7 +137,7 @@ export class CompleteJobComponent implements OnInit {
   public onSelectedMainMenu(event: MenuEvent, _menuStatus?: any): void {
     switch (event?.index) {
       case 0:
-        this.saveJobChanges();
+        this.completeJob();
         break;
       case 1:
         this.openAddNoteModal();
@@ -331,7 +331,7 @@ export class CompleteJobComponent implements OnInit {
         cancelButtonText: 'Cancel',
       }).then((confirmed) => {
         if (confirmed) {
-          this.goNextStep();
+          this.completeJob();
         }
       });
       return;
@@ -359,7 +359,7 @@ export class CompleteJobComponent implements OnInit {
 
     alert.addAction(
       UIAlertAction.actionWithTitleStyleHandler('Complete', UIAlertActionStyle.Destructive, () => {
-        this.goNextStep();
+        this.completeJob();
       })
     );
 
@@ -382,6 +382,50 @@ export class CompleteJobComponent implements OnInit {
     }
 
     viewController.presentViewControllerAnimatedCompletion(alert, true, null);
+  }
+
+  public completeJob(): void {
+    if (this.isLoading || !this.job || !this.userId || !this.job?.workOrderNumber) {
+      return;
+    }
+
+    const resolutionCodes = this.buildSelectedResolutionCodes();
+    const updatedJob = {
+      ...this.job,
+      resolutionCodes,
+    };
+
+    const saveResolCodes$ = this.todayService.saveResolCodes(
+      this.userId,
+      this.job.workOrderNumber,
+      resolutionCodes
+    );
+
+    const completeJob$ = this.todayService.completeJob(
+      this.userId,
+      this.job.workOrderNumber
+    );
+
+    this.setLoading(true);
+
+    concat(saveResolCodes$, completeJob$).subscribe({
+      next: (res) => {
+        console.log('[CompleteJob] response:', res);
+      },
+      complete: () => {
+        this.setLoading(false);
+        this.modalParams.closeCallback({ refreshToday: true });
+      },
+      error: (error) => {
+        console.error('[CompleteJob] error:', error);
+        this.setLoading(false);
+        Dialogs.alert({
+          title: 'Complete Job',
+          message: String(error?.error?.message || error?.message || 'Unable to complete job.'),
+          okButtonText: 'OK',
+        });
+      },
+    });
   }
 
   public onUpgradeDevicesListLoaded(): void {
@@ -452,7 +496,7 @@ export class CompleteJobComponent implements OnInit {
         });
         return;
       }
-      this.saveJobChanges();
+      this.completeJob();
       return;
     }
 
@@ -469,7 +513,7 @@ export class CompleteJobComponent implements OnInit {
       const firstSelected = this.selectedJobType[0];
       const firstSelectedId = Number(firstSelected?.jobTypeId || firstSelected?.id);
       this.selectedReviewCodeId = Number.isFinite(firstSelectedId) && firstSelectedId > 0 ? firstSelectedId : null;
-      this.saveJobChanges();
+      this.completeJob();
       return;
     }
 
@@ -641,7 +685,7 @@ export class CompleteJobComponent implements OnInit {
     }, 0);
   }
 
-  private saveJobChanges(): void {
+  private saveJobChanges(resolutionCodes?: any[]): void {
     if (this.isLoading || !this.job) {
       return;
     }
@@ -666,6 +710,7 @@ export class CompleteJobComponent implements OnInit {
 
     const updatedJob = {
       ...this.job,
+      resolutionCodes: Array.isArray(resolutionCodes) ? resolutionCodes : [],
       jobTypeId: nextJobTypeId || this.job?.jobTypeId,
       changedDeviceIds: [...this.changedDeviceIds],
       modems: String(this.modemsQty),
@@ -765,6 +810,38 @@ export class CompleteJobComponent implements OnInit {
         });
       },
     });
+  }
+
+  private buildSelectedResolutionCodes(): any[] {
+    const selectedCodes = Array.isArray(this.selectedJobType) ? this.selectedJobType : [];
+    const primaryId = this.getPrimaryResolutionCodeId();
+
+    return selectedCodes.map((code) => {
+      const id = Number(code?.jobTypeId || code?.id || code?.resolCodeId || code?.codeId || 0);
+
+      return {
+        ...code,
+        isPrimaryResolutionCode: !!primaryId && id === primaryId,
+        isDisablePreSelection: false,
+        isDisableOverride: false,
+      };
+    });
+  }
+
+  private getPrimaryResolutionCodeId(): number | null {
+    if (this.isReviewStep && this.selectedReviewCodeId) {
+      return this.selectedReviewCodeId;
+    }
+
+    if (this.selectedJobType.length === 1) {
+      const firstSelected = this.selectedJobType[0];
+      const firstSelectedId = Number(
+        firstSelected?.jobTypeId || firstSelected?.id || firstSelected?.resolCodeId || firstSelected?.codeId || 0
+      );
+      return Number.isFinite(firstSelectedId) && firstSelectedId > 0 ? firstSelectedId : null;
+    }
+
+    return this.selectedReviewCodeId;
   }
 
   private applyViewState(update: () => void): void {
