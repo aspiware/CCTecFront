@@ -71,12 +71,7 @@ export class CompleteJobComponent implements OnInit {
         name: 'Complete',
         icon: 'checkmark.circle',
         destructive: true,
-        confirm: {
-          title: 'Complete job?',
-          confirmText: 'Complete',
-          cancelText: 'Cancel',
-          presentation: 'anchor',
-        },
+        disabled: true,
       },
       {
         name: 'Add note',
@@ -85,7 +80,15 @@ export class CompleteJobComponent implements OnInit {
     ],
   };
   get mainMenuOptions() {
-    return this.mainMenu.options;
+    return this.mainMenu.options.map((option, index) => {
+      if (index !== 0) {
+        return option;
+      }
+      return {
+        ...option,
+        disabled: this.selectedJobType.length === 0,
+      };
+    });
   }
 
   constructor(
@@ -134,10 +137,10 @@ export class CompleteJobComponent implements OnInit {
     }, 0);
   }
 
-  public onSelectedMainMenu(event: MenuEvent, _menuStatus?: any): void {
+  public onSelectedMainMenu(event: MenuEvent, menuStatus?: any): void {
     switch (event?.index) {
       case 0:
-        this.completeJob();
+        this.openSingleCompleteConfirm(menuStatus);
         break;
       case 1:
         this.openAddNoteModal();
