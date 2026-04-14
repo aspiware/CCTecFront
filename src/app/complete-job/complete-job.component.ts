@@ -79,11 +79,12 @@ export class CompleteJobComponent implements OnInit {
         icon: 'note.text.badge.plus',
       },
       {
-        name: 'Run PHT',
+        name: 'PHT',
         icon: 'chart.bar.xaxis',
         children: [
-          { name: 'Regular PHT', icon: 'chart.bar.xaxis' },
-          { name: 'Bypass PHT', icon: 'chart.bar.xaxis' },
+          { name: 'Check Status', icon: 'checkmark.circle' },
+          { name: 'Run Regular PHT', icon: 'chart.bar.xaxis' },
+          { name: 'Run Bypass PHT', icon: 'chart.bar.xaxis' },
         ],
       },
       {
@@ -157,9 +158,12 @@ export class CompleteJobComponent implements OnInit {
     if (event?.index === 2) {
       switch (event.path?.[1]) {
         case 0:
-          this.runPHT('no');
+          this.checkPHTStatus();
           break;
         case 1:
+          this.runPHT('no');
+          break;
+        case 2:
           this.runPHT('yes');
           break;
         default:
@@ -565,6 +569,55 @@ export class CompleteJobComponent implements OnInit {
         Dialogs.alert({
           title: 'Run PHT',
           message: String(error?.error?.message || error?.message || 'Unable to run PHT.'),
+          okButtonText: 'OK',
+        });
+      },
+      complete: () => {
+        this.setLoading(false);
+      }
+    });
+  }
+
+  public checkPHTStatus(): void {
+    if (this.isLoading || !this.job || !this.userId) {
+      return;
+    }
+
+    this.setLoading(true);
+    this.todayService.getPHTStatus(
+      this.userId,
+      'no',
+      {
+        accountNumber: this.job?.accountNumber,
+        workOrderNumber: this.job?.workOrderNumber,
+        customerId: this.job?.customerId,
+        jobLat: this.job?.latitude,
+        jobLong: this.job?.longitude,
+      }
+    ).subscribe({
+      next: (res) => {
+        console.log('[CompleteJob][CheckPHTStatus] response:', res);
+        const status = Array.isArray(res) ? res[0] : res;
+        const premiseHealthStatus = String(status?.premiseHealthStatus || 'N/A');
+        const rssiHealthStatus = String(status?.rssiHealthStatus || 'N/A');
+        const gpaHealthStatus = String(status?.gpaHealthStatus || 'N/A');
+        const mocaHealthStatus = String(status?.mocaHealthStatus || 'N/A');
+
+        Dialogs.alert({
+          title: 'PHT Status',
+          message:
+            `Premise Health Status: ${premiseHealthStatus}\n` +
+            `RSSI Health Status: ${rssiHealthStatus}\n` +
+            `GPA Health Status: ${gpaHealthStatus}\n` +
+            `MOCA Health Status: ${mocaHealthStatus}`,
+          okButtonText: 'OK',
+        });
+      },
+      error: (error) => {
+        this.setLoading(false);
+        Dialogs.alert({
+          title: 'Check Status',
+          message: String(error?.error?.message || error?.message || 'Unable to get PHT status.'),
           okButtonText: 'OK',
         });
       },

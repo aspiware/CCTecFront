@@ -116,6 +116,13 @@ export class TodayService {
     );
   }
 
+  public getPHTStatus(userId: number, bypass: string, data: any): Observable<any> {
+    return this.httpClient.post<any>(
+      `${this.configService.getUrlBase()}/jobs/c/getPHTStatus/${userId}/${bypass}`,
+      data
+    );
+  }
+
   public updateTechStatus(
     userId: number,
     accountNumber: number | string,
