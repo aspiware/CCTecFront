@@ -109,9 +109,9 @@ export class TodayService {
     );
   }
 
-  public runPHT(userId: number, data: any): Observable<any> {
+  public runPHT(userId: number, bypass: string, data: any): Observable<any> {
     return this.httpClient.post<any>(
-      `${this.configService.getUrlBase()}/jobs/c/runPHT/${userId}`,
+      `${this.configService.getUrlBase()}/jobs/c/runPHT/${userId}/${bypass}`,
       data
     );
   }

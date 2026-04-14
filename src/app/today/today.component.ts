@@ -592,6 +592,7 @@ export class TodayComponent implements OnInit {
         { name: 'Complete Job', icon: 'checkmark.circle.fill' },
         // { name: 'Set ETC', icon: 'clock.fill' },
         { name: 'Set Location', icon: 'mappin.and.ellipse' },
+        { name: 'Run PHT Bypass', icon: 'chart.bar.xaxis' },
       ],
     };
   mainMenu: Item =
@@ -1579,13 +1580,16 @@ export class TodayComponent implements OnInit {
         this.goOnjob(job);
         break;
       case 2:
-        this.runPHT(job);
+        this.runPHT(job, 'no');
         break;
       case 3:
         this.completeJob(job);
         break;
       case 4:
         this.updateLocation(job);
+        break;
+      case 5:
+        this.runPHT(job, 'yes');
         break;
     }
   }
@@ -1715,13 +1719,14 @@ export class TodayComponent implements OnInit {
     });
   }
 
-  public async runPHT(job: any) {
+  public async runPHT(job: any, bypass: string) {
     if (!job) {
       return;
     }
 
     this.todayService.runPHT(
       this.user?.userId,
+      bypass,
       {
         accountNumber: job?.accountNumber,
         workOrderNumber: job?.workOrderNumber,

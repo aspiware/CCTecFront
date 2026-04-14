@@ -6,6 +6,7 @@ import { catchError, map, take } from 'rxjs/operators';
 import { SubscriptionService } from '../shared/services/subscription.service';
 
 export const subscriptionGuard: CanActivateFn = (_route, state): boolean | Observable<boolean> => {
+  console.log('[subscriptionGuard] start:', state.url);
   const routerExtensions = inject(RouterExtensions);
   const subscriptionService = inject(SubscriptionService);
   const environment = { production: !!(globalThis as any).IS_PRODUCTION };
@@ -23,17 +24,21 @@ export const subscriptionGuard: CanActivateFn = (_route, state): boolean | Obser
   };
 
   if (subscriptionBypass) {
+    console.log('[subscriptionGuard] global bypass enabled');
     return true;
   }
 
   if (!environment.production && !enforceSubscription) {
+    console.log('[subscriptionGuard] skipping check in non-production mode');
     return true;
   }
 
   if (!subscriptionService.hasLocalStatus()) {
+    console.log('[subscriptionGuard] no local status, verifying with backend');
     return subscriptionService.verifyWithBackend().pipe(
       take(1),
       map((isActive) => {
+        console.log('[subscriptionGuard] backend verification result:', isActive);
         if (!isActive) {
           navigateToSubscription('inactive');
           return false;
@@ -41,6 +46,7 @@ export const subscriptionGuard: CanActivateFn = (_route, state): boolean | Obser
         return true;
       }),
       catchError(() => {
+        console.log('[subscriptionGuard] backend verification error');
         navigateToSubscription('verify-error');
         return of(false);
       })
@@ -48,13 +54,16 @@ export const subscriptionGuard: CanActivateFn = (_route, state): boolean | Obser
   }
 
   if (!subscriptionService.getLocalStatus()) {
+    console.log('[subscriptionGuard] local status inactive');
     navigateToSubscription('inactive');
     return false;
   }
 
   // Allow immediate access from cache, then enforce backend result.
+  console.log('[subscriptionGuard] local status active, verifying in background');
   subscriptionService.verifyWithBackend().pipe(take(1)).subscribe({
     next: (isActive) => {
+      console.log('[subscriptionGuard] background verification result:', isActive);
       if (!isActive) {
         routerExtensions.navigate(['/subscription'], {
           clearHistory: true,
@@ -63,6 +72,7 @@ export const subscriptionGuard: CanActivateFn = (_route, state): boolean | Obser
       }
     },
     error: () => {
+      console.log('[subscriptionGuard] background verification error');
       routerExtensions.navigate(['/subscription'], {
         clearHistory: true,
         queryParams: { reason: 'verify-error', redirect: state.url || '/tabs' },

@@ -11,6 +11,36 @@
       "watch": true
     },
     {
+      "name": "Launch on iOS Production",
+      "type": "nativescript",
+      "request": "launch",
+      "platform": "ios",
+      "appRoot": "${workspaceFolder}",
+      "sourceMaps": true,
+      "watch": true,
+      "tnsArgs": [
+        "--env.production",
+        "--env.enforceSubscription=true",
+        "--env.apiUrl=https://cctec.aspiware.com/v1"
+      ]
+    },
+    {
+      "name": "Launch on iOS Production Debug",
+      "type": "nativescript",
+      "request": "launch",
+      "platform": "ios",
+      "appRoot": "${workspaceFolder}",
+      "sourceMaps": true,
+      "watch": false,
+      "stopOnEntry": true,
+      "diagnosticLogging": true,
+      "tnsArgs": [
+        "--env.production",
+        "--env.enforceSubscription=true",
+        "--env.apiUrl=https://cctec.aspiware.com/v1"
+      ]
+    },
+    {
       "name": "Attach on iOS",
       "type": "nativescript",
       "request": "attach",
