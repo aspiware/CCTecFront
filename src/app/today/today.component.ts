@@ -588,11 +588,9 @@ export class TodayComponent implements OnInit {
       options: [
         { name: 'Go Enroute', icon: 'car.fill' },
         { name: 'Go On Job', icon: 'wrench.fill' },
-        { name: 'Run PHT', icon: 'chart.bar.xaxis' },
         { name: 'Complete Job', icon: 'checkmark.circle.fill' },
         // { name: 'Set ETC', icon: 'clock.fill' },
         { name: 'Set Location', icon: 'mappin.and.ellipse' },
-        { name: 'Run PHT Bypass', icon: 'chart.bar.xaxis' },
       ],
     };
   mainMenu: Item =
@@ -1580,16 +1578,10 @@ export class TodayComponent implements OnInit {
         this.goOnjob(job);
         break;
       case 2:
-        this.runPHT(job, 'no');
-        break;
-      case 3:
         this.completeJob(job);
         break;
-      case 4:
+      case 3:
         this.updateLocation(job);
-        break;
-      case 5:
-        this.runPHT(job, 'yes');
         break;
     }
   }

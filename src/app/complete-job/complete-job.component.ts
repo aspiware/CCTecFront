@@ -79,6 +79,14 @@ export class CompleteJobComponent implements OnInit {
         icon: 'note.text.badge.plus',
       },
       {
+        name: 'Run PHT',
+        icon: 'chart.bar.xaxis',
+        children: [
+          { name: 'Regular PHT', icon: 'chart.bar.xaxis' },
+          { name: 'Bypass PHT', icon: 'chart.bar.xaxis' },
+        ],
+      },
+      {
         name: 'Not At Home',
         icon: 'xmark.circle',
         destructive: true,
@@ -146,6 +154,20 @@ export class CompleteJobComponent implements OnInit {
   }
 
   public onSelectedMainMenu(event: MenuEvent, menuStatus?: any): void {
+    if (event?.index === 2) {
+      switch (event.path?.[1]) {
+        case 0:
+          this.runPHT('no');
+          break;
+        case 1:
+          this.runPHT('yes');
+          break;
+        default:
+          break;
+      }
+      return;
+    }
+
     switch (event?.index) {
       case 0:
         this.openSingleCompleteConfirm(menuStatus);
@@ -153,7 +175,7 @@ export class CompleteJobComponent implements OnInit {
       case 1:
         this.openAddNoteModal();
         break;
-      case 2:
+      case 3:
         this.openNotAtHomeConfirm(menuStatus);
         break;
       default:
@@ -515,6 +537,40 @@ export class CompleteJobComponent implements OnInit {
           okButtonText: 'OK',
         });
       },
+    });
+  }
+
+  public runPHT(bypass: string): void {
+    if (this.isLoading || !this.job || !this.userId) {
+      return;
+    }
+
+    this.setLoading(true);
+    this.todayService.runPHT(
+      this.userId,
+      bypass,
+      {
+        accountNumber: this.job?.accountNumber,
+        workOrderNumber: this.job?.workOrderNumber,
+        customerId: this.job?.customerId,
+        jobLat: this.job?.latitude,
+        jobLong: this.job?.longitude,
+      }
+    ).subscribe({
+      next: (res) => {
+        console.log('[CompleteJob][RunPHT] response:', res);
+      },
+      error: (error) => {
+        this.setLoading(false);
+        Dialogs.alert({
+          title: 'Run PHT',
+          message: String(error?.error?.message || error?.message || 'Unable to run PHT.'),
+          okButtonText: 'OK',
+        });
+      },
+      complete: () => {
+        this.setLoading(false);
+      }
     });
   }
 
