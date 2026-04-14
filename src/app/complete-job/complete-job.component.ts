@@ -78,6 +78,11 @@ export class CompleteJobComponent implements OnInit {
         name: 'Add note',
         icon: 'note.text.badge.plus',
       },
+      {
+        name: 'Not At Home',
+        icon: 'xmark.circle',
+        destructive: true,
+      },
     ],
   };
   get mainMenuOptions() {
@@ -147,6 +152,9 @@ export class CompleteJobComponent implements OnInit {
         break;
       case 1:
         this.openAddNoteModal();
+        break;
+      case 2:
+        this.openNotAtHomeConfirm(menuStatus);
         break;
       default:
         break;
@@ -402,6 +410,112 @@ export class CompleteJobComponent implements OnInit {
     }
 
     viewController.presentViewControllerAnimatedCompletion(alert, true, null);
+  }
+
+  public openNotAtHomeConfirm(anchor?: any): void {
+    if (!__IOS__) {
+      Dialogs.confirm({
+        title: 'Not At Home?',
+        message: 'Do you want to complete this job as Not At Home?',
+        okButtonText: 'Confirm',
+        cancelButtonText: 'Cancel',
+      }).then((confirmed) => {
+        if (confirmed) {
+          this.markNotAtHome();
+        }
+      });
+      return;
+    }
+
+    let viewController = Application.ios?.rootController;
+    while (
+      viewController &&
+      viewController.presentedViewController &&
+      !viewController.presentedViewController.beingDismissed
+    ) {
+      viewController = viewController.presentedViewController;
+    }
+
+    if (!viewController?.view) {
+      return;
+    }
+
+    const sourceView = (anchor as any)?.ios as UIView | undefined;
+    const alert = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
+      'Not At Home?',
+      'Do you want to complete this job as Not At Home?',
+      UIAlertControllerStyle.ActionSheet
+    );
+
+    alert.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Confirm', UIAlertActionStyle.Destructive, () => {
+        this.markNotAtHome();
+      })
+    );
+
+    alert.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, null)
+    );
+
+    const popover = alert.popoverPresentationController;
+    if (popover) {
+      popover.sourceView = sourceView || viewController.view;
+      popover.sourceRect = sourceView
+        ? sourceView.bounds
+        : CGRectMake(
+          viewController.view.bounds.size.width / 2,
+          viewController.view.bounds.size.height / 2,
+          1,
+          1
+        );
+      popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
+    }
+
+    viewController.presentViewControllerAnimatedCompletion(alert, true, null);
+  }
+
+  public markNotAtHome(): void {
+    if (this.isLoading || !this.job || !this.userId || !this.job?.workOrderNumber) {
+      return;
+    }
+
+    const resolutionCodes = [
+      {
+        code: 'U12',
+        description: 'CUST NOT HOME'
+      },
+    ];
+
+    const saveResolCodes$ = this.todayService.saveResolCodes(
+      this.userId,
+      this.job.workOrderNumber,
+      resolutionCodes
+    );
+
+    const completeJob$ = this.todayService.completeJob(
+      this.userId,
+      this.job.workOrderNumber
+    );
+
+    this.setLoading(true);
+    concat(saveResolCodes$, completeJob$).subscribe({
+      next: (res) => {
+        console.log('[NotAtHome] response:', res);
+      },
+      complete: () => {
+        this.setLoading(false);
+        this.modalParams.closeCallback({ refreshToday: true });
+      },
+      error: (error) => {
+        console.error('[NotAtHome] error:', error);
+        this.setLoading(false);
+        Dialogs.alert({
+          title: 'Not At Home',
+          message: String(error?.error?.message || error?.message || 'Unable to complete job.'),
+          okButtonText: 'OK',
+        });
+      },
+    });
   }
 
   public completeJob(): void {
