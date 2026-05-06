@@ -118,10 +118,11 @@ export class SummaryComponent implements OnInit, OnDestroy {
 
     this.summaryService.getWeekAverage(this.user.userId).subscribe({
       next: (res) => {
+        console.log('[SUMMARY]', 'weekAverage', res);
         this.weekAverage = res;
         const list = Array.isArray(res?.totalsPerDay) ? res.totalsPerDay : [];
         this.weekAverage.dailyAverage = this.calculateDailyAverage(list);
-        this.weekAverage.todayHourlyAverage = this.calculateTodayHourlyAverage(list);
+        this.weekAverage.todayHourlyAverage = Number(res?.todayHourlyAverage || 0);
         this.weekAverage.totalsPerDay = list;
         onDone();
       },
