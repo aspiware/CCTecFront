@@ -1751,35 +1751,76 @@ export class TodayComponent implements OnInit {
       return;
     }
 
+    const userId = this.user?.userId || 0;
     const latitude = job?.latitude;
     const longitude = job?.longitude;
 
     this.setJobMenuLoading(job, true);
-    console.log(latitude, longitude)
+    console.log(latitude, longitude);
 
-    this.todayService.updateLocation(
-      this.user?.userId,
-      {
-        techStatus: 'ONJOB',
-        motionStatus: 'stop',
-        latitude,
-        longitude,
-      }
-    ).subscribe({
-      next: (res) => {
-        console.log('updateLocation-RES', res);
-      }, error: (error) => {
-        this.setJobMenuLoading(job, false);
-        console.log(error);
+    this.todayService.getTechStatus(userId).subscribe({
+      next: (statusRes) => {
+        const freshTechStatus = String(statusRes?.data?.techStatus || '').toUpperCase();
+        const techStatus = freshTechStatus || this.lastKnownTechStatus || 'ONJOB';
 
-        alert({
-          title: 'Error',
-          message: String(error.error.message),
-          okButtonText: 'OK',
+        if (freshTechStatus) {
+          this.lastKnownTechStatus = freshTechStatus;
+        }
+
+        this.todayService.updateLocation(
+          userId,
+          {
+            techStatus,
+            motionStatus: 'stop',
+            latitude,
+            longitude,
+          }
+        ).subscribe({
+          next: (res) => {
+            console.log('updateLocation-RES', res);
+          }, error: (error) => {
+            this.setJobMenuLoading(job, false);
+            console.log(error);
+
+            alert({
+              title: 'Error',
+              message: String(error.error.message),
+              okButtonText: 'OK',
+            });
+          },
+          complete: () => {
+            this.setJobMenuLoading(job, false);
+          }
         });
       },
-      complete: () => {
-        this.setJobMenuLoading(job, false);
+      error: () => {
+        const techStatus = this.lastKnownTechStatus || 'ONJOB';
+
+        this.todayService.updateLocation(
+          userId,
+          {
+            techStatus,
+            motionStatus: 'stop',
+            latitude,
+            longitude,
+          }
+        ).subscribe({
+          next: (res) => {
+            console.log('updateLocation-RES', res);
+          }, error: (error) => {
+            this.setJobMenuLoading(job, false);
+            console.log(error);
+
+            alert({
+              title: 'Error',
+              message: String(error.error.message),
+              okButtonText: 'OK',
+            });
+          },
+          complete: () => {
+            this.setJobMenuLoading(job, false);
+          }
+        });
       }
     });
   }
