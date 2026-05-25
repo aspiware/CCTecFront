@@ -31,7 +31,20 @@ export const authGuard: CanActivateFn = (_route, state): boolean | UrlTree => {
     // Allow immediate access from local auth cache, then enforce backend active flag.
     usersService.findById(userId).pipe(take(1)).subscribe({
       next: (res) => {
+        const backendUser =
+          res?.data?.user ??
+          res?.data ??
+          res?.user ??
+          res;
+        const backendRoleId = backendUser?.roleId ?? backendUser?.role_id;
+
+        console.log('[AuthGuard] local user cache:', JSON.stringify(user));
         console.log('[AuthGuard] findUserById response:', JSON.stringify(res));
+        console.log('[AuthGuard] roleId check:', {
+          localRoleId: user?.roleId,
+          backendRoleId,
+          backendUser,
+        });
 
         const refreshedUser =
           res?.data?.user ??

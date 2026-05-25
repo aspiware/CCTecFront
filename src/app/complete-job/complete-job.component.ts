@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, ElementRef, NO_ERRORS_SCHEMA, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
 import { ModalDialogParams, ModalDialogService, NativeScriptCommonModule } from '@nativescript/angular';
-import { Dialogs, ScrollView, Utils } from '@nativescript/core';
+import { Application, Dialogs, ScrollView, Utils } from '@nativescript/core';
 import { getNumber } from '@nativescript/core/application-settings';
 import { SegmentedBarItem } from '@nativescript/core';
 import { ObservableArray } from '@nativescript/core';
@@ -10,7 +10,7 @@ import { Item } from '../shared/components/menu-button/item';
 import { MenuEvent } from '../shared/components/menu-button';
 import { SettingsService } from '../settings/settings.service';
 import { TodayService } from '../today/today.service';
-import { lastValueFrom } from 'rxjs';
+import { concat, lastValueFrom } from 'rxjs';
 import { AddNoteComponent } from '../add-note/add-note.component';
 
 @Component({
@@ -23,6 +23,7 @@ import { AddNoteComponent } from '../add-note/add-note.component';
 })
 export class CompleteJobComponent implements OnInit {
   public job: any;
+  public isReviewStep = false;
   private userId = 0;
   public notes = '';
   public isNotesFocused = false;
@@ -45,6 +46,8 @@ export class CompleteJobComponent implements OnInit {
   public allResolutionCodes: any[] = [];
   public resolutionSearch = '';
   public selectedJobType: any[] = [];
+  public reviewResolutionCodes = new ObservableArray<any>([]);
+  public selectedReviewCodeId: number | null = null;
   public selectedCustomTypeIds = new Set<number>();
   public selectedCustomTypeMap = new Map<number, any>();
   public customTypeEmptyMessage = '';
@@ -53,8 +56,11 @@ export class CompleteJobComponent implements OnInit {
   public changedDeviceIds: number[] = [];
   public settings: any;
   public customTotalPrice = 0;
+  private isSyncingReviewSelection = false;
   @ViewChild('listView', { static: false, read: RadListViewComponent })
   public listViewRef?: RadListViewComponent;
+  @ViewChild('reviewListView', { static: false, read: RadListViewComponent })
+  public reviewListViewRef?: RadListViewComponent;
   @ViewChild('upgradeDevicesListView', { static: false, read: RadListViewComponent })
   public upgradeDevicesListViewRef?: RadListViewComponent;
   @ViewChild('bodyScroll', { static: false })
@@ -66,22 +72,40 @@ export class CompleteJobComponent implements OnInit {
         name: 'Complete',
         icon: 'checkmark.circle',
         destructive: true,
-        confirm: {
-          title: 'Complete job?',
-          confirmText: 'Complete',
-          cancelText: 'Cancel',
-          presentation: 'anchor',
-        },
+        disabled: true,
       },
       {
         name: 'Add note',
         icon: 'note.text.badge.plus',
       },
+      {
+        name: 'PHT',
+        icon: 'chart.bar.xaxis',
+        children: [
+          { name: 'Check Status', icon: 'checkmark.circle' },
+          { name: 'Run Regular PHT', icon: 'chart.bar.xaxis' },
+          { name: 'Run Bypass PHT', icon: 'chart.bar.xaxis' },
+        ],
+      },
+      {
+        name: 'Not At Home',
+        icon: 'xmark.circle',
+        destructive: true,
+      },
     ],
   };
-
   get mainMenuOptions() {
-    return this.mainMenu.options;
+    return this.mainMenu.options.map((option, index) => {
+      if (index !== 0) {
+        return option;
+      }
+      return {
+        ...option,
+        disabled:
+          this.selectedJobType.length === 0 ||
+          (this.selectedJobType.length > 1 && !this.selectedReviewCodeId),
+      };
+    });
   }
 
   constructor(
@@ -130,13 +154,33 @@ export class CompleteJobComponent implements OnInit {
     }, 0);
   }
 
-  public onSelectedMainMenu(event: MenuEvent, _menuStatus?: any): void {
+  public onSelectedMainMenu(event: MenuEvent, menuStatus?: any): void {
+    if (event?.index === 2) {
+      switch (event.path?.[1]) {
+        case 0:
+          this.checkPHTStatus();
+          break;
+        case 1:
+          this.runPHT('no');
+          break;
+        case 2:
+          this.runPHT('yes');
+          break;
+        default:
+          break;
+      }
+      return;
+    }
+
     switch (event?.index) {
       case 0:
-        this.saveJobChanges();
+        this.openSingleCompleteConfirm(menuStatus);
         break;
       case 1:
         this.openAddNoteModal();
+        break;
+      case 3:
+        this.openNotAtHomeConfirm(menuStatus);
         break;
       default:
         break;
@@ -288,6 +332,342 @@ export class CompleteJobComponent implements OnInit {
     return selectedName.includes('upgrade') || currentName.includes('upgrade');
   }
 
+  public get shouldShowReviewStepButton(): boolean {
+    return !this.isReviewStep && this.selectedJobType.length > 1;
+  }
+
+  public get shouldShowSingleCompleteButton(): boolean {
+    return !this.isReviewStep && this.selectedJobType.length === 1;
+  }
+
+  public get completeConfirmationMessage(): string {
+    if (!this.selectedJobType.length) {
+      return '';
+    }
+    const primaryId = this.getPrimaryResolutionCodeId();
+
+    return this.getOrderedSelectedCodes()
+      .map((item) => {
+        const id = Number(item?.jobTypeId || item?.id || item?.resolCodeId || item?.codeId || 0);
+        const code = String(item?.code || '').trim();
+        const description = String(item?.description || '').trim();
+        const isPrimary = !!primaryId && id === primaryId;
+
+        const lines = [
+          code ? `Code: ${code}` : '',
+          description ? `Description: ${description}` : '',
+          isPrimary ? 'Primary' : '',
+        ].filter(Boolean);
+
+        return lines.join('\n');
+      })
+      .filter(Boolean)
+      .join('\n\n');
+  }
+
+  public openSingleCompleteConfirm(anchor?: any): void {
+    if (this.isReviewStep && !this.selectedReviewCodeId) {
+      Dialogs.alert({
+        title: 'Primary Resolution Code',
+        message: 'You must select one resolution code as primary before completing the job.',
+        okButtonText: 'OK',
+      });
+      return;
+    }
+
+    const message = this.completeConfirmationMessage || '';
+
+    if (!__IOS__) {
+      Dialogs.confirm({
+        title: 'Complete job?',
+        message,
+        okButtonText: 'Complete',
+        cancelButtonText: 'Cancel',
+      }).then((confirmed) => {
+        if (confirmed) {
+          this.completeJob();
+        }
+      });
+      return;
+    }
+
+    let viewController = Application.ios?.rootController;
+    while (
+      viewController &&
+      viewController.presentedViewController &&
+      !viewController.presentedViewController.beingDismissed
+    ) {
+      viewController = viewController.presentedViewController;
+    }
+
+    if (!viewController?.view) {
+      return;
+    }
+
+    const sourceView = (anchor as any)?.ios as UIView | undefined;
+    const alert = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
+      'Complete job?',
+      message,
+      UIAlertControllerStyle.ActionSheet
+    );
+
+    alert.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Complete', UIAlertActionStyle.Destructive, () => {
+        this.completeJob();
+      })
+    );
+
+    alert.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, null)
+    );
+
+    const popover = alert.popoverPresentationController;
+    if (popover) {
+      popover.sourceView = sourceView || viewController.view;
+      popover.sourceRect = sourceView
+        ? sourceView.bounds
+        : CGRectMake(
+          viewController.view.bounds.size.width / 2,
+          viewController.view.bounds.size.height / 2,
+          1,
+          1
+        );
+      popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
+    }
+
+    viewController.presentViewControllerAnimatedCompletion(alert, true, null);
+  }
+
+  public openNotAtHomeConfirm(anchor?: any): void {
+    if (!__IOS__) {
+      Dialogs.confirm({
+        title: 'Not At Home?',
+        message: 'Do you want to complete this job as Not At Home?',
+        okButtonText: 'Confirm',
+        cancelButtonText: 'Cancel',
+      }).then((confirmed) => {
+        if (confirmed) {
+          this.markNotAtHome();
+        }
+      });
+      return;
+    }
+
+    let viewController = Application.ios?.rootController;
+    while (
+      viewController &&
+      viewController.presentedViewController &&
+      !viewController.presentedViewController.beingDismissed
+    ) {
+      viewController = viewController.presentedViewController;
+    }
+
+    if (!viewController?.view) {
+      return;
+    }
+
+    const sourceView = (anchor as any)?.ios as UIView | undefined;
+    const alert = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
+      'Not At Home?',
+      'Do you want to complete this job as Not At Home?',
+      UIAlertControllerStyle.ActionSheet
+    );
+
+    alert.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Confirm', UIAlertActionStyle.Destructive, () => {
+        this.markNotAtHome();
+      })
+    );
+
+    alert.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, null)
+    );
+
+    const popover = alert.popoverPresentationController;
+    if (popover) {
+      popover.sourceView = sourceView || viewController.view;
+      popover.sourceRect = sourceView
+        ? sourceView.bounds
+        : CGRectMake(
+          viewController.view.bounds.size.width / 2,
+          viewController.view.bounds.size.height / 2,
+          1,
+          1
+        );
+      popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
+    }
+
+    viewController.presentViewControllerAnimatedCompletion(alert, true, null);
+  }
+
+  public markNotAtHome(): void {
+    if (this.isLoading || !this.job || !this.userId || !this.job?.workOrderNumber) {
+      return;
+    }
+
+    const resolutionCodes = [
+      {
+        code: 'U12',
+        description: 'CUST NOT HOME'
+      },
+    ];
+
+    const saveResolCodes$ = this.todayService.saveResolCodes(
+      this.userId,
+      this.job.workOrderNumber,
+      resolutionCodes
+    );
+
+    const completeJob$ = this.todayService.completeJob(
+      this.userId,
+      this.job.workOrderNumber
+    );
+
+    this.setLoading(true);
+    concat(saveResolCodes$, completeJob$).subscribe({
+      next: (res) => {
+        console.log('[NotAtHome] response:', res);
+      },
+      complete: () => {
+        this.setLoading(false);
+        this.modalParams.closeCallback({ refreshToday: true });
+      },
+      error: (error) => {
+        console.error('[NotAtHome] error:', error);
+        this.setLoading(false);
+        Dialogs.alert({
+          title: 'Not At Home',
+          message: String(error?.error?.message || error?.message || 'Unable to complete job.'),
+          okButtonText: 'OK',
+        });
+      },
+    });
+  }
+
+  public runPHT(bypass: string): void {
+    if (this.isLoading || !this.job || !this.userId) {
+      return;
+    }
+
+    this.setLoading(true);
+    this.todayService.runPHT(
+      this.userId,
+      bypass,
+      {
+        accountNumber: this.job?.accountNumber,
+        workOrderNumber: this.job?.workOrderNumber,
+        customerId: this.job?.customerId,
+        jobLat: this.job?.latitude,
+        jobLong: this.job?.longitude,
+      }
+    ).subscribe({
+      next: (res) => {
+        console.log('[CompleteJob][RunPHT] response:', res);
+      },
+      error: (error) => {
+        this.setLoading(false);
+        Dialogs.alert({
+          title: 'Run PHT',
+          message: String(error?.error?.message || error?.message || 'Unable to run PHT.'),
+          okButtonText: 'OK',
+        });
+      },
+      complete: () => {
+        this.setLoading(false);
+      }
+    });
+  }
+
+  public checkPHTStatus(): void {
+    if (this.isLoading || !this.job || !this.userId) {
+      return;
+    }
+
+    this.setLoading(true);
+    this.todayService.getPHTStatus(
+      this.userId,
+      'no',
+      {
+        accountNumber: this.job?.accountNumber,
+        workOrderNumber: this.job?.workOrderNumber,
+        customerId: this.job?.customerId,
+        jobLat: this.job?.latitude,
+        jobLong: this.job?.longitude,
+      }
+    ).subscribe({
+      next: (res) => {
+        console.log('[CompleteJob][CheckPHTStatus] response:', res);
+        const status = Array.isArray(res) ? res[0] : res;
+        const premiseHealthStatus = String(status?.premiseHealthStatus || 'N/A');
+        const rssiHealthStatus = String(status?.rssiHealthStatus || 'N/A');
+        const gpaHealthStatus = String(status?.gpaHealthStatus || 'N/A');
+        const mocaHealthStatus = String(status?.mocaHealthStatus || 'N/A');
+
+        Dialogs.alert({
+          title: 'PHT Status',
+          message:
+            `Premise Health Status: ${premiseHealthStatus}\n` +
+            `RSSI Health Status: ${rssiHealthStatus}\n` +
+            `GPA Health Status: ${gpaHealthStatus}\n` +
+            `MOCA Health Status: ${mocaHealthStatus}`,
+          okButtonText: 'OK',
+        });
+      },
+      error: (error) => {
+        this.setLoading(false);
+        Dialogs.alert({
+          title: 'Check Status',
+          message: String(error?.error?.message || error?.message || 'Unable to get PHT status.'),
+          okButtonText: 'OK',
+        });
+      },
+      complete: () => {
+        this.setLoading(false);
+      }
+    });
+  }
+
+  public completeJob(): void {
+    if (this.isLoading || !this.job || !this.userId || !this.job?.workOrderNumber) {
+      return;
+    }
+
+    const resolutionCodes = this.buildSelectedResolutionCodes();
+    console.log(resolutionCodes)
+
+    const saveResolCodes$ = this.todayService.saveResolCodes(
+      this.userId,
+      this.job.workOrderNumber,
+      resolutionCodes
+    );
+
+    const completeJob$ = this.todayService.completeJob(
+      this.userId,
+      this.job.workOrderNumber
+    );
+
+    this.setLoading(true);
+
+    concat(saveResolCodes$, completeJob$).subscribe({
+      next: (res) => {
+        console.log('[CompleteJob] response:', res);
+      },
+      complete: () => {
+        this.setLoading(false);
+        this.modalParams.closeCallback({ refreshToday: true });
+      },
+      error: (error) => {
+        console.error('[CompleteJob] error:', error);
+        this.setLoading(false);
+        Dialogs.alert({
+          title: 'Complete Job',
+          message: String(error?.error?.message || error?.message || 'Unable to complete job.'),
+          okButtonText: 'OK',
+        });
+      },
+    });
+  }
+
   public onUpgradeDevicesListLoaded(): void {
     this.tryRestoreUpgradeDevicesSelection();
   }
@@ -328,6 +708,77 @@ export class CompleteJobComponent implements OnInit {
     this.selectedJobType = this.selectedJobType.filter((entry) => Number(entry?.jobTypeId || entry?.id) !== id);
     this.selectedCustomTypeMap.delete(id);
     this.recalculateCustomTotal();
+  }
+
+  public onReviewItemSelected(args: ListViewEventData): void {
+    if (this.isSyncingReviewSelection) {
+      return;
+    }
+
+    const item = this.reviewResolutionCodes.getItem(args?.index);
+    const id = Number(item?.jobTypeId || item?.id);
+    this.selectedReviewCodeId = Number.isFinite(id) && id > 0 ? id : null;
+    this.syncSingleReviewSelection(args?.index);
+  }
+
+  public onReviewItemDeselected(args: ListViewEventData): void {
+    if (this.isSyncingReviewSelection) {
+      return;
+    }
+
+    const item = this.reviewResolutionCodes.getItem(args?.index);
+    const id = Number(item?.jobTypeId || item?.id);
+    if (Number.isFinite(id) && id > 0 && id === this.selectedReviewCodeId) {
+      this.selectedReviewCodeId = null;
+    }
+  }
+
+  public goBackStep(): void {
+    if (this.isReviewStep) {
+      this.isReviewStep = false;
+      this.cdr.detectChanges();
+      return;
+    }
+    this.closeModal();
+  }
+
+  public goNextStep(): void {
+    if (this.isReviewStep) {
+      if (!this.selectedReviewCodeId) {
+        Dialogs.alert({
+          title: 'Resolution Code',
+          message: 'Select one resolution code to continue.',
+          okButtonText: 'OK',
+        });
+        return;
+      }
+      this.completeJob();
+      return;
+    }
+
+    if (!this.selectedJobType.length) {
+      Dialogs.alert({
+        title: 'Resolution Codes',
+        message: 'Select at least one resolution code before continuing.',
+        okButtonText: 'OK',
+      });
+      return;
+    }
+
+    if (this.selectedJobType.length === 1) {
+      const firstSelected = this.selectedJobType[0];
+      const firstSelectedId = Number(firstSelected?.jobTypeId || firstSelected?.id);
+      this.selectedReviewCodeId = Number.isFinite(firstSelectedId) && firstSelectedId > 0 ? firstSelectedId : null;
+      this.completeJob();
+      return;
+    }
+
+    this.reviewResolutionCodes.splice(0);
+    this.reviewResolutionCodes.push(...this.selectedJobType);
+    this.selectedReviewCodeId = null;
+    this.isReviewStep = true;
+    this.cdr.detectChanges();
+    setTimeout(() => this.syncSingleReviewSelection(), 0);
   }
 
   private loadJobTypes(): void {
@@ -490,9 +941,22 @@ export class CompleteJobComponent implements OnInit {
     }, 0);
   }
 
-  private saveJobChanges(): void {
+  private saveJobChanges(resolutionCodes?: any[]): void {
     if (this.isLoading || !this.job) {
       return;
+    }
+
+    if (this.isReviewStep && this.selectedReviewCodeId) {
+      this.selectedCustomTypeIds = new Set([this.selectedReviewCodeId]);
+      this.selectedJobType = this.selectedJobType.filter((entry) => {
+        const id = Number(entry?.jobTypeId || entry?.id);
+        return id === this.selectedReviewCodeId;
+      });
+      this.selectedCustomTypeMap.forEach((_value, key) => {
+        if (key !== this.selectedReviewCodeId) {
+          this.selectedCustomTypeMap.delete(key);
+        }
+      });
     }
 
     const selectedType = this.jobTypes[this.selectedTypeIndex];
@@ -502,6 +966,7 @@ export class CompleteJobComponent implements OnInit {
 
     const updatedJob = {
       ...this.job,
+      resolutionCodes: Array.isArray(resolutionCodes) ? resolutionCodes : [],
       jobTypeId: nextJobTypeId || this.job?.jobTypeId,
       changedDeviceIds: [...this.changedDeviceIds],
       modems: String(this.modemsQty),
@@ -601,6 +1066,61 @@ export class CompleteJobComponent implements OnInit {
         });
       },
     });
+  }
+
+  private buildSelectedResolutionCodes(): any[] {
+    const selectedCodes = this.getOrderedSelectedCodes();
+    const primaryId = this.getPrimaryResolutionCodeId();
+
+    return selectedCodes.map((code) => {
+      const id = Number(code?.jobTypeId || code?.id || code?.resolCodeId || code?.codeId || 0);
+
+      return {
+        code: code?.code,
+        description: code?.description,
+        isPrimaryResolutionCode: !!primaryId && id === primaryId,
+        isDisablePreSelection: false,
+        isDisableOverride: false,
+      };
+    });
+  }
+
+  private getOrderedSelectedCodes(): any[] {
+    const selectedCodes = Array.isArray(this.selectedJobType) ? [...this.selectedJobType] : [];
+    const primaryId = this.getPrimaryResolutionCodeId();
+
+    if (!primaryId) {
+      return selectedCodes;
+    }
+
+    return selectedCodes.sort((left, right) => {
+      const leftId = Number(left?.jobTypeId || left?.id || left?.resolCodeId || left?.codeId || 0);
+      const rightId = Number(right?.jobTypeId || right?.id || right?.resolCodeId || right?.codeId || 0);
+
+      if (leftId === primaryId && rightId !== primaryId) {
+        return -1;
+      }
+      if (rightId === primaryId && leftId !== primaryId) {
+        return 1;
+      }
+      return 0;
+    });
+  }
+
+  private getPrimaryResolutionCodeId(): number | null {
+    if (this.isReviewStep && this.selectedReviewCodeId) {
+      return this.selectedReviewCodeId;
+    }
+
+    if (this.selectedJobType.length === 1) {
+      const firstSelected = this.selectedJobType[0];
+      const firstSelectedId = Number(
+        firstSelected?.jobTypeId || firstSelected?.id || firstSelected?.resolCodeId || firstSelected?.codeId || 0
+      );
+      return Number.isFinite(firstSelectedId) && firstSelectedId > 0 ? firstSelectedId : null;
+    }
+
+    return this.selectedReviewCodeId;
   }
 
   private applyViewState(update: () => void): void {
@@ -990,5 +1510,33 @@ export class CompleteJobComponent implements OnInit {
       return `sn:${serial}`;
     }
     return '';
+  }
+
+  private syncSingleReviewSelection(selectedIndex?: number): void {
+    const listView = this.reviewListViewRef?.listView;
+    if (!listView || !this.reviewResolutionCodes?.length) {
+      return;
+    }
+
+    let targetIndex = typeof selectedIndex === 'number' ? selectedIndex : -1;
+    if (targetIndex < 0 && this.selectedReviewCodeId) {
+      targetIndex = this.reviewResolutionCodes.findIndex((item: any) => {
+        const id = Number(item?.jobTypeId || item?.id);
+        return id === this.selectedReviewCodeId;
+      });
+    }
+
+    this.isSyncingReviewSelection = true;
+    try {
+      for (let i = 0; i < this.reviewResolutionCodes.length; i++) {
+        if (i === targetIndex) {
+          listView.selectItemAt(i);
+        } else {
+          listView.deselectItemAt(i);
+        }
+      }
+    } finally {
+      this.isSyncingReviewSelection = false;
+    }
   }
 }

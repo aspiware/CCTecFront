@@ -1711,6 +1711,40 @@ export class TodayComponent implements OnInit {
     });
   }
 
+  public async runPHT(job: any, bypass: string) {
+    if (!job) {
+      return;
+    }
+
+    this.todayService.runPHT(
+      this.user?.userId,
+      bypass,
+      {
+        accountNumber: job?.accountNumber,
+        workOrderNumber: job?.workOrderNumber,
+        customerId: job?.customerId,
+        jobLat: job?.latitude,
+        jobLong: job?.longitude,
+      }
+    ).subscribe({
+      next: (res) => {
+        console.log('RUNPHT-RES', res);
+      }, error: (error) => {
+        this.setJobMenuLoading(job, false);
+        console.log(error);
+
+        alert({
+          title: 'Error',
+          message: String(error.error.message),
+          okButtonText: 'OK',
+        });
+      },
+      complete: () => {
+        this.setJobMenuLoading(job, false);
+      }
+    });
+  }
+
   private getJobMenuKey(job: any): string {
     return String(job?.number || job?.workOrderNumber || job?.id || '');
   }

@@ -114,6 +114,10 @@
   text-align: center;
 }
 
+.review-step-message {
+  margin-bottom: 12;
+}
+
 .job-segment {
   margin-top: 8;
   margin-bottom: 8;
@@ -175,6 +179,27 @@ TextField.custom-tf-inline {
 
 .custom-types-list {
   height: 100%;
+}
+
+.footer-actions {
+  margin-top: 12;
+  column-gap: 10;
+  min-height: 44;
+}
+
+.footer-button {
+  height: 44;
+  border-radius: 12;
+  font-size: 15;
+  font-weight: 600;
+}
+
+.footer-button-secondary {
+  margin-right: 6;
+}
+
+.footer-button-primary {
+  margin-left: 6;
 }
 
 .custom-type-row {

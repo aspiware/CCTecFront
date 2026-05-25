@@ -25,7 +25,7 @@
         </StackLayout>
       </GridLayout>
 
-      <GridLayout row="1" rows="auto,auto,*" class="modal-body">
+      <GridLayout row="1" rows="auto,auto,*,auto" class="modal-body">
         <Label
           row="0"
           [text]="emptyMessage"
@@ -33,11 +33,13 @@
           class="empty-message">
         </Label>
 
-        <GridLayout row="1" columns="*" class="segment-row">
+        <GridLayout row="1" columns="*" class="segment-row" [visibility]="!isReviewStep ? 'visible' : 'collapse'">
           <GridLayout columns="*,auto" class="input-shell" width="100%">
             <TextField
               col="0"
               hint="Search resolution codes"
+              autocorrect="false"
+              autocapitalizationType="none"
               [text]="resolutionSearch"
               (textChange)="onResolutionSearchChange($event.value)"
               class="custom-tf-inline">
@@ -52,13 +54,15 @@
           </GridLayout>
         </GridLayout>
 
-        <GridLayout row="2" class="custom-list-wrap">
+        <GridLayout row="2" rows="auto,*" class="custom-list-wrap" [visibility]="!isReviewStep ? 'visible' : 'collapse'">
           <Label
+            row="0"
             class="empty-message"
             [text]="customTypeEmptyMessage"
             [visibility]="(!isLoadingTypes && !jobUserTypesList.length && customTypeEmptyMessage) ? 'visible' : 'collapse'">
           </Label>
           <RadListView
+            row="1"
             #listView
             (loaded)="onListLoaded()"
             (itemSelected)="onItemSelected($event)"
@@ -70,14 +74,80 @@
             <ng-template tkListItemTemplate let-item="item">
               <GridLayout rows="auto" columns="*, auto" style="margin-left: 40; margin-right: 20; margin-top: 6; margin-bottom: 6;">
                 <GridLayout orientation="horizontal" class="item-bag" col="0" columns="*, auto">
-                  <StackLayout orientation="horizontal" col="0">
-                    <Label [text]="item.code"></Label>
-                    <Label [text]="item.description"></Label>
-                  </StackLayout>
+                  <GridLayout col="0" columns="70,*">
+                    <Label col="0" [text]="item.code" horizontalAlignment="left" style="margin-right: 10;"></Label>
+                    <Label col="1" [text]="item.description" horizontalAlignment="right" textAlignment="right"></Label>
+                  </GridLayout>
                 </GridLayout>
               </GridLayout>
             </ng-template>
           </RadListView>
+        </GridLayout>
+
+        <GridLayout row="2" rows="auto,*" class="custom-list-wrap" [visibility]="isReviewStep ? 'visible' : 'collapse'">
+          <Label
+            row="0"
+            class="empty-message review-step-message"
+            text="Select one resolution code as primary."
+            [visibility]="reviewResolutionCodes.length ? 'visible' : 'collapse'">
+          </Label>
+          <RadListView
+            row="1"
+            #reviewListView
+            (itemSelected)="onReviewItemSelected($event)"
+            (itemDeselected)="onReviewItemDeselected($event)"
+            [items]="reviewResolutionCodes"
+            selectionBehavior="Press"
+            multipleSelection="true"
+            class="custom-types-list">
+            <ng-template tkListItemTemplate let-item="item">
+              <GridLayout rows="auto" columns="*, auto" style="margin-left: 40; margin-right: 20; margin-top: 6; margin-bottom: 6;">
+                <GridLayout orientation="horizontal" class="item-bag" col="0" columns="*, auto">
+                  <GridLayout col="0" columns="70,*">
+                    <Label col="0" [text]="item.code" horizontalAlignment="left" style="margin-right: 10;"></Label>
+                    <Label col="1" [text]="item.description" horizontalAlignment="right" textAlignment="right"></Label>
+                  </GridLayout>
+                </GridLayout>
+              </GridLayout>
+            </ng-template>
+          </RadListView>
+        </GridLayout>
+
+        <GridLayout
+          row="3"
+          rows="auto,auto"
+          class="footer-actions">
+          <GridLayout
+            row="0"
+            columns="*,*">
+          <Button
+            col="0"
+            text="Back"
+            class="footer-button footer-button-secondary"
+            [visibility]="isReviewStep ? 'visible' : 'collapse'"
+            (tap)="goBackStep()"></Button>
+          <Button
+            col="1"
+            text="Next"
+            class="footer-button footer-button-primary"
+            [visibility]="shouldShowReviewStepButton ? 'visible' : 'collapse'"
+            (tap)="goNextStep()"></Button>
+          <Button
+            col="1"
+            [visibility]="shouldShowSingleCompleteButton ? 'visible' : 'collapse'"
+            class="footer-button footer-button-primary"
+            text="Complete"
+            (tap)="openSingleCompleteConfirm(singleCompleteBtn)"
+            #singleCompleteBtn>
+          </Button>
+          <Button
+            col="1"
+            text="Complete"
+            class="footer-button footer-button-primary"
+            [visibility]="isReviewStep ? 'visible' : 'collapse'"
+            (tap)="openSingleCompleteConfirm(reviewCompleteBtn)"
+            #reviewCompleteBtn></Button>
+          </GridLayout>
         </GridLayout>
       </GridLayout>
     </GridLayout>
