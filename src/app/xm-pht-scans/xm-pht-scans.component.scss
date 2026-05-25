@@ -56,6 +56,12 @@
   background-color: #eef4ff;
 }
 
+.signal-loss-hint {
+  margin-top: 8;
+  font-size: 12;
+  color: #5f7091;
+}
+
 .xm-pht-scans-stepper-card-left {
   margin-right: 8;
 }
@@ -119,6 +125,10 @@
 
 .xm-pht-scans-root.theme-dark .xm-pht-scans-stepper-card {
   background-color: #111b2a;
+}
+
+.xm-pht-scans-root.theme-dark .signal-loss-hint {
+  color: #91a5c9;
 }
 
 .xm-pht-scans-root.theme-dark .distance-badge {

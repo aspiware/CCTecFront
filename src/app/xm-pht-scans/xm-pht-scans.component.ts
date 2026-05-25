@@ -38,6 +38,8 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
   private static readonly DEFAULT_DOWNSTREAM = 8;
   private static readonly DEFAULT_TAP_PORT = 2;
   private static readonly DEFAULT_TAP_VALUE = 4;
+  private static readonly ESTIMATED_US_LOSS_PER_100FT = 1.5;
+  private static readonly ESTIMATED_DS_LOSS_PER_100FT = 6;
 
   public isDarkTheme = Application.systemAppearance() === 'dark';
   public mapLat = XmPhtScansComponent.DEFAULT_LAT;
@@ -52,6 +54,7 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
   public downstreamValue = XmPhtScansComponent.DEFAULT_DOWNSTREAM;
   public isSending = false;
   public tapGroundBlockDistanceText = '';
+  public tapGroundBlockDistanceFeet: number | null = null;
   public scanLocationList = [
     'Tap',
     'Ground Block',
@@ -256,6 +259,22 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
 
   public onDownstreamValueChange(value: number): void {
     this.downstreamValue = value;
+  }
+
+  public get estimatedUpstreamLossText(): string {
+    if (this.tapGroundBlockDistanceFeet === null) {
+      return 'Est. US loss: add Tap and Ground Block points';
+    }
+
+    return `Est. US loss: ~${Math.round(this.calculateEstimatedUpstreamLoss(this.tapGroundBlockDistanceFeet))} dB`;
+  }
+
+  public get estimatedDownstreamLossText(): string {
+    if (this.tapGroundBlockDistanceFeet === null) {
+      return 'Est. DS loss: add Tap and Ground Block points';
+    }
+
+    return `Est. DS loss: ~${Math.round(this.calculateEstimatedDownstreamLoss(this.tapGroundBlockDistanceFeet))} dB`;
   }
 
   public async sendPHT(): Promise<void> {
@@ -642,17 +661,17 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
 
     if (!tapMarker || !groundBlockMarker) {
       this.tapGroundBlockDistanceText = '';
+      this.tapGroundBlockDistanceFeet = null;
       return;
     }
 
-    this.tapGroundBlockDistanceText = this.formatDistanceLabel(
-      this.calculateDistanceInFeet(
-        tapMarker.lat,
-        tapMarker.lng,
-        groundBlockMarker.lat,
-        groundBlockMarker.lng
-      )
+    this.tapGroundBlockDistanceFeet = this.calculateDistanceInFeet(
+      tapMarker.lat,
+      tapMarker.lng,
+      groundBlockMarker.lat,
+      groundBlockMarker.lng
     );
+    this.tapGroundBlockDistanceText = this.formatDistanceLabel(this.tapGroundBlockDistanceFeet);
   }
 
   private calculateDistanceInFeet(
@@ -683,6 +702,14 @@ export class XmPhtScansComponent implements OnInit, OnDestroy {
     }
 
     return `TAP ↔ GB: ${distanceFeet.toFixed(1)} ft`;
+  }
+
+  private calculateEstimatedUpstreamLoss(distanceFeet: number): number {
+    return (distanceFeet / 100) * XmPhtScansComponent.ESTIMATED_US_LOSS_PER_100FT;
+  }
+
+  private calculateEstimatedDownstreamLoss(distanceFeet: number): number {
+    return (distanceFeet / 100) * XmPhtScansComponent.ESTIMATED_DS_LOSS_PER_100FT;
   }
 
   private setPreferredCameraTargetFromPersistedMarkers(

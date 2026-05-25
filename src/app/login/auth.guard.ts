@@ -1,10 +1,12 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router, UrlTree } from '@angular/router';
 import { RouterExtensions } from '@nativescript/angular';
+import { setNumber, setString } from '@nativescript/core/application-settings';
 import { ConfigService } from '../shared/services/config.service';
 import { UsersService } from '../shared/services/users.service';
 import { SettingsService } from '../settings/settings.service';
 import { take } from 'rxjs/operators';
+import { UserModel } from '../shared/models/user.model';
 
 export const authGuard: CanActivateFn = (_route, state): boolean | UrlTree => {
   const router = inject(Router);
@@ -30,6 +32,21 @@ export const authGuard: CanActivateFn = (_route, state): boolean | UrlTree => {
     usersService.findById(userId).pipe(take(1)).subscribe({
       next: (res) => {
         console.log('[AuthGuard] findUserById response:', JSON.stringify(res));
+
+        const refreshedUser =
+          res?.data?.user ??
+          res?.user ??
+          res?.data ??
+          res;
+
+        if (refreshedUser?.userId) {
+          setString('user', JSON.stringify(refreshedUser));
+          usersService.setUser(refreshedUser as UserModel);
+          setNumber('userId', Number(refreshedUser.userId || 0));
+          setNumber('roleId', Number(refreshedUser.roleId || 0));
+          setNumber('settingId', Number(refreshedUser.settingId || 0));
+          setString('bp', String(refreshedUser.bp || ''));
+        }
 
         const activeFlag =
           res?.active ??

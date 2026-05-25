@@ -67,6 +67,10 @@
           [step]="1"
           (valueChange)="onUpstreamValueChange($event)">
         </app-quantity-stepper>
+        <Label
+          [text]="estimatedUpstreamLossText"
+          class="signal-loss-hint">
+        </Label>
       </StackLayout>
 
       <StackLayout col="1" class="xm-pht-scans-stepper-card">
@@ -78,6 +82,10 @@
           [step]="1"
           (valueChange)="onDownstreamValueChange($event)">
         </app-quantity-stepper>
+        <Label
+          [text]="estimatedDownstreamLossText"
+          class="signal-loss-hint">
+        </Label>
       </StackLayout>
     </GridLayout>
 
