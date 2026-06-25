@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnInit, ViewContainerRef } from '@angular/core';
 import { ModalDialogService, NativeScriptCommonModule, RouterExtensions } from '@nativescript/angular';
-import { Application, ObservableArray, Screen, Utils } from '@nativescript/core';
+import { Application, Dialogs, ObservableArray, Screen, Utils } from '@nativescript/core';
 import { NativeScriptUIListViewModule } from 'nativescript-ui-listview/angular';
 import { MenuEvent } from '~/app/shared/components/menu-button/common';
 import { Item } from '~/app/shared/components/menu-button/item';
@@ -1138,15 +1138,25 @@ export class TodayComponent implements OnInit {
       },
     };
 
-    this.modalService.showModal(RemoveDevicesComponent, options).then((result: any) => {
-      if (result?.navigateToActivateService) {
-        setTimeout(() => {
-          this.goToActivateService(result?.job || job);
-        }, 0);
-        return;
-      }
-      this.clearJobActionTap(job, 'remove-devices');
-    });
+    this.modalService.showModal(RemoveDevicesComponent, options)
+      .then((result: any) => {
+        if (result?.navigateToActivateService) {
+          setTimeout(() => {
+            this.goToActivateService(result?.job || job);
+          }, 0);
+          return;
+        }
+        this.clearJobActionTap(job, 'remove-devices');
+      })
+      .catch((error: any) => {
+        console.error('[Today] Failed to open remove devices modal', error);
+        this.clearJobActionTap(job, 'remove-devices');
+        Dialogs.alert({
+          title: 'Remove Devices',
+          message: String(error?.message || error || 'Failed to open remove devices modal.'),
+          okButtonText: 'OK',
+        });
+      });
   }
 
   public goToActivateService(job?: any): void {
