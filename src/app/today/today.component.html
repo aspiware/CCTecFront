@@ -210,6 +210,11 @@
                   (tap)="markJobActionTap(item, 'customer', 0); showCustomerInfo(item)">
                 </MenuButton>
 
+                <MenuButton *ngIf="!isDemoMode" class="fas job-action-button" [class.job-action-tapped]="isJobActionTapped(item, 'job-history')"
+                  style="font-size: 14px; height: 70px; width: 100px; margin-right: 6" text="&#xff682;"
+                  (tap)="markJobActionTap(item, 'job-history'); showJobHistoryModal(item)">
+                </MenuButton>
+
                 <MenuButton *ngIf="!isDemoMode" class="fas job-action-button" [class.job-action-tapped]="isJobActionTapped(item, 'devices')"
                   style="font-size: 14px; height: 70px; width: 100px; margin-right: 6" text="&#xf26c;"
                   (tap)="markJobActionTap(item, 'devices'); showDevicesModal(item)">
