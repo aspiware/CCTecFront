@@ -1539,6 +1539,15 @@ export class TodayComponent implements OnInit {
     }
   }
 
+  public showJobStatusInfo(args: any, statusType: 'survey-sent' | 'mobile-link-sent'): void {
+    if (statusType === 'survey-sent') {
+      this.showMenu(args, 'Survey SMS was already sent for this job.', 'Survey SMS');
+      return;
+    }
+
+    this.showMenu(args, 'Mobile link was already shared for this job.', 'Share Mobile Link');
+  }
+
   private getCopyMenuTitle(type?: string): string {
     if (!type) {
       return 'Copy';
