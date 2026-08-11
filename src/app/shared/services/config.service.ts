@@ -36,6 +36,7 @@ interface JobLocations {
   tap?: ITap;
   gb?: IGB;
   surveySent?: boolean;
+  mobileLinkSent?: boolean;
 }
 
 interface IXmPhtScanMarker {
@@ -196,6 +197,17 @@ export class ConfigService {
     this.saveLocations(locations);
   }
 
+  public setMobileLinkSent(jobNumber: string): void {
+    const locations = this.getStoredLocations();
+
+    if (!locations[jobNumber]) {
+      locations[jobNumber] = {};
+    }
+
+    locations[jobNumber].mobileLinkSent = true;
+    this.saveLocations(locations);
+  }
+
   public setScansSent(jobNumber: string, type: 'tap' | 'gb', upstream: number, downstream: number, tapValue?: number, tapPort?: number): void {
     const locations = this.getStoredLocations();
 
@@ -260,6 +272,12 @@ export class ConfigService {
     const locations = this.getStoredLocations();
 
     return locations[jobNumber]?.surveySent;
+  }
+
+  public getMobileLinkSent(jobNumber: string): boolean | undefined {
+    const locations = this.getStoredLocations();
+
+    return locations[jobNumber]?.mobileLinkSent;
   }
 
   public getStarredJobs(): { [jobNumber: string]: any } {

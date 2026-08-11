@@ -667,6 +667,9 @@ export class TodayComponent implements OnInit {
       if (event?.type === 'surveySent' && event?.jobNumber) {
         this.applySurveySentFlag(String(event.jobNumber));
       }
+      if (event?.type === 'mobileLinkSent' && event?.jobNumber) {
+        this.applyMobileLinkSentFlag(String(event.jobNumber));
+      }
     });
 
     if (this.isDemoUser()) {
@@ -706,6 +709,7 @@ export class TodayComponent implements OnInit {
       map((res) =>
         res.map((job) => {
           const surveySent = this.configService.getSurveySent(job.number);
+          const mobileLinkSent = this.configService.getMobileLinkSent(job.number);
 
           const isStarred = this.configService.isJobStarred(job.number);
           if (isStarred) {
@@ -714,6 +718,7 @@ export class TodayComponent implements OnInit {
           return {
             ...job,
             sms_survey_sent: surveySent ? true : false,
+            mobile_link_sent: mobileLinkSent ? true : false,
             isStarred,
           };
         })
@@ -782,6 +787,7 @@ export class TodayComponent implements OnInit {
   private applyJobsForDisplay(jobs: any[]): void {
     const displayJobs = (Array.isArray(jobs) ? jobs : []).map((job) => {
       const surveySent = this.configService.getSurveySent(job.number);
+      const mobileLinkSent = this.configService.getMobileLinkSent(job.number);
       const isStarred = this.configService.isJobStarred(job.number);
       if (isStarred) {
         this.configService.setStarredJob(job, true);
@@ -789,6 +795,7 @@ export class TodayComponent implements OnInit {
       return {
         ...job,
         sms_survey_sent: surveySent ? true : false,
+        mobile_link_sent: mobileLinkSent ? true : false,
         isStarred,
       };
     });
@@ -1060,7 +1067,9 @@ export class TodayComponent implements OnInit {
 
     this.modalService.showModal(CustomerInfoComponent, options).then(() => {
       const surveySent = this.configService.getSurveySent(job?.number);
+      const mobileLinkSent = this.configService.getMobileLinkSent(job?.number);
       job.sms_survey_sent = !!surveySent;
+      job.mobile_link_sent = !!mobileLinkSent;
       this.cdr.detectChanges();
       this.clearJobActionTap(job, 'customer');
     });
@@ -1246,6 +1255,19 @@ export class TodayComponent implements OnInit {
       const item = this.jobList.getItem(i);
       if (String(item?.number || '') === jobNumber) {
         item.sms_survey_sent = true;
+      }
+    }
+    this.cdr.detectChanges();
+  }
+
+  private applyMobileLinkSentFlag(jobNumber: string): void {
+    if (!this.jobList?.length) {
+      return;
+    }
+    for (let i = 0; i < this.jobList.length; i++) {
+      const item = this.jobList.getItem(i);
+      if (String(item?.number || '') === jobNumber) {
+        item.mobile_link_sent = true;
       }
     }
     this.cdr.detectChanges();

@@ -520,6 +520,7 @@ export class CustomerInfoComponent implements OnInit {
 
     this.todayService.shareMobileLink(this.userId, accountNumber, workOrderNumber, emails, phoneNumbers).subscribe({
       next: () => {
+        this.markMobileLinkSent();
         Dialogs.alert({
           title: 'Share Mobile Link',
           message: 'Mobile link shared successfully.',
@@ -545,5 +546,15 @@ export class CustomerInfoComponent implements OnInit {
       this.isSharingMobileLink = false;
       this.cdr.detectChanges();
     }, 0);
+  }
+
+  private markMobileLinkSent(): void {
+    const jobNumber = String(this.job?.number || '').trim();
+    if (!jobNumber) {
+      return;
+    }
+    this.configService.setMobileLinkSent(jobNumber);
+    this.configService.sendData({ type: 'mobileLinkSent', jobNumber });
+    this.job.mobile_link_sent = true;
   }
 }

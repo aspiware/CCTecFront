@@ -157,6 +157,7 @@
               <StackLayout row="0" col="0" horizontalAlignment="left" orientation="horizontal" style="padding: 0"
                 backgroundColor="">
                 <Label *ngIf="item.sms_survey_sent" class="fas" text="&#xf7cd;" style="font-size: 18px"></Label>
+                <Label *ngIf="item.mobile_link_sent" class="fas" text="&#xf0c1;" style="font-size: 16px; margin-left: 6;"></Label>
 
                 <!-- <TimePicker *ngIf="item.status != 'CLOSED'" #etcTimePicker width="100" minuteInterval="5"
                   horizontalAlignment="left" marginLeft="0" (timeChange)="onTimeChanged($event, item)">

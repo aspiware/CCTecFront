@@ -699,7 +699,9 @@ export class ExpensesComponent implements OnInit, OnDestroy {
 
     this.modalService.showModal(CustomerInfoComponent, options).then(() => {
       const surveySent = this.configService.getSurveySent(job?.number);
+      const mobileLinkSent = this.configService.getMobileLinkSent(job?.number);
       job.sms_survey_sent = !!surveySent;
+      job.mobile_link_sent = !!mobileLinkSent;
       this.cdr.detectChanges();
       this.clearJobActionTap(job, 'customer');
     });
