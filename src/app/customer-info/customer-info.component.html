@@ -11,6 +11,7 @@
             [useSFIcon]="true"
             style="background-color: transparent; height: 24; width: 35;"
             [sfIconName]="'ellipsis.circle'"
+            [showSpinner]="isSharingMobileLink"
             [options]="mainMenu.options"
             (selected)="onSelectedMainMenu($event)">
           </MenuButton>

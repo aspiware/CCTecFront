@@ -1,4 +1,4 @@
-import { Component, NO_ERRORS_SCHEMA, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnInit } from '@angular/core';
 import { TitleCasePipe } from '@angular/common';
 import { ModalDialogParams, NativeScriptCommonModule } from '@nativescript/angular';
 import { Item } from '../shared/components/menu-button/item';
@@ -41,7 +41,8 @@ export class CustomerInfoComponent implements OnInit {
     private settingsService: SettingsService,
     private usersService: UsersService,
     private configService: ConfigService,
-    private todayService: TodayService
+    private todayService: TodayService,
+    private cdr: ChangeDetectorRef
   ) {
     this.job = this.modalParams.context;
     console.log('[CustomerInfoComponent]JOB', this.job);
@@ -526,7 +527,7 @@ export class CustomerInfoComponent implements OnInit {
         });
       },
       error: (error) => {
-        this.isSharingMobileLink = false;
+        this.finishSharingMobileLink();
         Dialogs.alert({
           title: 'Share Mobile Link',
           message: String(error?.error?.message || error?.message || 'Failed to share mobile link.'),
@@ -534,8 +535,15 @@ export class CustomerInfoComponent implements OnInit {
         });
       },
       complete: () => {
-        this.isSharingMobileLink = false;
+        this.finishSharingMobileLink();
       },
     });
+  }
+
+  private finishSharingMobileLink(): void {
+    setTimeout(() => {
+      this.isSharingMobileLink = false;
+      this.cdr.detectChanges();
+    }, 0);
   }
 }
