@@ -24,14 +24,8 @@
         </StackLayout>
       </GridLayout>
 
-      <GridLayout row="1" rows="auto,*,auto" class="history-list-wrap">
-        <StackLayout row="0" class="history-summary">
-          <Label class="history-job-title" [text]="job?.jobDescription || 'Job'"></Label>
-          <Label class="history-job-meta" [text]="'Account#: ' + (job?.accountNumber || 'n/a')"></Label>
-          <Label class="history-job-meta" [text]="'WO#: ' + (job?.workOrderNumber || 'n/a')"></Label>
-        </StackLayout>
-
-        <GridLayout row="1">
+      <GridLayout row="1" rows="*" class="history-list-wrap">
+        <GridLayout row="0">
           <ActivityIndicator
             *ngIf="isLoading"
             [busy]="isLoading"
@@ -69,10 +63,6 @@
               </GridLayout>
             </StackLayout>
           </ScrollView>
-        </GridLayout>
-
-        <GridLayout row="2" columns="*" class="footer-row">
-          <Button text="Close" class="close-button" (tap)="closeWithoutSave()"></Button>
         </GridLayout>
       </GridLayout>
     </GridLayout>
