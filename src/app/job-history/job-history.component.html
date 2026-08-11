@@ -46,16 +46,15 @@
             <Label class="empty-message" text="No history found for this job."></Label>
           </StackLayout>
 
-          <RadListView
-            *ngIf="!isLoading && jobHistoryList.length"
-            [items]="jobHistoryList"
-            selectionBehavior="None"
-            class="custom-types-list">
-            <ng-template tkListItemTemplate let-item="item">
-              <GridLayout rows="auto" columns="*"
+          <ScrollView *ngIf="!isLoading && jobHistoryList.length" class="custom-types-list">
+            <StackLayout>
+              <GridLayout
+                *ngFor="let item of jobHistoryList"
+                rows="auto"
+                columns="*"
                 style="margin-left: 10; margin-right: 10; margin-top: 6; margin-bottom: 6;">
-                <StackLayout class="item-bag history-card">
-                  <GridLayout columns="*,auto" class="history-card-header">
+                <GridLayout rows="auto,auto,auto" class="item-bag history-card">
+                  <GridLayout row="0" columns="*,auto" class="history-card-header">
                     <Label col="0" class="history-card-title" [text]="getHistoryTitle(item)"></Label>
                     <Label
                       col="1"
@@ -64,12 +63,12 @@
                     </Label>
                   </GridLayout>
 
-                  <Label class="history-author" [text]="getHistoryAuthor(item)"></Label>
-                  <Label *ngIf="getHistoryComment(item)" class="history-notes" [text]="getHistoryComment(item)"></Label>
-                </StackLayout>
+                  <Label row="1" class="history-author" [text]="getHistoryAuthor(item)"></Label>
+                  <Label row="2" *ngIf="getHistoryComment(item)" class="history-notes" [text]="getHistoryComment(item)" textWrap="true"></Label>
+                </GridLayout>
               </GridLayout>
-            </ng-template>
-          </RadListView>
+            </StackLayout>
+          </ScrollView>
         </GridLayout>
 
         <GridLayout row="2" columns="*" class="footer-row">
