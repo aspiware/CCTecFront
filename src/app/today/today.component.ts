@@ -1541,11 +1541,223 @@ export class TodayComponent implements OnInit {
 
   public showJobStatusInfo(args: any, statusType: 'survey-sent' | 'mobile-link-sent'): void {
     if (statusType === 'survey-sent') {
-      this.showMenu(args, 'Survey SMS was already sent for this job.', 'Survey SMS');
+      this.showSurveyStatusMenu(args);
       return;
     }
 
-    this.showMenu(args, 'Mobile link was already shared for this job.', 'Share Mobile Link');
+    this.showMobileLinkStatusMenu(args);
+  }
+
+  private showSurveyStatusMenu(args: any): void {
+    if (args && typeof args.cancel === 'boolean') {
+      args.cancel = true;
+    }
+
+    const now = Date.now();
+    if (this.isCopyMenuOpen || now - this.lastCopyMenuTs < 500) {
+      return;
+    }
+
+    if (!__IOS__) {
+      return;
+    }
+
+    this.isCopyMenuOpen = true;
+    this.lastCopyMenuTs = now;
+
+    let viewController = Application.ios?.rootController;
+    while (
+      viewController &&
+      viewController.presentedViewController &&
+      !viewController.presentedViewController.beingDismissed
+    ) {
+      viewController = viewController.presentedViewController;
+    }
+    if (!viewController?.view) {
+      this.isCopyMenuOpen = false;
+      return;
+    }
+
+    const sourceView = args?.object?.ios as UIView | undefined;
+    const alert = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
+      'Survey SMS',
+      'Survey SMS was already sent for this job.',
+      UIAlertControllerStyle.ActionSheet
+    );
+
+    alert.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, () => {
+        this.isCopyMenuOpen = false;
+      })
+    );
+
+    const popover = alert.popoverPresentationController;
+    if (popover) {
+      popover.sourceView = sourceView || viewController.view;
+      popover.sourceRect = sourceView
+        ? sourceView.bounds
+        : CGRectMake(
+            viewController.view.bounds.size.width / 2,
+            viewController.view.bounds.size.height / 2,
+            1,
+            1
+          );
+      popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
+    }
+
+    viewController.presentViewControllerAnimatedCompletion(alert, true, null);
+  }
+
+  private showMobileLinkStatusMenu(args: any): void {
+    if (args && typeof args.cancel === 'boolean') {
+      args.cancel = true;
+    }
+
+    const now = Date.now();
+    if (this.isCopyMenuOpen || now - this.lastCopyMenuTs < 500) {
+      return;
+    }
+
+    if (!__IOS__) {
+      return;
+    }
+
+    this.isCopyMenuOpen = true;
+    this.lastCopyMenuTs = now;
+
+    let viewController = Application.ios?.rootController;
+    while (
+      viewController &&
+      viewController.presentedViewController &&
+      !viewController.presentedViewController.beingDismissed
+    ) {
+      viewController = viewController.presentedViewController;
+    }
+    if (!viewController?.view) {
+      this.isCopyMenuOpen = false;
+      return;
+    }
+
+    const sourceView = args?.object?.ios as UIView | undefined;
+    const alert = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
+      'Share Mobile Link',
+      'Mobile link was already shared for this job.',
+      UIAlertControllerStyle.ActionSheet
+    );
+
+    const resendAction = UIAlertAction.actionWithTitleStyleHandler(
+      'Resend',
+      UIAlertActionStyle.Default,
+      () => {
+        this.isCopyMenuOpen = false;
+        const job = args?.object?.bindingContext;
+        this.resendMobileLink(job);
+      }
+    );
+    resendAction.setValueForKey(UIImage.systemImageNamed('link'), 'image');
+    alert.addAction(resendAction);
+
+    alert.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, () => {
+        this.isCopyMenuOpen = false;
+      })
+    );
+
+    const popover = alert.popoverPresentationController;
+    if (popover) {
+      popover.sourceView = sourceView || viewController.view;
+      popover.sourceRect = sourceView
+        ? sourceView.bounds
+        : CGRectMake(
+            viewController.view.bounds.size.width / 2,
+            viewController.view.bounds.size.height / 2,
+            1,
+            1
+          );
+      popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
+    }
+
+    viewController.presentViewControllerAnimatedCompletion(alert, true, null);
+  }
+
+  private resendMobileLink(job: any): void {
+    if (!job) {
+      return;
+    }
+
+    const userId = Number(this.user?.userId || 0);
+    const accountNumber = String(job?.accountNumber || '').trim();
+    const workOrderNumber = String(job?.workOrderNumber || '').trim();
+    const emails = this.getCustomerEmailList(job);
+    const phoneNumbers = this.getUniqueCustomerPhoneDigits(job);
+
+    if (!userId || !accountNumber || !workOrderNumber || (!emails.length && !phoneNumbers.length)) {
+      Dialogs.alert({
+        title: 'Share Mobile Link',
+        message: 'Missing data to resend the mobile link.',
+        okButtonText: 'OK',
+      });
+      return;
+    }
+
+    this.todayService.shareMobileLink(userId, accountNumber, workOrderNumber, emails, phoneNumbers).subscribe({
+      next: () => {
+        this.markMobileLinkSent(job);
+        Dialogs.alert({
+          title: 'Share Mobile Link',
+          message: 'Mobile link shared successfully.',
+          okButtonText: 'OK',
+        });
+      },
+      error: (error) => {
+        const errorPayload = error?.error || {};
+        if (errorPayload?.errorType === 'info' && errorPayload?.displayAlert) {
+          this.markMobileLinkSent(job);
+        }
+        Dialogs.alert({
+          title: 'Share Mobile Link',
+          message: String(errorPayload?.message || error?.message || 'Failed to share mobile link.'),
+          okButtonText: 'OK',
+        });
+      },
+    });
+  }
+
+  private markMobileLinkSent(job: any): void {
+    const jobNumber = String(job?.number || '').trim();
+    if (!jobNumber) {
+      return;
+    }
+    this.configService.setMobileLinkSent(jobNumber);
+    this.configService.sendData({ type: 'mobileLinkSent', jobNumber });
+    job.mobile_link_sent = true;
+    this.cdr.detectChanges();
+  }
+
+  private getUniqueCustomerPhoneDigits(job: any): string[] {
+    const customer = job?.customer || {};
+    const rawPhones = [
+      customer.homePhoneNumber,
+      customer.callFirstPhoneNumber,
+      customer.workPhoneNumber,
+      customer.surveyPhoneNumber,
+    ];
+
+    const unique = new Set<string>();
+    for (const raw of rawPhones) {
+      const digits = String(raw ?? '').replace(/\D+/g, '');
+      if (!digits) {
+        continue;
+      }
+      unique.add(digits);
+    }
+
+    return Array.from(unique);
+  }
+
+  private getCustomerEmailList(job: any): string[] {
+    const email = String(job?.customer?.email || '').trim().toLowerCase();
+    return email ? [email] : [];
   }
 
   private getCopyMenuTitle(type?: string): string {
