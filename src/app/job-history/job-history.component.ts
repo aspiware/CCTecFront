@@ -83,36 +83,48 @@ export class JobHistoryComponent implements OnInit, OnDestroy {
   }
 
   public getHistoryTitle(item: any): string {
-    const base = String(item?.jobDescription || item?.description || item?.status || 'History').trim();
-    const extra = String(item?.description || '').trim();
-    if (!extra || extra.toLowerCase() === base.toLowerCase()) {
-      return base;
+    const subject = String(item?.subject || '').trim();
+    if (subject) {
+      return subject;
     }
-    return `${base} - ${extra}`;
+
+    const unifiedType = String(item?.unifiedNoteType || '').trim();
+    if (unifiedType) {
+      return unifiedType;
+    }
+
+    const noteType = String(item?.noteType || '').trim();
+    if (noteType) {
+      return noteType.replace(/_/g, ' ');
+    }
+
+    return 'History';
   }
 
   public getHistoryDate(item: any): string {
-    const raw = item?.createdAt || item?.updatedAt || item?.timeSlotStartDateTime || item?.date;
+    const raw = item?.dateWritten || item?.createdAt || item?.updatedAt || item?.timeSlotStartDateTime || item?.date;
     if (!raw) {
       return 'No date';
     }
 
-    const parsed = new Date(raw);
+    const numericRaw = Number(raw);
+    const parsed = Number.isFinite(numericRaw) && numericRaw > 0
+      ? new Date(numericRaw)
+      : new Date(raw);
     if (Number.isNaN(parsed.getTime())) {
       return String(raw);
     }
 
-    return parsed.toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-    });
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = monthNames[parsed.getUTCMonth()];
+    const day = parsed.getUTCDate();
+    const year = parsed.getUTCFullYear();
+
+    return `${month} ${day}, ${year}`;
   }
 
   public getHistoryStatus(item: any): string {
-    return String(item?.status || item?.jobStatus || 'Unknown');
+    return String(item?.noteType || item?.unifiedNoteType || item?.status || 'Unknown');
   }
 
   public getHistoryAmount(item: any): string {
@@ -133,12 +145,29 @@ export class JobHistoryComponent implements OnInit, OnDestroy {
     return parts.join(', ');
   }
 
+  public getHistoryAuthor(item: any): string {
+    return String(item?.author || 'System');
+  }
+
+  public getHistoryComment(item: any): string {
+    const raw = String(item?.comment || '').trim();
+    if (!raw) {
+      return '';
+    }
+
+    return raw
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/<\/?[^>]+(>|$)/g, '')
+      .trim();
+  }
+
   public itemStatusClass(item: any): string {
-    const status = String(item?.status || item?.jobStatus || '').toUpperCase();
-    if (status === 'CLOSED' || status === 'COMPLETE') {
+    const status = String(item?.noteType || item?.unifiedNoteType || item?.status || '').toUpperCase();
+    if (status === 'JOB_NOTE') {
       return 'status-closed';
     }
-    if (status === 'OPEN' || status === 'PENDING') {
+    if (status === 'UNIFIED_NOTE') {
       return 'status-open';
     }
     return 'status-default';
@@ -204,10 +233,11 @@ export class JobHistoryComponent implements OnInit, OnDestroy {
       .map((item) => ({
         ...item,
         amount: Number(item?.amount || 0),
+        comment: this.getHistoryComment(item),
       }))
       .sort((a, b) => {
-        const aTime = new Date(a?.createdAt || a?.updatedAt || a?.timeSlotStartDateTime || 0).getTime();
-        const bTime = new Date(b?.createdAt || b?.updatedAt || b?.timeSlotStartDateTime || 0).getTime();
+        const aTime = Number(a?.dateWritten || new Date(a?.createdAt || a?.updatedAt || a?.timeSlotStartDateTime || 0).getTime());
+        const bTime = Number(b?.dateWritten || new Date(b?.createdAt || b?.updatedAt || b?.timeSlotStartDateTime || 0).getTime());
         return bTime - aTime;
       });
 
@@ -234,45 +264,26 @@ export class JobHistoryComponent implements OnInit, OnDestroy {
     const baseDate = new Date('2026-08-08T10:00:00-05:00').getTime();
     return [
       {
-        jobDescription: this.job?.jobDescription || 'Tech Recovery',
-        description: 'Initial assignment',
-        status: 'OPEN',
-        accountNumber: this.job?.accountNumber,
-        workOrderNumber: this.job?.workOrderNumber,
-        number: this.job?.number,
-        address: this.job?.address,
-        city: this.job?.city,
-        state: this.job?.state,
-        zipcode: this.job?.zipcode,
-        createdAt: new Date(baseDate - 1000 * 60 * 60 * 24 * 2).toISOString(),
+        author: 'ADDAM PEREZ',
+        dateWritten: String(baseDate - 1000 * 60 * 60 * 24 * 2),
+        comment: '***THIS IS A PREPAID ACCOUNT. PLEASE REFERENCE HOW 13494 FOR PREPAID ACCOUNT SPECIFICS***',
+        noteType: 'JOB_NOTE',
       },
       {
-        jobDescription: this.job?.jobDescription || 'Tech Recovery',
-        description: 'Customer updated',
-        status: 'PENDING',
-        accountNumber: this.job?.accountNumber,
-        workOrderNumber: this.job?.workOrderNumber,
-        number: this.job?.number,
-        address: this.job?.address,
-        city: this.job?.city,
-        state: this.job?.state,
-        zipcode: this.job?.zipcode,
-        createdAt: new Date(baseDate - 1000 * 60 * 60 * 24).toISOString(),
+        author: 'bp-asuare710',
+        dateWritten: String(baseDate - 1000 * 60 * 60 * 24),
+        comment: 'Work Completed by ADDAM SUAREZ PEREZ (#9688):<br/>09:34 AM - Primary Resolution: FS3 FS INACTIVE OUTLET<br/>',
+        noteType: 'UNIFIED_NOTE',
+        unifiedNoteType: 'TECHNICIAN',
+        subject: '',
       },
       {
-        jobDescription: this.job?.jobDescription || 'Tech Recovery',
-        description: 'Closed successfully',
-        status: 'CLOSED',
-        amount: this.job?.amount,
-        accountNumber: this.job?.accountNumber,
-        workOrderNumber: this.job?.workOrderNumber,
-        number: this.job?.number,
-        address: this.job?.address,
-        city: this.job?.city,
-        state: this.job?.state,
-        zipcode: this.job?.zipcode,
-        notes: this.job?.notes,
-        createdAt: new Date(baseDate).toISOString(),
+        author: null,
+        dateWritten: String(baseDate),
+        comment: 'CEDAR RIDGE APARTMENTS',
+        noteType: 'UNIFIED_NOTE',
+        unifiedNoteType: 'LOCATION',
+        subject: null,
       },
     ];
   }

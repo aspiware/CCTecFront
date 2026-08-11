@@ -60,18 +60,12 @@
                     <Label
                       col="1"
                       class="history-status"
-                      [class.status-closed]="itemStatusClass(item) === 'status-closed'"
-                      [class.status-open]="itemStatusClass(item) === 'status-open'"
-                      [class.status-default]="itemStatusClass(item) === 'status-default'"
-                      [text]="getHistoryStatus(item)">
+                      [text]="getHistoryDate(item)">
                     </Label>
                   </GridLayout>
 
-                  <Label *ngIf="getHistoryAmount(item)" class="history-amount" [text]="getHistoryAmount(item)"></Label>
-                  <Label class="history-date" [text]="getHistoryDate(item)"></Label>
-                  <Label *ngIf="getHistoryAddress(item)" class="history-address" [text]="getHistoryAddress(item)"></Label>
-                  <Label class="history-meta" [text]="'Job#: ' + (item?.number || job?.number || 'n/a')"></Label>
-                  <Label *ngIf="item?.notes" class="history-notes" [text]="item.notes"></Label>
+                  <Label class="history-author" [text]="getHistoryAuthor(item)"></Label>
+                  <Label *ngIf="getHistoryComment(item)" class="history-notes" [text]="getHistoryComment(item)"></Label>
                 </StackLayout>
               </GridLayout>
             </ng-template>
