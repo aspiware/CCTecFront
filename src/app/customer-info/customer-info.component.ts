@@ -529,9 +529,13 @@ export class CustomerInfoComponent implements OnInit {
       },
       error: (error) => {
         this.finishSharingMobileLink();
+        const errorPayload = error?.error || {};
+        if (errorPayload?.errorType === 'info' && errorPayload?.displayAlert) {
+          this.markMobileLinkSent();
+        }
         Dialogs.alert({
           title: 'Share Mobile Link',
-          message: String(error?.error?.message || error?.message || 'Failed to share mobile link.'),
+          message: String(errorPayload?.message || error?.message || 'Failed to share mobile link.'),
           okButtonText: 'OK',
         });
       },
