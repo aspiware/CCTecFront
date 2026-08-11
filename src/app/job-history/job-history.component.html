@@ -6,60 +6,82 @@
     <StackLayout row="0" col="0" class="backdrop" (tap)="closeWithoutSave()"></StackLayout>
 
     <GridLayout row="0" col="0" rows="auto,*" class="modal-card">
-      <GridLayout row="0" columns="*,auto,auto" class="header header-fixed">
+      <GridLayout row="0" columns="*,auto" class="header header-fixed">
         <Label
           col="0"
-          [text]="'Devices (' + devices.length + ')'"
+          [text]="'Job History (' + jobHistoryList.length + ')'"
           class="title modal-title-text"></Label>
 
-        <StackLayout col="2">
-          <MenuButton [useSFIcon]="true" style="background-color: transparent; height: 24; width: 35;"
-            [sfIconName]="'ellipsis.circle'" [showSpinner]="isRefreshingMainMenu" #menuStatus [options]="mainMenuOptions"
-            (selected)="onSelectedMainMenu($event, menuStatus)">
+        <StackLayout col="1">
+          <MenuButton
+            [useSFIcon]="true"
+            style="background-color: transparent; height: 24; width: 35;"
+            [sfIconName]="'ellipsis.circle'"
+            [showSpinner]="isRefreshingMainMenu"
+            [options]="mainMenuOptions"
+            (selected)="onSelectedMainMenu($event)">
           </MenuButton>
         </StackLayout>
       </GridLayout>
 
-      <GridLayout row="1" class="update-devices-list-wrap">
-        <RadListView [items]="devices" selectionBehavior="None" class="custom-types-list">
-          <ng-template tkListItemTemplate let-item="item">
-            <GridLayout rows="auto" columns="*, auto"
-              style="margin-left: 10; margin-right: 10; margin-top: 6; margin-bottom: 6;">
-                <GridLayout orientation="horizontal" class="item-bag" col="0" columns="*, auto">
-                <GridLayout col="0" columns="28,60,*,auto,30">
-                  <Label *ngIf="isDeviceConnected(item)" class="fas device-status-icon" text="&#xf058;" col="0"></Label>
-                  <Label *ngIf="!isDeviceConnected(item)" class="fas device-status-icon device-status-icon-muted"
-                    text="&#xf05e;" col="0"></Label>
-                  <Label col="1" class="device-type" horizontalAlignment="left"
-                    [text]="item.type == 'STB' || item.type == 'IPSTB' ? 'VIDEO' : item.type == 'MTA' || item.type == 'HSI' || item.type == 'CM' ? 'MODEM' : item.type"
-                    [class.device-text-muted]="!isDeviceConnected(item)"></Label>
-                  <StackLayout col="2" verticalAlignment="middle">
-                    <Label class="device-name" verticalAlignment="middle" [text]="item.name || item.deviceName"
-                      [class.device-text-muted]="!isDeviceConnected(item)"></Label>
-                  </StackLayout>
-                  <StackLayout col="3" verticalAlignment="middle">
-                    <Label class="device-serial" verticalAlignment="middle"
-                      [text]="item.serialNumber || item.deviceSerialNumber"
-                      [class.device-text-muted]="!isDeviceConnected(item)"></Label>
-                  </StackLayout>
-                  <MenuButton col="4" #deviceMenuBtn
-                    class="device-status-button"
-                    style="font-size: 16px; height: 60px; width: 100px;"
-                    [showSpinner]="isJobMenuLoading(item)"
-                    [spinnerOffsetX]="0" [spinnerOffsetY]="0" [isRightSide]="true" [useSFIcon]="true"
-                    [sfIconName]="getDeviceMenuIcon(item)" [imageInsets]="{ top: 0, left: 0, bottom: 0, right: 0 }"
-                    [options]="getDeviceMenuOptions(item)"
-                    (selected)="onSelectedDeviceMenu($event, item, deviceMenuBtn)">
-                  </MenuButton>
+      <GridLayout row="1" rows="auto,*,auto" class="history-list-wrap">
+        <StackLayout row="0" class="history-summary">
+          <Label class="history-job-title" [text]="job?.jobDescription || 'Job'"></Label>
+          <Label class="history-job-meta" [text]="'Account#: ' + (job?.accountNumber || 'n/a')"></Label>
+          <Label class="history-job-meta" [text]="'WO#: ' + (job?.workOrderNumber || 'n/a')"></Label>
+        </StackLayout>
 
-                </GridLayout>
+        <GridLayout row="1">
+          <ActivityIndicator
+            *ngIf="isLoading"
+            [busy]="isLoading"
+            class="loading-indicator">
+          </ActivityIndicator>
+
+          <StackLayout *ngIf="!isLoading && loadError" class="empty-state">
+            <Label class="empty-message" [text]="loadError"></Label>
+          </StackLayout>
+
+          <StackLayout *ngIf="!isLoading && !loadError && !jobHistoryList.length" class="empty-state">
+            <Label class="empty-message" text="No history found for this job."></Label>
+          </StackLayout>
+
+          <RadListView
+            *ngIf="!isLoading && jobHistoryList.length"
+            [items]="jobHistoryList"
+            selectionBehavior="None"
+            class="custom-types-list">
+            <ng-template tkListItemTemplate let-item="item">
+              <GridLayout rows="auto" columns="*"
+                style="margin-left: 10; margin-right: 10; margin-top: 6; margin-bottom: 6;">
+                <StackLayout class="item-bag history-card">
+                  <GridLayout columns="*,auto" class="history-card-header">
+                    <Label col="0" class="history-card-title" [text]="getHistoryTitle(item)"></Label>
+                    <Label
+                      col="1"
+                      class="history-status"
+                      [class.status-closed]="itemStatusClass(item) === 'status-closed'"
+                      [class.status-open]="itemStatusClass(item) === 'status-open'"
+                      [class.status-default]="itemStatusClass(item) === 'status-default'"
+                      [text]="getHistoryStatus(item)">
+                    </Label>
+                  </GridLayout>
+
+                  <Label *ngIf="getHistoryAmount(item)" class="history-amount" [text]="getHistoryAmount(item)"></Label>
+                  <Label class="history-date" [text]="getHistoryDate(item)"></Label>
+                  <Label *ngIf="getHistoryAddress(item)" class="history-address" [text]="getHistoryAddress(item)"></Label>
+                  <Label class="history-meta" [text]="'Job#: ' + (item?.number || job?.number || 'n/a')"></Label>
+                  <Label *ngIf="item?.notes" class="history-notes" [text]="item.notes"></Label>
+                </StackLayout>
               </GridLayout>
-            </GridLayout>
-          </ng-template>
-        </RadListView>
+            </ng-template>
+          </RadListView>
+        </GridLayout>
+
+        <GridLayout row="2" columns="*" class="footer-row">
+          <Button text="Close" class="close-button" (tap)="closeWithoutSave()"></Button>
+        </GridLayout>
       </GridLayout>
     </GridLayout>
-
-
   </GridLayout>
 </ModalStack>

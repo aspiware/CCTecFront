@@ -1,12 +1,11 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
 import { ModalDialogParams, NativeScriptCommonModule } from '@nativescript/angular';
-import { Application, Dialogs } from '@nativescript/core';
+import { Application, Dialogs, ObservableArray } from '@nativescript/core';
 import { NativeScriptUIListViewModule } from 'nativescript-ui-listview/angular';
-import { Item } from '../shared/components/menu-button/item';
 import { MenuEvent } from '../shared/components/menu-button';
+import { Item } from '../shared/components/menu-button/item';
 import { UsersService } from '../shared/services/users.service';
 import { TodayService } from '../today/today.service';
-import { concatMap, finalize } from 'rxjs/operators';
 
 @Component({
   standalone: true,
@@ -19,27 +18,20 @@ import { concatMap, finalize } from 'rxjs/operators';
 export class JobHistoryComponent implements OnInit, OnDestroy {
   public isDarkTheme = Application.systemAppearance() === 'dark';
   public job: any;
-  public devices: any[] = [];
+  public jobHistoryList = new ObservableArray<any>([]);
   public isRefreshingMainMenu = false;
+  public isLoading = false;
+  public loadError = '';
   private userId = 0;
   private appearanceChangedHandler?: () => void;
-  private actionTapStates: { [key: string]: boolean } = {};
-  private actionTapTimers: { [key: string]: ReturnType<typeof setTimeout> } = {};
-  private loadingStates: { [key: string]: boolean } = {};
+
   public mainMenu: Item = {
     name: 'Main Menu',
     options: [
       {
         name: 'Refresh',
         icon: 'arrow.clockwise',
-        // destructive: true,
-        // confirm: {
-        //   title: 'Save note?',
-        //   confirmText: 'Save',
-        //   cancelText: 'Cancel',
-        //   presentation: 'anchor',
-        // },
-      }
+      },
     ],
   };
 
@@ -47,11 +39,9 @@ export class JobHistoryComponent implements OnInit, OnDestroy {
     private modalParams: ModalDialogParams,
     private usersService: UsersService,
     private todayService: TodayService,
-    private cdr: ChangeDetectorRef,
+    private cdr: ChangeDetectorRef
   ) {
-    const context = this.modalParams.context || {};
-    this.job = context;
-    this.syncDevices(Array.isArray(this.job?.devices) ? this.job.devices : []);
+    this.job = this.modalParams.context || {};
     this.userId = Number(this.usersService.getUser()?.userId || 0);
   }
 
@@ -62,6 +52,7 @@ export class JobHistoryComponent implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     };
     Application.on(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
+    this.loadJobHistory();
   }
 
   ngOnDestroy(): void {
@@ -75,7 +66,7 @@ export class JobHistoryComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  get mainMenuOptions() {
+  public get mainMenuOptions(): Item['options'] {
     return this.mainMenu.options;
   }
 
@@ -85,398 +76,208 @@ export class JobHistoryComponent implements OnInit, OnDestroy {
     });
   }
 
-  public onSelectedMainMenu(event: MenuEvent, _menuStatus?: any): void {
-    switch (event?.index) {
-      case 0:
-        this.refreshDevices();
-        break;
+  public onSelectedMainMenu(event: MenuEvent): void {
+    if (event?.index === 0) {
+      this.loadJobHistory(true);
     }
   }
 
-  private refreshDevices(): void {
-    if (this.isRefreshingMainMenu) {
+  public getHistoryTitle(item: any): string {
+    const base = String(item?.jobDescription || item?.description || item?.status || 'History').trim();
+    const extra = String(item?.description || '').trim();
+    if (!extra || extra.toLowerCase() === base.toLowerCase()) {
+      return base;
+    }
+    return `${base} - ${extra}`;
+  }
+
+  public getHistoryDate(item: any): string {
+    const raw = item?.createdAt || item?.updatedAt || item?.timeSlotStartDateTime || item?.date;
+    if (!raw) {
+      return 'No date';
+    }
+
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) {
+      return String(raw);
+    }
+
+    return parsed.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  }
+
+  public getHistoryStatus(item: any): string {
+    return String(item?.status || item?.jobStatus || 'Unknown');
+  }
+
+  public getHistoryAmount(item: any): string {
+    const amount = Number(item?.amount || 0);
+    return Number.isFinite(amount) && amount > 0 ? `$${amount.toFixed(2)}` : '';
+  }
+
+  public getHistoryAddress(item: any): string {
+    const parts = [
+      item?.address,
+      item?.city,
+      item?.state,
+      this.fiveDigitZip(item?.zipcode),
+    ]
+      .map((value) => String(value || '').trim())
+      .filter(Boolean);
+
+    return parts.join(', ');
+  }
+
+  public itemStatusClass(item: any): string {
+    const status = String(item?.status || item?.jobStatus || '').toUpperCase();
+    if (status === 'CLOSED' || status === 'COMPLETE') {
+      return 'status-closed';
+    }
+    if (status === 'OPEN' || status === 'PENDING') {
+      return 'status-open';
+    }
+    return 'status-default';
+  }
+
+  public fiveDigitZip(zipcode: string | number | null | undefined): string {
+    const digits = String(zipcode || '').replace(/\D/g, '');
+    return digits.slice(0, 5);
+  }
+
+  private loadJobHistory(isManualRefresh = false): void {
+    if (this.isLoading) {
       return;
     }
 
-    const workOrderNumber = this.job?.workOrderNumber;
-    if (!this.userId || !workOrderNumber) {
+    const accountNumber = String(this.job?.accountNumber || '').trim();
+    const workOrderNumber = String(this.job?.workOrderNumber || '').trim();
+    if (!this.userId || !accountNumber || !workOrderNumber) {
       Dialogs.alert({
-        title: 'Refresh',
-        message: 'Missing data to refresh devices.',
+        title: 'Job History',
+        message: 'Missing data to load job history.',
         okButtonText: 'OK',
       });
       return;
     }
 
-    this.isRefreshingMainMenu = true;
+    this.isLoading = true;
+    this.isRefreshingMainMenu = isManualRefresh;
+    this.loadError = '';
     this.cdr.detectChanges();
 
-    this.todayService
-      .refreshOrderDetail(this.userId, workOrderNumber)
-      .pipe(
-        concatMap(() => this.todayService.getWorkOrderDetails(this.userId, workOrderNumber)),
-        finalize(() => {
-          this.isRefreshingMainMenu = false;
-          this.cdr.detectChanges();
-        })
-      )
-      .subscribe({
-        next: (details: any) => {
-          const refreshedDevices =
-            details?.devices?.existingDevices?.deviceList ?? [];
+    if (this.usersService.isDemoUser()) {
+      this.applyHistory(this.buildDemoHistory());
+      this.finishLoading();
+      return;
+    }
 
-          this.syncDevices(Array.isArray(refreshedDevices) ? refreshedDevices : []);
-          this.cdr.detectChanges();
-        },
-        error: (error) => {
-          Dialogs.alert({
-            title: 'Refresh',
-            message: String(error?.error?.message || error?.message || 'Failed to refresh devices.'),
-            okButtonText: 'OK',
-          });
-        },
+    this.todayService.getJobHistory(this.userId, accountNumber, workOrderNumber).subscribe({
+      next: (res) => {
+        console.log('[JobHistory] getJobHistory', res);
+        this.applyHistory(this.normalizeHistoryResponse(res));
+      },
+      error: (error) => {
+        console.log('[JobHistory] getJobHistory error', error);
+        this.jobHistoryList = new ObservableArray<any>([]);
+        this.loadError = String(error?.error?.message || error?.message || 'Failed to load job history.');
+        this.finishLoading();
+      },
+      complete: () => {
+        this.finishLoading();
+      },
+    });
+  }
+
+  private finishLoading(): void {
+    this.isLoading = false;
+    this.isRefreshingMainMenu = false;
+    this.cdr.detectChanges();
+  }
+
+  private applyHistory(history: any[]): void {
+    const normalized = history
+      .map((item) => ({
+        ...item,
+        amount: Number(item?.amount || 0),
+      }))
+      .sort((a, b) => {
+        const aTime = new Date(a?.createdAt || a?.updatedAt || a?.timeSlotStartDateTime || 0).getTime();
+        const bTime = new Date(b?.createdAt || b?.updatedAt || b?.timeSlotStartDateTime || 0).getTime();
+        return bTime - aTime;
       });
+
+    this.jobHistoryList = new ObservableArray(normalized);
   }
 
-  public isModemType(item: any): boolean {
-    const type = String(item?.type || '').toUpperCase();
-    return type === 'MTA' || type === 'HSI' || type === 'CM';
+  private normalizeHistoryResponse(response: any): any[] {
+    if (Array.isArray(response)) {
+      return response;
+    }
+    if (Array.isArray(response?.payload)) {
+      return response.payload;
+    }
+    if (Array.isArray(response?.history)) {
+      return response.history;
+    }
+    if (Array.isArray(response?.data)) {
+      return response.data;
+    }
+    return [];
   }
 
-  public isVideoType(item: any): boolean {
-    const type = String(item?.type || '').toUpperCase();
-    return type === 'STB' || type === 'IPSTB';
-  }
-
-  public isDeviceConnected(item: any): boolean {
-    const rawStatus = item?.connectionStatus;
-    if (typeof rawStatus === 'boolean') {
-      return rawStatus;
-    }
-
-    const status = String(rawStatus || '').trim().toLowerCase();
-    if (!status) {
-      return false;
-    }
-
-    return (
-      status === 'true' ||
-      status === '1' ||
-      status === 'active' ||
-      status === 'connected' ||
-      status === 'online'
-    );
-  }
-
-  public getDeviceMenuIcon(item: any): string {
-    if (this.isModemType(item)) {
-      return 'wifi';
-    }
-    if (this.isVideoType(item)) {
-      return 'tv';
-    }
-    return 'ellipsis.circle';
-  }
-
-  public getDeviceMenuOptions(item: any): Item['options'] {
-    if (this.isModemType(item)) {
-      return [
-        {
-          name: 'Modem Status',
-          icon: 'antenna.radiowaves.left.and.right',
-        },
-        {
-          name: 'Activate Modem',
-          icon: 'bolt.fill',
-        },
-        {
-          name: 'Reboot Modem',
-          icon: 'power',
-        },
-      ];
-    }
-
-    if (this.isVideoType(item)) {
-      return [
-        {
-          name: 'Send Init',
-          icon: 'arrow.trianglehead.2.clockwise.rotate.90',
-        },
-        {
-          name: 'Send Hit',
-          icon: 'dot.radiowaves.left.and.right',
-        },
-      ];
-    }
-
+  private buildDemoHistory(): any[] {
+    const baseDate = new Date('2026-08-08T10:00:00-05:00').getTime();
     return [
       {
-        name: 'Device Info',
-        icon: 'info.circle',
+        jobDescription: this.job?.jobDescription || 'Tech Recovery',
+        description: 'Initial assignment',
+        status: 'OPEN',
+        accountNumber: this.job?.accountNumber,
+        workOrderNumber: this.job?.workOrderNumber,
+        number: this.job?.number,
+        address: this.job?.address,
+        city: this.job?.city,
+        state: this.job?.state,
+        zipcode: this.job?.zipcode,
+        createdAt: new Date(baseDate - 1000 * 60 * 60 * 24 * 2).toISOString(),
+      },
+      {
+        jobDescription: this.job?.jobDescription || 'Tech Recovery',
+        description: 'Customer updated',
+        status: 'PENDING',
+        accountNumber: this.job?.accountNumber,
+        workOrderNumber: this.job?.workOrderNumber,
+        number: this.job?.number,
+        address: this.job?.address,
+        city: this.job?.city,
+        state: this.job?.state,
+        zipcode: this.job?.zipcode,
+        createdAt: new Date(baseDate - 1000 * 60 * 60 * 24).toISOString(),
+      },
+      {
+        jobDescription: this.job?.jobDescription || 'Tech Recovery',
+        description: 'Closed successfully',
+        status: 'CLOSED',
+        amount: this.job?.amount,
+        accountNumber: this.job?.accountNumber,
+        workOrderNumber: this.job?.workOrderNumber,
+        number: this.job?.number,
+        address: this.job?.address,
+        city: this.job?.city,
+        state: this.job?.state,
+        zipcode: this.job?.zipcode,
+        notes: this.job?.notes,
+        createdAt: new Date(baseDate).toISOString(),
       },
     ];
   }
 
-  public onSelectedDeviceMenu(event: MenuEvent, item: any, anchor?: any): void {
-    if (this.isModemType(item)) {
-      switch (event?.index) {
-        case 0:
-          this.gatewayStatus(item, anchor);
-          break;
-        case 1:
-          this.goToActivateService();
-          break;
-        case 2:
-          this.rebootGateway(item, anchor);
-          break;
-        default:
-          break;
-      }
-      return;
-    }
-
-    if (this.isVideoType(item)) {
-      switch (event?.index) {
-        case 0:
-          this.showDeviceInfo(item, anchor);
-          break;
-        case 1:
-          this.showVideoStatus(item, anchor);
-          break;
-        default:
-          break;
-      }
-      return;
-    }
-
-    switch (event?.index) {
-      case 0:
-        this.showDeviceInfo(item, anchor);
-        break;
-      default:
-        break;
-    }
-  }
-
-  public goToActivateService(): void {
-    this.modalParams.closeCallback({
-      navigateToActivateService: true,
-      job: this.job,
-    });
-  }
-
-  private syncDevices(devices: any[]): void {
-    const mirroredDevices = Array.isArray(devices) ? [...devices] : [];
-    this.devices = mirroredDevices;
-
-    if (this.job && typeof this.job === 'object') {
-      this.job.devices = mirroredDevices;
-    }
-  }
-
-  public markJobActionTap(item: any, action: string, autoClearMs = 140): void {
-    const key = this.getActionKey(item, action);
-    this.actionTapStates[key] = true;
-    if (this.actionTapTimers[key]) {
-      clearTimeout(this.actionTapTimers[key]);
-    }
-    if (autoClearMs > 0) {
-      this.actionTapTimers[key] = setTimeout(() => {
-        this.actionTapStates[key] = false;
-      }, autoClearMs);
-    }
-  }
-
-  public isJobActionTapped(item: any, action: string): boolean {
-    return !!this.actionTapStates[this.getActionKey(item, action)];
-  }
-
-  public isJobMenuLoading(item: any): boolean {
-    return !!this.loadingStates[this.getDeviceKey(item)];
-  }
-
-  public gatewayStatus(item: any, anchor?: any): void {
-    const key = this.getDeviceKey(item);
-    if (!key || this.loadingStates[key]) {
-      return;
-    }
-
-    const mac = String(item?.mac || item?.deviceMac || '').trim();
-    const workOrderNumber = this.job?.workOrderNumber;
-    const accountNumber = this.job?.accountNumber;
-
-    if (!this.userId || !mac || !workOrderNumber || !accountNumber) {
-      Dialogs.alert({
-        title: 'Gateway Status',
-        message: 'Missing data to check gateway status.',
-        okButtonText: 'OK',
-      });
-      return;
-    }
-
-    this.setGatewayLoading(key, true);
-    this.todayService
-      .gatewayStatus(this.userId, mac, workOrderNumber, accountNumber)
-      .pipe(finalize(() => this.finishGatewayLoading(key)))
-      .subscribe({
-        next: (res: any) => {
-          const friendlyName = String(res?.gatewayStatusFriendlyName || '').trim();
-          const message = String(
-            friendlyName ||
-            res?.message ||
-            res?.status ||
-            res?.result ||
-            'Gateway status checked.'
-          );
-          const canActivate = friendlyName === 'Fully Manageable';
-
-          this.showGatewayStatusMessage(
-            message,
-            anchor,
-            canActivate,
-            0,
-            () => this.gatewayStatus(item, anchor)
-          );
-        },
-        error: (error) => {
-          this.showGatewayStatusMessage(
-            String(error?.error?.message || error?.message || 'Failed to check gateway status.'),
-            anchor,
-            false,
-            0,
-            () => this.gatewayStatus(item, anchor)
-          );
-        },
-      });
-  }
-
-  rebootGateway(item: any, anchor?: any) { }
-
-  private finishGatewayLoading(key: string): void {
-    // Defer spinner state update to the next tick to avoid NG0100 in dev mode.
-    setTimeout(() => {
-      this.setGatewayLoading(key, false);
-    }, 0);
-  }
-
-  private setGatewayLoading(key: string, isLoading: boolean): void {
-    if (!key) {
-      return;
-    }
-    this.loadingStates[key] = isLoading;
-    this.cdr.detectChanges();
-  }
-
-  private getDeviceKey(item: any): string {
-    return String(item?.id || item?.deviceId || item?.serialNumber || item?.deviceSerialNumber || '');
-  }
-
-  private getActionKey(item: any, action: string): string {
-    return `${this.getDeviceKey(item)}:${action}`;
-  }
-
-  private showDeviceInfo(item: any, anchor?: any): void {
-    const info = [
-      `Type: ${String(item?.type || 'n/a')}`,
-      `Name: ${String(item?.name || item?.deviceName || 'n/a')}`,
-      `Serial: ${String(item?.serialNumber || item?.deviceSerialNumber || 'n/a')}`,
-      `MAC: ${String(item?.mac || item?.deviceMac || 'n/a')}`,
-    ].join('\n');
-    this.showGatewayStatusMessage(info, anchor);
-  }
-
-  private showVideoStatus(item: any, anchor?: any): void {
-    const status = this.isDeviceConnected(item) ? 'Connected' : 'Disconnected';
-    this.showGatewayStatusMessage(`Video status: ${status}`, anchor);
-  }
-
-  private showGatewayStatusMessage(
-    message: string,
-    anchor?: any,
-    canActivate = false,
-    autoDismissMs = 2000,
-    onRetry?: () => void
-  ): void {
-    const title = 'Gateway Status';
-
-    if (!__IOS__) {
-      Dialogs.alert({
-        title,
-        message,
-        okButtonText: 'OK',
-      });
-      return;
-    }
-
-    let viewController = Application.ios?.rootController;
-    while (
-      viewController &&
-      viewController.presentedViewController &&
-      !viewController.presentedViewController.beingDismissed
-    ) {
-      viewController = viewController.presentedViewController;
-    }
-
-    if (!viewController?.view) {
-      return;
-    }
-
-    const sourceView = (anchor as any)?.ios as UIView | undefined;
-    const alert = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
-      title,
-      message,
-      UIAlertControllerStyle.ActionSheet
-    );
-    if (onRetry) {
-      const retryAction = UIAlertAction.actionWithTitleStyleHandler(
-        'Retry',
-        UIAlertActionStyle.Default,
-        () => {
-          onRetry();
-        }
-      );
-      retryAction.setValueForKey(UIImage.systemImageNamed('arrow.clockwise'), 'image');
-      alert.addAction(retryAction);
-    }
-    if (canActivate) {
-      const activateAction = UIAlertAction.actionWithTitleStyleHandler(
-        'Activate',
-        UIAlertActionStyle.Default,
-        () => {
-          this.goToActivateService();
-        }
-      );
-      activateAction.setValueForKey(UIImage.systemImageNamed('bolt.fill'), 'image');
-      alert.addAction(activateAction);
-    }
-
-    const popover = alert.popoverPresentationController;
-    if (popover) {
-      popover.sourceView = sourceView || viewController.view;
-      popover.sourceRect = sourceView
-        ? sourceView.bounds
-        : CGRectMake(
-          viewController.view.bounds.size.width / 2,
-          viewController.view.bounds.size.height / 2,
-          1,
-          1
-        );
-      popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
-    }
-
-    viewController.presentViewControllerAnimatedCompletion(alert, true, null);
-
-    if (autoDismissMs > 0) {
-      setTimeout(() => {
-        if (alert.presentingViewController && !alert.beingDismissed) {
-          alert.dismissViewControllerAnimatedCompletion(true, null);
-        }
-      }, autoDismissMs);
-    }
-  }
-
   private syncTheme(): void {
-    const appAppearance = Application.systemAppearance();
-    this.isDarkTheme = appAppearance === 'dark';
+    this.isDarkTheme = Application.systemAppearance() === 'dark';
   }
 }

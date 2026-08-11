@@ -22,41 +22,19 @@
   background-color: #281d1d;
   vertical-align: middle;
   horizontal-align: center;
-  height: 65%;
-}
-
-.content {
-  // margin-top: 6;
-  padding-bottom: 180;
-}
-
-.content-notes-focused {
-  padding-bottom: 360;
-}
-
-.form-scroll {
-  width: 100%;
-  height: 40%;
-}
-
-.form-scroll-custom {
-  height: 65%;
-}
-
-.modal-body {
-  width: 100%;
-  height: 60%;
+  height: 70%;
+  width: 92%;
 }
 
 .ns-light .modal-card,
 .modal-root.theme-light .modal-card {
-  background-color: #F2F2F7;
+  background-color: #f2f2f7;
   border-color: rgba(60, 60, 67, 0.16);
 }
 
 .ns-dark .modal-card,
 .modal-root.theme-dark .modal-card {
-  background-color: #1C1C1E;
+  background-color: #1c1c1e;
   border-color: rgba(255, 255, 255, 0.14);
 }
 
@@ -74,84 +52,47 @@
   padding-bottom: 20;
 }
 
-.price-title {
+.history-list-wrap {
+  height: 100%;
+  margin-top: 4;
+}
+
+.history-summary {
+  padding: 6 10 10 10;
+}
+
+.history-job-title {
   font-size: 16;
   font-weight: 700;
-  margin-right: 6;
-  text-align: right;
 }
 
-.card {
-  padding: 14;
-  border-radius: 8;
-  background-color: rgba(126, 151, 185, 0.2);
-  min-height: 180;
-  width: 300;
-}
-
-.section-title {
-  font-size: 14;
-  font-weight: 600;
-  margin-bottom: 8;
+.history-job-meta {
+  font-size: 12;
+  opacity: 0.8;
+  margin-top: 2;
 }
 
 .loading-indicator {
   width: 22;
   height: 22;
   horizontal-align: center;
-  margin-top: 8;
+  vertical-align: middle;
+}
+
+.empty-state {
+  vertical-align: middle;
+  horizontal-align: center;
+  padding: 16;
 }
 
 .empty-message {
   font-size: 13;
-  margin-top: 8;
   opacity: 0.8;
   text-align: center;
 }
 
-.job-segment {
-  margin-top: 8;
-  margin-bottom: 8;
-}
-
-.segment-row {
-  margin-top: 8;
-  margin-bottom: 8;
-  vertical-align: middle;
-}
-
-.input-shell {
-  margin-top: 6;
-  margin-bottom: 6;
-  height: 44;
-  border-radius: 50%;
-  border-width: 1;
-  background-color: #ffffff;
-  border-color: #d1d1d6;
-}
-
-TextField.custom-tf-inline {
-  height: 44;
-  font-size: 17;
-  padding-left: 12;
-  padding-right: 5;
-  padding-top: 0;
-  padding-bottom: 0;
-  margin: 0;
-  border-width: 0;
-  background-color: transparent;
-  vertical-align: middle;
-  color: #000000;
-  placeholder-color: #8e8e93;
-}
-
-.search-icon {
-  font-size: 16;
-  width: 34;
-  text-align: center;
-  vertical-align: middle;
-  margin-right: 5;
-  height: 44;
+.custom-types-list {
+  height: 100%;
 }
 
 .item-bag {
@@ -162,247 +103,59 @@ TextField.custom-tf-inline {
   border-color: rgba(255, 255, 255, 0.12);
 }
 
-.custom-list-wrap {
-  height: 100%;
-  margin-top: 8;
-  margin-bottom: 0;
+.history-card {
+  margin-bottom: 2;
 }
 
-.custom-types-list {
-  height: 100%;
+.history-card-header {
+  margin-bottom: 6;
 }
 
-.custom-type-row {
-  padding: 10;
-  border-radius: 10;
-  border-width: 1;
-  margin-top: 6;
-}
-
-.custom-type-row-selected {
-  border-color: #0a84ff;
-}
-
-.custom-type-name {
+.history-card-title {
   font-size: 14;
+  font-weight: 700;
 }
 
-.custom-type-check {
-  font-size: 16;
+.history-status {
+  font-size: 11;
+  font-weight: 700;
+  text-align: right;
 }
 
-.device-status-icon {
-  font-size: 18;
-  margin-right: 8;
-}
-
-.device-type,
-.device-name,
-.device-serial {
-  font-size: 12;
-}
-
-.modem-status-icon {
-  font-size: 12;
-  vertical-align: middle;
-  text-align: center;
-}
-
-.job-type-picker {
-  margin-top: 8;
+.history-amount {
+  font-size: 13;
+  font-weight: 700;
   margin-bottom: 4;
-  height: 120;
-  width: 100%;
 }
 
-.update-devices-list-wrap {
-  height: 100%;
+.history-date,
+.history-address,
+.history-meta,
+.history-notes {
+  font-size: 12;
   margin-top: 4;
-  margin-bottom: 10;
 }
 
-.modems-stepper {
-  margin-top: 10;
-  margin-right: 10;
+.history-notes {
+  opacity: 0.9;
 }
 
-.tv-boxes-stepper {
-  margin-top: 10;
-  margin-left: 10;
+.status-closed {
+  color: #65b56b;
 }
 
-.stepper-row {
-  margin-top: 8;
+.status-open {
+  color: #c79042;
 }
 
-.stepper-primary-row {
-  margin-bottom: 14;
+.status-default {
+  color: #888;
 }
 
-.include-panel-row {
-  margin-top: 14;
-  margin-bottom: 8;
-  vertical-align: middle;
+.footer-row {
+  padding: 10 0 0 0;
 }
 
-.include-panel-label {
-  margin-left: 8;
-  font-size: 14;
-  vertical-align: middle;
-}
-
-.notes-input {
-  // margin-top: 10;
-  height: 100;
-  font-size: 16;
-  padding-top: 10;
-  padding-left: 12;
-  padding-right: 12;
-  // padding-bottom: 10;
-  border-radius: 12;
-  border-width: 1;
-  text-align: left;
-  vertical-align: top;
-}
-
-.ns-light .notes-input,
-.modal-root.theme-light .notes-input {
-  background-color: #ffffff;
-  border-color: #d1d1d6;
-  color: #000000;
-  placeholder-color: #8e8e93;
-}
-
-.ns-dark .notes-input,
-.modal-root.theme-dark .notes-input {
-  background-color: #2c2c2e;
-  border-color: #48484a;
-  color: #ffffff;
-  placeholder-color: #aeaeb2;
-}
-
-.ns-light .section-title,
-.ns-light .empty-message,
-.modal-root.theme-light .section-title,
-.modal-root.theme-light .empty-message {
-  color: #1c1c1e;
-}
-
-.ns-light .input-shell,
-.modal-root.theme-light .input-shell {
-  background-color: #ffffff;
-  border-color: #d1d1d6;
-}
-
-.ns-light TextField.custom-tf-inline,
-.modal-root.theme-light TextField.custom-tf-inline {
-  color: #000000;
-  placeholder-color: #8e8e93;
-}
-
-.ns-light .search-icon,
-.modal-root.theme-light .search-icon {
-  color: #3a3a3c;
-}
-
-.ns-light .include-panel-label,
-.modal-root.theme-light .include-panel-label {
-  color: #1c1c1e;
-}
-
-.ns-light .custom-type-row,
-.modal-root.theme-light .custom-type-row {
-  background-color: #ffffff;
-  border-color: rgba(60, 60, 67, 0.20);
-}
-
-.ns-light .custom-type-name,
-.ns-light .custom-type-check,
-.modal-root.theme-light .custom-type-name,
-.modal-root.theme-light .custom-type-check {
-  color: #1c1c1e;
-}
-
-// .ns-light .device-status-icon,
-// .ns-light .device-type,
-// .ns-light .device-name,
-// .ns-light .device-serial,
-// .modal-root.theme-light .device-status-icon,
-// .modal-root.theme-light .device-type,
-// .modal-root.theme-light .device-name,
-// .modal-root.theme-light .device-serial {
-//   color: #1c1c1e;
-// }
-
-.ns-light .device-status-icon-muted,
-.ns-light .device-text-muted,
-.modal-root.theme-light .device-status-icon-muted,
-.modal-root.theme-light .device-text-muted {
-  color: #8e8e93;
-}
-
-.ns-dark .section-title,
-.ns-dark .empty-message,
-.modal-root.theme-dark .section-title,
-.modal-root.theme-dark .empty-message {
-  color: #f2f2f7;
-}
-
-.ns-dark .input-shell,
-.modal-root.theme-dark .input-shell {
-  background-color: #2c2c2e;
-  border-color: #48484a;
-}
-
-.ns-dark TextField.custom-tf-inline,
-.modal-root.theme-dark TextField.custom-tf-inline {
-  color: #ffffff;
-  placeholder-color: #aeaeb2;
-}
-
-.ns-dark .search-icon,
-.modal-root.theme-dark .search-icon {
-  color: #f2f2f7;
-}
-
-.ns-dark .include-panel-label,
-.modal-root.theme-dark .include-panel-label {
-  color: #f2f2f7;
-}
-
-.ns-dark .custom-type-row,
-.modal-root.theme-dark .custom-type-row {
-  background-color: #2c2c2e;
-  border-color: rgba(255, 255, 255, 0.16);
-}
-
-.ns-dark .custom-type-name,
-.ns-dark .custom-type-check,
-.modal-root.theme-dark .custom-type-name,
-.modal-root.theme-dark .custom-type-check {
-  color: #f2f2f7;
-}
-
-// .ns-dark .device-status-icon,
-// .ns-dark .device-type,
-// .ns-dark .device-name,
-// .ns-dark .device-serial,
-// .modal-root.theme-dark .device-status-icon,
-// .modal-root.theme-dark .device-type,
-// .modal-root.theme-dark .device-name,
-// .modal-root.theme-dark .device-serial {
-//   color: #ffffff;
-// }
-
-.ns-dark .device-status-icon-muted,
-.ns-dark .device-text-muted,
-.modal-root.theme-dark .device-status-icon-muted,
-.modal-root.theme-dark .device-text-muted {
-  color: rgb(160, 160, 160);
-}
-
-.device-status-button {
-  margin-left: 4;
-  padding: 0;
-  font-size: 20;
+.close-button {
+  border-radius: 10;
 }

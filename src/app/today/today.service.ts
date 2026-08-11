@@ -230,6 +230,16 @@ export class TodayService {
     );
   }
 
+  public getJobHistory(
+    userId: number,
+    accountNumber: number | string,
+    workOrderNumber: number | string
+  ): Observable<any> {
+    return this.httpClient.get<any>(
+      `${this.configService.getUrlBase()}/jobs/c/getJobHistory/${userId}/${encodeURIComponent(String(accountNumber))}/${encodeURIComponent(String(workOrderNumber))}`
+    );
+  }
+
   public removeDevice(userId: number, workOrderId: any, device: any): Observable<any> {
     return this.httpClient.post<void>(
       this.configService.getUrlBase() + "/jobs/c/removeDevice",
