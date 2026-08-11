@@ -240,6 +240,22 @@ export class TodayService {
     );
   }
 
+  public shareMobileLink(
+    userId: number,
+    accountNumber: number | string,
+    workOrderNumber: number | string,
+    emails: string[],
+    phoneNumbers: string[]
+  ): Observable<any> {
+    return this.httpClient.post<any>(
+      `${this.configService.getUrlBase()}/jobs/c/shareMobileLink/${userId}/${encodeURIComponent(String(accountNumber))}/${encodeURIComponent(String(workOrderNumber))}`,
+      {
+        emails,
+        phoneNumbers,
+      }
+    );
+  }
+
   public removeDevice(userId: number, workOrderId: any, device: any): Observable<any> {
     return this.httpClient.post<void>(
       this.configService.getUrlBase() + "/jobs/c/removeDevice",

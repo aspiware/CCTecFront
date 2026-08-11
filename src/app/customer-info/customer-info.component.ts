@@ -3,11 +3,12 @@ import { TitleCasePipe } from '@angular/common';
 import { ModalDialogParams, NativeScriptCommonModule } from '@nativescript/angular';
 import { Item } from '../shared/components/menu-button/item';
 import { MenuEvent } from '../shared/components/menu-button';
-import { Application, Utils } from '@nativescript/core';
+import { Application, Dialogs, Utils } from '@nativescript/core';
 import { PhonePipe } from '../shared/pipes/phone.pipe';
 import { SettingsService } from '../settings/settings.service';
 import { UsersService } from '../shared/services/users.service';
 import { ConfigService } from '../shared/services/config.service';
+import { TodayService } from '../today/today.service';
 
 @Component({
   standalone: true,
@@ -24,12 +25,14 @@ export class CustomerInfoComponent implements OnInit {
   private isCopyMenuOpen = false;
   private lastCopyMenuTs = 0;
   private messageComposeDelegate: any;
+  public isSharingMobileLink = false;
   mainMenu: Item =
     {
       name: 'Main Menu',
       options: [
         { name: 'Availability SMS', icon: 'message.badge' },
         { name: 'Survey SMS', icon: 'ellipsis.message' },
+        { name: 'Share Mobile Link', icon: 'link' },
       ],
     };
 
@@ -37,7 +40,8 @@ export class CustomerInfoComponent implements OnInit {
     private modalParams: ModalDialogParams,
     private settingsService: SettingsService,
     private usersService: UsersService,
-    private configService: ConfigService
+    private configService: ConfigService,
+    private todayService: TodayService
   ) {
     this.job = this.modalParams.context;
     console.log('[CustomerInfoComponent]JOB', this.job);
@@ -58,17 +62,23 @@ export class CustomerInfoComponent implements OnInit {
   }
 
   public onSelectedMainMenu(event: MenuEvent): void {
-    const recipients = this.getUniqueCustomerPhoneDigits();
-    if (!recipients.length) {
-      return;
-    }
-
     switch (event?.index) {
       case 0:
-        this.showAvailabilityLanguageMenu((event as any)?.object?.ios as UIView | undefined, recipients);
+        const availabilityRecipients = this.getUniqueCustomerPhoneDigits();
+        if (!availabilityRecipients.length) {
+          return;
+        }
+        this.showAvailabilityLanguageMenu((event as any)?.object?.ios as UIView | undefined, availabilityRecipients);
         break;
       case 1:
-        this.showSurveyLanguageMenu((event as any)?.object?.ios as UIView | undefined, recipients);
+        const surveyRecipients = this.getUniqueCustomerPhoneDigits();
+        if (!surveyRecipients.length) {
+          return;
+        }
+        this.showSurveyLanguageMenu((event as any)?.object?.ios as UIView | undefined, surveyRecipients);
+        break;
+      case 2:
+        this.shareMobileLink();
         break;
       default:
         break;
@@ -470,5 +480,62 @@ export class CustomerInfoComponent implements OnInit {
       unique.add(digits);
     }
     return Array.from(unique);
+  }
+
+  private getCustomerEmailList(): string[] {
+    const email = String(this.job?.customer?.email || '').trim().toLowerCase();
+    return email ? [email] : [];
+  }
+
+  private shareMobileLink(): void {
+    if (this.isSharingMobileLink) {
+      return;
+    }
+
+    const accountNumber = String(this.job?.accountNumber || '').trim();
+    const workOrderNumber = String(this.job?.workOrderNumber || '').trim();
+    const emails = this.getCustomerEmailList();
+    const phoneNumbers = this.getUniqueCustomerPhoneDigits();
+
+    if (!this.userId || !accountNumber || !workOrderNumber) {
+      Dialogs.alert({
+        title: 'Share Mobile Link',
+        message: 'Missing data to share the mobile link.',
+        okButtonText: 'OK',
+      });
+      return;
+    }
+
+    if (!emails.length && !phoneNumbers.length) {
+      Dialogs.alert({
+        title: 'Share Mobile Link',
+        message: 'No email or phone number is available for this customer.',
+        okButtonText: 'OK',
+      });
+      return;
+    }
+
+    this.isSharingMobileLink = true;
+
+    this.todayService.shareMobileLink(this.userId, accountNumber, workOrderNumber, emails, phoneNumbers).subscribe({
+      next: () => {
+        Dialogs.alert({
+          title: 'Share Mobile Link',
+          message: 'Mobile link shared successfully.',
+          okButtonText: 'OK',
+        });
+      },
+      error: (error) => {
+        this.isSharingMobileLink = false;
+        Dialogs.alert({
+          title: 'Share Mobile Link',
+          message: String(error?.error?.message || error?.message || 'Failed to share mobile link.'),
+          okButtonText: 'OK',
+        });
+      },
+      complete: () => {
+        this.isSharingMobileLink = false;
+      },
+    });
   }
 }
