@@ -23,7 +23,7 @@ import { SmsSurveyComponent } from './sms-survey/sms-survey.component';
 import { SmsAvailabilityComponent } from './sms-availability/sms-availability.component';
 import { EzeeTabsContainerComponent } from './providers/ezee/tabs/ezee-tabs-container.component';
 import { EzeeHomeComponent } from './providers/ezee/home/ezee-home.component';
-import { EzeeJobsComponent } from './providers/ezee/jobs/ezee-jobs.component';
+import { EzeeOrdersComponent } from './providers/ezee/orders/ezee-orders.component';
 import { EzeeSettingsComponent } from './providers/ezee/settings/ezee-settings.component';
 import { ezeeProviderGuard, xfinityProviderGuard } from './shared/guards/provider-route.guard';
 
@@ -149,9 +149,9 @@ export const routes: Routes = [
         component: EzeeHomeComponent,
       },
       {
-        path: 'jobs',
-        outlet: 'ezeeJobsTab',
-        component: EzeeJobsComponent,
+        path: 'orders',
+        outlet: 'ezeeOrdersTab',
+        component: EzeeOrdersComponent,
       },
       {
         path: 'settings',

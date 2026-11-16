@@ -1,6 +1,7 @@
 import { Component, NO_ERRORS_SCHEMA, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NativeScriptCommonModule, PageRouterOutlet } from '@nativescript/angular';
+import { EzeeOrdersService } from '../orders/ezee-orders.service';
 
 @Component({
   standalone: true,
@@ -13,7 +14,8 @@ import { NativeScriptCommonModule, PageRouterOutlet } from '@nativescript/angula
 export class EzeeTabsContainerComponent implements OnInit {
   constructor(
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private ordersService: EzeeOrdersService
   ) {}
 
   public ngOnInit(): void {
@@ -21,11 +23,17 @@ export class EzeeTabsContainerComponent implements OnInit {
       [{
         outlets: {
           ezeeHomeTab: ['home'],
-          ezeeJobsTab: ['jobs'],
+          ezeeOrdersTab: ['orders'],
           ezeeSettingsTab: ['settings'],
         },
       }],
       { relativeTo: this.route, replaceUrl: true }
     );
+  }
+
+  public onSelectedIndexChanged(event: any): void {
+    if (Number(event?.newIndex) === 1) {
+      this.ordersService.loadToday();
+    }
   }
 }

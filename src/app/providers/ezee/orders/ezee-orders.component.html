@@ -1,0 +1,78 @@
+<ActionBar [title]="'Today\'s Orders (' + orders.length + ')'">
+  <ActionItem
+    ios.position="right"
+    ios.systemIcon="13"
+    [isEnabled]="!isLoading"
+    (tap)="refresh()">
+  </ActionItem>
+</ActionBar>
+
+<GridLayout rows="auto,auto,*" class="orders-page">
+  <ActivityIndicator
+    row="0"
+    [busy]="isLoading"
+    [visibility]="isLoading ? 'visible' : 'collapsed'"
+    class="orders-loader">
+  </ActivityIndicator>
+
+  <GridLayout
+    row="1"
+    columns="*,auto,auto"
+    [visibility]="!isLoading && !errorMessage ? 'visible' : 'collapsed'"
+    class="orders-summary">
+    <Label col="0" [text]="reportDate" class="summary-date"></Label>
+    <Label col="1" [text]="'Pending: ' + pendingCount" class="summary-count pending-count"></Label>
+    <Label col="2" [text]="'Completed: ' + completedCount" class="summary-count completed-count"></Label>
+  </GridLayout>
+
+  <Label
+    row="2"
+    *ngIf="!isLoading && errorMessage"
+    [text]="errorMessage"
+    textWrap="true"
+    class="orders-message orders-error">
+  </Label>
+
+  <Label
+    row="2"
+    *ngIf="!isLoading && !errorMessage && !orders.length"
+    text="No orders scheduled for today."
+    class="orders-message">
+  </Label>
+
+  <ListView
+    row="2"
+    *ngIf="!isLoading && !errorMessage && orders.length"
+    [items]="orders"
+    class="orders-list">
+    <ng-template let-order="item">
+      <GridLayout rows="auto,auto,auto,auto" columns="*,auto" class="order-card">
+        <Label row="0" col="0" [text]="orderTitle(order)" class="order-title"></Label>
+        <Label row="0" col="1" [text]="order.workflowStatus" class="order-status"></Label>
+        <Label
+          row="1"
+          col="0"
+          colSpan="2"
+          [text]="(order.customer.fullName || 'Unknown customer') + ' · ' + (order.workType || 'No work type')"
+          textWrap="true"
+          class="order-customer">
+        </Label>
+        <Label
+          row="2"
+          col="0"
+          colSpan="2"
+          [text]="order.address"
+          textWrap="true"
+          class="order-detail">
+        </Label>
+        <Label
+          row="3"
+          col="0"
+          colSpan="2"
+          [text]="'Subscriber: ' + (order.customer.subscriberNumber || '-')"
+          class="order-subscriber">
+        </Label>
+      </GridLayout>
+    </ng-template>
+  </ListView>
+</GridLayout>
