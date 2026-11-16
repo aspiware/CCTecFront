@@ -3,7 +3,7 @@ import { ModalDialogService, NativeScriptCommonModule, NativeScriptFormsModule, 
 import { ActivatedRoute } from '@angular/router';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { LoginService } from './login.service';
-import { getString, setBoolean, setNumber, setString } from '@nativescript/core/application-settings';
+import { setNumber, setString } from '@nativescript/core/application-settings';
 import { Application, Page, alert } from '@nativescript/core';
 import { UsersService } from '../shared/services/users.service';
 import { UserModel } from '../shared/models/user.model';
@@ -12,6 +12,7 @@ import { SubscriptionService } from '../shared/services/subscription.service';
 import { MsAuthCodeComponent } from '../ms-auth-code/ms-auth-code.component';
 import { SegmentedBarItem } from '@nativescript/core';
 import { MsAuthPushComponent } from '../ms-auth-push/ms-auth-push.component';
+import { ProviderId, ProviderService } from '../shared/services/provider.service';
 
 @Component({
   standalone: true,
@@ -24,9 +25,12 @@ import { MsAuthPushComponent } from '../ms-auth-push/ms-auth-push.component';
 export class LoginComponent implements OnInit, OnDestroy {
   public isDarkTheme = Application.systemAppearance() === 'dark';
   public showPass = false;
+  public providerItems: SegmentedBarItem[] = [];
+  public selectedProviderIndex = 0;
   public authMethodItems: SegmentedBarItem[] = [];
   public selectedAuthMethodIndex = 0;
   public loginForm = new FormGroup({
+    provider: new FormControl<ProviderId>('xfinity', { nonNullable: true, validators: [Validators.required] }),
     username: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     password: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     authMethodId: new FormControl('PhoneAppOTP', { nonNullable: true }),
@@ -43,6 +47,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     private usersService: UsersService,
     private configService: ConfigService,
     private subscriptionService: SubscriptionService,
+    private providerService: ProviderService,
     private routerExtensions: RouterExtensions,
     private route: ActivatedRoute,
     private page: Page,
@@ -53,6 +58,16 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.syncTheme();
+    this.providerItems = ['Xfinity', 'Ezee Fiber'].map((label) => {
+      const item = new SegmentedBarItem();
+      item.title = label;
+      return item;
+    });
+    const savedProvider = this.providerService.provider;
+    if (savedProvider === 'ezee-fiber') {
+      this.selectedProviderIndex = 1;
+      this.loginForm.controls.provider.setValue(savedProvider);
+    }
     this.authMethodItems = ['OTP Code', 'Push', 'SMS'].map((label) => {
       const item = new SegmentedBarItem();
       item.title = label;
@@ -85,6 +100,21 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.passwordInputRef?.nativeElement?.focus?.();
   }
 
+  public get isXfinityProvider(): boolean {
+    return this.loginForm.controls.provider.value === 'xfinity';
+  }
+
+  public onProviderChanged(event: any): void {
+    const index = Number(event?.value);
+    if (Number.isNaN(index) || index < 0 || index > 1) {
+      return;
+    }
+
+    this.selectedProviderIndex = index;
+    const provider: ProviderId = index === 1 ? 'ezee-fiber' : 'xfinity';
+    this.loginForm.controls.provider.setValue(provider);
+  }
+
   public login(): void {
     if (this.isBusy) {
       return;
@@ -101,6 +131,11 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     if ((username === 'demo' || username === 'demoexpired') && password === 'Demo123!') {
       this.loginDemoUser(username);
+      return;
+    }
+
+    if (this.loginForm.controls.provider.value === 'ezee-fiber') {
+      this.loginEzeeFiber(username, password);
       return;
     }
 
@@ -232,19 +267,7 @@ export class LoginComponent implements OnInit, OnDestroy {
           return;
         }
 
-        setString("token", res.data.token);
-        setString("user", JSON.stringify(res.data));
-        this.usersService.setUser(
-          <UserModel>JSON.parse(getString("user", null))
-        );
-        setNumber("userId", res.data.userId);
-        setNumber("roleId", res.data.roleId);
-        setNumber("settingId", res.data.settingId);
-        setString("bp", res.data.bp);
-
-        this.configService.login();
-        this.isBusy = false;
-        this.routerExtensions.navigate(['/tabs'], { clearHistory: true });
+        this.completeLogin(res.data);
       }, error: async (error) => {
         console.log(error);
         this.isBusy = false;
@@ -277,10 +300,85 @@ export class LoginComponent implements OnInit, OnDestroy {
     setNumber("roleId", Number(demoUser.roleId || 2));
     setNumber("settingId", Number(demoUser.settingId || 999999));
     setString("bp", String(demoUser.bp || 'demo'));
+    this.providerService.setProvider(this.loginForm.controls.provider.value);
     this.subscriptionService.setLocalStatus(!isExpiredDemo);
     this.configService.login();
     this.isBusy = false;
-    this.routerExtensions.navigate(['/tabs'], { clearHistory: true });
+    this.navigateToProviderHome();
+  }
+
+  private loginEzeeFiber(username: string, password: string): void {
+    this.isBusy = true;
+    this.cdr.detectChanges();
+
+    this.loginService.loginEzeeFiber(username, password).subscribe({
+      next: async (res: any) => {
+        if (res?.error) {
+          this.isBusy = false;
+          this.cdr.detectChanges();
+          await alert({
+            title: 'Login',
+            message: String(res?.message || 'Login failed.'),
+            okButtonText: 'OK',
+          });
+          return;
+        }
+
+        const data = res?.data?.user
+          ? { ...res.data.user, token: res.data.token || res.data.user.token }
+          : (res?.data || res);
+        const session = {
+          ...data,
+          userId: Number(data?.userId || data?.id || 0),
+        };
+
+        if (!session?.token || !session?.userId) {
+          this.isBusy = false;
+          this.cdr.detectChanges();
+          await alert({
+            title: 'Login',
+            message: 'The Ezee Fiber login response is incomplete.',
+            okButtonText: 'OK',
+          });
+          return;
+        }
+
+        this.completeLogin(session);
+      },
+      error: async (error) => {
+        this.isBusy = false;
+        this.cdr.detectChanges();
+        const message =
+          error?.error?.message ||
+          error?.error?.error?.message ||
+          error?.message ||
+          'Login failed.';
+        await alert({
+          title: 'Login',
+          message: String(message),
+          okButtonText: 'OK',
+        });
+      },
+    });
+  }
+
+  private completeLogin(session: any): void {
+    this.providerService.setProvider(this.loginForm.controls.provider.value);
+    setString('token', String(session.token));
+    setString('user', JSON.stringify(session));
+    this.usersService.setUser(session as UserModel);
+    setNumber('userId', Number(session.userId || 0));
+    setNumber('roleId', Number(session.roleId || 0));
+    setNumber('settingId', Number(session.settingId || 0));
+    setString('bp', String(session.bp || ''));
+
+    this.configService.login();
+    this.isBusy = false;
+    this.navigateToProviderHome();
+  }
+
+  private navigateToProviderHome(): void {
+    this.routerExtensions.navigate([this.providerService.getHomeRoute()], { clearHistory: true });
   }
 
   private syncTheme(): void {

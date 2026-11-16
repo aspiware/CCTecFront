@@ -6,6 +6,8 @@ export class UserModel {
   public name?: string;
   public lastname?: string;
   public techNumber?: number;
+  public techCode?: string;
+  public active?: number | boolean;
   public token?: string;
 
   constructor(user?: Partial<UserModel>) {

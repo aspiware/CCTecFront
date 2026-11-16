@@ -12,10 +12,10 @@ export class LoginService {
     private configService: ConfigService
   ) { }
 
-  public login(username, password): Observable<any> {
+  public loginEzeeFiber(login, password): Observable<any> {
     return this.httpClient.post<void>(
-      this.configService.getUrlBase() + "/auth/signin",
-      { username, password }
+      this.configService.getUrlBase() + "/ezee-fiber/auth/signin",
+      { login, password }
     );
   }
 

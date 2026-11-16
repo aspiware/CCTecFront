@@ -82,7 +82,9 @@ export class ConfigService {
   }
 
   logout() {
+    const provider = ApplicationSettings.getString('provider', 'xfinity');
     ApplicationSettings.clear();
+    ApplicationSettings.setString('provider', provider);
     this._isLoggedIn.next(false);
   }
 

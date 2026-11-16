@@ -1,0 +1,13 @@
+<TabView selectedIndex="0" iosIconRenderingMode="alwaysTemplate" [tabTextFontSize]="11">
+  <GridLayout *tabItem="{ title: 'Home', iconSource: 'sys://house.fill' }">
+    <page-router-outlet name="ezeeHomeTab"></page-router-outlet>
+  </GridLayout>
+
+  <GridLayout *tabItem="{ title: 'Jobs', iconSource: 'sys://list.bullet.rectangle.fill' }">
+    <page-router-outlet name="ezeeJobsTab"></page-router-outlet>
+  </GridLayout>
+
+  <GridLayout *tabItem="{ title: 'Settings', iconSource: 'sys://gearshape.fill' }">
+    <page-router-outlet name="ezeeSettingsTab"></page-router-outlet>
+  </GridLayout>
+</TabView>

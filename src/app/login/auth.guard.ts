@@ -7,6 +7,7 @@ import { UsersService } from '../shared/services/users.service';
 import { SettingsService } from '../settings/settings.service';
 import { take } from 'rxjs/operators';
 import { UserModel } from '../shared/models/user.model';
+import { ProviderService } from '../shared/services/provider.service';
 
 export const authGuard: CanActivateFn = (_route, state): boolean | UrlTree => {
   const router = inject(Router);
@@ -14,6 +15,7 @@ export const authGuard: CanActivateFn = (_route, state): boolean | UrlTree => {
   const configService = inject(ConfigService);
   const usersService = inject(UsersService);
   const settingsService = inject(SettingsService);
+  const providerService = inject(ProviderService);
   const user = usersService.getUser();
   const userId = Number(user?.userId || 0);
   const isDemoUser = usersService.isDemoUser(user);
@@ -25,6 +27,16 @@ export const authGuard: CanActivateFn = (_route, state): boolean | UrlTree => {
 
   if (configService.isLoggedIn && hasValidUser) {
     if (isDemoUser) {
+      return true;
+    }
+
+    if (providerService.isEzeeFiber()) {
+      const active = (user as any)?.active;
+      const isInactive = active === false || active === 0 || active === '0' || active === 'false';
+      if (isInactive) {
+        configService.logout();
+        return redirectToLogin();
+      }
       return true;
     }
 
