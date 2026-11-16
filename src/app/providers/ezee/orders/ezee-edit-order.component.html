@@ -35,15 +35,33 @@
             class="empty-message">
           </Label>
 
-          <GridLayout *ngFor="let charge of charges" columns="*" class="stepper-row">
+          <GridLayout
+            *ngFor="let row of chargeRows"
+            [columns]="row.length > 1 ? '*,16,*' : '*'"
+            class="stepper-row">
             <app-quantity-stepper
-              [label]="charge.description + ' (' + charge.code + ')'"
-              [value]="charge.quantity"
+              col="0"
+              [label]="row[0].description + ' (' + row[0].code + ')'"
+              [value]="row[0].quantity"
               [min]="0"
               [max]="50"
               [step]="1"
               [disabled]="isLoading || isLoadingOptions"
-              (valueChange)="updateQuantity(charge, $event)">
+              (valueChange)="updateQuantity(row[0], $event)"
+              class="modems-stepper">
+            </app-quantity-stepper>
+
+            <app-quantity-stepper
+              *ngIf="row[1]"
+              col="2"
+              [label]="row[1].description + ' (' + row[1].code + ')'"
+              [value]="row[1].quantity"
+              [min]="0"
+              [max]="50"
+              [step]="1"
+              [disabled]="isLoading || isLoadingOptions"
+              (valueChange)="updateQuantity(row[1], $event)"
+              class="tv-boxes-stepper">
             </app-quantity-stepper>
           </GridLayout>
         </StackLayout>

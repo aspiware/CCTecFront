@@ -25,6 +25,7 @@ interface EditableCharge {
 export class EzeeEditOrderComponent implements OnInit {
   public readonly order: EzeeOrderListItem;
   public readonly charges: EditableCharge[];
+  public chargeRows: EditableCharge[][] = [];
   public isLoading = false;
   public isLoadingOptions = false;
   public optionsError = '';
@@ -52,6 +53,7 @@ export class EzeeEditOrderComponent implements OnInit {
   ) {
     this.order = this.modalParams.context;
     this.charges = this.buildCharges(this.order?.pricing?.extras || []);
+    this.syncChargeRows();
   }
 
   public ngOnInit(): void {
@@ -73,7 +75,6 @@ export class EzeeEditOrderComponent implements OnInit {
 
   public updateQuantity(charge: EditableCharge, quantity: number): void {
     charge.quantity = Math.max(0, Math.floor(Number(quantity || 0)));
-    this.cdr.detectChanges();
   }
 
   public closeModal(): void {
@@ -188,5 +189,14 @@ export class EzeeEditOrderComponent implements OnInit {
     });
 
     this.charges.sort((left, right) => left.description.localeCompare(right.description));
+    this.syncChargeRows();
+  }
+
+  private syncChargeRows(): void {
+    const rows: EditableCharge[][] = [];
+    for (let index = 0; index < this.charges.length; index += 2) {
+      rows.push(this.charges.slice(index, index + 2));
+    }
+    this.chargeRows = rows;
   }
 }
