@@ -90,12 +90,6 @@
           <GridLayout rows="auto" columns="*">
             <StackLayout row="0" col="0" horizontalAlignment="right" orientation="horizontal"
               style="padding: 0" backgroundColor="">
-              <MenuButton class="fas job-action-button"
-                [class.job-action-tapped]="isActionTapped(order, 'wifi')"
-                style="font-size: 14px; height: 70px; width: 100px; margin-right: 6" text="&#xf1eb;"
-                (tap)="markActionTap(order, 'wifi'); wifiConfig(order)">
-              </MenuButton>
-
               <MenuButton *ngIf="order.workflowStatus === 'Completed'" class="fas job-action-button"
                 [class.job-action-tapped]="isActionTapped(order, 'edit')"
                 style="font-size: 14px; height: 70px; width: 100px; margin-right: 6" text="&#xf044;"

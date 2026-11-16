@@ -326,10 +326,6 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     });
   }
 
-  public wifiConfig(_order: EzeeOrderListItem): void {
-    this.showUnavailable('Wi-Fi configuration is not connected for Ezee Fiber yet.');
-  }
-
   public showEditOrder(_order: EzeeOrderListItem): void {
     this.showUnavailable('Order editing is not connected for Ezee Fiber yet.');
   }
