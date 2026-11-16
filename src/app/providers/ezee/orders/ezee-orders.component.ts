@@ -1,6 +1,6 @@
-import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
-import { NativeScriptCommonModule, RouterExtensions } from '@nativescript/angular';
-import { Application, ObservableArray, Page, SegmentedBarItem, Utils, alert } from '@nativescript/core';
+import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit, ViewContainerRef } from '@angular/core';
+import { ModalDialogService, NativeScriptCommonModule, RouterExtensions } from '@nativescript/angular';
+import { Application, ObservableArray, Page, Screen, SegmentedBarItem, Utils, alert } from '@nativescript/core';
 import { NativeScriptUIListViewModule } from 'nativescript-ui-listview/angular';
 import { Subscription } from 'rxjs';
 import { EzeeOrdersService } from './ezee-orders.service';
@@ -8,6 +8,7 @@ import { EzeeOrderListItem } from './ezee-order.model';
 import { MenuEvent } from '../../../shared/components/menu-button/common';
 import { Item } from '../../../shared/components/menu-button/item';
 import { ConfigService } from '../../../shared/services/config.service';
+import { CustomerInfoComponent } from '../../../customer-info/customer-info.component';
 
 @Component({
   standalone: true,
@@ -79,7 +80,9 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private page: Page,
     private configService: ConfigService,
-    private routerExtensions: RouterExtensions
+    private routerExtensions: RouterExtensions,
+    private modalService: ModalDialogService,
+    private vcRef: ViewContainerRef
   ) {}
 
   public ngOnInit(): void {
@@ -226,18 +229,53 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
   }
 
   public showCustomer(order: EzeeOrderListItem): void {
-    const customer = order.customer;
-    const phone = customer?.phones?.[0]?.value || '-';
-    const email = customer?.emails?.[0]?.value || '-';
-    alert({
-      title: customer?.fullName || 'Customer',
-      message: [
-        `Subscriber: ${customer?.subscriberNumber || '-'}`,
-        `Status: ${customer?.status || '-'}`,
-        `Phone: ${phone}`,
-        `Email: ${email}`,
-      ].join('\n'),
-      okButtonText: 'OK',
+    if (!order) {
+      return;
+    }
+
+    const modalWidth = Math.min(380, Math.max(300, Screen.mainScreen.widthDIPs - 32));
+    const modalHeight = Math.min(620, Math.max(420, Screen.mainScreen.heightDIPs - 120));
+    const phones = order.customer?.phones || [];
+    const emails = order.customer?.emails || [];
+    const customerContext = {
+      ...order,
+      accountNumber: order.customer?.subscriberNumber,
+      hideSurveyNumber: true,
+      hideXfinityAppUsername: true,
+      hideSurveyActions: true,
+      customer: {
+        ...order.customer,
+        homePhoneNumber: phones[0]?.value || null,
+        callFirstPhoneNumber: phones[0]?.value || null,
+        workPhoneNumber: phones[1]?.value || null,
+        surveyPhoneNumber: phones[0]?.value || null,
+        xfinityAppUsername: order.customer?.subscriberNumber || null,
+        email: emails[0]?.value || null,
+      },
+    };
+
+    const options: any = {
+      context: customerContext,
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: false,
+      stretched: false,
+      cancelable: true,
+      dismissEnabled: true,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.Custom,
+        width: modalWidth,
+        height: modalHeight,
+      },
+    };
+
+    this.modalService.showModal(CustomerInfoComponent, options).catch((error) => {
+      console.log('[EzeeOrders] Failed to open customer info modal', error);
+      alert({
+        title: 'Customer Info',
+        message: 'Unable to open customer information.',
+        okButtonText: 'OK',
+      });
     });
   }
 
