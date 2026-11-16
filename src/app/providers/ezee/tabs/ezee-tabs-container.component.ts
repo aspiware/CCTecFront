@@ -17,7 +17,7 @@ export class EzeeTabsContainerComponent implements OnInit, AfterViewInit, OnDest
   @ViewChild('mainTabs', { static: true }) private mainTabsRef?: ElementRef<TabView>;
   private ordersCountSub?: Subscription;
   private todayOrdersCount = 0;
-  private readonly todayTabIndex = 1;
+  private readonly todayTabIndex = 2;
   private readonly todayBadgeBgColor = new Color('#E57373');
   private readonly todayBadgeTextColor = new Color('#FFFFFF');
 
@@ -32,7 +32,9 @@ export class EzeeTabsContainerComponent implements OnInit, AfterViewInit, OnDest
       [{
         outlets: {
           ezeeHomeTab: ['home'],
+          ezeeJobsTab: ['jobs'],
           ezeeOrdersTab: ['orders'],
+          ezeeExpensesTab: ['expenses'],
           ezeeSettingsTab: ['settings'],
         },
       }],

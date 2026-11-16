@@ -1,13 +1,21 @@
 <TabView #mainTabs
-  selectedIndex="1"
+  selectedIndex="2"
   iosIconRenderingMode="alwaysTemplate"
   [tabTextFontSize]="11">
   <GridLayout *tabItem="{ title: 'Summary', iconSource: 'sys://chart.pie.fill' }">
     <page-router-outlet name="ezeeHomeTab"></page-router-outlet>
   </GridLayout>
 
+  <GridLayout *tabItem="{ title: 'Orders', iconSource: 'sys://list.bullet.rectangle.fill' }">
+    <page-router-outlet name="ezeeJobsTab"></page-router-outlet>
+  </GridLayout>
+
   <GridLayout *tabItem="{ title: 'Today', iconSource: 'sys://clock.badge.checkmark.fill' }">
     <page-router-outlet name="ezeeOrdersTab"></page-router-outlet>
+  </GridLayout>
+
+  <GridLayout *tabItem="{ title: 'Expenses', iconSource: 'sys://creditcard.fill' }">
+    <page-router-outlet name="ezeeExpensesTab"></page-router-outlet>
   </GridLayout>
 
   <GridLayout *tabItem="{ title: 'Settings', iconSource: 'sys://gearshape.fill' }">

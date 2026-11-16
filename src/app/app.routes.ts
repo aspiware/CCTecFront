@@ -25,6 +25,8 @@ import { EzeeTabsContainerComponent } from './providers/ezee/tabs/ezee-tabs-cont
 import { EzeeHomeComponent } from './providers/ezee/home/ezee-home.component';
 import { EzeeOrdersComponent } from './providers/ezee/orders/ezee-orders.component';
 import { EzeeSettingsComponent } from './providers/ezee/settings/ezee-settings.component';
+import { EzeeJobsComponent } from './providers/ezee/jobs/ezee-jobs.component';
+import { EzeeExpensesComponent } from './providers/ezee/expenses/ezee-expenses.component';
 import { ezeeProviderGuard, xfinityProviderGuard } from './shared/guards/provider-route.guard';
 
 export const routes: Routes = [
@@ -152,6 +154,16 @@ export const routes: Routes = [
         path: 'orders',
         outlet: 'ezeeOrdersTab',
         component: EzeeOrdersComponent,
+      },
+      {
+        path: 'jobs',
+        outlet: 'ezeeJobsTab',
+        component: EzeeJobsComponent,
+      },
+      {
+        path: 'expenses',
+        outlet: 'ezeeExpensesTab',
+        component: EzeeExpensesComponent,
       },
       {
         path: 'settings',
