@@ -68,15 +68,15 @@
             <Label col="1" class="first-row amount" [text]="order.workflowStatus"></Label>
           </GridLayout>
 
-          <Label class="second-row" (longPress)="copyValue(order.address)"
+          <Label class="second-row" (longPress)="showMenu($event, order.address, 'address')"
             [text]="order.address || 'Address unavailable'">
           </Label>
 
           <GridLayout rows="auto" columns="auto, *, auto" class="meta-row">
-            <Label col="0" (longPress)="copyValue(order.number)" class="secondRow"
+            <Label col="0" (longPress)="showMenu($event, order.number, 'order')" class="secondRow"
               [text]="'Order#: ' + (order.number || 'n/a')" style="margin-right: 10;">
             </Label>
-            <Label col="1" (longPress)="copyValue(order.customer.subscriberNumber)" class="secondRow"
+            <Label col="1" (longPress)="showMenu($event, order.customer.subscriberNumber, 'account')" class="secondRow"
               [text]="'Account#: ' + (order.customer.subscriberNumber || 'n/a')">
             </Label>
             <Label col="2" class="secondRow units" [text]="'Units: ' + (order.workUnits || 'n/a')"></Label>

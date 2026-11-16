@@ -69,6 +69,8 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
   private allOrders: EzeeOrderListItem[] = [];
   private readonly actionTapStates: Record<string, boolean> = {};
   private readonly actionTapTimers: Record<string, any> = {};
+  private isCopyMenuOpen = false;
+  private lastCopyMenuTs = 0;
   private appearanceChangedHandler?: () => void;
   private readonly subscriptions = new Subscription();
 
@@ -296,11 +298,94 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     this.showUnavailable('Service activation is not connected for Ezee Fiber yet.');
   }
 
-  public copyValue(value: unknown): void {
-    const text = String(value || '').trim();
-    if (text) {
-      Utils.copyToClipboard(text);
+  public showMenu(args: any, value: unknown, type?: string): void {
+    if (args && typeof args.cancel === 'boolean') {
+      args.cancel = true;
     }
+
+    const now = Date.now();
+    if (this.isCopyMenuOpen || now - this.lastCopyMenuTs < 500) {
+      return;
+    }
+
+    const textToCopy = String(value ?? '').trim();
+    if (!textToCopy) {
+      return;
+    }
+
+    if (!__IOS__) {
+      Utils.copyToClipboard(textToCopy);
+      return;
+    }
+
+    this.isCopyMenuOpen = true;
+    this.lastCopyMenuTs = now;
+
+    let viewController = Application.ios?.rootController;
+    while (
+      viewController &&
+      viewController.presentedViewController &&
+      !viewController.presentedViewController.beingDismissed
+    ) {
+      viewController = viewController.presentedViewController;
+    }
+    if (!viewController?.view) {
+      this.isCopyMenuOpen = false;
+      return;
+    }
+
+    const sourceView = args?.object?.ios as UIView | undefined;
+    const menu = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
+      this.getCopyMenuTitle(type),
+      textToCopy,
+      UIAlertControllerStyle.ActionSheet
+    );
+
+    const copyAction = UIAlertAction.actionWithTitleStyleHandler(
+      'Copy',
+      UIAlertActionStyle.Default,
+      () => {
+        UIPasteboard.generalPasteboard.string = textToCopy;
+        this.isCopyMenuOpen = false;
+      }
+    );
+    copyAction.setValueForKey(UIImage.systemImageNamed('doc.on.doc'), 'image');
+    menu.addAction(copyAction);
+
+    if (type === 'address') {
+      const goAction = UIAlertAction.actionWithTitleStyleHandler(
+        'Go',
+        UIAlertActionStyle.Default,
+        () => {
+          this.isCopyMenuOpen = false;
+          this.showMapOptions(sourceView, textToCopy);
+        }
+      );
+      goAction.setValueForKey(UIImage.systemImageNamed('location'), 'image');
+      menu.addAction(goAction);
+    }
+
+    menu.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, () => {
+        this.isCopyMenuOpen = false;
+      })
+    );
+
+    const popover = menu.popoverPresentationController;
+    if (popover) {
+      popover.sourceView = sourceView || viewController.view;
+      popover.sourceRect = sourceView
+        ? sourceView.bounds
+        : CGRectMake(
+            viewController.view.bounds.size.width / 2,
+            viewController.view.bounds.size.height / 2,
+            1,
+            1
+          );
+      popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
+    }
+
+    viewController.presentViewControllerAnimatedCompletion(menu, true, null);
   }
 
   private applyOrdersFilter(): void {
@@ -328,6 +413,80 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
 
   private showUnavailable(message: string): void {
     alert({ title: 'Orders', message, okButtonText: 'OK' });
+  }
+
+  private getCopyMenuTitle(type?: string): string {
+    if (!type) {
+      return 'Copy';
+    }
+    const normalized = String(type).trim().toLowerCase();
+    return normalized ? normalized.charAt(0).toUpperCase() + normalized.slice(1) : 'Copy';
+  }
+
+  private showMapOptions(sourceView: UIView | undefined, address: string): void {
+    if (!__IOS__) {
+      return;
+    }
+
+    let viewController = Application.ios?.rootController;
+    while (
+      viewController &&
+      viewController.presentedViewController &&
+      !viewController.presentedViewController.beingDismissed
+    ) {
+      viewController = viewController.presentedViewController;
+    }
+    if (!viewController?.view) {
+      return;
+    }
+
+    const menu = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
+      'Open With',
+      address,
+      UIAlertControllerStyle.ActionSheet
+    );
+
+    const appleAction = UIAlertAction.actionWithTitleStyleHandler(
+      'iOS Map',
+      UIAlertActionStyle.Default,
+      () => Utils.openUrl(`http://maps.apple.com/?q=${encodeURIComponent(address)}`)
+    );
+    appleAction.setValueForKey(UIImage.systemImageNamed('map'), 'image');
+    menu.addAction(appleAction);
+
+    const googleAction = UIAlertAction.actionWithTitleStyleHandler(
+      'Google Map',
+      UIAlertActionStyle.Default,
+      () => {
+        const query = encodeURIComponent(address);
+        const opened = Utils.openUrl(`comgooglemaps://?q=${query}`);
+        if (!opened) {
+          Utils.openUrl(`https://www.google.com/maps/search/?api=1&query=${query}`);
+        }
+      }
+    );
+    googleAction.setValueForKey(UIImage.systemImageNamed('globe'), 'image');
+    menu.addAction(googleAction);
+
+    menu.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, null)
+    );
+
+    const popover = menu.popoverPresentationController;
+    if (popover) {
+      popover.sourceView = sourceView || viewController.view;
+      popover.sourceRect = sourceView
+        ? sourceView.bounds
+        : CGRectMake(
+            viewController.view.bounds.size.width / 2,
+            viewController.view.bounds.size.height / 2,
+            1,
+            1
+          );
+      popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
+    }
+
+    viewController.presentViewControllerAnimatedCompletion(menu, true, null);
   }
 
   private syncTheme(): void {
