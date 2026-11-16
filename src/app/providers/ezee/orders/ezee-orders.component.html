@@ -1,78 +1,120 @@
-<ActionBar [title]="'Today\'s Orders (' + orders.length + ')'">
-  <ActionItem
-    ios.position="right"
-    ios.systemIcon="13"
-    [isEnabled]="!isLoading"
-    (tap)="refresh()">
+<ActionBar class="action-bar" [title]="'Orders (' + orders.length + ')'">
+  <ActionItem ios.position="right" ios.systemIcon="13" [visibility]="isLoading ? 'collapse' : 'visible'"
+    [isEnabled]="!isLoading" (tap)="refresh()">
+  </ActionItem>
+  <ActionItem ios.position="right" [visibility]="isLoading ? 'visible' : 'collapse'">
+    <ActivityIndicator [busy]="isLoading" width="20" height="20"></ActivityIndicator>
   </ActionItem>
 </ActionBar>
 
-<GridLayout rows="auto,auto,*" class="orders-page">
-  <ActivityIndicator
-    row="0"
-    [busy]="isLoading"
-    [visibility]="isLoading ? 'visible' : 'collapsed'"
-    class="orders-loader">
-  </ActivityIndicator>
+<StackLayout [class]="'container ' + (isDarkTheme ? 'theme-dark' : 'theme-light')" (loaded)="onRootLoaded()">
+  <GridLayout rows="auto,auto" columns="*" style="margin-right: 10; margin-top: 10;">
+    <GridLayout row="0" columns="auto,auto,*" class="jobs-filters-row">
+      <GridLayout col="0" rows="auto" horizontalAlignment="left" class="date-filter-block">
+        <GridLayout row="0" columns="auto" class="date-filter-row" horizontalAlignment="left">
+          <DatePicker col="0" horizontalAlignment="left" class="today-date-picker"
+            [date]="reportDateValue" [isEnabled]="false">
+          </DatePicker>
+        </GridLayout>
+      </GridLayout>
 
-  <GridLayout
-    row="1"
-    columns="*,auto,auto"
-    [visibility]="!isLoading && !errorMessage ? 'visible' : 'collapsed'"
-    class="orders-summary">
-    <Label col="0" [text]="reportDate" class="summary-date"></Label>
-    <Label col="1" [text]="'Pending: ' + pendingCount" class="summary-count pending-count"></Label>
-    <Label col="2" [text]="'Completed: ' + completedCount" class="summary-count completed-count"></Label>
-  </GridLayout>
+      <GridLayout col="1" rows="auto" horizontalAlignment="left" class="date-filter-block">
+        <GridLayout row="0" columns="auto" class="date-filter-row">
+          <DatePicker col="0" horizontalAlignment="left" class="today-date-picker"
+            [date]="reportDateValue" [maxDate]="todayDate" [isEnabled]="false">
+          </DatePicker>
+        </GridLayout>
+      </GridLayout>
 
-  <Label
-    row="2"
-    *ngIf="!isLoading && errorMessage"
-    [text]="errorMessage"
-    textWrap="true"
-    class="orders-message orders-error">
-  </Label>
-
-  <Label
-    row="2"
-    *ngIf="!isLoading && !errorMessage && !orders.length"
-    text="No orders scheduled for today."
-    class="orders-message">
-  </Label>
-
-  <ListView
-    row="2"
-    *ngIf="!isLoading && !errorMessage && orders.length"
-    [items]="orders"
-    class="orders-list">
-    <ng-template let-order="item">
-      <GridLayout rows="auto,auto,auto,auto" columns="*,auto" class="order-card">
-        <Label row="0" col="0" [text]="orderTitle(order)" class="order-title"></Label>
-        <Label row="0" col="1" [text]="order.workflowStatus" class="order-status"></Label>
-        <Label
-          row="1"
-          col="0"
-          colSpan="2"
-          [text]="(order.customer.fullName || 'Unknown customer') + ' · ' + (order.workType || 'No work type')"
-          textWrap="true"
-          class="order-customer">
+      <StackLayout col="2" verticalAlignment="middle" horizontalAlignment="right">
+        <Label class="action-bar-title today-label"
+          [text]="'P: ' + pendingCount + ' / C: ' + completedCount">
         </Label>
-        <Label
-          row="2"
-          col="0"
-          colSpan="2"
-          [text]="order.address"
-          textWrap="true"
-          class="order-detail">
-        </Label>
-        <Label
-          row="3"
-          col="0"
-          colSpan="2"
-          [text]="'Subscriber: ' + (order.customer.subscriberNumber || '-')"
-          class="order-subscriber">
+      </StackLayout>
+    </GridLayout>
+
+    <GridLayout row="1" columns="*" class="search-row">
+      <GridLayout columns="*,auto" class="input-shell" width="100%">
+        <TextField col="0" hint="Search orders" [text]="ordersSearch"
+          (textChange)="onOrdersSearchChange($event.value)" class="custom-tf-inline">
+        </TextField>
+        <Label col="1" class="search-icon fas"
+          [text]="ordersSearch?.trim() ? '&#xf057;' : '&#xf002;'"
+          [isUserInteractionEnabled]="!!ordersSearch?.trim()" (tap)="clearOrdersSearch()">
         </Label>
       </GridLayout>
+    </GridLayout>
+  </GridLayout>
+
+  <RadListView [items]="orders" [pullToRefresh]="!isLoading"
+    (pullToRefreshInitiated)="onPullToRefresh($event)" height="100%" class="jobs-list">
+    <ng-template tkListItemTemplate let-order="item">
+      <GridLayout clipToBounds="false">
+        <StackLayout class="item-bag">
+          <GridLayout columns="*,auto" width="100%" class="item-header">
+            <Label col="0" class="first-row"
+              [text]="(order.workType || 'Order') + (order.initialReason ? ' - ' + order.initialReason : '')">
+            </Label>
+            <Label col="1" class="first-row amount" [text]="order.workflowStatus"></Label>
+          </GridLayout>
+
+          <Label class="second-row" (longPress)="copyValue(order.address)"
+            [text]="order.address || 'Address unavailable'">
+          </Label>
+
+          <GridLayout rows="auto" columns="auto, *, auto" class="meta-row">
+            <Label col="0" (longPress)="copyValue(order.number)" class="secondRow"
+              [text]="'Order#: ' + (order.number || 'n/a')" style="margin-right: 10;">
+            </Label>
+            <Label col="1" (longPress)="copyValue(order.customer.subscriberNumber)" class="secondRow"
+              [text]="'Account#: ' + (order.customer.subscriberNumber || 'n/a')">
+            </Label>
+            <Label col="2" class="secondRow units" [text]="'Units: ' + (order.workUnits || 'n/a')"></Label>
+          </GridLayout>
+
+          <GridLayout columns="*,auto" style="margin-bottom: 10;">
+            <Label col="0" class="second-row" [text]="orderTime(order)"></Label>
+            <Label col="1" class="second-row" [text]="order.customer.fullName || ''"></Label>
+          </GridLayout>
+
+          <GridLayout rows="auto" columns="*">
+            <StackLayout row="0" col="0" horizontalAlignment="right" orientation="horizontal"
+              style="padding: 0" backgroundColor="">
+              <MenuButton class="fas job-action-button"
+                [class.job-action-tapped]="isActionTapped(order, 'wifi')"
+                style="font-size: 14px; height: 70px; width: 100px; margin-right: 6" text="&#xf1eb;"
+                (tap)="markActionTap(order, 'wifi'); wifiConfig(order)">
+              </MenuButton>
+
+              <MenuButton *ngIf="order.workflowStatus === 'Completed'" class="fas job-action-button"
+                [class.job-action-tapped]="isActionTapped(order, 'edit')"
+                style="font-size: 14px; height: 70px; width: 100px; margin-right: 6" text="&#xf044;"
+                (tap)="markActionTap(order, 'edit'); showEditOrder(order)">
+              </MenuButton>
+
+              <MenuButton class="fas job-action-button"
+                [class.job-action-tapped]="isActionTapped(order, 'customer')"
+                style="font-size: 14px; height: 70px; width: 100px; margin-right: 6" text="&#xf007;"
+                (tap)="markActionTap(order, 'customer'); showCustomer(order)">
+              </MenuButton>
+
+              <MenuButton class="fas job-action-button"
+                [class.job-action-tapped]="isActionTapped(order, 'devices')"
+                style="font-size: 14px; height: 70px; width: 100px; margin-right: 6" text="&#xf26c;"
+                (tap)="markActionTap(order, 'devices'); showDevices(order)">
+              </MenuButton>
+
+              <MenuButton class="fas job-action-button"
+                [class.job-action-tapped]="isActionTapped(order, 'activate-service')"
+                style="font-size: 16px; height: 70px; width: 100px; margin-right: 6" text="&#xe012;"
+                (tap)="markActionTap(order, 'activate-service'); activateService(order)">
+              </MenuButton>
+            </StackLayout>
+          </GridLayout>
+        </StackLayout>
+
+        <Label class="fas status-icon floating-status {{ statusClass(order) }}" [text]="statusIcon(order)"></Label>
+      </GridLayout>
     </ng-template>
-  </ListView>
-</GridLayout>
+  </RadListView>
+</StackLayout>

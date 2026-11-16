@@ -1,5 +1,7 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
 import { NativeScriptCommonModule } from '@nativescript/angular';
+import { Application, ObservableArray, Page, Utils, alert } from '@nativescript/core';
+import { NativeScriptUIListViewModule } from 'nativescript-ui-listview/angular';
 import { Subscription } from 'rxjs';
 import { EzeeOrdersService } from './ezee-orders.service';
 import { EzeeOrderListItem } from './ezee-order.model';
@@ -7,28 +9,45 @@ import { EzeeOrderListItem } from './ezee-order.model';
 @Component({
   standalone: true,
   selector: 'app-ezee-orders',
-  imports: [NativeScriptCommonModule],
+  imports: [NativeScriptCommonModule, NativeScriptUIListViewModule],
   schemas: [NO_ERRORS_SCHEMA],
   templateUrl: './ezee-orders.component.html',
-  styleUrl: './ezee-orders.component.scss',
+  styleUrl: '../../../jobs/jobs.component.scss',
 })
 export class EzeeOrdersComponent implements OnInit, OnDestroy {
-  public orders: EzeeOrderListItem[] = [];
+  public orders = new ObservableArray<EzeeOrderListItem>([]);
   public isLoading = false;
   public errorMessage = '';
   public reportDate = '';
+  public reportDateValue = new Date();
+  public todayDate = new Date();
   public pendingCount = 0;
   public completedCount = 0;
+  public ordersSearch = '';
+  public isDarkTheme = Application.systemAppearance() === 'dark';
+  private allOrders: EzeeOrderListItem[] = [];
+  private readonly actionTapStates: Record<string, boolean> = {};
+  private readonly actionTapTimers: Record<string, any> = {};
+  private appearanceChangedHandler?: () => void;
   private readonly subscriptions = new Subscription();
 
   constructor(
     private ordersService: EzeeOrdersService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private page: Page
   ) {}
 
   public ngOnInit(): void {
+    this.syncTheme();
+    this.appearanceChangedHandler = () => {
+      this.syncTheme();
+      this.cdr.detectChanges();
+    };
+    Application.on(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
+
     this.subscriptions.add(this.ordersService.orders$.subscribe((orders) => {
-      this.orders = orders;
+      this.allOrders = orders;
+      this.applyOrdersFilter();
       this.cdr.detectChanges();
     }));
     this.subscriptions.add(this.ordersService.loading$.subscribe((isLoading) => {
@@ -37,6 +56,9 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     }));
     this.subscriptions.add(this.ordersService.summary$.subscribe((summary) => {
       this.reportDate = summary.date;
+      if (summary.date) {
+        this.reportDateValue = new Date(`${summary.date}T12:00:00`);
+      }
       this.pendingCount = summary.pending.count;
       this.completedCount = summary.completed.count;
       this.cdr.detectChanges();
@@ -50,13 +72,183 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
 
   public ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
+    if (this.appearanceChangedHandler) {
+      Application.off(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
+    }
+    Object.values(this.actionTapTimers).forEach((timer) => clearTimeout(timer));
   }
 
   public refresh(): void {
     this.ordersService.loadToday();
   }
 
+  public onRootLoaded(): void {
+    this.syncTheme();
+    this.cdr.detectChanges();
+  }
+
+  public onPullToRefresh(event: any): void {
+    const listView = event?.object;
+    this.ordersService.loadToday(() => {
+      listView?.notifyPullToRefreshFinished?.();
+      listView?.scrollToIndex?.(0, false);
+    });
+  }
+
+  public onOrdersSearchChange(value: string): void {
+    this.ordersSearch = String(value || '');
+    this.applyOrdersFilter();
+  }
+
+  public clearOrdersSearch(): void {
+    if (!this.ordersSearch) {
+      return;
+    }
+    this.ordersSearch = '';
+    this.applyOrdersFilter();
+  }
+
   public orderTitle(order: EzeeOrderListItem): string {
     return `Order #${order.number}`;
+  }
+
+  public orderTime(order: EzeeOrderListItem): string {
+    if (!order.timeFrom && !order.timeTo) {
+      return 'Time not specified';
+    }
+    return `${order.timeFrom || '-'} - ${order.timeTo || '-'}`;
+  }
+
+  public statusClass(order: EzeeOrderListItem): string {
+    return order.workflowStatus === 'Completed' ? 'status-closed' : 'status-open';
+  }
+
+  public statusIcon(order: EzeeOrderListItem): string {
+    return order.workflowStatus === 'Completed' ? '\uf058' : '\uf017';
+  }
+
+  public markActionTap(order: EzeeOrderListItem, action: string): void {
+    const key = `${order.number}:${action}`;
+    this.actionTapStates[key] = true;
+    this.cdr.detectChanges();
+    if (this.actionTapTimers[key]) {
+      clearTimeout(this.actionTapTimers[key]);
+    }
+    this.actionTapTimers[key] = setTimeout(() => {
+      this.actionTapStates[key] = false;
+      this.cdr.detectChanges();
+    }, 160);
+  }
+
+  public isActionTapped(order: EzeeOrderListItem, action: string): boolean {
+    return !!this.actionTapStates[`${order.number}:${action}`];
+  }
+
+  public showCustomer(order: EzeeOrderListItem): void {
+    const customer = order.customer;
+    const phone = customer?.phones?.[0]?.value || '-';
+    const email = customer?.emails?.[0]?.value || '-';
+    alert({
+      title: customer?.fullName || 'Customer',
+      message: [
+        `Subscriber: ${customer?.subscriberNumber || '-'}`,
+        `Status: ${customer?.status || '-'}`,
+        `Phone: ${phone}`,
+        `Email: ${email}`,
+      ].join('\n'),
+      okButtonText: 'OK',
+    });
+  }
+
+  public callCustomer(order: EzeeOrderListItem): void {
+    const phone = order.customer?.phones?.[0]?.value;
+    if (!phone) {
+      this.showUnavailable('No phone number is available for this customer.');
+      return;
+    }
+    Utils.openUrl(`tel:${String(phone).replace(/[^\d+]/g, '')}`);
+  }
+
+  public emailCustomer(order: EzeeOrderListItem): void {
+    const email = order.customer?.emails?.[0]?.value;
+    if (!email) {
+      this.showUnavailable('No email address is available for this customer.');
+      return;
+    }
+    Utils.openUrl(`mailto:${encodeURIComponent(email)}`);
+  }
+
+  public openMap(order: EzeeOrderListItem): void {
+    if (!order.address) {
+      this.showUnavailable('No address is available for this order.');
+      return;
+    }
+    const address = encodeURIComponent(order.address);
+    Utils.openUrl(`https://www.google.com/maps/search/?api=1&query=${address}`);
+  }
+
+  public showOrderDetails(order: EzeeOrderListItem): void {
+    alert({
+      title: this.orderTitle(order),
+      message: [
+        `Status: ${order.workflowStatus}`,
+        `Work type: ${order.workType || '-'}`,
+        `Reason: ${order.initialReason || '-'}`,
+        `Work units: ${order.workUnits ?? '-'}`,
+        `Time: ${this.orderTime(order)}`,
+      ].join('\n'),
+      okButtonText: 'OK',
+    });
+  }
+
+  public wifiConfig(_order: EzeeOrderListItem): void {
+    this.showUnavailable('Wi-Fi configuration is not connected for Ezee Fiber yet.');
+  }
+
+  public showEditOrder(_order: EzeeOrderListItem): void {
+    this.showUnavailable('Order editing is not connected for Ezee Fiber yet.');
+  }
+
+  public showDevices(_order: EzeeOrderListItem): void {
+    this.showUnavailable('Devices are not connected for Ezee Fiber yet.');
+  }
+
+  public activateService(_order: EzeeOrderListItem): void {
+    this.showUnavailable('Service activation is not connected for Ezee Fiber yet.');
+  }
+
+  public copyValue(value: unknown): void {
+    const text = String(value || '').trim();
+    if (text) {
+      Utils.copyToClipboard(text);
+    }
+  }
+
+  private applyOrdersFilter(): void {
+    const query = this.ordersSearch.trim().toLowerCase();
+    const filtered = !query
+      ? [...this.allOrders]
+      : this.allOrders.filter((order) => [
+          order.number,
+          order.workType,
+          order.address,
+          order.workflowStatus,
+          order.customer?.fullName,
+          order.customer?.subscriberNumber,
+        ].some((value) => String(value || '').toLowerCase().includes(query)));
+    this.orders = new ObservableArray(filtered);
+  }
+
+  private showUnavailable(message: string): void {
+    alert({ title: 'Orders', message, okButtonText: 'OK' });
+  }
+
+  private syncTheme(): void {
+    const appearance = Application.systemAppearance();
+    if (appearance === 'dark' || appearance === 'light') {
+      this.isDarkTheme = appearance === 'dark';
+      return;
+    }
+    this.isDarkTheme = String(this.page.className || '').includes('ns-dark');
   }
 }

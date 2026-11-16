@@ -27,8 +27,9 @@ export class EzeeOrdersService {
     private configService: ConfigService
   ) {}
 
-  public loadToday(): void {
+  public loadToday(onFinished?: () => void): void {
     if (this.loadingSubject.value) {
+      onFinished?.();
       return;
     }
 
@@ -45,9 +46,18 @@ export class EzeeOrdersService {
       { headers }
     ).pipe(
       timeout(20000),
-      finalize(() => this.loadingSubject.next(false))
+      finalize(() => {
+        this.loadingSubject.next(false);
+        onFinished?.();
+      })
     ).subscribe({
       next: (response) => {
+        if (response?.error) {
+          this.ordersSubject.next([]);
+          this.summarySubject.next(this.emptySummary());
+          this.errorSubject.next(response?.message || 'Unable to load today\'s orders.');
+          return;
+        }
         const summary = this.normalizeResponse(response);
         this.summarySubject.next(summary);
         this.ordersSubject.next([
