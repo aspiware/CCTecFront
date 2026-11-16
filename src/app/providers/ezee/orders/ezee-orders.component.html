@@ -1,9 +1,35 @@
-<ActionBar class="action-bar" [title]="'Orders (' + orders.length + ')'">
+<ActionBar class="action-bar" title="Today's Order List">
   <ActionItem ios.position="right" ios.systemIcon="13" [visibility]="isLoading ? 'collapse' : 'visible'"
     [isEnabled]="!isLoading" (tap)="refresh()">
   </ActionItem>
   <ActionItem ios.position="right" [visibility]="isLoading ? 'visible' : 'collapse'">
     <ActivityIndicator [busy]="isLoading" width="20" height="20"></ActivityIndicator>
+  </ActionItem>
+
+  <ActionItem ios.position="right">
+    <StackLayout>
+      <MenuButton style="height: 48; width: 35; padding: 0; margin: 0;" [useSFIcon]="true"
+        [sfIconName]="'ellipsis.circle'" [isRightSide]="true" [options]="mainMenuR.options"
+        (selected)="onSelectedMainMenuR($event)">
+      </MenuButton>
+    </StackLayout>
+  </ActionItem>
+
+  <ActionItem ios.position="left" style="font-size: 17px" class="fas">
+    <StackLayout orientation="horizontal">
+      <MenuButton [useSFIcon]="true" class="fas" style="background-color: transparent; font-size: 18px;"
+        [sfIconName]="mainMenuIconName" [showSpinner]="isTechStatusLoading" [options]="mainMenu.options"
+        (selected)="onSelectedMainMenu($event)">
+      </MenuButton>
+    </StackLayout>
+  </ActionItem>
+
+  <ActionItem *ngIf="isOnShift" ios.position="left">
+    <StackLayout>
+      <MenuButton [useSFIcon]="true" [sfIconName]="'fork.knife.circle'" [options]="[]"
+        (selected)="selected($event, item)">
+      </MenuButton>
+    </StackLayout>
   </ActionItem>
 </ActionBar>
 

@@ -1,10 +1,13 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
-import { NativeScriptCommonModule } from '@nativescript/angular';
+import { NativeScriptCommonModule, RouterExtensions } from '@nativescript/angular';
 import { Application, ObservableArray, Page, Utils, alert } from '@nativescript/core';
 import { NativeScriptUIListViewModule } from 'nativescript-ui-listview/angular';
 import { Subscription } from 'rxjs';
 import { EzeeOrdersService } from './ezee-orders.service';
 import { EzeeOrderListItem } from './ezee-order.model';
+import { MenuEvent } from '../../../shared/components/menu-button/common';
+import { Item } from '../../../shared/components/menu-button/item';
+import { ConfigService } from '../../../shared/services/config.service';
 
 @Component({
   standalone: true,
@@ -25,6 +28,42 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
   public completedCount = 0;
   public ordersSearch = '';
   public isDarkTheme = Application.systemAppearance() === 'dark';
+  public mainMenuIconName = 'ellipsis.circle';
+  public isTechStatusLoading = false;
+  public isOnShift = true;
+  public item: any;
+  public mainMenu: Item = {
+    name: 'Main Menu',
+    options: [
+      { name: 'Available', icon: 'checkmark.circle.fill' },
+      { name: 'Lunch', icon: 'fork.knife.circle.fill' },
+      { name: 'Tech Log', icon: 'network' },
+      { name: 'Meeting', icon: 'inset.filled.rectangle.and.person.filled' },
+      { name: 'Logged On', icon: 'iphone.and.arrow.right.outward' },
+      { name: 'End of Day', icon: 'circle.slash.fill' },
+    ],
+  };
+  public mainMenuR: Item = {
+    name: 'Main Menu Right',
+    options: [
+      { name: 'Location', icon: 'mappin.and.ellipse' },
+      { name: 'Gate Codes', icon: 'square.grid.3x3' },
+      { name: 'Customer Consent', icon: 'signature' },
+      { name: 'Order Tools', icon: 'waveform.path.ecg.rectangle' },
+      { name: 'Report Bug', icon: 'bubble.left.and.exclamationmark.bubble.right' },
+      {
+        name: 'Log Out',
+        icon: 'person.crop.circle.badge.xmark',
+        destructive: true,
+        confirm: {
+          title: 'Are you sure you want to log out?',
+          confirmText: 'Yes',
+          cancelText: 'Cancel',
+          presentation: 'anchor',
+        },
+      },
+    ],
+  };
   private allOrders: EzeeOrderListItem[] = [];
   private readonly actionTapStates: Record<string, boolean> = {};
   private readonly actionTapTimers: Record<string, any> = {};
@@ -34,7 +73,9 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
   constructor(
     private ordersService: EzeeOrdersService,
     private cdr: ChangeDetectorRef,
-    private page: Page
+    private page: Page,
+    private configService: ConfigService,
+    private routerExtensions: RouterExtensions
   ) {}
 
   public ngOnInit(): void {
@@ -80,6 +121,28 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
 
   public refresh(): void {
     this.ordersService.loadToday();
+  }
+
+  public onSelectedMainMenu(event: MenuEvent): void {
+    const selected = this.mainMenu.options[event?.index ?? 0];
+    if (selected?.icon) {
+      this.mainMenuIconName = selected.icon;
+    }
+    this.showUnavailable(`${selected?.name || 'Technician status'} is not connected for Ezee Fiber yet.`);
+  }
+
+  public onSelectedMainMenuR(event: MenuEvent): void {
+    const selected = this.mainMenuR.options[event?.index ?? 0];
+    if (event?.index === 5) {
+      this.configService.logout();
+      this.routerExtensions.navigate(['/login'], { clearHistory: true });
+      return;
+    }
+    this.showUnavailable(`${selected?.name || 'This option'} is not connected for Ezee Fiber yet.`);
+  }
+
+  public selected(_event: MenuEvent, _item?: any): void {
+    this.showUnavailable('Lunch actions are not connected for Ezee Fiber yet.');
   }
 
   public onRootLoaded(): void {
