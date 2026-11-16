@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
 import { NativeScriptCommonModule, RouterExtensions } from '@nativescript/angular';
-import { Application, ObservableArray, Page, Utils, alert } from '@nativescript/core';
+import { Application, ObservableArray, Page, SegmentedBarItem, Utils, alert } from '@nativescript/core';
 import { NativeScriptUIListViewModule } from 'nativescript-ui-listview/angular';
 import { Subscription } from 'rxjs';
 import { EzeeOrdersService } from './ezee-orders.service';
@@ -15,7 +15,7 @@ import { ConfigService } from '../../../shared/services/config.service';
   imports: [NativeScriptCommonModule, NativeScriptUIListViewModule],
   schemas: [NO_ERRORS_SCHEMA],
   templateUrl: './ezee-orders.component.html',
-  styleUrl: '../../../jobs/jobs.component.scss',
+  styleUrl: '../../../today/today.component.scss',
 })
 export class EzeeOrdersComponent implements OnInit, OnDestroy {
   public orders = new ObservableArray<EzeeOrderListItem>([]);
@@ -31,6 +31,8 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
   public mainMenuIconName = 'ellipsis.circle';
   public isTechStatusLoading = false;
   public isOnShift = true;
+  public statusFilterItems: SegmentedBarItem[] = [];
+  public selectedStatusFilterIndex = 0;
   public item: any;
   public mainMenu: Item = {
     name: 'Main Menu',
@@ -80,6 +82,11 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
 
   public ngOnInit(): void {
     this.syncTheme();
+    this.statusFilterItems = ['All', 'Pending', 'Completed'].map((label) => {
+      const item = new SegmentedBarItem();
+      item.title = label;
+      return item;
+    });
     this.appearanceChangedHandler = () => {
       this.syncTheme();
       this.cdr.detectChanges();
@@ -168,6 +175,15 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       return;
     }
     this.ordersSearch = '';
+    this.applyOrdersFilter();
+  }
+
+  public onStatusFilterChanged(event: any): void {
+    const index = Number(event?.value);
+    if (Number.isNaN(index) || index < 0 || index > 2) {
+      return;
+    }
+    this.selectedStatusFilterIndex = index;
     this.applyOrdersFilter();
   }
 
@@ -289,9 +305,17 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
 
   private applyOrdersFilter(): void {
     const query = this.ordersSearch.trim().toLowerCase();
+    const selectedStatus = this.selectedStatusFilterIndex === 1
+      ? 'Pending'
+      : this.selectedStatusFilterIndex === 2
+        ? 'Completed'
+        : null;
+    const source = selectedStatus
+      ? this.allOrders.filter((order) => order.workflowStatus === selectedStatus)
+      : this.allOrders;
     const filtered = !query
-      ? [...this.allOrders]
-      : this.allOrders.filter((order) => [
+      ? [...source]
+      : source.filter((order) => [
           order.number,
           order.workType,
           order.address,
