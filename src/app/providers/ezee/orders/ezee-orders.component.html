@@ -36,15 +36,15 @@
 <StackLayout [class]="'container ' + (isDarkTheme ? 'theme-dark' : 'theme-light')" (loaded)="onRootLoaded()">
   <GridLayout rows="auto" columns="*" style="margin-left: 10; margin-right: 10; margin-top: 10;">
     <StackLayout horizontalAlignment="left" orientation="horizontal">
-      <Label class="action-bar-title today-label" [text]="'Today: ' + (pendingCount + completedCount)"></Label>
+      <Label class="action-bar-title today-label" [text]="'Today: ' + (todayTotal | currency)"></Label>
     </StackLayout>
 
     <StackLayout horizontalAlignment="center" orientation="horizontal">
-      <Label class="action-bar-title today-label" [text]="'Pending: ' + pendingCount"></Label>
+      <Label class="action-bar-title today-label" [text]="'Units: ' + totalUnits"></Label>
     </StackLayout>
 
     <StackLayout horizontalAlignment="right" orientation="horizontal">
-      <Label class="action-bar-title today-label" [text]="'Completed: ' + completedCount"></Label>
+      <Label class="action-bar-title today-label" [text]="'Week: ' + (weekTotal | currency)"></Label>
     </StackLayout>
   </GridLayout>
 
@@ -65,7 +65,7 @@
             <Label col="0" class="first-row"
               [text]="(order.workType || 'Order') + (order.initialReason ? ' - ' + order.initialReason : '')">
             </Label>
-            <Label col="1" class="first-row amount" [text]="order.workflowStatus"></Label>
+            <Label col="1" class="first-row amount" [text]="(order.pricing?.total || 0) | currency"></Label>
           </GridLayout>
 
           <Label class="second-row" (longPress)="showMenu($event, order.address, 'address')"

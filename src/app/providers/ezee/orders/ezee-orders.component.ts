@@ -9,6 +9,7 @@ import { MenuEvent } from '../../../shared/components/menu-button/common';
 import { Item } from '../../../shared/components/menu-button/item';
 import { ConfigService } from '../../../shared/services/config.service';
 import { CustomerInfoComponent } from '../../../customer-info/customer-info.component';
+import { EzeeEditOrderComponent } from './ezee-edit-order.component';
 
 @Component({
   standalone: true,
@@ -25,6 +26,9 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
   public reportDate = '';
   public reportDateValue = new Date();
   public todayDate = new Date();
+  public todayTotal = 0;
+  public weekTotal = 0;
+  public totalUnits = 0;
   public pendingCount = 0;
   public completedCount = 0;
   public ordersSearch = '';
@@ -100,6 +104,14 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
 
     this.subscriptions.add(this.ordersService.orders$.subscribe((orders) => {
       this.allOrders = orders;
+      this.todayTotal = orders.reduce((total, order) => {
+        const orderTotal = Number(order.pricing?.total);
+        return total + (Number.isFinite(orderTotal) ? orderTotal : 0);
+      }, 0);
+      this.totalUnits = orders.reduce((total, order) => {
+        const orderUnits = Number(order.workUnits);
+        return total + (Number.isFinite(orderUnits) ? orderUnits : 0);
+      }, 0);
       this.applyOrdersFilter();
       this.cdr.detectChanges();
     }));
@@ -326,8 +338,36 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     });
   }
 
-  public showEditOrder(_order: EzeeOrderListItem): void {
-    this.showUnavailable('Order editing is not connected for Ezee Fiber yet.');
+  public showEditOrder(order: EzeeOrderListItem): void {
+    if (!order) {
+      return;
+    }
+
+    const options: any = {
+      context: order,
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: false,
+      stretched: false,
+      cancelable: true,
+      dismissEnabled: true,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.Custom,
+      },
+    };
+
+    this.modalService.showModal(EzeeEditOrderComponent, options).then((result) => {
+      if (result) {
+        this.ordersService.loadToday();
+      }
+    }).catch((error) => {
+      console.log('[EzeeOrders] Failed to open edit order modal', error);
+      alert({
+        title: 'Edit Order',
+        message: 'Unable to open order editing.',
+        okButtonText: 'OK',
+      });
+    });
   }
 
   public showDevices(_order: EzeeOrderListItem): void {

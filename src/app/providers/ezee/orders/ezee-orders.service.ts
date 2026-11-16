@@ -1,10 +1,12 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { getString } from '@nativescript/core/application-settings';
-import { BehaviorSubject, finalize, timeout } from 'rxjs';
+import { BehaviorSubject, finalize, Observable, timeout } from 'rxjs';
 import { ConfigService } from '../../../shared/services/config.service';
 import {
   EzeeOrderGroup,
+  EzeeOrderChargeUpdate,
+  EzeeChargeOptionsResponse,
   EzeeOrderListItem,
   EzeeOrdersDay,
   EzeeOrdersResponse,
@@ -26,6 +28,31 @@ export class EzeeOrdersService {
     private httpClient: HttpClient,
     private configService: ConfigService
   ) {}
+
+  public getChargeOptions(number: string): Observable<EzeeChargeOptionsResponse> {
+    const token = getString('token', '');
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`,
+    });
+
+    return this.httpClient.get<EzeeChargeOptionsResponse>(
+      `${this.configService.getUrlBase()}/ezee-fiber/orders/${encodeURIComponent(number)}/charge-options`,
+      { headers }
+    ).pipe(timeout(20000));
+  }
+
+  public updateCharges(number: string, charges: EzeeOrderChargeUpdate[]): Observable<any> {
+    const token = getString('token', '');
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`,
+    });
+
+    return this.httpClient.patch<any>(
+      `${this.configService.getUrlBase()}/ezee-fiber/orders/${encodeURIComponent(number)}/charges`,
+      { charges },
+      { headers }
+    ).pipe(timeout(20000));
+  }
 
   public loadToday(onFinished?: () => void): void {
     if (this.loadingSubject.value) {

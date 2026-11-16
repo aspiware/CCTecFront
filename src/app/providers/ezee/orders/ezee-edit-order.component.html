@@ -1,0 +1,53 @@
+<ModalStack dismissEnabled="true" class="modal-root">
+  <GridLayout rows="*" columns="*">
+    <StackLayout row="0" col="0" class="backdrop" (tap)="closeModal()"></StackLayout>
+
+    <GridLayout row="0" col="0" rows="auto,*" class="modal-card">
+      <GridLayout row="0" columns="*,auto,auto" class="header header-fixed">
+        <Label col="0" text="Edit Order" class="title modal-title-text"></Label>
+        <Label col="1" [text]="totalPrice | currency" class="title modal-title-text price-title"></Label>
+
+        <StackLayout col="2">
+          <MenuButton
+            [useSFIcon]="true"
+            style="background-color: transparent; height: 24; width: 35;"
+            [sfIconName]="'ellipsis.circle'"
+            [showSpinner]="isLoading || isLoadingOptions"
+            [options]="mainMenu.options"
+            (selected)="onSelectedMainMenu($event)">
+          </MenuButton>
+        </StackLayout>
+      </GridLayout>
+
+      <ScrollView row="1" class="form-scroll form-scroll-custom">
+        <StackLayout class="content">
+          <Label [text]="'Order #' + order.number" class="section-title"></Label>
+
+          <ActivityIndicator
+            [busy]="isLoadingOptions"
+            [visibility]="isLoadingOptions ? 'visible' : 'collapse'"
+            class="loading-indicator">
+          </ActivityIndicator>
+
+          <Label
+            [text]="optionsError"
+            [visibility]="optionsError ? 'visible' : 'collapse'"
+            class="empty-message">
+          </Label>
+
+          <GridLayout *ngFor="let charge of charges" columns="*" class="stepper-row">
+            <app-quantity-stepper
+              [label]="charge.description + ' (' + charge.code + ')'"
+              [value]="charge.quantity"
+              [min]="0"
+              [max]="50"
+              [step]="1"
+              [disabled]="isLoading || isLoadingOptions"
+              (valueChange)="updateQuantity(charge, $event)">
+            </app-quantity-stepper>
+          </GridLayout>
+        </StackLayout>
+      </ScrollView>
+    </GridLayout>
+  </GridLayout>
+</ModalStack>

@@ -15,6 +15,46 @@ export interface EzeeCustomer {
   contactMethods: EzeeContactMethod[];
 }
 
+export interface EzeePricingItem {
+  code: string;
+  description: string;
+  category: string;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+  source: string;
+}
+
+export interface EzeeOrderPricing {
+  base: EzeePricingItem | null;
+  extras: EzeePricingItem[];
+  total: number;
+  estimated: boolean;
+  priceConfigured: boolean;
+}
+
+export interface EzeeOrderChargeUpdate {
+  code: string;
+  quantity: number;
+}
+
+export interface EzeeChargeOption {
+  code: string;
+  description: string;
+  category: string;
+  unitType: string;
+  unitPrice: number;
+}
+
+export interface EzeeChargeOptionsResponse {
+  statusCode: number;
+  data: {
+    number: string;
+    date: string;
+    options: EzeeChargeOption[];
+  };
+}
+
 export interface EzeeOrder {
   number: string;
   date: string;
@@ -26,6 +66,7 @@ export interface EzeeOrder {
   callFirst: unknown;
   address: string;
   detailPath: string;
+  pricing?: EzeeOrderPricing | null;
   customer: EzeeCustomer;
 }
 
