@@ -56,6 +56,7 @@ export class EzeeOrdersService {
 
   public loadToday(onFinished?: () => void): void {
     if (this.loadingSubject.value) {
+      console.log('[EzeeOrdersService] GET /ezee-fiber/orders skipped: request already in progress');
       onFinished?.();
       return;
     }
@@ -67,6 +68,7 @@ export class EzeeOrdersService {
 
     this.loadingSubject.next(true);
     this.errorSubject.next('');
+    console.log('[EzeeOrdersService] GET /ezee-fiber/orders request started');
 
     this.httpClient.get<EzeeOrdersResponse>(
       `${this.configService.getUrlBase()}/ezee-fiber/orders`,
@@ -79,6 +81,9 @@ export class EzeeOrdersService {
       })
     ).subscribe({
       next: (response) => {
+        console.log(
+          `[EzeeOrdersService] GET /ezee-fiber/orders response:\n${JSON.stringify(response, null, 2)}`
+        );
         if (response?.error) {
           this.ordersSubject.next([]);
           this.summarySubject.next(this.emptySummary());
@@ -93,6 +98,9 @@ export class EzeeOrdersService {
         ]);
       },
       error: (error) => {
+        console.log(
+          `[EzeeOrdersService] GET /ezee-fiber/orders error:\n${JSON.stringify(error, null, 2)}`
+        );
         this.ordersSubject.next([]);
         this.summarySubject.next(this.emptySummary());
         this.errorSubject.next(

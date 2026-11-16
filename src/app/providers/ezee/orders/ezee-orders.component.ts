@@ -76,6 +76,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
   private readonly actionTapTimers: Record<string, any> = {};
   private isCopyMenuOpen = false;
   private lastCopyMenuTs = 0;
+  private isErrorAlertOpen = false;
   private appearanceChangedHandler?: () => void;
   private readonly subscriptions = new Subscription();
 
@@ -131,6 +132,9 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     this.subscriptions.add(this.ordersService.error$.subscribe((message) => {
       this.errorMessage = message;
       this.cdr.detectChanges();
+      if (message) {
+        this.showOrdersError(message);
+      }
     }));
     this.ordersService.loadToday();
   }
@@ -145,6 +149,31 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
 
   public refresh(): void {
     this.ordersService.loadToday();
+  }
+
+  private async showOrdersError(message: string): Promise<void> {
+    if (this.isErrorAlertOpen) {
+      return;
+    }
+
+    this.isErrorAlertOpen = true;
+    try {
+      await alert({
+        title: 'Unable to Load Orders',
+        message,
+        okButtonText: 'OK',
+      });
+      if (this.isSessionExpiredError(message)) {
+        this.configService.logout();
+        this.routerExtensions.navigate(['/login'], { clearHistory: true });
+      }
+    } finally {
+      this.isErrorAlertOpen = false;
+    }
+  }
+
+  private isSessionExpiredError(message: string): boolean {
+    return /session expired|sign in again|unauthorized/i.test(String(message || ''));
   }
 
   public onSelectedMainMenu(event: MenuEvent): void {
