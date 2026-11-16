@@ -237,12 +237,18 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     const modalHeight = Math.min(620, Math.max(420, Screen.mainScreen.heightDIPs - 120));
     const phones = order.customer?.phones || [];
     const emails = order.customer?.emails || [];
+    const customerName = order.customer?.firstName || order.customer?.fullName || 'customer';
+    const appointmentTime = this.formatAppointmentTime(order.timeFrom);
     const customerContext = {
       ...order,
       accountNumber: order.customer?.subscriberNumber,
       hideSurveyNumber: true,
       hideXfinityAppUsername: true,
       hideSurveyActions: true,
+      availabilitySmsText: {
+        english: `Hi ${customerName}, this is your Ezee Fiber technician. I have your appointment scheduled for today at ${appointmentTime}. Would it be okay if I came earlier, possibly now?`,
+        spanish: `Hola ${customerName}, soy tu técnico de Ezee Fiber. Tengo tu cita programada para hoy a las ${appointmentTime}. ¿Estaría bien si llego más temprano, posiblemente ahora?`,
+      },
       customer: {
         ...order.customer,
         homePhoneNumber: phones[0]?.value || null,
@@ -451,6 +457,29 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
 
   private showUnavailable(message: string): void {
     alert({ title: 'Orders', message, okButtonText: 'OK' });
+  }
+
+  private formatAppointmentTime(value: string | null): string {
+    const rawValue = String(value || '').trim();
+    if (!rawValue) {
+      return '10 AM';
+    }
+
+    const timeMatch = rawValue.match(/(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?/i);
+    if (!timeMatch) {
+      return rawValue;
+    }
+
+    let hour = Number(timeMatch[1]);
+    const minutes = timeMatch[2];
+    let period = timeMatch[3]?.toUpperCase();
+
+    if (!period) {
+      period = hour >= 12 ? 'PM' : 'AM';
+      hour = hour % 12 || 12;
+    }
+
+    return `${hour}${minutes === '00' ? '' : `:${minutes}`} ${period}`;
   }
 
   private getCopyMenuTitle(type?: string): string {

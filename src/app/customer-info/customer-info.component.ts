@@ -268,7 +268,9 @@ export class CustomerInfoComponent implements OnInit {
       () => {
         this.openSmsComposer(
           recipientsList,
-          this.settings?.englishAvailabilityText || 'Hi, this is Xfinity tech, are you available for your appointment?'
+          this.job?.availabilitySmsText?.english ||
+            this.settings?.englishAvailabilityText ||
+            'Hi, this is Xfinity tech, are you available for your appointment?'
         );
         this.isCopyMenuOpen = false;
       }
@@ -282,7 +284,9 @@ export class CustomerInfoComponent implements OnInit {
       () => {
         this.openSmsComposer(
           recipientsList,
-          this.settings?.spanishAvailabilityText || 'Hola, soy el tecnico de Xfinity, esta disponible para su cita?'
+          this.job?.availabilitySmsText?.spanish ||
+            this.settings?.spanishAvailabilityText ||
+            'Hola, soy el tecnico de Xfinity, esta disponible para su cita?'
         );
         this.isCopyMenuOpen = false;
       }

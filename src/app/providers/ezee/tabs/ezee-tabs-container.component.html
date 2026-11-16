@@ -1,5 +1,5 @@
 <TabView
-  selectedIndex="0"
+  selectedIndex="1"
   iosIconRenderingMode="alwaysTemplate"
   [tabTextFontSize]="11"
   (selectedIndexChanged)="onSelectedIndexChanged($event)">
@@ -7,7 +7,7 @@
     <page-router-outlet name="ezeeHomeTab"></page-router-outlet>
   </GridLayout>
 
-  <GridLayout *tabItem="{ title: 'Orders', iconSource: 'sys://list.bullet.rectangle.fill' }">
+  <GridLayout *tabItem="{ title: 'Today', iconSource: 'sys://clock.badge.checkmark.fill' }">
     <page-router-outlet name="ezeeOrdersTab"></page-router-outlet>
   </GridLayout>
 
