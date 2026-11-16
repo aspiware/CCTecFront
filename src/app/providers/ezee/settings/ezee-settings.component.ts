@@ -19,6 +19,8 @@ import { VersionService } from '../../../shared/services/version.service';
   styleUrl: '../../../settings/settings.component.scss',
 })
 export class EzeeSettingsComponent extends SettingsComponent {
+  public override isEzeeSettings = true;
+
   constructor(
     subscriptionService: SubscriptionService,
     configService: ConfigService,
@@ -46,7 +48,7 @@ export class EzeeSettingsComponent extends SettingsComponent {
   }
 
   public override openResidentialJobPrices(): void {
-    this.showPendingFeature('Residential Prices');
+    this.showPendingFeature('Pay Rate');
   }
 
   public override openXhJobPrices(): void {

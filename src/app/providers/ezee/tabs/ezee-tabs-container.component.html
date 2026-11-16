@@ -1,8 +1,7 @@
 <TabView
   selectedIndex="1"
   iosIconRenderingMode="alwaysTemplate"
-  [tabTextFontSize]="11"
-  (selectedIndexChanged)="onSelectedIndexChanged($event)">
+  [tabTextFontSize]="11">
   <GridLayout *tabItem="{ title: 'Home', iconSource: 'sys://house.fill' }">
     <page-router-outlet name="ezeeHomeTab"></page-router-outlet>
   </GridLayout>
