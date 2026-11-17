@@ -89,6 +89,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
   private readonly actionTapTimers: Record<string, any> = {};
   private readonly addingNoteOrders = new Set<string>();
   private readonly finalizingOrders = new Set<string>();
+  private readonly updatingStatusOrders = new Set<string>();
   private readonly selectedFinalizeReasons = new Map<string, EzeeFinalizeReason>();
   private isCopyMenuOpen = false;
   private lastCopyMenuTs = 0;
@@ -216,6 +217,10 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
 
   public onSelectedOrderMenu(event: MenuEvent, order: EzeeOrderListItem): void {
     const selected = this.orderMenu.options[event?.index ?? 0];
+    if (event?.index === 0) {
+      this.setOrderEnroute(order);
+      return;
+    }
     if (event?.index === 2) {
       this.openFinalizeModal(order);
       return;
@@ -268,7 +273,9 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
   }
 
   public isOrderMenuLoading(order: EzeeOrderListItem): boolean {
-    return this.addingNoteOrders.has(order.number) || this.finalizingOrders.has(order.number);
+    return this.addingNoteOrders.has(order.number) ||
+      this.finalizingOrders.has(order.number) ||
+      this.updatingStatusOrders.has(order.number);
   }
 
   public openAddNoteModal(order: EzeeOrderListItem): void {
@@ -360,10 +367,16 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
   }
 
   public statusClass(order: EzeeOrderListItem): string {
+    if (String(order.status || '').toLowerCase() === 'enroute') {
+      return 'status-current';
+    }
     return order.workflowStatus === 'Completed' ? 'status-closed' : 'status-open';
   }
 
   public statusIcon(order: EzeeOrderListItem): string {
+    if (String(order.status || '').toLowerCase() === 'enroute') {
+      return '\uf1b9';
+    }
     return order.workflowStatus === 'Completed' ? '\uf058' : '\uf017';
   }
 
@@ -727,6 +740,60 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
         alert({ title: 'Finalize Order', message, okButtonText: 'OK' });
       },
     });
+  }
+
+  private setOrderEnroute(order: EzeeOrderListItem): void {
+    if (!order || this.isOrderMenuLoading(order)) {
+      return;
+    }
+
+    this.updatingStatusOrders.add(order.number);
+    this.cdr.detectChanges();
+
+    this.ordersService.setEnroute(order.number).pipe(
+      finalize(() => {
+        this.updatingStatusOrders.delete(order.number);
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
+      next: (response) => {
+        if (response?.error) {
+          alert({
+            title: 'Go Enroute',
+            message: response?.message || 'Unable to change the order status.',
+            okButtonText: 'OK',
+          });
+          return;
+        }
+
+        alert({
+          title: 'Order Enroute',
+          message: response?.message || 'Work order status changed to Enroute successfully.',
+          okButtonText: 'OK',
+        });
+        this.updateOrderStatus(order, response?.data?.status || 'Enroute');
+      },
+      error: (error) => {
+        const message = String(
+          error?.error?.message || error?.message || 'Unable to change the order status.'
+        );
+        alert({ title: 'Go Enroute', message, okButtonText: 'OK' });
+      },
+    });
+  }
+
+  private updateOrderStatus(order: EzeeOrderListItem, status: string): void {
+    const updatedOrder: EzeeOrderListItem = { ...order, status };
+    const allOrdersIndex = this.allOrders.findIndex((item) => item.number === order.number);
+    if (allOrdersIndex >= 0) {
+      this.allOrders[allOrdersIndex] = updatedOrder;
+    }
+
+    const visibleOrderIndex = this.orders.findIndex((item) => item.number === order.number);
+    if (visibleOrderIndex >= 0) {
+      this.orders.setItem(visibleOrderIndex, updatedOrder);
+    }
+    this.cdr.detectChanges();
   }
 
   private showUnavailable(message: string): void {

@@ -10,6 +10,7 @@ import {
   EzeeAddOrderNoteResponse,
   EzeeFinalizeOrderResponse,
   EzeeFinalizeReason,
+  EzeeOrderStatusResponse,
   EzeeOrderListItem,
   EzeeOrdersDay,
   EzeeOrdersResponse,
@@ -87,6 +88,19 @@ export class EzeeOrdersService {
         reason: selectedReason.reason,
         reasonId: selectedReason.reasonId,
       },
+      { headers }
+    ).pipe(timeout(20000));
+  }
+
+  public setEnroute(number: string): Observable<EzeeOrderStatusResponse> {
+    const token = getString('token', '');
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`,
+    });
+
+    return this.httpClient.post<EzeeOrderStatusResponse>(
+      `${this.configService.getUrlBase()}/ezee-fiber/orders/enroute/${encodeURIComponent(number)}`,
+      {},
       { headers }
     ).pipe(timeout(20000));
   }

@@ -100,8 +100,19 @@ export interface EzeeFinalizeOrderResponse {
   };
 }
 
+export interface EzeeOrderStatusResponse {
+  statusCode: number;
+  message: string;
+  error: boolean;
+  data: {
+    number: string;
+    status: string;
+  };
+}
+
 export interface EzeeOrder {
   number: string;
+  status?: string;
   date: string;
   timeFrom: string | null;
   timeTo: string | null;
