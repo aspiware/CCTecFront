@@ -105,6 +105,19 @@ export class EzeeOrdersService {
     ).pipe(timeout(20000));
   }
 
+  public setInProgress(number: string): Observable<EzeeOrderStatusResponse> {
+    const token = getString('token', '');
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`,
+    });
+
+    return this.httpClient.post<EzeeOrderStatusResponse>(
+      `${this.configService.getUrlBase()}/ezee-fiber/orders/in-progress/${encodeURIComponent(number)}`,
+      {},
+      { headers }
+    ).pipe(timeout(20000));
+  }
+
   public loadToday(onFinished?: () => void): void {
     if (this.loadingSubject.value) {
       console.log('[EzeeOrdersService] GET /ezee-fiber/orders skipped: request already in progress');

@@ -221,6 +221,10 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       this.setOrderEnroute(order);
       return;
     }
+    if (event?.index === 1) {
+      this.setOrderInProgress(order);
+      return;
+    }
     if (event?.index === 2) {
       this.openFinalizeModal(order);
       return;
@@ -367,15 +371,20 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
   }
 
   public statusClass(order: EzeeOrderListItem): string {
-    if (String(order.status || '').toLowerCase() === 'enroute') {
+    const status = this.normalizedOrderStatus(order);
+    if (status === 'enroute' || status === 'inprogress') {
       return 'status-current';
     }
     return order.workflowStatus === 'Completed' ? 'status-closed' : 'status-open';
   }
 
   public statusIcon(order: EzeeOrderListItem): string {
-    if (String(order.status || '').toLowerCase() === 'enroute') {
+    const status = this.normalizedOrderStatus(order);
+    if (status === 'enroute') {
       return '\uf1b9';
+    }
+    if (status === 'inprogress') {
+      return '\uf0ad';
     }
     return order.workflowStatus === 'Completed' ? '\uf058' : '\uf017';
   }
@@ -782,6 +791,46 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     });
   }
 
+  private setOrderInProgress(order: EzeeOrderListItem): void {
+    if (!order || this.isOrderMenuLoading(order)) {
+      return;
+    }
+
+    this.updatingStatusOrders.add(order.number);
+    this.cdr.detectChanges();
+
+    this.ordersService.setInProgress(order.number).pipe(
+      finalize(() => {
+        this.updatingStatusOrders.delete(order.number);
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
+      next: (response) => {
+        if (response?.error) {
+          alert({
+            title: 'Go In Progress',
+            message: response?.message || 'Unable to change the order status.',
+            okButtonText: 'OK',
+          });
+          return;
+        }
+
+        alert({
+          title: 'Order In Progress',
+          message: response?.message || 'Work order status changed to In Progress successfully.',
+          okButtonText: 'OK',
+        });
+        this.updateOrderStatus(order, response?.data?.status || 'In Progress');
+      },
+      error: (error) => {
+        const message = String(
+          error?.error?.message || error?.message || 'Unable to change the order status.'
+        );
+        alert({ title: 'Go In Progress', message, okButtonText: 'OK' });
+      },
+    });
+  }
+
   private updateOrderStatus(order: EzeeOrderListItem, status: string): void {
     const updatedOrder: EzeeOrderListItem = { ...order, status };
     const allOrdersIndex = this.allOrders.findIndex((item) => item.number === order.number);
@@ -794,6 +843,10 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       this.orders.setItem(visibleOrderIndex, updatedOrder);
     }
     this.cdr.detectChanges();
+  }
+
+  private normalizedOrderStatus(order: EzeeOrderListItem): string {
+    return String(order.status || '').toLowerCase().replace(/[\s_-]+/g, '');
   }
 
   private showUnavailable(message: string): void {
