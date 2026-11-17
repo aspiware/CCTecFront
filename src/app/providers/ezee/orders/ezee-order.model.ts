@@ -77,6 +77,18 @@ export interface EzeeAddOrderNoteResponse {
   };
 }
 
+export interface EzeeFinalizeReason {
+  reason: string;
+  reasonId: number;
+  description: string;
+}
+
+export interface EzeeFinalizeOptions {
+  reasons: EzeeFinalizeReason[];
+  finalSecondaryReasonsRequired: boolean;
+  secondaryReasonsRequired: boolean;
+}
+
 export interface EzeeOrder {
   number: string;
   date: string;
@@ -89,6 +101,7 @@ export interface EzeeOrder {
   address: string;
   detailPath: string;
   notes?: EzeeOrderNote[];
+  finalizeOptions?: EzeeFinalizeOptions | null;
   pricing?: EzeeOrderPricing | null;
   customer: EzeeCustomer;
 }

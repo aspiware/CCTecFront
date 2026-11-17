@@ -12,6 +12,8 @@ import { CustomerInfoComponent } from '../../../customer-info/customer-info.comp
 import { EzeeEditOrderComponent } from './ezee-edit-order.component';
 import { EzeeOrderHistoryComponent } from './ezee-order-history.component';
 import { AddNoteComponent } from '../../../add-note/add-note.component';
+import { EzeeFinalizeOrderComponent } from './ezee-finalize-order.component';
+import { EzeeFinalizeReason } from './ezee-order.model';
 
 @Component({
   standalone: true,
@@ -86,6 +88,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
   private readonly actionTapStates: Record<string, boolean> = {};
   private readonly actionTapTimers: Record<string, any> = {};
   private readonly addingNoteOrders = new Set<string>();
+  private readonly selectedFinalizeReasons = new Map<string, EzeeFinalizeReason>();
   private isCopyMenuOpen = false;
   private lastCopyMenuTs = 0;
   private isErrorAlertOpen = false;
@@ -212,6 +215,10 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
 
   public onSelectedOrderMenu(event: MenuEvent, order: EzeeOrderListItem): void {
     const selected = this.orderMenu.options[event?.index ?? 0];
+    if (event?.index === 2) {
+      this.openFinalizeModal(order);
+      return;
+    }
     if (event?.index === 3) {
       this.openAddNoteModal(order);
       return;
@@ -219,6 +226,42 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     this.showUnavailable(
       `${selected?.name || 'This order action'} is not connected for Ezee Fiber yet.`
     );
+  }
+
+  public openFinalizeModal(order: EzeeOrderListItem): void {
+    if (!order) {
+      return;
+    }
+
+    const selectedReason = this.selectedFinalizeReasons.get(order.number);
+    const options: any = {
+      context: {
+        order,
+        selectedReasonId: selectedReason?.reasonId,
+      },
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: false,
+      stretched: false,
+      cancelable: true,
+      dismissEnabled: true,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.Custom,
+      },
+    };
+
+    this.modalService.showModal(EzeeFinalizeOrderComponent, options).then((result) => {
+      if (result?.reason && Number.isFinite(Number(result?.reasonId))) {
+        this.selectedFinalizeReasons.set(order.number, result as EzeeFinalizeReason);
+      }
+    }).catch((error) => {
+      console.log('[EzeeOrders] Failed to open finalize modal', error);
+      alert({
+        title: 'Finalize Order',
+        message: 'Unable to open the finalize options.',
+        okButtonText: 'OK',
+      });
+    });
   }
 
   public isOrderMenuLoading(order: EzeeOrderListItem): boolean {

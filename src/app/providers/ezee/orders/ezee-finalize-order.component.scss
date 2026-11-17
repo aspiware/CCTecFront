@@ -1,0 +1,116 @@
+.modal-root {
+  width: 100%;
+  height: 100%;
+}
+
+.backdrop {
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+}
+
+.modal-card {
+  width: 90%;
+  height: 60%;
+  padding: 16;
+  border-radius: 16;
+  border-width: 1;
+  border-color: rgba(255, 255, 255, 0.14);
+  background-color: #1c1c1e;
+  vertical-align: middle;
+  horizontal-align: center;
+}
+
+.ns-light .modal-card {
+  background-color: #f2f2f7;
+  border-color: rgba(60, 60, 67, 0.16);
+}
+
+.header {
+  margin-bottom: 12;
+}
+
+.modal-title {
+  font-size: 20;
+  font-weight: 700;
+}
+
+.order-number {
+  margin-top: 3;
+  font-size: 13;
+  opacity: 0.7;
+}
+
+.close-button {
+  width: 38;
+  height: 38;
+  padding-top: 10;
+  font-size: 16;
+  text-align: center;
+}
+
+.reasons-scroll {
+  margin-top: 4;
+  margin-bottom: 12;
+}
+
+.reason-row {
+  margin-top: 6;
+  margin-bottom: 6;
+  padding: 12;
+  border-radius: 10;
+  border-width: 1;
+  border-color: rgba(142, 142, 147, 0.35);
+  background-color: rgba(126, 151, 185, 0.12);
+}
+
+.reason-row-selected {
+  border-color: #0a84ff;
+  background-color: rgba(10, 132, 255, 0.16);
+}
+
+.selection-indicator {
+  width: 32;
+  margin-right: 8;
+  color: #0a84ff;
+  font-size: 22;
+  vertical-align: middle;
+}
+
+.reason-code {
+  font-size: 16;
+  font-weight: 700;
+}
+
+.reason-description {
+  margin-top: 3;
+  font-size: 14;
+  opacity: 0.8;
+}
+
+.empty-message {
+  margin: 24 12;
+  text-align: center;
+  opacity: 0.7;
+}
+
+.footer {
+  margin-top: 8;
+}
+
+.footer-button {
+  height: 46;
+  margin: 0 5;
+  border-radius: 10;
+  font-size: 16;
+  font-weight: 600;
+}
+
+.secondary-button {
+  background-color: rgba(142, 142, 147, 0.2);
+}
+
+.primary-button {
+  color: #ffffff;
+  background-color: #0a84ff;
+}
