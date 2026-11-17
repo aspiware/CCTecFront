@@ -119,6 +119,21 @@
                 style="font-size: 16px; height: 70px; width: 100px; margin-right: 6" text="&#xe012;"
                 (tap)="markActionTap(order, 'activate-service'); activateService(order)">
               </MenuButton>
+
+              <StackLayout class="job-action-button" style="width: 100px; height: 70px;">
+                <MenuButton class="fas"
+                  [class.job-action-tapped]="isActionTapped(order, 'order-menu')"
+                  style="font-size: 16px; height: 70px; width: 100px;"
+                  [showSpinner]="isOrderMenuLoading(order)"
+                  [isRightSide]="true"
+                  [useSFIcon]="true"
+                  [sfIconName]="'bolt.circle'"
+                  [imageInsets]="{ top: 0, left: 0, bottom: 0, right: 0 }"
+                  [options]="orderMenu.options"
+                  (tap)="markActionTap(order, 'order-menu')"
+                  (selected)="onSelectedOrderMenu($event, order)">
+                </MenuButton>
+              </StackLayout>
             </StackLayout>
           </GridLayout>
         </StackLayout>

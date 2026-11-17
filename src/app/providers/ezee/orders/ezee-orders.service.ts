@@ -7,6 +7,7 @@ import {
   EzeeOrderGroup,
   EzeeOrderChargeUpdate,
   EzeeChargeOptionsResponse,
+  EzeeAddOrderNoteResponse,
   EzeeOrderListItem,
   EzeeOrdersDay,
   EzeeOrdersResponse,
@@ -50,6 +51,20 @@ export class EzeeOrdersService {
     return this.httpClient.patch<any>(
       `${this.configService.getUrlBase()}/ezee-fiber/orders/${encodeURIComponent(number)}/charges`,
       { charges },
+      { headers }
+    ).pipe(timeout(20000));
+  }
+
+  public addNote(number: string, comment: string): Observable<EzeeAddOrderNoteResponse> {
+    const token = getString('token', '');
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    });
+
+    return this.httpClient.post<EzeeAddOrderNoteResponse>(
+      `${this.configService.getUrlBase()}/ezee-fiber/orders/${encodeURIComponent(number)}/notes`,
+      { comment },
       { headers }
     ).pipe(timeout(20000));
   }

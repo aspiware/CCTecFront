@@ -68,6 +68,15 @@ export interface EzeeChargeOptionsResponse {
   };
 }
 
+export interface EzeeAddOrderNoteResponse {
+  statusCode: number;
+  message: string;
+  error: boolean;
+  data: {
+    number: string;
+  };
+}
+
 export interface EzeeOrder {
   number: string;
   date: string;

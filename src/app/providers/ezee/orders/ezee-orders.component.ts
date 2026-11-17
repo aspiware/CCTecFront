@@ -2,7 +2,7 @@ import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit, View
 import { ModalDialogService, NativeScriptCommonModule, RouterExtensions } from '@nativescript/angular';
 import { Application, ObservableArray, Page, Screen, SegmentedBarItem, Utils, alert } from '@nativescript/core';
 import { NativeScriptUIListViewModule } from 'nativescript-ui-listview/angular';
-import { Subscription } from 'rxjs';
+import { finalize, Subscription } from 'rxjs';
 import { EzeeOrdersService } from './ezee-orders.service';
 import { EzeeOrderListItem } from './ezee-order.model';
 import { MenuEvent } from '../../../shared/components/menu-button/common';
@@ -11,6 +11,7 @@ import { ConfigService } from '../../../shared/services/config.service';
 import { CustomerInfoComponent } from '../../../customer-info/customer-info.component';
 import { EzeeEditOrderComponent } from './ezee-edit-order.component';
 import { EzeeOrderHistoryComponent } from './ezee-order-history.component';
+import { AddNoteComponent } from '../../../add-note/add-note.component';
 
 @Component({
   standalone: true,
@@ -72,9 +73,19 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       },
     ],
   };
+  public orderMenu: Item = {
+    name: 'Order Menu',
+    options: [
+      { name: 'Go Enroute', icon: 'car.fill' },
+      { name: 'Go In Progress', icon: 'wrench.fill' },
+      { name: 'Finalize', icon: 'checkmark.circle.fill' },
+      { name: 'Add Note', icon: 'note.text.badge.plus' },
+    ],
+  };
   private allOrders: EzeeOrderListItem[] = [];
   private readonly actionTapStates: Record<string, boolean> = {};
   private readonly actionTapTimers: Record<string, any> = {};
+  private readonly addingNoteOrders = new Set<string>();
   private isCopyMenuOpen = false;
   private lastCopyMenuTs = 0;
   private isErrorAlertOpen = false;
@@ -197,6 +208,63 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
 
   public selected(_event: MenuEvent, _item?: any): void {
     this.showUnavailable('Lunch actions are not connected for Ezee Fiber yet.');
+  }
+
+  public onSelectedOrderMenu(event: MenuEvent, order: EzeeOrderListItem): void {
+    const selected = this.orderMenu.options[event?.index ?? 0];
+    if (event?.index === 3) {
+      this.openAddNoteModal(order);
+      return;
+    }
+    this.showUnavailable(
+      `${selected?.name || 'This order action'} is not connected for Ezee Fiber yet.`
+    );
+  }
+
+  public isOrderMenuLoading(order: EzeeOrderListItem): boolean {
+    return this.addingNoteOrders.has(order.number);
+  }
+
+  public openAddNoteModal(order: EzeeOrderListItem): void {
+    if (!order || this.isOrderMenuLoading(order)) {
+      return;
+    }
+
+    const options: any = {
+      context: { note: '' },
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: false,
+      stretched: false,
+      cancelable: true,
+      dismissEnabled: true,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.Custom,
+      },
+    };
+
+    this.modalService.showModal(AddNoteComponent, options).then((result) => {
+      if (typeof result !== 'string') {
+        return;
+      }
+      const comment = result.trim();
+      if (!comment) {
+        alert({
+          title: 'Add Note',
+          message: 'Please enter a note before saving.',
+          okButtonText: 'OK',
+        });
+        return;
+      }
+      this.saveOrderNote(order, comment);
+    }).catch((error) => {
+      console.log('[EzeeOrders] Failed to open add note modal', error);
+      alert({
+        title: 'Add Note',
+        message: 'Unable to open the note editor.',
+        okButtonText: 'OK',
+      });
+    });
   }
 
   public onRootLoaded(): void {
@@ -533,6 +601,41 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
           order.customer?.subscriberNumber,
         ].some((value) => String(value || '').toLowerCase().includes(query)));
     this.orders = new ObservableArray(filtered);
+  }
+
+  private saveOrderNote(order: EzeeOrderListItem, comment: string): void {
+    this.addingNoteOrders.add(order.number);
+    this.cdr.detectChanges();
+
+    this.ordersService.addNote(order.number, comment).pipe(
+      finalize(() => {
+        this.addingNoteOrders.delete(order.number);
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
+      next: (response) => {
+        if (response?.error) {
+          alert({
+            title: 'Add Note',
+            message: response?.message || 'Unable to add the note.',
+            okButtonText: 'OK',
+          });
+          return;
+        }
+        alert({
+          title: 'Note Added',
+          message: response?.message || 'Work order note added successfully.',
+          okButtonText: 'OK',
+        });
+        this.ordersService.loadToday();
+      },
+      error: (error) => {
+        const message = String(
+          error?.error?.message || error?.message || 'Unable to add the note.'
+        );
+        alert({ title: 'Add Note', message, okButtonText: 'OK' });
+      },
+    });
   }
 
   private showUnavailable(message: string): void {
