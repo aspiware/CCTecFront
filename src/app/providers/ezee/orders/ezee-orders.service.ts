@@ -1,7 +1,7 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { getString } from '@nativescript/core/application-settings';
-import { BehaviorSubject, finalize, Observable, timeout } from 'rxjs';
+import { BehaviorSubject, finalize, Observable, Subject, timeout } from 'rxjs';
 import { ConfigService } from '../../../shared/services/config.service';
 import {
   EzeeOrderGroup,
@@ -21,7 +21,7 @@ export class EzeeOrdersService {
   private readonly ordersSubject = new BehaviorSubject<EzeeOrderListItem[]>([]);
   private readonly summarySubject = new BehaviorSubject<EzeeOrdersDay>(this.emptySummary());
   private readonly loadingSubject = new BehaviorSubject<boolean>(false);
-  private readonly errorSubject = new BehaviorSubject<string>('');
+  private readonly errorSubject = new Subject<string>();
 
   public readonly orders$ = this.ordersSubject.asObservable();
   public readonly summary$ = this.summarySubject.asObservable();

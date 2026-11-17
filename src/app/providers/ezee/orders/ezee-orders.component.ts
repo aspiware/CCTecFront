@@ -180,7 +180,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
         message,
         okButtonText: 'OK',
       });
-      if (this.isSessionExpiredError(message)) {
+      if (this.isSessionExpiredError(message) && this.errorMessage === message) {
         this.configService.logout();
         this.routerExtensions.navigate(['/login'], { clearHistory: true });
       }
