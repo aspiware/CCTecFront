@@ -1,0 +1,145 @@
+<ActionBar class="action-bar" title="Today’s Orders">
+  <ActionItem ios.position="right" ios.systemIcon="13" [visibility]="isLoading ? 'collapse' : 'visible'"
+    [isEnabled]="!isLoading" (tap)="refresh()">
+  </ActionItem>
+  <ActionItem ios.position="right" [visibility]="isLoading ? 'visible' : 'collapse'">
+    <ActivityIndicator [busy]="isLoading" width="20" height="20"></ActivityIndicator>
+  </ActionItem>
+
+  <ActionItem ios.position="right">
+    <StackLayout>
+      <MenuButton style="height: 48; width: 35; padding: 0; margin: 0;" [useSFIcon]="true"
+        [sfIconName]="'ellipsis.circle'" [isRightSide]="true" [options]="mainMenuR.options"
+        (selected)="onSelectedMainMenuR($event)">
+      </MenuButton>
+    </StackLayout>
+  </ActionItem>
+
+  <ActionItem ios.position="left" style="font-size: 17px" class="fas">
+    <StackLayout orientation="horizontal">
+      <MenuButton [useSFIcon]="true" class="fas" style="background-color: transparent; font-size: 18px;"
+        [sfIconName]="mainMenuIconName" [showSpinner]="isTechStatusLoading" [options]="mainMenu.options"
+        (selected)="onSelectedMainMenu($event)">
+      </MenuButton>
+    </StackLayout>
+  </ActionItem>
+
+  <ActionItem *ngIf="isOnShift" ios.position="left">
+    <StackLayout>
+      <MenuButton [useSFIcon]="true" [sfIconName]="'fork.knife.circle'" [options]="[]"
+        (selected)="selected($event, item)">
+      </MenuButton>
+    </StackLayout>
+  </ActionItem>
+</ActionBar>
+
+<StackLayout [class]="'container ' + (isDarkTheme ? 'theme-dark' : 'theme-light')" (loaded)="onRootLoaded()">
+  <GridLayout rows="auto" columns="*" style="margin-left: 10; margin-right: 10; margin-top: 10;">
+    <StackLayout horizontalAlignment="left" orientation="horizontal">
+      <Label class="action-bar-title today-label" [text]="'Today: ' + (todayTotal | currency)"></Label>
+    </StackLayout>
+
+    <StackLayout horizontalAlignment="center" orientation="horizontal">
+      <Label class="action-bar-title today-label" [text]="'Units: ' + totalUnits"></Label>
+    </StackLayout>
+
+    <StackLayout horizontalAlignment="right" orientation="horizontal">
+      <Label class="action-bar-title today-label" [text]="'Week: ' + (weekTotal | currency)"></Label>
+    </StackLayout>
+  </GridLayout>
+
+  <GridLayout rows="auto" columns="*" style="margin-left: 10; margin-right: 10; margin-top: 10; margin-bottom: 20;">
+    <SegmentedBar
+      [items]="statusFilterItems"
+      [selectedIndex]="selectedStatusFilterIndex"
+      (selectedIndexChange)="onStatusFilterChanged($event)">
+    </SegmentedBar>
+  </GridLayout>
+
+  <RadListView [items]="orders" [pullToRefresh]="!isLoading"
+    (pullToRefreshInitiated)="onPullToRefresh($event)" height="100%" class="jobs-list">
+    <ng-template tkListItemTemplate let-order="item">
+      <GridLayout clipToBounds="false">
+        <StackLayout class="item-bag">
+          <GridLayout columns="*,auto" width="100%" class="item-header">
+            <Label col="0" class="first-row"
+              [text]="(order.workType || 'Order') + (order.initialReason ? ' - ' + order.initialReason : '')">
+            </Label>
+            <Label col="1" class="first-row amount" [text]="(order.pricing?.total || 0) | currency"></Label>
+          </GridLayout>
+
+          <Label class="second-row" (longPress)="showMenu($event, order.address, 'address')"
+            [text]="order.address || 'Address unavailable'">
+          </Label>
+
+          <GridLayout rows="auto" columns="auto, *, auto" class="meta-row">
+            <Label col="0" (longPress)="showMenu($event, order.number, 'order')" class="secondRow"
+              [text]="'Order#: ' + (order.number || 'n/a')" style="margin-right: 10;">
+            </Label>
+            <Label col="1" (longPress)="showMenu($event, order.customer.subscriberNumber, 'account')" class="secondRow"
+              [text]="'Account#: ' + (order.customer.subscriberNumber || 'n/a')">
+            </Label>
+            <Label col="2" class="secondRow units" [text]="'Units: ' + (order.workUnits || 'n/a')"></Label>
+          </GridLayout>
+
+          <GridLayout columns="*,auto" style="margin-bottom: 10;">
+            <Label col="0" class="second-row" [text]="orderTime(order)"></Label>
+            <Label col="1" class="second-row" [text]="order.customer.fullName || ''"></Label>
+          </GridLayout>
+
+          <GridLayout rows="auto" columns="*">
+            <StackLayout row="0" col="0" horizontalAlignment="right" orientation="horizontal"
+              style="padding: 0" backgroundColor="">
+              <MenuButton *ngIf="order.workflowStatus === 'Completed'" class="fas job-action-button"
+                [class.job-action-tapped]="isActionTapped(order, 'edit')"
+                style="font-size: 14px; height: 70px; width: 100px; margin-right: 6" text="&#xf044;"
+                (tap)="markActionTap(order, 'edit'); showEditOrder(order)">
+              </MenuButton>
+
+              <MenuButton class="fas job-action-button"
+                [class.job-action-tapped]="isActionTapped(order, 'customer')"
+                style="font-size: 14px; height: 70px; width: 100px; margin-right: 6" text="&#xf007;"
+                (tap)="markActionTap(order, 'customer'); showCustomer(order)">
+              </MenuButton>
+
+              <MenuButton class="fas job-action-button"
+                [class.job-action-tapped]="isActionTapped(order, 'history')"
+                style="font-size: 14px; height: 70px; width: 100px; margin-right: 6" text="&#xf1da;"
+                (tap)="markActionTap(order, 'history'); showOrderHistory(order)">
+              </MenuButton>
+
+              <MenuButton class="fas job-action-button"
+                [class.job-action-tapped]="isActionTapped(order, 'devices')"
+                style="font-size: 14px; height: 70px; width: 100px; margin-right: 6" text="&#xf26c;"
+                (tap)="markActionTap(order, 'devices'); showDevices(order)">
+              </MenuButton>
+
+              <MenuButton class="fas job-action-button"
+                [class.job-action-tapped]="isActionTapped(order, 'activate-service')"
+                style="font-size: 16px; height: 70px; width: 100px; margin-right: 6" text="&#xe012;"
+                (tap)="markActionTap(order, 'activate-service'); activateService(order)">
+              </MenuButton>
+
+              <StackLayout class="job-action-button" style="width: 100px; height: 70px;">
+                <MenuButton class="fas"
+                  [class.job-action-tapped]="isActionTapped(order, 'order-menu')"
+                  style="font-size: 16px; height: 70px; width: 100px;"
+                  [showSpinner]="isOrderMenuLoading(order)"
+                  [isRightSide]="true"
+                  [useSFIcon]="true"
+                  [sfIconName]="'bolt.circle'"
+                  [imageInsets]="{ top: 0, left: 0, bottom: 0, right: 0 }"
+                  [options]="orderMenu.options"
+                  (tap)="markActionTap(order, 'order-menu')"
+                  (selected)="onSelectedOrderMenu($event, order)">
+                </MenuButton>
+              </StackLayout>
+            </StackLayout>
+          </GridLayout>
+        </StackLayout>
+
+        <Label class="fas status-icon floating-status {{ statusClass(order) }}" [text]="statusIcon(order)"></Label>
+      </GridLayout>
+    </ng-template>
+  </RadListView>
+</StackLayout>

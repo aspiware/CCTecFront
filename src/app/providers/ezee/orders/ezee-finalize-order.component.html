@@ -1,0 +1,54 @@
+<ModalStack dismissEnabled="true" class="modal-root">
+  <GridLayout rows="*" columns="*">
+    <StackLayout row="0" col="0" class="backdrop" (tap)="cancel()"></StackLayout>
+
+    <GridLayout row="0" col="0" rows="auto,*,auto" class="modal-card">
+      <GridLayout row="0" columns="*,auto" class="header">
+        <StackLayout col="0">
+          <Label text="Finalize Order" class="modal-title"></Label>
+          <Label [text]="'Order #' + order.number" class="order-number"></Label>
+        </StackLayout>
+        <Label col="1" text="&#xf00d;" class="fas close-button" (tap)="cancel()"></Label>
+      </GridLayout>
+
+      <ScrollView row="1" class="reasons-scroll">
+        <StackLayout>
+          <Label
+            *ngIf="!reasons.length"
+            text="No finalize options are available for this order."
+            textWrap="true"
+            class="empty-message">
+          </Label>
+
+          <GridLayout
+            *ngFor="let reason of reasons"
+            columns="auto,*"
+            rows="auto,auto"
+            class="reason-row"
+            [class.reason-row-selected]="isSelected(reason)"
+            (tap)="selectReason(reason)">
+            <Label
+              rowSpan="2"
+              col="0"
+              [text]="isSelected(reason) ? '●' : '○'"
+              class="selection-indicator">
+            </Label>
+            <Label row="0" col="1" [text]="reason.reason" class="reason-code"></Label>
+            <Label row="1" col="1" [text]="reason.description" textWrap="true" class="reason-description"></Label>
+          </GridLayout>
+        </StackLayout>
+      </ScrollView>
+
+      <GridLayout row="2" columns="*,*" class="footer">
+        <Button col="0" text="Cancel" class="footer-button secondary-button" (tap)="cancel()"></Button>
+        <Button
+          col="1"
+          text="Finalize"
+          class="footer-button primary-button"
+          [isEnabled]="!!selectedReason"
+          (tap)="continue()">
+        </Button>
+      </GridLayout>
+    </GridLayout>
+  </GridLayout>
+</ModalStack>

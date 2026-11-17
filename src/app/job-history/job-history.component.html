@@ -9,7 +9,7 @@
       <GridLayout row="0" columns="*,auto" class="header header-fixed">
         <Label
           col="0"
-          [text]="'Job History (' + jobHistoryList.length + ')'"
+          [text]="modalTitle + ' (' + jobHistoryList.length + ')'"
           class="title modal-title-text"></Label>
 
         <StackLayout col="1">
@@ -37,7 +37,7 @@
           </StackLayout>
 
           <StackLayout *ngIf="!isLoading && !loadError && !jobHistoryList.length" class="empty-state">
-            <Label class="empty-message" text="No history found for this job."></Label>
+            <Label class="empty-message" [text]="emptyHistoryMessage"></Label>
           </StackLayout>
 
           <ScrollView *ngIf="!isLoading && jobHistoryList.length" class="custom-types-list">
@@ -57,7 +57,12 @@
                     </Label>
                   </GridLayout>
 
-                  <Label row="1" class="history-author" [text]="getHistoryAuthor(item)"></Label>
+                  <Label
+                    row="1"
+                    *ngIf="getHistoryAuthor(item)"
+                    class="history-author"
+                    [text]="getHistoryAuthor(item)">
+                  </Label>
                   <Label row="2" *ngIf="getHistoryComment(item)" class="history-notes" [text]="getHistoryComment(item)" textWrap="true"></Label>
                 </GridLayout>
               </GridLayout>

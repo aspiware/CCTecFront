@@ -18,6 +18,7 @@ import { SettingsService } from './settings.service';
   styleUrl: './settings.component.scss',
 })
 export class SettingsComponent implements OnInit, OnDestroy {
+  public isEzeeSettings = false;
   public isDarkTheme = Application.systemAppearance() === 'dark';
   public isSubscribed = false;
   public roleId = 0;

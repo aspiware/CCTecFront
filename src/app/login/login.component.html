@@ -7,26 +7,37 @@
     <Label text="Welcome back" class="logo"></Label>
     <Label text="Sign in to continue" class="subtitle"></Label>
 
-    <GridLayout rows="auto" columns="*" style="margin-top: 50px;">
+    <StackLayout class="provider-wrap">
+      <Label text="Provider" class="field-label"></Label>
+      <SegmentedBar
+        [items]="providerItems"
+        [selectedIndex]="selectedProviderIndex"
+        (selectedIndexChange)="onProviderChanged($event)">
+      </SegmentedBar>
+    </StackLayout>
+
+    <GridLayout rows="auto" columns="*" style="margin-top: 24px;">
       <GridLayout columns="*,auto" class="input-shell" width="100%">
         <TextField
           col="0"
           formControlName="username"
           required
-          hint="bp-username"
+          [hint]="isXfinityProvider ? 'bp-username' : 'username'"
           returnKeyType="next"
           (returnPress)="focusPassword()"
           autocapitalizationType="none"
           autocorrect="false"
           class="custom-tf-inline">
         </TextField>
-        <Label col="1" text="@cable.comcast.com" class="suffix-label"></Label>
+        <Label *ngIf="isXfinityProvider" col="1" text="@cable.comcast.com" class="suffix-label"></Label>
       </GridLayout>
     </GridLayout>
 
     <Label
       class="required-label"
-      text="{{loginForm.controls.username.errors?.required ? 'Please enter the BP Username' : ''}}">
+      [text]="loginForm.controls.username.errors?.required
+        ? (isXfinityProvider ? 'Please enter the BP Username' : 'Please enter the username')
+        : ''">
     </Label>
 
     <GridLayout rows="auto" columns="*" style="margin-top: 20;">
@@ -56,7 +67,7 @@
       text="{{loginForm.controls.password.errors?.required ? 'Please enter the password' : ''}}">
     </Label>
 
-    <StackLayout class="auth-method-wrap">
+    <StackLayout *ngIf="isXfinityProvider" class="auth-method-wrap">
       <Label text="Verification method" class="auth-method-label"></Label>
       <SegmentedBar
         [items]="authMethodItems"

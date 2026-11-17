@@ -21,6 +21,13 @@ import { XmIngressComponent } from './xm-ingress/xm-ingress.component';
 import { XmPhtScansComponent } from './xm-pht-scans/xm-pht-scans.component';
 import { SmsSurveyComponent } from './sms-survey/sms-survey.component';
 import { SmsAvailabilityComponent } from './sms-availability/sms-availability.component';
+import { EzeeTabsContainerComponent } from './providers/ezee/tabs/ezee-tabs-container.component';
+import { EzeeHomeComponent } from './providers/ezee/home/ezee-home.component';
+import { EzeeOrdersComponent } from './providers/ezee/orders/ezee-orders.component';
+import { EzeeSettingsComponent } from './providers/ezee/settings/ezee-settings.component';
+import { EzeeJobsComponent } from './providers/ezee/jobs/ezee-jobs.component';
+import { EzeeExpensesComponent } from './providers/ezee/expenses/ezee-expenses.component';
+import { ezeeProviderGuard, xfinityProviderGuard } from './shared/guards/provider-route.guard';
 
 export const routes: Routes = [
   {
@@ -38,7 +45,7 @@ export const routes: Routes = [
   },
   {
     path: 'tabs',
-    canActivate: [authGuard, subscriptionGuard],
+    canActivate: [authGuard, xfinityProviderGuard, subscriptionGuard],
     component: TabsContainerComponent,
     children: [
       {
@@ -130,6 +137,38 @@ export const routes: Routes = [
         path: 'sms-availability',
         outlet: 'settingsTab',
         component: SmsAvailabilityComponent,
+      },
+    ],
+  },
+  {
+    path: 'ezee-tabs',
+    canActivate: [authGuard, ezeeProviderGuard, subscriptionGuard],
+    component: EzeeTabsContainerComponent,
+    children: [
+      {
+        path: 'home',
+        outlet: 'ezeeHomeTab',
+        component: EzeeHomeComponent,
+      },
+      {
+        path: 'orders',
+        outlet: 'ezeeOrdersTab',
+        component: EzeeOrdersComponent,
+      },
+      {
+        path: 'jobs',
+        outlet: 'ezeeJobsTab',
+        component: EzeeJobsComponent,
+      },
+      {
+        path: 'expenses',
+        outlet: 'ezeeExpensesTab',
+        component: EzeeExpensesComponent,
+      },
+      {
+        path: 'settings',
+        outlet: 'ezeeSettingsTab',
+        component: EzeeSettingsComponent,
       },
     ],
   },

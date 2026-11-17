@@ -106,23 +106,34 @@ TextField.custom-tf-inline {
   font-size: 12;
 }
 
+.provider-wrap {
+  margin-top: 34;
+  margin-left: 6;
+  margin-right: 6;
+}
+
+.field-label,
+.auth-method-label {
+  font-size: 13;
+  margin-bottom: 6;
+}
+
 .auth-method-wrap {
   margin-top: 20;
   margin-left: 6;
   margin-right: 6;
 }
 
-.auth-method-label {
-  font-size: 13;
-  margin-bottom: 6;
-}
-
+.ns-light .field-label,
 .ns-light .auth-method-label,
+.form-scroll.theme-light .field-label,
 .form-scroll.theme-light .auth-method-label {
   color: #3a3a3ca9;
 }
 
+.ns-dark .field-label,
 .ns-dark .auth-method-label,
+.form-scroll.theme-dark .field-label,
 .form-scroll.theme-dark .auth-method-label {
   color: #f2f2f79a;
 }

@@ -45,6 +45,9 @@ export class CustomerInfoComponent implements OnInit {
     private cdr: ChangeDetectorRef
   ) {
     this.job = this.modalParams.context;
+    if (this.job?.hideSurveyActions) {
+      this.mainMenu.options = this.mainMenu.options.filter((option) => option.name !== 'Survey SMS');
+    }
     console.log('[CustomerInfoComponent]JOB', this.job);
   }
 
@@ -63,22 +66,24 @@ export class CustomerInfoComponent implements OnInit {
   }
 
   public onSelectedMainMenu(event: MenuEvent): void {
-    switch (event?.index) {
-      case 0:
+    const selectedOption = this.mainMenu.options[event?.index];
+
+    switch (selectedOption?.name) {
+      case 'Availability SMS':
         const availabilityRecipients = this.getUniqueCustomerPhoneDigits();
         if (!availabilityRecipients.length) {
           return;
         }
         this.showAvailabilityLanguageMenu((event as any)?.object?.ios as UIView | undefined, availabilityRecipients);
         break;
-      case 1:
+      case 'Survey SMS':
         const surveyRecipients = this.getUniqueCustomerPhoneDigits();
         if (!surveyRecipients.length) {
           return;
         }
         this.showSurveyLanguageMenu((event as any)?.object?.ios as UIView | undefined, surveyRecipients);
         break;
-      case 2:
+      case 'Share Mobile Link':
         this.shareMobileLink();
         break;
       default:
@@ -185,16 +190,18 @@ export class CustomerInfoComponent implements OnInit {
         availabilityAction.setValueForKey(UIImage.systemImageNamed('message.badge'), 'image');
         alert.addAction(availabilityAction);
 
-        const messageAction = UIAlertAction.actionWithTitleStyleHandler(
-          'Send Survey',
-          UIAlertActionStyle.Default,
-          () => {
-            this.isCopyMenuOpen = false;
-            this.showSurveyLanguageMenu(sourceView, phoneDigits);
-          }
-        );
-        messageAction.setValueForKey(UIImage.systemImageNamed('ellipsis.message'), 'image');
-        alert.addAction(messageAction);
+        if (!this.job?.hideSurveyActions) {
+          const messageAction = UIAlertAction.actionWithTitleStyleHandler(
+            'Send Survey',
+            UIAlertActionStyle.Default,
+            () => {
+              this.isCopyMenuOpen = false;
+              this.showSurveyLanguageMenu(sourceView, phoneDigits);
+            }
+          );
+          messageAction.setValueForKey(UIImage.systemImageNamed('ellipsis.message'), 'image');
+          alert.addAction(messageAction);
+        }
       }
 
       alert.addAction(
@@ -261,7 +268,9 @@ export class CustomerInfoComponent implements OnInit {
       () => {
         this.openSmsComposer(
           recipientsList,
-          this.settings?.englishAvailabilityText || 'Hi, this is Xfinity tech, are you available for your appointment?'
+          this.job?.availabilitySmsText?.english ||
+            this.settings?.englishAvailabilityText ||
+            'Hi, this is Xfinity tech, are you available for your appointment?'
         );
         this.isCopyMenuOpen = false;
       }
@@ -275,7 +284,9 @@ export class CustomerInfoComponent implements OnInit {
       () => {
         this.openSmsComposer(
           recipientsList,
-          this.settings?.spanishAvailabilityText || 'Hola, soy el tecnico de Xfinity, esta disponible para su cita?'
+          this.job?.availabilitySmsText?.spanish ||
+            this.settings?.spanishAvailabilityText ||
+            'Hola, soy el tecnico de Xfinity, esta disponible para su cita?'
         );
         this.isCopyMenuOpen = false;
       }

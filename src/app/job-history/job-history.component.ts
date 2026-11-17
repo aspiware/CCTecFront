@@ -16,6 +16,8 @@ import { TodayService } from '../today/today.service';
   styleUrl: './job-history.component.scss',
 })
 export class JobHistoryComponent implements OnInit, OnDestroy {
+  public modalTitle = 'Job History';
+  public emptyHistoryMessage = 'No history found for this job.';
   public isDarkTheme = Application.systemAppearance() === 'dark';
   public job: any;
   public jobHistoryList = new ObservableArray<any>([]);

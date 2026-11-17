@@ -75,7 +75,7 @@
           </Label>
         </GridLayout>
 
-        <GridLayout columns="*, auto" class="line-row data-row">
+        <GridLayout *ngIf="!job?.hideSurveyNumber" columns="*, auto" class="line-row data-row">
           <Label col="0" text="Survey Number" class="label-key"></Label>
           <Label
             col="1"
@@ -86,7 +86,7 @@
           </Label>
         </GridLayout>
 
-        <GridLayout columns="*, auto" class="line-row data-row">
+        <GridLayout *ngIf="!job?.hideXfinityAppUsername" columns="*, auto" class="line-row data-row">
           <Label col="0" text="Xfinity App Username" class="label-key"></Label>
           <Label
             col="1"
