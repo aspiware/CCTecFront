@@ -84,7 +84,7 @@ export class EzeeOrderHistoryComponent implements OnInit, OnDestroy {
     if (!raw) {
       return 'No date';
     }
-    const date = new Date(raw);
+    const date = this.parseDate(String(raw));
     if (Number.isNaN(date.getTime())) {
       return String(raw);
     }
@@ -96,24 +96,18 @@ export class EzeeOrderHistoryComponent implements OnInit, OnDestroy {
   }
 
   public getHistoryAuthor(item: any): string {
-    const author = item?.author ?? item?.createdBy ?? item?.user ?? item?.person ?? item?.technician ?? item?.writtenBy;
+    const author = item?.author ?? item?.createdBy ?? item?.user;
     if (author && typeof author === 'object') {
-      return String(author?.fullName || author?.name || author?.username || '').trim();
+      const name = String(author.name || author.fullName || author.username || '').trim();
+      const techCode = String(author.techCode || '').trim();
+      return name && techCode ? `${name} (${techCode})` : name || techCode;
     }
-    if (author) {
-      return String(author).trim();
-    }
-    const entryType = String(item?.type || item?.field || item?.label || '').toLowerCase();
-    return /author|person|technician|created by|written by/.test(entryType)
-      ? String(item?.value || '').trim()
-      : '';
+    return author ? String(author).trim() : '';
   }
 
   public getHistoryComment(item: any): string {
-    const explicitComment = item?.comment ?? item?.note ?? item?.text ?? item?.message ?? item?.content ?? item?.description;
-    const entryType = String(item?.type || item?.field || item?.label || '').toLowerCase();
     const comment = String(
-      explicitComment ?? (/note|comment|description/.test(entryType) ? item?.value : '') ?? ''
+      item?.comment ?? item?.note ?? item?.text ?? item?.description ?? item?.value ?? ''
     );
     return comment
       .replace(/<br\s*\/?>/gi, '\n')
@@ -124,45 +118,16 @@ export class EzeeOrderHistoryComponent implements OnInit, OnDestroy {
 
   private loadOrderNotes(): void {
     const rawNotes = this.job?.notes ?? (this.job as any)?.note ?? (this.job as any)?.orderNotes;
-    const notes: any[] = [];
-    let pendingAuthor = '';
-
-    this.extractNotes(rawNotes).forEach((entry, index, entries) => {
-      if (entry && typeof entry === 'object') {
-        const author = this.getHistoryAuthor(entry);
-        const comment = this.getHistoryComment(entry);
-        if (!comment && author) {
-          pendingAuthor = author;
-          return;
-        }
-        if (!comment) {
-          return;
-        }
-        notes.push({
-          ...entry,
-          author: author || pendingAuthor,
-          comment,
-        });
-        pendingAuthor = '';
-        return;
+    const notes = this.extractNotes(rawNotes).map((note) => {
+      if (note && typeof note === 'object') {
+        return note;
       }
-
-      const text = String(entry ?? '').trim();
-      if (!text) {
-        return;
-      }
-      if (index < entries.length - 1 && this.looksLikeAuthorName(text)) {
-        pendingAuthor = text;
-        return;
-      }
-      notes.push({
+      return {
         subject: 'Order Note',
-        author: pendingAuthor,
-        comment: text,
+        comment: String(note ?? ''),
         date: this.job?.date,
-      });
-      pendingAuthor = '';
-    });
+      };
+    }).filter((note) => this.getHistoryComment(note));
 
     this.jobHistoryList = new ObservableArray(notes);
   }
@@ -172,24 +137,33 @@ export class EzeeOrderHistoryComponent implements OnInit, OnDestroy {
       return rawNotes;
     }
     if (rawNotes && typeof rawNotes === 'object') {
-      const nested =
-        (rawNotes as any).data ||
-        (rawNotes as any).notes ||
-        (rawNotes as any).history ||
-        (rawNotes as any).entries ||
-        (rawNotes as any).items ||
-        (rawNotes as any).list;
+      const nested = (rawNotes as any).data || (rawNotes as any).notes || (rawNotes as any).history;
       return Array.isArray(nested) ? nested : [rawNotes];
     }
     return rawNotes === null || rawNotes === undefined || rawNotes === '' ? [] : [rawNotes];
   }
 
-  private looksLikeAuthorName(value: string): boolean {
-    const words = value.trim().split(/\s+/);
-    if (words.length < 2 || words.length > 5 || value.length > 80) {
-      return false;
+  private parseDate(value: string): Date {
+    const match = value.trim().match(
+      /^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})\s+(AM|PM)$/i
+    );
+    if (!match) {
+      return new Date(value);
     }
-    return words.every((word) => /^[A-ZÁÉÍÓÚÜÑ][A-Za-zÁÉÍÓÚÜÑáéíóúüñ.'-]*$/.test(word));
+
+    const [, month, day, year, rawHour, minute, second, meridiem] = match;
+    let hour = Number(rawHour) % 12;
+    if (meridiem.toUpperCase() === 'PM') {
+      hour += 12;
+    }
+    return new Date(
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      hour,
+      Number(minute),
+      Number(second)
+    );
   }
 
   private syncTheme(): void {

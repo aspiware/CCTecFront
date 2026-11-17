@@ -33,6 +33,19 @@ export interface EzeeOrderPricing {
   priceConfigured: boolean;
 }
 
+export interface EzeeOrderNoteAuthor {
+  name: string;
+  techCode: string;
+}
+
+export interface EzeeOrderNote {
+  text: string;
+  author: EzeeOrderNoteAuthor | null;
+  createdAt: string;
+  editedBy: EzeeOrderNoteAuthor | null;
+  editedAt: string | null;
+}
+
 export interface EzeeOrderChargeUpdate {
   code: string;
   quantity: number;
@@ -66,7 +79,7 @@ export interface EzeeOrder {
   callFirst: unknown;
   address: string;
   detailPath: string;
-  notes?: unknown;
+  notes?: EzeeOrderNote[];
   pricing?: EzeeOrderPricing | null;
   customer: EzeeCustomer;
 }
