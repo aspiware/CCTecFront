@@ -10,6 +10,7 @@ import { Item } from '../../../shared/components/menu-button/item';
 import { ConfigService } from '../../../shared/services/config.service';
 import { CustomerInfoComponent } from '../../../customer-info/customer-info.component';
 import { EzeeEditOrderComponent } from './ezee-edit-order.component';
+import { EzeeOrderHistoryComponent } from './ezee-order-history.component';
 
 @Component({
   standalone: true,
@@ -353,17 +354,31 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     Utils.openUrl(`https://www.google.com/maps/search/?api=1&query=${address}`);
   }
 
-  public showOrderDetails(order: EzeeOrderListItem): void {
-    alert({
-      title: this.orderTitle(order),
-      message: [
-        `Status: ${order.workflowStatus}`,
-        `Work type: ${order.workType || '-'}`,
-        `Reason: ${order.initialReason || '-'}`,
-        `Work units: ${order.workUnits ?? '-'}`,
-        `Time: ${this.orderTime(order)}`,
-      ].join('\n'),
-      okButtonText: 'OK',
+  public showOrderHistory(order: EzeeOrderListItem): void {
+    if (!order) {
+      return;
+    }
+
+    const options: any = {
+      context: order,
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: false,
+      stretched: false,
+      cancelable: true,
+      dismissEnabled: true,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.Custom,
+      },
+    };
+
+    this.modalService.showModal(EzeeOrderHistoryComponent, options).catch((error) => {
+      console.log('[EzeeOrders] Failed to open order history modal', error);
+      alert({
+        title: 'Order History',
+        message: 'Unable to open order history.',
+        okButtonText: 'OK',
+      });
     });
   }
 

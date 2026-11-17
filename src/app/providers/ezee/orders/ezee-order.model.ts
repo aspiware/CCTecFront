@@ -66,6 +66,7 @@ export interface EzeeOrder {
   callFirst: unknown;
   address: string;
   detailPath: string;
+  notes?: unknown;
   pricing?: EzeeOrderPricing | null;
   customer: EzeeCustomer;
 }
