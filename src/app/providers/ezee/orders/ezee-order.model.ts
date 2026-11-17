@@ -89,6 +89,17 @@ export interface EzeeFinalizeOptions {
   secondaryReasonsRequired: boolean;
 }
 
+export interface EzeeFinalizeOrderResponse {
+  statusCode: number;
+  message: string;
+  error: boolean;
+  data: {
+    number: string;
+    reason: string;
+    reasonId: number;
+  };
+}
+
 export interface EzeeOrder {
   number: string;
   date: string;

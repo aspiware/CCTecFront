@@ -88,6 +88,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
   private readonly actionTapStates: Record<string, boolean> = {};
   private readonly actionTapTimers: Record<string, any> = {};
   private readonly addingNoteOrders = new Set<string>();
+  private readonly finalizingOrders = new Set<string>();
   private readonly selectedFinalizeReasons = new Map<string, EzeeFinalizeReason>();
   private isCopyMenuOpen = false;
   private lastCopyMenuTs = 0;
@@ -229,7 +230,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
   }
 
   public openFinalizeModal(order: EzeeOrderListItem): void {
-    if (!order) {
+    if (!order || this.isOrderMenuLoading(order)) {
       return;
     }
 
@@ -252,7 +253,9 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
 
     this.modalService.showModal(EzeeFinalizeOrderComponent, options).then((result) => {
       if (result?.reason && Number.isFinite(Number(result?.reasonId))) {
-        this.selectedFinalizeReasons.set(order.number, result as EzeeFinalizeReason);
+        const selectedReason = result as EzeeFinalizeReason;
+        this.selectedFinalizeReasons.set(order.number, selectedReason);
+        this.finalizeOrder(order, selectedReason);
       }
     }).catch((error) => {
       console.log('[EzeeOrders] Failed to open finalize modal', error);
@@ -265,7 +268,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
   }
 
   public isOrderMenuLoading(order: EzeeOrderListItem): boolean {
-    return this.addingNoteOrders.has(order.number);
+    return this.addingNoteOrders.has(order.number) || this.finalizingOrders.has(order.number);
   }
 
   public openAddNoteModal(order: EzeeOrderListItem): void {
@@ -677,6 +680,51 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
           error?.error?.message || error?.message || 'Unable to add the note.'
         );
         alert({ title: 'Add Note', message, okButtonText: 'OK' });
+      },
+    });
+  }
+
+  private finalizeOrder(order: EzeeOrderListItem, selectedReason: EzeeFinalizeReason): void {
+    if (this.finalizingOrders.has(order.number)) {
+      return;
+    }
+
+    this.finalizingOrders.add(order.number);
+    this.cdr.detectChanges();
+
+    this.ordersService.finalizeOrder(order.number, selectedReason).pipe(
+      finalize(() => {
+        this.finalizingOrders.delete(order.number);
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
+      next: (response) => {
+        if (response?.error) {
+          alert({
+            title: 'Finalize Order',
+            message: response?.message || 'Unable to finalize the order.',
+            okButtonText: 'OK',
+          });
+          return;
+        }
+
+        this.selectedFinalizeReasons.delete(order.number);
+        const successMessage = response?.message || 'Work order finalized successfully.';
+        const finalizedReason = String(response?.data?.reason || '').trim();
+        alert({
+          title: 'Order Finalized',
+          message: finalizedReason
+            ? `${successMessage}\nReason: ${finalizedReason}`
+            : successMessage,
+          okButtonText: 'OK',
+        });
+        this.ordersService.loadToday();
+      },
+      error: (error) => {
+        const message = String(
+          error?.error?.message || error?.message || 'Unable to finalize the order.'
+        );
+        alert({ title: 'Finalize Order', message, okButtonText: 'OK' });
       },
     });
   }

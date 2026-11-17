@@ -8,6 +8,8 @@ import {
   EzeeOrderChargeUpdate,
   EzeeChargeOptionsResponse,
   EzeeAddOrderNoteResponse,
+  EzeeFinalizeOrderResponse,
+  EzeeFinalizeReason,
   EzeeOrderListItem,
   EzeeOrdersDay,
   EzeeOrdersResponse,
@@ -65,6 +67,26 @@ export class EzeeOrdersService {
     return this.httpClient.post<EzeeAddOrderNoteResponse>(
       `${this.configService.getUrlBase()}/ezee-fiber/orders/${encodeURIComponent(number)}/notes`,
       { comment },
+      { headers }
+    ).pipe(timeout(20000));
+  }
+
+  public finalizeOrder(
+    number: string,
+    selectedReason: EzeeFinalizeReason
+  ): Observable<EzeeFinalizeOrderResponse> {
+    const token = getString('token', '');
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    });
+
+    return this.httpClient.post<EzeeFinalizeOrderResponse>(
+      `${this.configService.getUrlBase()}/ezee-fiber/orders/finalize/${encodeURIComponent(number)}`,
+      {
+        reason: selectedReason.reason,
+        reasonId: selectedReason.reasonId,
+      },
       { headers }
     ).pipe(timeout(20000));
   }
