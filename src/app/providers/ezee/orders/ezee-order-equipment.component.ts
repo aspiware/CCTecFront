@@ -12,8 +12,6 @@ import { EzeeOrderEquipment, EzeeOrderListItem } from './ezee-order.model';
 import { EzeeOrdersService } from './ezee-orders.service';
 import { EzeeEquipmentScannerComponent } from './ezee-equipment-scanner.component';
 
-type EquipmentCodeField = 'serial' | 'mac' | 'equipmentId';
-
 @Component({
   standalone: true,
   selector: 'app-ezee-order-equipment',
@@ -26,12 +24,11 @@ export class EzeeOrderEquipmentComponent implements OnInit, OnDestroy {
   public order: EzeeOrderListItem;
   public equipment: EzeeOrderEquipment[] = [];
   public isLoading = false;
+  public isSavingEquipment = false;
   public errorMessage = '';
   public isAddingEquipment = false;
   public newEquipment = {
     serial: '',
-    mac: '',
-    equipmentId: '',
   };
   private equipmentSubscription?: Subscription;
 
@@ -54,6 +51,9 @@ export class EzeeOrderEquipmentComponent implements OnInit, OnDestroy {
   }
 
   public close(): void {
+    if (this.isSavingEquipment) {
+      return;
+    }
     if (this.isAddingEquipment) {
       this.isAddingEquipment = false;
       this.cdr.detectChanges();
@@ -63,19 +63,14 @@ export class EzeeOrderEquipmentComponent implements OnInit, OnDestroy {
   }
 
   public openAddEquipment(): void {
-    this.newEquipment = { serial: '', mac: '', equipmentId: '' };
+    this.newEquipment = { serial: '' };
     this.isAddingEquipment = true;
     this.cdr.detectChanges();
   }
 
-  public scanField(field: EquipmentCodeField): void {
-    const labels: Record<EquipmentCodeField, string> = {
-      serial: 'Serial',
-      mac: 'MAC address',
-      equipmentId: 'Equipment ID',
-    };
+  public scanSerial(): void {
     const options: any = {
-      context: { fieldLabel: labels[field] },
+      context: { fieldLabel: 'Serial' },
       viewContainerRef: this.vcRef,
       animated: true,
       fullscreen: true,
@@ -92,7 +87,7 @@ export class EzeeOrderEquipmentComponent implements OnInit, OnDestroy {
       if (!scannedValue) {
         return;
       }
-      this.newEquipment = { ...this.newEquipment, [field]: scannedValue };
+      this.newEquipment = { serial: scannedValue };
       this.cdr.detectChanges();
     }).catch((error) => {
       console.log('[EzeeEquipment] Failed to open scanner', error);
@@ -105,19 +100,48 @@ export class EzeeOrderEquipmentComponent implements OnInit, OnDestroy {
   }
 
   public canAddEquipment(): boolean {
-    return !!this.newEquipment.serial.trim() &&
-      !!this.newEquipment.mac.trim() &&
-      !!this.newEquipment.equipmentId.trim();
+    return !!this.newEquipment.serial.trim();
   }
 
   public saveEquipment(): void {
-    if (!this.canAddEquipment()) {
+    if (!this.canAddEquipment() || this.isSavingEquipment) {
       return;
     }
-    alert({
-      title: 'Add Equipment',
-      message: 'The equipment is ready. The save action will be connected when the endpoint is available.',
-      okButtonText: 'OK',
+
+    const serial = this.newEquipment.serial.trim();
+    this.isSavingEquipment = true;
+    this.cdr.detectChanges();
+    this.ordersService.addOrderEquipment(this.order.number, serial).pipe(
+      finalize(() => {
+        this.isSavingEquipment = false;
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
+      next: (response) => {
+        if (response?.error) {
+          alert({
+            title: 'Add Equipment',
+            message: response?.message || 'Unable to add the equipment.',
+            okButtonText: 'OK',
+          });
+          return;
+        }
+
+        alert({
+          title: 'Equipment Added',
+          message: response?.message || 'Equipment added successfully.',
+          okButtonText: 'OK',
+        });
+        this.newEquipment = { serial: '' };
+        this.isAddingEquipment = false;
+        this.loadEquipment();
+      },
+      error: (error) => {
+        const message = String(
+          error?.error?.message || error?.message || 'Unable to add the equipment.'
+        );
+        alert({ title: 'Add Equipment', message, okButtonText: 'OK' });
+      },
     });
   }
 

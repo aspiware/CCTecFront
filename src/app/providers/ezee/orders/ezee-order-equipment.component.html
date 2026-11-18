@@ -56,24 +56,12 @@
 
       <ScrollView *ngIf="isAddingEquipment" row="1" class="equipment-form-scroll">
         <StackLayout class="equipment-form">
-          <Label text="Scan each code separately or enter it manually." textWrap="true" class="form-instructions"></Label>
+          <Label text="Scan the serial code or enter it manually." textWrap="true" class="form-instructions"></Label>
 
           <Label text="Serial" class="input-label"></Label>
           <GridLayout columns="*,auto" class="input-row">
             <TextField col="0" [(ngModel)]="newEquipment.serial" hint="Equipment serial" class="equipment-input"></TextField>
-            <Button col="1" text="Scan" class="scan-button" (tap)="scanField('serial')"></Button>
-          </GridLayout>
-
-          <Label text="MAC Address" class="input-label"></Label>
-          <GridLayout columns="*,auto" class="input-row">
-            <TextField col="0" [(ngModel)]="newEquipment.mac" hint="MAC address" autocapitalizationType="allCharacters" class="equipment-input"></TextField>
-            <Button col="1" text="Scan" class="scan-button" (tap)="scanField('mac')"></Button>
-          </GridLayout>
-
-          <Label text="Equipment ID" class="input-label"></Label>
-          <GridLayout columns="*,auto" class="input-row">
-            <TextField col="0" [(ngModel)]="newEquipment.equipmentId" hint="Equipment ID" class="equipment-input"></TextField>
-            <Button col="1" text="Scan" class="scan-button" (tap)="scanField('equipmentId')"></Button>
+            <Button col="1" text="Scan" class="scan-button" (tap)="scanSerial()"></Button>
           </GridLayout>
         </StackLayout>
       </ScrollView>
@@ -86,9 +74,9 @@
         <Button col="0" text="Cancel" class="secondary-button footer-button" (tap)="close()"></Button>
         <Button
           col="1"
-          text="Add"
+          [text]="isSavingEquipment ? 'Adding...' : 'Add'"
           class="primary-button footer-button"
-          [isEnabled]="canAddEquipment()"
+          [isEnabled]="canAddEquipment() && !isSavingEquipment"
           (tap)="saveEquipment()">
         </Button>
       </GridLayout>
