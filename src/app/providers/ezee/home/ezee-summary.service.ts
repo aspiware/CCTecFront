@@ -21,6 +21,23 @@ export interface EzeeWeeklySummaryResponse {
   };
 }
 
+export interface EzeeNextPaymentResponse {
+  statusCode: number;
+  message: string;
+  error: boolean;
+  data: {
+    fundWeeks: number;
+    payday: number | null;
+    paymentDate: string;
+    startDate: string;
+    endDate: string;
+    gross: number;
+    net: number;
+    carRentalAmount: number;
+    toolRentalAmount: number;
+  };
+}
+
 @Injectable({ providedIn: 'root' })
 export class EzeeSummaryService {
   private cachedResponse?: EzeeWeeklySummaryResponse;
@@ -67,5 +84,17 @@ export class EzeeSummaryService {
       shareReplay({ bufferSize: 1, refCount: false })
     );
     return this.inFlightRequest;
+  }
+
+  public getNextPayment(): Observable<EzeeNextPaymentResponse> {
+    const token = getString('token', '');
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`,
+    });
+
+    return this.httpClient.get<EzeeNextPaymentResponse>(
+      `${this.configService.getUrlBase()}/ezee-fiber/summary/next-payment`,
+      { headers }
+    ).pipe(timeout(20000));
   }
 }

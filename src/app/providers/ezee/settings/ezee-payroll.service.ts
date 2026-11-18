@@ -11,12 +11,16 @@ export interface EzeePayrollSettingsResponse {
   data: {
     fundWeeks: number;
     payday: number | null;
+    carRentalAmount: number;
+    toolRentalAmount: number;
   };
 }
 
 export interface EzeePayrollSettingsUpdate {
   fundWeeks: number;
   payday: number | null;
+  carRentalAmount: number;
+  toolRentalAmount: number;
 }
 
 @Injectable({ providedIn: 'root' })

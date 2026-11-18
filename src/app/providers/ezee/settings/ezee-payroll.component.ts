@@ -191,6 +191,10 @@ export class EzeePayrollComponent implements OnInit, OnDestroy {
         }
 
         this.fundWeeks = Math.max(0, Math.min(52, Number(response?.data?.fundWeeks || 0)));
+        this.carRentalAmount = Math.max(0, Number(response?.data?.carRentalAmount || 0));
+        this.carRentalAmountText = this.formatPriceInput(this.carRentalAmount);
+        this.toolRentalAmount = Math.max(0, Number(response?.data?.toolRentalAmount || 0));
+        this.toolRentalAmountText = this.formatPriceInput(this.toolRentalAmount);
         const payday = response?.data?.payday;
         this.payDay = payday === null || payday === undefined
           ? -1
@@ -219,6 +223,8 @@ export class EzeePayrollComponent implements OnInit, OnDestroy {
     const settings = {
       fundWeeks: Math.max(0, Math.min(52, Number(this.fundWeeks || 0))),
       payday: this.payDay >= 0 ? this.payDay : null,
+      carRentalAmount: Math.max(0, Number(this.carRentalAmount || 0)),
+      toolRentalAmount: Math.max(0, Number(this.toolRentalAmount || 0)),
     };
 
     this.payrollService.updatePayrollSettings(settings).subscribe({
@@ -231,6 +237,10 @@ export class EzeePayrollComponent implements OnInit, OnDestroy {
         const data = response?.data;
         if (data) {
           this.fundWeeks = Math.max(0, Math.min(52, Number(data.fundWeeks || 0)));
+          this.carRentalAmount = Math.max(0, Number(data.carRentalAmount || 0));
+          this.carRentalAmountText = this.formatPriceInput(this.carRentalAmount);
+          this.toolRentalAmount = Math.max(0, Number(data.toolRentalAmount || 0));
+          this.toolRentalAmountText = this.formatPriceInput(this.toolRentalAmount);
           this.payDay = data.payday === null || data.payday === undefined
             ? -1
             : Math.max(0, Math.min(6, Number(data.payday)));

@@ -16,16 +16,20 @@
         <Label
           [text]="'Next Payment (' + (summaryAmount.startDate | date) + ' - ' + (summaryAmount.endDate | date) + ')'"
           class="section-title"></Label>
+        <Label
+          *ngIf="summaryAmount.paymentDate"
+          [text]="'Payment date: ' + (summaryAmount.paymentDate | date: 'EEEE, MMM d, y')"
+          class="payment-date"></Label>
 
         <GridLayout rows="auto, auto, auto, auto, auto, auto" columns="*, auto" class="card">
           <Label row="0" col="0" text="Gross Amount"></Label>
           <Label row="0" col="1" [text]="summaryAmount.gross | currency" textAlignment="right"></Label>
 
-          <Label row="1" col="0" text="Meter Rental Amount" class="line"></Label>
-          <Label row="1" col="1" [text]="formatMinus(summaryAmount.meterRent) | currency" class="line" textAlignment="right"></Label>
+          <Label *ngIf="showMeterRentalAmount" row="1" col="0" text="Meter Rental Amount" class="line"></Label>
+          <Label *ngIf="showMeterRentalAmount" row="1" col="1" [text]="formatMinus(summaryAmount.meterRent) | currency" class="line" textAlignment="right"></Label>
 
-          <Label row="2" col="0" text="Billing Platform" class="line"></Label>
-          <Label row="2" col="1" [text]="formatMinus(summaryAmount.billingPlatform) | currency" class="line" textAlignment="right"></Label>
+          <Label *ngIf="showBillingPlatform" row="2" col="0" text="Billing Platform" class="line"></Label>
+          <Label *ngIf="showBillingPlatform" row="2" col="1" [text]="formatMinus(summaryAmount.billingPlatform) | currency" class="line" textAlignment="right"></Label>
 
           <Label row="3" col="0" text="Car Rental Amount" class="line"></Label>
           <Label row="3" col="1" [text]="formatMinus(summaryAmount.carRentalAmount) | currency" class="line" textAlignment="right"></Label>

@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
 import { NativeScriptCommonModule } from '@nativescript/angular';
 import { Application, Page, alert } from '@nativescript/core';
-import { Subscription } from 'rxjs';
+import { forkJoin, Subscription } from 'rxjs';
 import { EzeeDailyTotal, EzeeSummaryService } from './ezee-summary.service';
 
 @Component({
@@ -14,6 +14,8 @@ import { EzeeDailyTotal, EzeeSummaryService } from './ezee-summary.service';
   styleUrl: '../../../summary/summary.component.scss',
 })
 export class EzeeHomeComponent implements OnInit, OnDestroy {
+  public showMeterRentalAmount = false;
+  public showBillingPlatform = false;
   public isDarkTheme = Application.systemAppearance() === 'dark';
   public isSyncing = false;
   public weekAverage: any = {
@@ -78,36 +80,50 @@ export class EzeeHomeComponent implements OnInit, OnDestroy {
     this.isSyncing = true;
     this.cdr.detectChanges();
     this.summarySubscription?.unsubscribe();
-    this.summarySubscription = this.summaryService.getCurrentWeek(forceRefresh).subscribe({
-      next: (response) => {
-        if (response?.error) {
-          this.showSummaryError(response?.message || 'Unable to load the weekly summary.');
+    this.summarySubscription = forkJoin({
+      weekly: this.summaryService.getCurrentWeek(forceRefresh),
+      nextPayment: this.summaryService.getNextPayment(),
+    }).subscribe({
+      next: ({ weekly, nextPayment }) => {
+        if (weekly?.error || nextPayment?.error) {
+          this.showSummaryError(
+            weekly?.error
+              ? weekly.message || 'Unable to load the weekly summary.'
+              : nextPayment?.message || 'Unable to load the next payment.'
+          );
           return;
         }
 
-        const data = response?.data;
-        const totalsPerDay = (Array.isArray(data?.totalsPerDay) ? data.totalsPerDay : []).map(
+        const weeklyData = weekly?.data;
+        const totalsPerDay = (
+          Array.isArray(weeklyData?.totalsPerDay) ? weeklyData.totalsPerDay : []
+        ).map(
           (item) => ({
             date: String(item?.date || ''),
             total: Number(item?.total || 0),
           })
         );
-        const weeklyTotal = Number(data?.weeklyTotal || 0);
 
         this.weekAverage = {
           totalsPerDay,
           dailyAverage: this.calculateDailyAverage(totalsPerDay),
           todayHourlyAverage: this.calculateTodayHourlyAverage(totalsPerDay),
         };
+        const payment = nextPayment?.data;
+        const gross = Number(payment?.gross || 0);
+        const net = Number(payment?.net ?? 0);
+        const carRentalAmount = Number(payment?.carRentalAmount || 0);
+        const toolRentalAmount = Number(payment?.toolRentalAmount || 0);
         this.summaryAmount = {
-          startDate: this.parseLocalDate(data?.startDate),
-          endDate: this.parseLocalDate(data?.endDate),
-          gross: weeklyTotal,
+          startDate: this.parseLocalDate(payment?.startDate),
+          endDate: this.parseLocalDate(payment?.endDate),
+          paymentDate: this.parseLocalDate(payment?.paymentDate),
+          gross,
           meterRent: 0,
           billingPlatform: 0,
-          carRentalAmount: 0,
-          toolRentalAmount: 0,
-          net: weeklyTotal,
+          carRentalAmount,
+          toolRentalAmount,
+          net,
         };
       },
       error: (error) => {
