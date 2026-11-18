@@ -17,6 +17,8 @@ import { QuantityStepperComponent } from '../shared/components/quantity-stepper/
   styleUrl: './payroll.component.scss',
 })
 export class PayrollComponent implements OnInit, OnDestroy {
+  public showMeterRentAmount = true;
+  public showBillingPlatformAmount = true;
   @ViewChild('pricesScroll', { static: false }) private pricesScrollRef?: ElementRef<ScrollView>;
   public isDarkTheme = Application.systemAppearance() === 'dark';
   public isSaveLoading = false;

@@ -28,7 +28,7 @@ export class EzeeSettingsComponent extends SettingsComponent {
     todayJobsCountService: TodayJobsCountService,
     usersService: UsersService,
     versionService: VersionService,
-    router: Router,
+    private ezeeRouter: Router,
     routerExtensions: RouterExtensions,
     cdr: ChangeDetectorRef,
     page: Page
@@ -40,7 +40,7 @@ export class EzeeSettingsComponent extends SettingsComponent {
       todayJobsCountService,
       usersService,
       versionService,
-      router,
+      ezeeRouter,
       routerExtensions,
       cdr,
       page
@@ -64,7 +64,10 @@ export class EzeeSettingsComponent extends SettingsComponent {
   }
 
   public override openPayroll(): void {
-    this.showPendingFeature('Payroll');
+    this.ezeeRouter.navigate([
+      '/ezee-tabs',
+      { outlets: { ezeeSettingsTab: ['payroll'] } },
+    ]);
   }
 
   public override openSmsSurvey(): void {

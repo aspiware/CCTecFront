@@ -27,6 +27,7 @@ import { EzeeOrdersComponent } from './providers/ezee/orders/ezee-orders.compone
 import { EzeeSettingsComponent } from './providers/ezee/settings/ezee-settings.component';
 import { EzeeJobsComponent } from './providers/ezee/jobs/ezee-jobs.component';
 import { EzeeExpensesComponent } from './providers/ezee/expenses/ezee-expenses.component';
+import { EzeePayrollComponent } from './providers/ezee/settings/ezee-payroll.component';
 import { ezeeProviderGuard, xfinityProviderGuard } from './shared/guards/provider-route.guard';
 
 export const routes: Routes = [
@@ -169,6 +170,11 @@ export const routes: Routes = [
         path: 'settings',
         outlet: 'ezeeSettingsTab',
         component: EzeeSettingsComponent,
+      },
+      {
+        path: 'payroll',
+        outlet: 'ezeeSettingsTab',
+        component: EzeePayrollComponent,
       },
     ],
   },
