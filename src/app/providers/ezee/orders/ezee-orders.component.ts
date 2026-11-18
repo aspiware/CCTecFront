@@ -232,7 +232,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       return;
     }
     if (event?.index === 2) {
-      this.showUnavailable('Pre-Provision is not connected for Ezee Fiber yet.');
+      this.preProvisionOrder(order);
       return;
     }
     if (event?.index === 3) {
@@ -878,6 +878,45 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
           error?.error?.message || error?.message || 'Unable to change the order status.'
         );
         alert({ title: 'Go In Progress', message, okButtonText: 'OK' });
+      },
+    });
+  }
+
+  private preProvisionOrder(order: EzeeOrderListItem): void {
+    if (!order || this.isOrderMenuLoading(order)) {
+      return;
+    }
+
+    this.updatingStatusOrders.add(order.number);
+    this.cdr.detectChanges();
+
+    this.ordersService.preProvisionOrder(order.number).pipe(
+      finalize(() => {
+        this.updatingStatusOrders.delete(order.number);
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
+      next: (response) => {
+        if (response?.error) {
+          alert({
+            title: 'Pre-Provision',
+            message: response?.message || 'Unable to pre-provision the order.',
+            okButtonText: 'OK',
+          });
+          return;
+        }
+
+        alert({
+          title: 'Order Pre-Provisioned',
+          message: response?.message || 'Work order pre-provisioned successfully.',
+          okButtonText: 'OK',
+        });
+      },
+      error: (error) => {
+        const message = String(
+          error?.error?.message || error?.message || 'Unable to pre-provision the order.'
+        );
+        alert({ title: 'Pre-Provision', message, okButtonText: 'OK' });
       },
     });
   }

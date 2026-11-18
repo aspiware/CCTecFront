@@ -127,6 +127,15 @@ export interface EzeeOrderStatusResponse {
   };
 }
 
+export interface EzeePreProvisionOrderResponse {
+  statusCode: number;
+  message: string;
+  error: boolean;
+  data: {
+    number: string;
+  };
+}
+
 export interface EzeeOrder {
   number: string;
   status?: string;
