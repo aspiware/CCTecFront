@@ -19,6 +19,8 @@
     "@nativescript/core": "~9.0.0",
     "@nativescript/geolocation": "^9.0.0",
     "@nativescript/google-maps": "^1.8.0",
+    "@nativescript/mlkit-barcode-scanning": "^3.0.4",
+    "@nativescript/mlkit-core": "^3.0.4",
     "nativescript-ui-listview": "^15.2.3",
     "rxjs": "~7.8.0",
     "zone.js": "~0.15.0"

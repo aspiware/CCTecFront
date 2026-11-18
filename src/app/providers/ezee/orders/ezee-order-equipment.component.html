@@ -2,16 +2,16 @@
   <GridLayout rows="*" columns="*">
     <StackLayout row="0" col="0" class="backdrop" (tap)="close()"></StackLayout>
 
-    <GridLayout row="0" col="0" rows="auto,*" class="modal-card">
+    <GridLayout row="0" col="0" rows="auto,*,auto" class="modal-card">
       <GridLayout row="0" columns="*,auto" class="header">
         <StackLayout col="0">
-          <Label text="Order Equipment" class="modal-title"></Label>
+          <Label [text]="isAddingEquipment ? 'Add Equipment' : 'Order Equipment'" class="modal-title"></Label>
           <Label [text]="'Order #' + order.number" class="order-number"></Label>
         </StackLayout>
-        <Label col="1" text="&#xf00d;" class="fas close-button" (tap)="close()"></Label>
+        <Label col="1" [text]="isAddingEquipment ? '&#xf060;' : '&#xf00d;'" class="fas close-button" (tap)="close()"></Label>
       </GridLayout>
 
-      <GridLayout row="1" rows="*" columns="*">
+      <GridLayout *ngIf="!isAddingEquipment" row="1" rows="*" columns="*">
         <StackLayout *ngIf="isLoading" verticalAlignment="middle" horizontalAlignment="center">
           <ActivityIndicator [busy]="true" width="32" height="32"></ActivityIndicator>
           <Label text="Loading equipment..." class="state-message"></Label>
@@ -52,6 +52,45 @@
             </GridLayout>
           </StackLayout>
         </ScrollView>
+      </GridLayout>
+
+      <ScrollView *ngIf="isAddingEquipment" row="1" class="equipment-form-scroll">
+        <StackLayout class="equipment-form">
+          <Label text="Scan each code separately or enter it manually." textWrap="true" class="form-instructions"></Label>
+
+          <Label text="Serial" class="input-label"></Label>
+          <GridLayout columns="*,auto" class="input-row">
+            <TextField col="0" [(ngModel)]="newEquipment.serial" hint="Equipment serial" class="equipment-input"></TextField>
+            <Button col="1" text="Scan" class="scan-button" (tap)="scanField('serial')"></Button>
+          </GridLayout>
+
+          <Label text="MAC Address" class="input-label"></Label>
+          <GridLayout columns="*,auto" class="input-row">
+            <TextField col="0" [(ngModel)]="newEquipment.mac" hint="MAC address" autocapitalizationType="allCharacters" class="equipment-input"></TextField>
+            <Button col="1" text="Scan" class="scan-button" (tap)="scanField('mac')"></Button>
+          </GridLayout>
+
+          <Label text="Equipment ID" class="input-label"></Label>
+          <GridLayout columns="*,auto" class="input-row">
+            <TextField col="0" [(ngModel)]="newEquipment.equipmentId" hint="Equipment ID" class="equipment-input"></TextField>
+            <Button col="1" text="Scan" class="scan-button" (tap)="scanField('equipmentId')"></Button>
+          </GridLayout>
+        </StackLayout>
+      </ScrollView>
+
+      <GridLayout *ngIf="!isAddingEquipment" row="2" columns="*" class="footer">
+        <Button text="Add Equipment" class="primary-button" (tap)="openAddEquipment()"></Button>
+      </GridLayout>
+
+      <GridLayout *ngIf="isAddingEquipment" row="2" columns="*,*" class="footer">
+        <Button col="0" text="Cancel" class="secondary-button footer-button" (tap)="close()"></Button>
+        <Button
+          col="1"
+          text="Add"
+          class="primary-button footer-button"
+          [isEnabled]="canAddEquipment()"
+          (tap)="saveEquipment()">
+        </Button>
       </GridLayout>
     </GridLayout>
   </GridLayout>

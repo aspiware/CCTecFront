@@ -1,0 +1,36 @@
+<ModalStack class="scanner-root">
+  <GridLayout rows="auto,*" columns="*" class="scanner-page">
+    <GridLayout row="0" columns="auto,*" class="scanner-header">
+      <Label col="0" text="&#xf00d;" class="fas close-button" (tap)="cancel()"></Label>
+      <StackLayout col="1">
+        <Label text="Scan Equipment" class="scanner-title"></Label>
+        <Label [text]="'Point the camera at the ' + fieldLabel + ' code'" class="scanner-subtitle"></Label>
+      </StackLayout>
+    </GridLayout>
+
+    <GridLayout row="1" rows="*" columns="*" class="camera-container">
+      <MLKitView
+        row="0"
+        col="0"
+        [cameraPosition]="cameraPosition"
+        [detectionType]="detectionType"
+        [barcodeFormats]="barcodeFormats"
+        [processEveryNthFrame]="3"
+        aspectRatio="aspectFill"
+        (loaded)="onScannerLoaded($event)"
+        (detection)="onDetection($event)">
+      </MLKitView>
+
+      <GridLayout *ngIf="!permissionError" row="0" col="0" rows="*,220,*" columns="*,300,*" class="scanner-overlay">
+        <StackLayout row="1" col="1" class="scan-frame"></StackLayout>
+        <Label row="2" col="0" colSpan="3" text="Hold the code inside the frame" class="scan-hint"></Label>
+      </GridLayout>
+
+      <StackLayout *ngIf="permissionError" row="0" col="0" class="error-panel" verticalAlignment="middle">
+        <Label text="&#xf071;" class="fas error-icon"></Label>
+        <Label [text]="permissionError" textWrap="true" class="error-message"></Label>
+        <Button text="Close" class="close-error-button" (tap)="cancel()"></Button>
+      </StackLayout>
+    </GridLayout>
+  </GridLayout>
+</ModalStack>
