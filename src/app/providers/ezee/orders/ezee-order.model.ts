@@ -51,6 +51,23 @@ export interface EzeeOrderChargeUpdate {
   quantity: number;
 }
 
+export interface EzeeOrderEquipment {
+  id: string;
+  serial: string;
+  model: string;
+  action: string;
+}
+
+export interface EzeeOrderEquipmentResponse {
+  statusCode: number;
+  message: string;
+  error: boolean;
+  data: {
+    number: string;
+    equipment: EzeeOrderEquipment[];
+  };
+}
+
 export interface EzeeChargeOption {
   code: string;
   description: string;
