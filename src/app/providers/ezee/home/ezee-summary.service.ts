@@ -1,5 +1,6 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { File, Http, knownFolders, path } from '@nativescript/core';
 import { getString } from '@nativescript/core/application-settings';
 import { finalize, Observable, of, shareReplay, tap, timeout } from 'rxjs';
 import { ConfigService } from '../../../shared/services/config.service';
@@ -96,5 +97,60 @@ export class EzeeSummaryService {
       `${this.configService.getUrlBase()}/ezee-fiber/summary/next-payment`,
       { headers }
     ).pipe(timeout(20000));
+  }
+
+  public downloadCurrentWeekOrdersReport(): Promise<File> {
+    const token = getString('token', '');
+    return Http.request({
+      url: `${this.configService.getUrlBase()}/ezee-fiber/orders/export`,
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      },
+      timeout: 60000,
+    }).then((response) => {
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        let message = 'Unable to download the weekly report.';
+        try {
+          const errorBody = response.content?.toJSON();
+          message = String(errorBody?.message || message);
+        } catch {
+          // Keep the default message when the error body is not JSON.
+        }
+        throw new Error(message);
+      }
+
+      if (!response.content) {
+        throw new Error('The weekly report response was empty.');
+      }
+
+      const contentDisposition = this.getHeader(response.headers, 'content-disposition');
+      const fileName = this.getDownloadFileName(contentDisposition);
+      const destinationPath = path.join(knownFolders.temp().path, fileName);
+      return response.content.toFile(destinationPath);
+    });
+  }
+
+  private getHeader(headers: Record<string, string | string[]>, name: string): string {
+    const headerKey = Object.keys(headers || {}).find(
+      (key) => key.toLowerCase() === name.toLowerCase()
+    );
+    const value = headerKey ? headers[headerKey] : '';
+    return Array.isArray(value) ? String(value[0] || '') : String(value || '');
+  }
+
+  private getDownloadFileName(contentDisposition: string): string {
+    const encodedMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+    const regularMatch = contentDisposition.match(/filename="?([^";]+)"?/i);
+    let fileName = encodedMatch?.[1] || regularMatch?.[1] || 'ezee-orders-current-week.xlsx';
+    try {
+      fileName = decodeURIComponent(fileName.trim());
+    } catch {
+      fileName = fileName.trim();
+    }
+
+    fileName = fileName.replace(/[\\/:*?"<>|\r\n]/g, '_');
+    return fileName.toLowerCase().endsWith('.xlsx') ? fileName : `${fileName}.xlsx`;
   }
 }

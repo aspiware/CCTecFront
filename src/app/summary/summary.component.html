@@ -1,4 +1,28 @@
 <ActionBar class="action-bar" title="Summary">
+  <ActionItem
+    *ngIf="showWeeklyReportExport"
+    ios.position="right">
+    <GridLayout
+      width="38"
+      height="38"
+      accessibilityLabel="Export Weekly Report"
+      (tap)="onWeeklyReportExport()">
+      <Label
+        [visibility]="isExportingWeeklyReport ? 'collapse' : 'visible'"
+        text="&#xf019;"
+        class="fas"
+        fontSize="18"
+        textAlignment="center"
+        verticalTextAlignment="middle">
+      </Label>
+      <ActivityIndicator
+        [visibility]="isExportingWeeklyReport ? 'visible' : 'collapse'"
+        [busy]="isExportingWeeklyReport"
+        width="20"
+        height="20">
+      </ActivityIndicator>
+    </GridLayout>
+  </ActionItem>
   <ActionItem *ngIf="!isSyncing" ios.position="right" ios.systemIcon="13" (tap)="onSummaryDirectRefresh()"></ActionItem>
   <ActionItem *ngIf="isSyncing" ios.position="right">
     <ActivityIndicator [busy]="true" width="20" height="20"></ActivityIndicator>

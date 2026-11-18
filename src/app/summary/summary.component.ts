@@ -15,6 +15,8 @@ import { Application, Page } from '@nativescript/core';
   styleUrl: './summary.component.scss',
 })
 export class SummaryComponent implements OnInit, OnDestroy {
+  public showWeeklyReportExport = false;
+  public isExportingWeeklyReport = false;
   public showMeterRentalAmount = true;
   public showBillingPlatform = true;
   public isDarkTheme = Application.systemAppearance() === 'dark';
@@ -137,6 +139,8 @@ export class SummaryComponent implements OnInit, OnDestroy {
   public onSummaryDirectRefresh(): void {
     this.syncSummary();
   }
+
+  public onWeeklyReportExport(): void {}
 
   protected formatMinus(value: number): string {
     if (!value) {
