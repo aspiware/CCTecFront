@@ -14,6 +14,7 @@ import { EzeeOrderHistoryComponent } from './ezee-order-history.component';
 import { AddNoteComponent } from '../../../add-note/add-note.component';
 import { EzeeFinalizeOrderComponent } from './ezee-finalize-order.component';
 import { EzeeFinalizeReason } from './ezee-order.model';
+import { EzeeSummaryService } from '../home/ezee-summary.service';
 
 @Component({
   standalone: true,
@@ -104,7 +105,8 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     private configService: ConfigService,
     private routerExtensions: RouterExtensions,
     private modalService: ModalDialogService,
-    private vcRef: ViewContainerRef
+    private vcRef: ViewContainerRef,
+    private summaryService: EzeeSummaryService
   ) {}
 
   public ngOnInit(): void {
@@ -154,6 +156,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       }
     }));
     this.ordersService.loadToday();
+    this.loadWeeklyTotal();
   }
 
   public ngOnDestroy(): void {
@@ -166,6 +169,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
 
   public refresh(): void {
     this.ordersService.loadToday();
+    this.loadWeeklyTotal(true);
   }
 
   private async showOrdersError(message: string): Promise<void> {
@@ -331,6 +335,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
 
   public onPullToRefresh(event: any): void {
     const listView = event?.object;
+    this.loadWeeklyTotal(true);
     this.ordersService.loadToday(() => {
       listView?.notifyPullToRefreshFinished?.();
       listView?.scrollToIndex?.(0, false);
@@ -669,6 +674,22 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
           order.customer?.subscriberNumber,
         ].some((value) => String(value || '').toLowerCase().includes(query)));
     this.orders = new ObservableArray(filtered);
+  }
+
+  private loadWeeklyTotal(forceRefresh = false): void {
+    this.subscriptions.add(
+      this.summaryService.getCurrentWeek(forceRefresh).subscribe({
+        next: (response) => {
+          if (!response?.error) {
+            this.weekTotal = Number(response?.data?.weeklyTotal || 0);
+            this.cdr.detectChanges();
+          }
+        },
+        error: (error) => {
+          console.log('[EzeeOrders] Unable to load weekly total', error);
+        },
+      })
+    );
   }
 
   private saveOrderNote(order: EzeeOrderListItem, comment: string): void {

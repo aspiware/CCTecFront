@@ -1,7 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
 import { NativeScriptCommonModule } from '@nativescript/angular';
-import { Application, Page } from '@nativescript/core';
+import { Application, Page, alert } from '@nativescript/core';
+import { Subscription } from 'rxjs';
+import { EzeeDailyTotal, EzeeSummaryService } from './ezee-summary.service';
 
 @Component({
   standalone: true,
@@ -30,15 +32,17 @@ export class EzeeHomeComponent implements OnInit, OnDestroy {
     net: 0,
   };
   private appearanceChangedHandler?: () => void;
+  private summarySubscription?: Subscription;
 
   public constructor(
     private cdr: ChangeDetectorRef,
-    private page: Page
+    private page: Page,
+    private summaryService: EzeeSummaryService
   ) {}
 
   public ngOnInit(): void {
     this.syncTheme();
-    this.initializeCurrentWeek();
+    this.loadCurrentWeek();
     this.appearanceChangedHandler = () => {
       this.syncTheme();
       this.cdr.detectChanges();
@@ -47,6 +51,7 @@ export class EzeeHomeComponent implements OnInit, OnDestroy {
   }
 
   public ngOnDestroy(): void {
+    this.summarySubscription?.unsubscribe();
     if (this.appearanceChangedHandler) {
       Application.off(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
     }
@@ -58,41 +63,119 @@ export class EzeeHomeComponent implements OnInit, OnDestroy {
   }
 
   public onSummaryDirectRefresh(): void {
-    this.isSyncing = true;
-    this.cdr.detectChanges();
-    setTimeout(() => {
-      this.initializeCurrentWeek();
-      this.isSyncing = false;
-      this.cdr.detectChanges();
-    }, 250);
+    this.loadCurrentWeek(true);
   }
 
   public formatMinus(value: number): string {
     return value ? `-${value}` : '0.00';
   }
 
-  private initializeCurrentWeek(): void {
-    const today = new Date();
-    const monday = new Date(today);
-    const day = monday.getDay();
-    monday.setDate(monday.getDate() - (day === 0 ? 6 : day - 1));
-    monday.setHours(12, 0, 0, 0);
+  private loadCurrentWeek(forceRefresh = false): void {
+    if (this.isSyncing) {
+      return;
+    }
 
-    this.weekAverage = {
-      totalsPerDay: Array.from({ length: 5 }, (_, index) => {
-        const date = new Date(monday);
-        date.setDate(monday.getDate() + index);
-        return { date, total: 0 };
-      }),
-      dailyAverage: 0,
-      todayHourlyAverage: 0,
-    };
+    this.isSyncing = true;
+    this.cdr.detectChanges();
+    this.summarySubscription?.unsubscribe();
+    this.summarySubscription = this.summaryService.getCurrentWeek(forceRefresh).subscribe({
+      next: (response) => {
+        if (response?.error) {
+          this.showSummaryError(response?.message || 'Unable to load the weekly summary.');
+          return;
+        }
 
-    this.summaryAmount = {
-      ...this.summaryAmount,
-      startDate: monday,
-      endDate: new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 4, 12),
-    };
+        const data = response?.data;
+        const totalsPerDay = (Array.isArray(data?.totalsPerDay) ? data.totalsPerDay : []).map(
+          (item) => ({
+            date: String(item?.date || ''),
+            total: Number(item?.total || 0),
+          })
+        );
+        const weeklyTotal = Number(data?.weeklyTotal || 0);
+
+        this.weekAverage = {
+          totalsPerDay,
+          dailyAverage: this.calculateDailyAverage(totalsPerDay),
+          todayHourlyAverage: this.calculateTodayHourlyAverage(totalsPerDay),
+        };
+        this.summaryAmount = {
+          startDate: this.parseLocalDate(data?.startDate),
+          endDate: this.parseLocalDate(data?.endDate),
+          gross: weeklyTotal,
+          meterRent: 0,
+          billingPlatform: 0,
+          carRentalAmount: 0,
+          toolRentalAmount: 0,
+          net: weeklyTotal,
+        };
+      },
+      error: (error) => {
+        const message = String(
+          error?.error?.message || error?.message || 'Unable to load the weekly summary.'
+        );
+        this.showSummaryError(message);
+      },
+      complete: () => {
+        this.finishSync();
+      },
+    });
+  }
+
+  private calculateDailyAverage(totals: EzeeDailyTotal[]): number {
+    return totals.length
+      ? totals.reduce((sum, item) => sum + Number(item.total || 0), 0) / totals.length
+      : 0;
+  }
+
+  private calculateTodayHourlyAverage(totals: EzeeDailyTotal[]): number {
+    const todayKey = this.toDateKey(new Date());
+    const todayTotal = Number(totals.find((item) => item.date === todayKey)?.total || 0);
+    if (!todayTotal) {
+      return 0;
+    }
+
+    const now = new Date();
+    const start = new Date(now);
+    start.setHours(8, 0, 0, 0);
+    const end = new Date(now);
+    end.setHours(18, 30, 0, 0);
+    if (now <= start) {
+      return 0;
+    }
+
+    const effectiveEnd = now < end ? now : end;
+    const elapsedHours = (effectiveEnd.getTime() - start.getTime()) / 3600000;
+    return elapsedHours > 0 ? todayTotal / elapsedHours : 0;
+  }
+
+  private parseLocalDate(value: string | undefined): Date {
+    const match = String(value || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) {
+      return new Date(value || '');
+    }
+    return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]), 12);
+  }
+
+  private toDateKey(date: Date): string {
+    const year = date.getFullYear();
+    const month = `${date.getMonth() + 1}`.padStart(2, '0');
+    const day = `${date.getDate()}`.padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private showSummaryError(message: string): void {
+    this.finishSync();
+    alert({
+      title: 'Unable to Load Summary',
+      message,
+      okButtonText: 'OK',
+    });
+  }
+
+  private finishSync(): void {
+    this.isSyncing = false;
+    this.cdr.detectChanges();
   }
 
   private syncTheme(): void {
