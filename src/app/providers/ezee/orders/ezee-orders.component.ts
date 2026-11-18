@@ -82,8 +82,9 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     options: [
       { name: 'Go Enroute', icon: 'car.fill' },
       { name: 'Go In Progress', icon: 'wrench.fill' },
-      { name: 'Finalize', icon: 'checkmark.circle.fill' },
+      { name: 'Pre-Provision', icon: 'shippingbox.fill' },
       { name: 'Add Note', icon: 'note.text.badge.plus' },
+      { name: 'Finalize', icon: 'checkmark.circle.fill' },
     ],
   };
   private allOrders: EzeeOrderListItem[] = [];
@@ -231,11 +232,15 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       return;
     }
     if (event?.index === 2) {
-      this.openFinalizeModal(order);
+      this.showUnavailable('Pre-Provision is not connected for Ezee Fiber yet.');
       return;
     }
     if (event?.index === 3) {
       this.openAddNoteModal(order);
+      return;
+    }
+    if (event?.index === 4) {
+      this.openFinalizeModal(order);
       return;
     }
     this.showUnavailable(
