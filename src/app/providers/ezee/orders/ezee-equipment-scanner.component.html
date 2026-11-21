@@ -23,7 +23,15 @@
 
       <GridLayout *ngIf="!permissionError" row="0" col="0" rows="*,220,*" columns="*,300,*" class="scanner-overlay">
         <StackLayout row="1" col="1" class="scan-frame"></StackLayout>
-        <Label row="2" col="0" colSpan="3" text="Hold the code inside the frame" class="scan-hint"></Label>
+        <StackLayout row="2" col="0" colSpan="3" class="scanner-controls">
+          <Label text="Hold the code inside the frame" class="scan-hint"></Label>
+          <Button
+            [text]="isTorchOn ? 'Turn Light Off' : 'Turn Light On'"
+            [class.torch-active]="isTorchOn"
+            class="torch-button"
+            (tap)="toggleTorch()">
+          </Button>
+        </StackLayout>
       </GridLayout>
 
       <StackLayout *ngIf="permissionError" row="0" col="0" class="error-panel" verticalAlignment="middle">

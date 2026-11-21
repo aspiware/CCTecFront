@@ -56,6 +56,30 @@
   vertical-align: top;
 }
 
+.scanner-controls {
+  horizontal-align: center;
+}
+
+.torch-button {
+  min-width: 150;
+  height: 44;
+  margin-top: 14;
+  padding: 0 16;
+  color: #ffffff;
+  background-color: rgba(28, 28, 30, 0.85);
+  border-width: 1;
+  border-color: rgba(255, 255, 255, 0.35);
+  border-radius: 22;
+  font-size: 14;
+  font-weight: 600;
+}
+
+.torch-active {
+  color: #1c1c1e;
+  background-color: #ffd60a;
+  border-color: #ffd60a;
+}
+
 .error-panel {
   margin: 24;
   padding: 24;

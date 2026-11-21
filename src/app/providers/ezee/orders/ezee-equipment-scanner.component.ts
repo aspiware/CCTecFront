@@ -25,6 +25,7 @@ export class EzeeEquipmentScannerComponent implements OnDestroy {
   public readonly barcodeFormats = [BarcodeFormats.ALL];
   public readonly fieldLabel: string;
   public permissionError = '';
+  public isTorchOn = false;
   private scanner?: MLKitView;
   private hasResult = false;
 
@@ -33,6 +34,9 @@ export class EzeeEquipmentScannerComponent implements OnDestroy {
   }
 
   public ngOnDestroy(): void {
+    if (this.scanner) {
+      this.scanner.torchOn = false;
+    }
     this.scanner?.stopPreview();
   }
 
@@ -67,13 +71,25 @@ export class EzeeEquipmentScannerComponent implements OnDestroy {
 
     this.hasResult = true;
     if (this.scanner) {
+      this.scanner.torchOn = false;
       this.scanner.pause = true;
       this.scanner.stopPreview();
     }
     this.modalParams.closeCallback(value);
   }
 
+  public toggleTorch(): void {
+    if (!this.scanner || this.permissionError) {
+      return;
+    }
+    this.isTorchOn = !this.isTorchOn;
+    this.scanner.torchOn = this.isTorchOn;
+  }
+
   public cancel(): void {
+    if (this.scanner) {
+      this.scanner.torchOn = false;
+    }
     this.modalParams.closeCallback();
   }
 }
