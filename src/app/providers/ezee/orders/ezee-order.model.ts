@@ -79,6 +79,19 @@ export interface EzeeAddOrderEquipmentResponse {
   };
 }
 
+export interface EzeeSwapOrderEquipmentResponse {
+  statusCode: number;
+  message: string;
+  error: boolean;
+  data: {
+    number: string;
+    removeId: string;
+    removeSerial: string | null;
+    id: string;
+    serial: string | null;
+  };
+}
+
 export interface EzeeChargeOption {
   code: string;
   description: string;

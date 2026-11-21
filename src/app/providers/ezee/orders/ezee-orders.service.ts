@@ -13,6 +13,7 @@ import {
   EzeeOrderStatusResponse,
   EzeeOrderEquipmentResponse,
   EzeeAddOrderEquipmentResponse,
+  EzeeSwapOrderEquipmentResponse,
   EzeePreProvisionOrderResponse,
   EzeeOrderListItem,
   EzeeOrdersDay,
@@ -61,6 +62,24 @@ export class EzeeOrdersService {
     return this.httpClient.post<EzeeAddOrderEquipmentResponse>(
       `${this.configService.getUrlBase()}/ezee-fiber/orders/equipment/add/${encodeURIComponent(number)}`,
       { id },
+      { headers }
+    ).pipe(timeout(20000));
+  }
+
+  public swapOrderEquipment(
+    number: string,
+    removeId: string,
+    id: string
+  ): Observable<EzeeSwapOrderEquipmentResponse> {
+    const token = getString('token', '');
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    });
+
+    return this.httpClient.post<EzeeSwapOrderEquipmentResponse>(
+      `${this.configService.getUrlBase()}/ezee-fiber/orders/equipment/swap/${encodeURIComponent(number)}`,
+      { removeId, id },
       { headers }
     ).pipe(timeout(20000));
   }

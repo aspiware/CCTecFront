@@ -27,8 +27,12 @@ export class EzeeOrderEquipmentComponent implements OnInit, OnDestroy {
   public isSavingEquipment = false;
   public errorMessage = '';
   public isAddingEquipment = false;
+  public swappingEquipment: EzeeOrderEquipment | null = null;
   public newEquipment = {
     serial: '',
+  };
+  public replacementEquipment = {
+    id: '',
   };
   private equipmentSubscription?: Subscription;
 
@@ -54,8 +58,9 @@ export class EzeeOrderEquipmentComponent implements OnInit, OnDestroy {
     if (this.isSavingEquipment) {
       return;
     }
-    if (this.isAddingEquipment) {
+    if (this.isAddingEquipment || this.swappingEquipment) {
       this.isAddingEquipment = false;
+      this.swappingEquipment = null;
       this.cdr.detectChanges();
       return;
     }
@@ -64,13 +69,33 @@ export class EzeeOrderEquipmentComponent implements OnInit, OnDestroy {
 
   public openAddEquipment(): void {
     this.newEquipment = { serial: '' };
+    this.swappingEquipment = null;
     this.isAddingEquipment = true;
     this.cdr.detectChanges();
   }
 
+  public openSwapEquipment(equipment: EzeeOrderEquipment): void {
+    this.replacementEquipment = { id: '' };
+    this.isAddingEquipment = false;
+    this.swappingEquipment = equipment;
+    this.cdr.detectChanges();
+  }
+
   public scanSerial(): void {
+    this.openScanner('Equipment ID', (scannedValue) => {
+      this.newEquipment = { serial: scannedValue };
+    });
+  }
+
+  public scanReplacementId(): void {
+    this.openScanner('Replacement equipment ID', (scannedValue) => {
+      this.replacementEquipment = { id: scannedValue };
+    });
+  }
+
+  private openScanner(fieldLabel: string, onScanned: (value: string) => void): void {
     const options: any = {
-      context: { fieldLabel: 'Serial' },
+      context: { fieldLabel },
       viewContainerRef: this.vcRef,
       animated: true,
       fullscreen: true,
@@ -87,7 +112,7 @@ export class EzeeOrderEquipmentComponent implements OnInit, OnDestroy {
       if (!scannedValue) {
         return;
       }
-      this.newEquipment = { serial: scannedValue };
+      onScanned(scannedValue);
       this.cdr.detectChanges();
     }).catch((error) => {
       console.log('[EzeeEquipment] Failed to open scanner', error);
@@ -101,6 +126,12 @@ export class EzeeOrderEquipmentComponent implements OnInit, OnDestroy {
 
   public canAddEquipment(): boolean {
     return !!this.newEquipment.serial.trim();
+  }
+
+  public canSwapEquipment(): boolean {
+    const oldId = this.swappingEquipment?.id?.trim() || '';
+    const newId = this.replacementEquipment.id.trim();
+    return !!oldId && !!newId && oldId !== newId;
   }
 
   public saveEquipment(): void {
@@ -141,6 +172,49 @@ export class EzeeOrderEquipmentComponent implements OnInit, OnDestroy {
           error?.error?.message || error?.message || 'Unable to add the equipment.'
         );
         alert({ title: 'Add Equipment', message, okButtonText: 'OK' });
+      },
+    });
+  }
+
+  public saveSwap(): void {
+    if (!this.canSwapEquipment() || this.isSavingEquipment || !this.swappingEquipment) {
+      return;
+    }
+
+    const oldId = this.swappingEquipment.id.trim();
+    const newId = this.replacementEquipment.id.trim();
+    this.isSavingEquipment = true;
+    this.cdr.detectChanges();
+    this.ordersService.swapOrderEquipment(this.order.number, oldId, newId).pipe(
+      finalize(() => {
+        this.isSavingEquipment = false;
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
+      next: (response) => {
+        if (response?.error) {
+          alert({
+            title: 'Swap Equipment',
+            message: response?.message || 'Unable to swap the equipment.',
+            okButtonText: 'OK',
+          });
+          return;
+        }
+
+        alert({
+          title: 'Equipment Swapped',
+          message: response?.message || 'Equipment swapped successfully.',
+          okButtonText: 'OK',
+        });
+        this.replacementEquipment = { id: '' };
+        this.swappingEquipment = null;
+        this.loadEquipment();
+      },
+      error: (error) => {
+        const message = String(
+          error?.error?.message || error?.message || 'Unable to swap the equipment.'
+        );
+        alert({ title: 'Swap Equipment', message, okButtonText: 'OK' });
       },
     });
   }

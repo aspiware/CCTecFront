@@ -5,13 +5,13 @@
     <GridLayout row="0" col="0" rows="auto,*,auto" class="modal-card">
       <GridLayout row="0" columns="*,auto" class="header">
         <StackLayout col="0">
-          <Label [text]="isAddingEquipment ? 'Add Equipment' : 'Order Equipment'" class="modal-title"></Label>
+          <Label [text]="isAddingEquipment ? 'Add Equipment' : (swappingEquipment ? 'Swap Equipment' : 'Order Equipment')" class="modal-title"></Label>
           <Label [text]="'Order #' + order.number" class="order-number"></Label>
         </StackLayout>
-        <Label col="1" [text]="isAddingEquipment ? '&#xf060;' : '&#xf00d;'" class="fas close-button" (tap)="close()"></Label>
+        <Label col="1" [text]="isAddingEquipment || swappingEquipment ? '&#xf060;' : '&#xf00d;'" class="fas close-button" (tap)="close()"></Label>
       </GridLayout>
 
-      <GridLayout *ngIf="!isAddingEquipment" row="1" rows="*" columns="*">
+      <GridLayout *ngIf="!isAddingEquipment && !swappingEquipment" row="1" rows="*" columns="*">
         <StackLayout *ngIf="isLoading" verticalAlignment="middle" horizontalAlignment="center">
           <ActivityIndicator [busy]="true" width="32" height="32"></ActivityIndicator>
           <Label text="Loading equipment..." class="state-message"></Label>
@@ -35,7 +35,7 @@
           <StackLayout>
             <GridLayout
               *ngFor="let item of equipment"
-              rows="auto,auto,auto,auto"
+              rows="auto,auto,auto,auto,auto"
               columns="auto,*"
               class="equipment-card">
               <Label row="0" col="0" text="Model" class="field-label"></Label>
@@ -49,6 +49,15 @@
 
               <Label row="3" col="0" text="Action" class="field-label"></Label>
               <Label row="3" col="1" [text]="item.action || '—'" textWrap="true" class="field-value action"></Label>
+
+              <Button
+                row="4"
+                col="0"
+                colSpan="2"
+                text="Swap Equipment"
+                class="swap-button"
+                (tap)="openSwapEquipment(item)">
+              </Button>
             </GridLayout>
           </StackLayout>
         </ScrollView>
@@ -66,8 +75,45 @@
         </StackLayout>
       </ScrollView>
 
-      <GridLayout *ngIf="!isAddingEquipment" row="2" columns="*" class="footer">
+      <ScrollView *ngIf="swappingEquipment" row="1" class="equipment-form-scroll">
+        <StackLayout class="equipment-form">
+          <Label text="Replace the selected equipment with a new unit." textWrap="true" class="form-instructions"></Label>
+
+          <StackLayout class="selected-equipment">
+            <Label text="CURRENT EQUIPMENT" class="selected-equipment-title"></Label>
+            <Label [text]="swappingEquipment.model || 'Unknown model'" textWrap="true" class="selected-equipment-model"></Label>
+            <Label [text]="'ID: ' + swappingEquipment.id" textWrap="true" class="selected-equipment-detail"></Label>
+            <Label [text]="'Serial: ' + (swappingEquipment.serial || '—')" textWrap="true" class="selected-equipment-detail"></Label>
+          </StackLayout>
+
+          <Label text="New equipment ID" class="input-label"></Label>
+          <GridLayout columns="*,auto" class="input-row">
+            <TextField col="0" [(ngModel)]="replacementEquipment.id" hint="Replacement equipment ID" class="equipment-input"></TextField>
+            <Button col="1" text="Scan" class="scan-button" (tap)="scanReplacementId()"></Button>
+          </GridLayout>
+
+          <Label
+            *ngIf="replacementEquipment.id.trim() === swappingEquipment.id.trim()"
+            text="The replacement must be different from the current equipment."
+            textWrap="true"
+            class="validation-message">
+          </Label>
+        </StackLayout>
+      </ScrollView>
+
+      <GridLayout *ngIf="!isAddingEquipment && !swappingEquipment" row="2" columns="*" class="footer">
         <Button text="Add Equipment" class="primary-button" (tap)="openAddEquipment()"></Button>
+      </GridLayout>
+
+      <GridLayout *ngIf="swappingEquipment" row="2" columns="*,*" class="footer">
+        <Button col="0" text="Cancel" class="secondary-button footer-button" (tap)="close()"></Button>
+        <Button
+          col="1"
+          [text]="isSavingEquipment ? 'Swapping...' : 'Swap'"
+          class="primary-button footer-button"
+          [isEnabled]="canSwapEquipment() && !isSavingEquipment"
+          (tap)="saveSwap()">
+        </Button>
       </GridLayout>
 
       <GridLayout *ngIf="isAddingEquipment" row="2" columns="*,*" class="footer">
