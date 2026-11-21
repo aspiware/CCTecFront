@@ -41,12 +41,13 @@ export class EzeeInstallNoteComponent implements OnInit, OnDestroy {
   public readonly equipmentLocationOptions: MenuButtonAction[] = [
     { name: 'Living Room' },
     { name: 'Bedroom' },
-    { name: 'Home Office' },
+    { name: 'Office' },
+    { name: 'Game Room' },
+    { name: 'Control Panel' },
     { name: 'Basement' },
     { name: 'Garage' },
     { name: 'Utility Room' },
     { name: 'Closet' },
-    { name: 'Attic' },
     { name: 'Other' },
   ];
   public readonly fiberInstallationProcessOptions: MenuButtonAction[] = [
@@ -58,6 +59,8 @@ export class EzeeInstallNoteComponent implements OnInit, OnDestroy {
   public preview = '';
   public isLoadingEquipment = false;
   public equipmentErrorMessage = '';
+  private ontEquipmentCount = 0;
+  private eeroEquipmentCount = 0;
   private equipmentSubscription?: Subscription;
   private dismissKeyboardTimer?: ReturnType<typeof setTimeout>;
   private suppressDismissUntil = 0;
@@ -131,7 +134,10 @@ export class EzeeInstallNoteComponent implements OnInit, OnDestroy {
     });
   }
 
-  public updatePreview(): void {
+  public updatePreview(generateTechNotes = true): void {
+    if (generateTechNotes) {
+      this.fields.techNotes = this.buildTechNotes();
+    }
     this.preview = this.buildNote();
   }
 
@@ -208,7 +214,7 @@ export class EzeeInstallNoteComponent implements OnInit, OnDestroy {
       `Equipment Location: ${this.fields.equipmentLocation}`,
       `Fiber Installation Process: ${this.fields.fiberInstallationProcess}`,
       `Assisted Customer with Router Setup: ${this.yesNo(this.fields.assistedRouterSetup)}`,
-      `Eero Speeds: ${this.fields.eeroSpeeds}`,
+      `Eero Speeds: ${this.formattedEeroSpeed()}`,
       `Terminal Splice: ${this.yesNo(this.fields.terminalSplice)}`,
       `NID Splice: ${this.yesNo(this.fields.nidSplice)}`,
       `NID Light Levels: ${this.fields.nidLightLevels}`,
@@ -277,6 +283,8 @@ export class EzeeInstallNoteComponent implements OnInit, OnDestroy {
         const equipment = Array.isArray(response?.data?.equipment)
           ? response.data.equipment
           : [];
+        this.ontEquipmentCount = this.countEquipment(equipment, /\b(?:ont|onu)\b|modem/i);
+        this.eeroEquipmentCount = this.countEquipment(equipment, /eero/i);
         this.fields.ontSerialNumber = this.findEquipmentIds(equipment, /\b(?:ont|onu)\b|modem/i);
         this.fields.eeroSerialNumber = this.findEquipmentIds(equipment, /eero/i);
         this.updatePreview();
@@ -358,14 +366,105 @@ export class EzeeInstallNoteComponent implements OnInit, OnDestroy {
   }
 
   private findEquipmentIds(equipment: EzeeOrderEquipment[], modelPattern: RegExp): string {
-    const currentEquipment = equipment.filter((item) =>
-      !/^remove$/i.test(String(item?.action || '').trim())
-    );
-    return currentEquipment
+    return this.currentEquipment(equipment)
       .filter((item) => modelPattern.test(String(item?.model || '')))
       .map((item) => String(item?.id || '').trim())
       .filter((id, index, ids) => !!id && ids.indexOf(id) === index)
       .join(', ');
+  }
+
+  private countEquipment(equipment: EzeeOrderEquipment[], modelPattern: RegExp): number {
+    return this.currentEquipment(equipment)
+      .filter((item) => modelPattern.test(String(item?.model || '')))
+      .length;
+  }
+
+  private currentEquipment(equipment: EzeeOrderEquipment[]): EzeeOrderEquipment[] {
+    return equipment.filter((item) =>
+      !/^remove$/i.test(String(item?.action || '').trim())
+    );
+  }
+
+  private buildTechNotes(): string {
+    const process = this.installationProcessDescription(this.fields.fiberInstallationProcess);
+    const location = String(this.fields.equipmentLocation || '').trim().toLowerCase();
+    let installation = 'Completed fiber installation';
+    if (process) {
+      installation += ` with ${process}`;
+    }
+    if (location && !(process === 'duct to the attic' && location === 'attic')) {
+      installation += ` into the ${location}`;
+    }
+
+    const details: string[] = [];
+    const installedEquipment = this.installedEquipmentDescription();
+    if (installedEquipment) {
+      details.push(`successfully installed ${installedEquipment}`);
+    }
+    details.push(
+      this.fields.assistedRouterSetup
+        ? 'assisted the customer with router setup'
+        : 'customer router setup assistance was not required'
+    );
+    const speed = this.formattedEeroSpeed();
+    if (speed) {
+      details.push(`verified internet speeds of ${speed}`);
+    }
+
+    return `${installation}. ${this.capitalize(this.joinPhrases(details))}.`;
+  }
+
+  private installationProcessDescription(value: string): string {
+    const process = String(value || '').trim().toLowerCase();
+    if (process === 'wall fish') {
+      return 'wall fish through the attic';
+    }
+    if (process === 'duct to attic') {
+      return 'duct to the attic';
+    }
+    return process;
+  }
+
+  private formattedEeroSpeed(): string {
+    const speed = String(this.fields.eeroSpeeds || '').trim();
+    if (!speed || /\bGbps$/i.test(speed)) {
+      return speed;
+    }
+    return `${speed} Gbps`;
+  }
+
+  private installedEquipmentDescription(): string {
+    const equipment: string[] = [];
+    if (this.ontEquipmentCount === 1) {
+      equipment.push('the ONU');
+    } else if (this.ontEquipmentCount > 1) {
+      equipment.push(`${this.numberWord(this.ontEquipmentCount)} ONUs`);
+    }
+    if (this.eeroEquipmentCount === 1) {
+      equipment.push('an eero router');
+    } else if (this.eeroEquipmentCount > 1) {
+      equipment.push(`${this.numberWord(this.eeroEquipmentCount)} eero routers`);
+    }
+    return this.joinPhrases(equipment);
+  }
+
+  private joinPhrases(values: string[]): string {
+    if (values.length <= 1) {
+      return values[0] || '';
+    }
+    if (values.length === 2) {
+      return `${values[0]} and ${values[1]}`;
+    }
+    return values.join(', ');
+  }
+
+  private numberWord(value: number): string {
+    const words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+    return words[value] || String(value);
+  }
+
+  private capitalize(value: string): string {
+    return value ? `${value.charAt(0).toUpperCase()}${value.slice(1)}` : '';
   }
 
   private yesNo(value: boolean): string {

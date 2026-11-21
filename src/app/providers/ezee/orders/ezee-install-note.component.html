@@ -80,7 +80,7 @@
           <Label *ngIf="equipmentErrorMessage" [text]="equipmentErrorMessage" textWrap="true" class="equipment-state equipment-error"></Label>
 
           <Label text="Tech Notes" class="input-label"></Label>
-          <TextView [(ngModel)]="fields.techNotes" (ngModelChange)="updatePreview()" (tap)="onInputTap()" (touch)="onInputTap()" (focus)="onInputTap()" class="text-area"></TextView>
+          <TextView [(ngModel)]="fields.techNotes" (ngModelChange)="updatePreview(false)" (tap)="onInputTap()" (touch)="onInputTap()" (focus)="onInputTap()" class="text-area generated-notes"></TextView>
 
           <Label text="PREVIEW" class="preview-title"></Label>
           <TextView [text]="preview" editable="false" class="preview"></TextView>
