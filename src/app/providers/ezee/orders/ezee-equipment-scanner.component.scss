@@ -56,8 +56,39 @@
   vertical-align: top;
 }
 
+.detected-hint {
+  max-width: 320;
+  margin-top: 8;
+  color: #ffd60a;
+  font-size: 12;
+  text-align: center;
+}
+
 .scanner-controls {
   horizontal-align: center;
+}
+
+.auto-find-row {
+  width: 300;
+  min-height: 48;
+  margin-top: 14;
+  padding: 0 12;
+  color: #ffffff;
+  background-color: rgba(28, 28, 30, 0.85);
+  border-width: 1;
+  border-color: rgba(255, 255, 255, 0.25);
+  border-radius: 12;
+}
+
+.auto-find-label {
+  font-size: 14;
+  font-weight: 600;
+}
+
+.auto-find-value {
+  margin-right: 8;
+  font-size: 13;
+  opacity: 0.8;
 }
 
 .torch-button {

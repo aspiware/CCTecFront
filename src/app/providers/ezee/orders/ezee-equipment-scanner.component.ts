@@ -1,4 +1,4 @@
-import { Component, NO_ERRORS_SCHEMA, OnDestroy } from '@angular/core';
+import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy } from '@angular/core';
 import { ModalDialogParams, NativeScriptCommonModule } from '@nativescript/angular';
 import { EventData } from '@nativescript/core';
 import {
@@ -26,10 +26,16 @@ export class EzeeEquipmentScannerComponent implements OnDestroy {
   public readonly fieldLabel: string;
   public permissionError = '';
   public isTorchOn = false;
+  public isScannerReady = false;
+  public autoFindDsn = false;
+  public detectedCode = '';
   private scanner?: MLKitView;
   private hasResult = false;
 
-  public constructor(private modalParams: ModalDialogParams) {
+  public constructor(
+    private modalParams: ModalDialogParams,
+    private cdr: ChangeDetectorRef
+  ) {
     this.fieldLabel = String(this.modalParams.context?.fieldLabel || 'equipment code');
   }
 
@@ -52,8 +58,12 @@ export class EzeeEquipmentScannerComponent implements OnDestroy {
         await this.scanner.requestCameraPermission();
       }
       this.scanner.startPreview();
+      this.isScannerReady = true;
+      this.cdr.detectChanges();
     } catch {
+      this.isScannerReady = false;
       this.permissionError = 'Camera access is required to scan equipment codes.';
+      this.cdr.detectChanges();
     }
   }
 
@@ -63,8 +73,9 @@ export class EzeeEquipmentScannerComponent implements OnDestroy {
     }
 
     const results = Array.isArray(event.data) ? event.data : [event.data];
-    const barcode = results[0] as BarcodeResult | undefined;
-    const value = String(barcode?.rawValue || barcode?.displayValue || '').trim();
+    const value = this.autoFindDsn
+      ? this.findDsn(results as BarcodeResult[])
+      : this.firstDetectedValue(results as BarcodeResult[]);
     if (!value) {
       return;
     }
@@ -78,8 +89,55 @@ export class EzeeEquipmentScannerComponent implements OnDestroy {
     this.modalParams.closeCallback(value);
   }
 
+  public onAutoFindDsnChanged(event: any): void {
+    this.autoFindDsn = Boolean(event?.value ?? event?.object?.checked ?? false);
+    if (!this.autoFindDsn) {
+      this.detectedCode = '';
+    }
+    this.cdr.detectChanges();
+  }
+
+  private firstDetectedValue(results: BarcodeResult[]): string {
+    for (const barcode of results) {
+      const value = String(barcode?.rawValue || barcode?.displayValue || '').trim();
+      if (value) {
+        return value;
+      }
+    }
+    return '';
+  }
+
+  private findDsn(results: BarcodeResult[]): string {
+    for (const barcode of results) {
+      const value = String(barcode?.rawValue || barcode?.displayValue || '')
+        .trim()
+        .toUpperCase();
+      if (!value) {
+        continue;
+      }
+      if (this.detectedCode !== value) {
+        this.detectedCode = value;
+        this.cdr.detectChanges();
+      }
+
+      const separatedDsn = value.match(
+        /(?:^|[^A-Z0-9])([A-Z0-9]{4})[-\s]+([A-Z0-9]{4})[-\s]+([A-Z0-9]{4})[-\s]+([A-Z0-9]{4})(?:$|[^A-Z0-9])/
+      );
+      if (separatedDsn) {
+        return separatedDsn.slice(1, 5).join('-');
+      }
+
+      const withoutLabel = value.replace(/^DSN\s*:\s*/i, '');
+      const compactDsn = withoutLabel.replace(/[^A-Z0-9]/g, '');
+      if (compactDsn.length === 16 && /[A-Z]/.test(compactDsn)) {
+        return compactDsn.match(/.{4}/g)?.join('-') || compactDsn;
+      }
+    }
+    return '';
+  }
+
   public toggleTorch(): void {
-    if (!this.scanner || this.permissionError) {
+    if (!this.scanner || !this.isScannerReady || this.permissionError) {
       return;
     }
     this.isTorchOn = !this.isTorchOn;

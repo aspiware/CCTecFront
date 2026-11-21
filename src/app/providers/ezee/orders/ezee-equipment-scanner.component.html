@@ -4,7 +4,7 @@
       <Label col="0" text="&#xf00d;" class="fas close-button" (tap)="cancel()"></Label>
       <StackLayout col="1">
         <Label text="Scan Equipment" class="scanner-title"></Label>
-        <Label [text]="'Point the camera at the ' + fieldLabel + ' code'" class="scanner-subtitle"></Label>
+        <Label [text]="autoFindDsn ? 'Point the camera at the DSN barcode' : ('Point the camera at the ' + fieldLabel + ' code')" class="scanner-subtitle"></Label>
       </StackLayout>
     </GridLayout>
 
@@ -21,12 +21,24 @@
         (detection)="onDetection($event)">
       </MLKitView>
 
-      <GridLayout *ngIf="!permissionError" row="0" col="0" rows="*,220,*" columns="*,300,*" class="scanner-overlay">
+      <GridLayout *ngIf="!permissionError" row="0" col="0" rows="*,220,auto,*" columns="*,300,*" class="scanner-overlay">
         <StackLayout row="1" col="1" class="scan-frame"></StackLayout>
         <StackLayout row="2" col="0" colSpan="3" class="scanner-controls">
-          <Label text="Hold the code inside the frame" class="scan-hint"></Label>
+          <GridLayout columns="*,auto,auto" class="auto-find-row">
+            <Label col="0" text="Auto Find DSN" verticalAlignment="middle" class="auto-find-label"></Label>
+            <Label col="1" [text]="autoFindDsn ? 'Yes' : 'No'" verticalAlignment="middle" class="auto-find-value"></Label>
+            <Switch col="2" [checked]="autoFindDsn" verticalAlignment="middle" (checkedChange)="onAutoFindDsnChanged($event)"></Switch>
+          </GridLayout>
+          <Label [text]="autoFindDsn ? 'Hold the DSN code inside the frame' : 'Hold the code inside the frame'" class="scan-hint"></Label>
+          <Label
+            *ngIf="autoFindDsn && detectedCode"
+            [text]="'Detected: ' + detectedCode + ' — looking for DSN'"
+            textWrap="true"
+            class="detected-hint">
+          </Label>
           <Button
             [text]="isTorchOn ? 'Turn Light Off' : 'Turn Light On'"
+            [isEnabled]="isScannerReady"
             [class.torch-active]="isTorchOn"
             class="torch-button"
             (tap)="toggleTorch()">
