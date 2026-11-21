@@ -5,7 +5,7 @@
     <GridLayout row="0" col="0" rows="auto,*,auto" class="modal-card">
       <GridLayout row="0" columns="*,auto" class="header">
         <StackLayout col="0">
-          <Label text="Install Note" class="modal-title"></Label>
+          <Label text="Close out Notes" class="modal-title"></Label>
           <Label [text]="'Order #' + order.number" class="order-number"></Label>
         </StackLayout>
         <Label col="1" text="&#xf00d;" class="fas close-button" (tap)="close()"></Label>
@@ -77,7 +77,6 @@
             </StackLayout>
           </GridLayout>
 
-          <Label *ngIf="isLoadingEquipment" text="Loading equipment serials..." class="equipment-state"></Label>
           <Label *ngIf="equipmentErrorMessage" [text]="equipmentErrorMessage" textWrap="true" class="equipment-state equipment-error"></Label>
 
           <Label text="Tech Notes" class="input-label"></Label>

@@ -73,7 +73,7 @@ export class EzeeInstallNoteComponent implements OnInit, OnDestroy {
   }
 
   public ngOnInit(): void {
-    this.loadEquipmentSerials();
+    this.loadEquipmentIds();
   }
 
   public ngOnDestroy(): void {
@@ -167,23 +167,21 @@ export class EzeeInstallNoteComponent implements OnInit, OnDestroy {
 
   private buildNote(): string {
     return [
-      'Close out notes :',
-      '',
       `Address: ${this.fields.address}`,
       `Pre-Installation Walkthrough, Performed With: ${this.fields.walkthroughPerformedWith}`,
-      `• Equipment Location: ${this.fields.equipmentLocation}`,
-      `• Fiber Installation Process: ${this.fields.fiberInstallationProcess}`,
-      `• Assisted Customer with Router Setup: ${this.yesNo(this.fields.assistedRouterSetup)}`,
-      `• Eero Speeds: ${this.fields.eeroSpeeds}`,
-      `• Terminal Splice: ${this.yesNo(this.fields.terminalSplice)}`,
-      `• NID Splice: ${this.yesNo(this.fields.nidSplice)}`,
-      `• NID Light Levels: ${this.fields.nidLightLevels}`,
-      `• ONT Light Levels: ${this.fields.ontLightLevels}`,
-      `• ONT Serial Number: ${this.fields.ontSerialNumber}`,
-      `• Eero Serial Number: ${this.fields.eeroSerialNumber}`,
-      `• Tech notes: ${this.fields.techNotes}`,
-      `• Tech Name/ID: ${this.fields.techNameId}`,
-      `• Date: ${this.fields.date}`,
+      `Equipment Location: ${this.fields.equipmentLocation}`,
+      `Fiber Installation Process: ${this.fields.fiberInstallationProcess}`,
+      `Assisted Customer with Router Setup: ${this.yesNo(this.fields.assistedRouterSetup)}`,
+      `Eero Speeds: ${this.fields.eeroSpeeds}`,
+      `Terminal Splice: ${this.yesNo(this.fields.terminalSplice)}`,
+      `NID Splice: ${this.yesNo(this.fields.nidSplice)}`,
+      `NID Light Levels: ${this.fields.nidLightLevels}`,
+      `ONT Light Levels: ${this.fields.ontLightLevels}`,
+      `ONT Serial Number: ${this.fields.ontSerialNumber}`,
+      `Eero Serial Number: ${this.fields.eeroSerialNumber}`,
+      `Tech notes: ${this.fields.techNotes}`,
+      `Tech Name/ID: ${this.fields.techNameId}`,
+      `Date: ${this.fields.date}`,
     ].join('\n');
   }
 
@@ -221,7 +219,7 @@ export class EzeeInstallNoteComponent implements OnInit, OnDestroy {
     }
   }
 
-  private loadEquipmentSerials(): void {
+  private loadEquipmentIds(): void {
     if (!this.order?.number || this.isLoadingEquipment) {
       return;
     }
@@ -237,32 +235,32 @@ export class EzeeInstallNoteComponent implements OnInit, OnDestroy {
     ).subscribe({
       next: (response) => {
         if (response?.error) {
-          this.equipmentErrorMessage = response?.message || 'Unable to load equipment serials.';
+          this.equipmentErrorMessage = response?.message || 'Unable to load equipment IDs.';
           return;
         }
         const equipment = Array.isArray(response?.data?.equipment)
           ? response.data.equipment
           : [];
-        this.fields.ontSerialNumber = this.findEquipmentSerials(equipment, /\b(?:ont|onu)\b|modem/i);
-        this.fields.eeroSerialNumber = this.findEquipmentSerials(equipment, /eero/i);
+        this.fields.ontSerialNumber = this.findEquipmentIds(equipment, /\b(?:ont|onu)\b|modem/i);
+        this.fields.eeroSerialNumber = this.findEquipmentIds(equipment, /eero/i);
         this.updatePreview();
       },
       error: (error) => {
         this.equipmentErrorMessage = String(
-          error?.error?.message || error?.message || 'Unable to load equipment serials.'
+          error?.error?.message || error?.message || 'Unable to load equipment IDs.'
         );
       },
     });
   }
 
-  private findEquipmentSerials(equipment: EzeeOrderEquipment[], modelPattern: RegExp): string {
+  private findEquipmentIds(equipment: EzeeOrderEquipment[], modelPattern: RegExp): string {
     const currentEquipment = equipment.filter((item) =>
       !/^remove$/i.test(String(item?.action || '').trim())
     );
     return currentEquipment
       .filter((item) => modelPattern.test(String(item?.model || '')))
-      .map((item) => String(item?.serial || '').trim())
-      .filter((serial, index, serials) => !!serial && serials.indexOf(serial) === index)
+      .map((item) => String(item?.id || '').trim())
+      .filter((id, index, ids) => !!id && ids.indexOf(id) === index)
       .join(', ');
   }
 
