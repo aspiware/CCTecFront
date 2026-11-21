@@ -87,7 +87,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       { name: 'Go In Progress', icon: 'wrench.fill' },
       { name: 'Pre-Provision', icon: 'shippingbox.fill' },
       { name: 'Add Note', icon: 'note.text.badge.plus' },
-      { name: 'Create OSP Ticket', icon: 'ticket.fill' },
+      { name: 'OSP Template', icon: 'ticket.fill' },
       { name: 'Finalize', icon: 'checkmark.circle.fill' },
     ],
   };
@@ -277,7 +277,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     this.modalService.showModal(EzeeOspTicketComponent, options).catch((error) => {
       console.log('[EzeeOrders] Failed to open OSP ticket modal', error);
       alert({
-        title: 'Create OSP Ticket',
+        title: 'OSP Template',
         message: 'Unable to open the OSP ticket template.',
         okButtonText: 'OK',
       });

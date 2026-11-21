@@ -101,6 +101,7 @@
 }
 
 .copy-button,
+.share-button,
 .retry-button {
   height: 46;
   color: #ffffff;
@@ -108,6 +109,14 @@
   border-radius: 10;
   font-size: 15;
   font-weight: 600;
+}
+
+.footer-button {
+  margin: 0 5;
+}
+
+.share-button {
+  background-color: #34c759;
 }
 
 .retry-button {

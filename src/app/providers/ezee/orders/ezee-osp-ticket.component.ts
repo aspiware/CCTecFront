@@ -4,7 +4,7 @@ import {
   NativeScriptCommonModule,
   NativeScriptFormsModule,
 } from '@nativescript/angular';
-import { alert, isAndroid, isIOS, Utils } from '@nativescript/core';
+import { alert, Application, isAndroid, isIOS, Utils } from '@nativescript/core';
 import { finalize, Subscription } from 'rxjs';
 import {
   EzeeOspTicketFields,
@@ -102,10 +102,65 @@ export class EzeeOspTicketComponent implements OnInit, OnDestroy {
     this.preview = this.buildTicket();
     Utils.copyToClipboard(this.preview);
     alert({
-      title: 'OSP Ticket',
+      title: 'OSP Template',
       message: 'Ticket copied to the clipboard.',
       okButtonText: 'OK',
     });
+  }
+
+  public shareTicket(): void {
+    this.dismissKeyboard();
+    this.preview = this.buildTicket();
+
+    try {
+      if (isIOS) {
+        const rootController = Application.ios?.rootController;
+        const visibleController = rootController
+          ? Utils.ios.getVisibleViewController(rootController)
+          : null;
+        if (!visibleController) {
+          throw new Error('Unable to open the share menu.');
+        }
+
+        const activityController = UIActivityViewController.alloc()
+          .initWithActivityItemsApplicationActivities([this.preview], []);
+        const popover = activityController.popoverPresentationController;
+        if (popover) {
+          popover.sourceView = visibleController.view;
+          popover.sourceRect = CGRectMake(
+            visibleController.view.bounds.size.width / 2,
+            visibleController.view.bounds.size.height / 2,
+            1,
+            1
+          );
+          popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
+        }
+        visibleController.presentViewControllerAnimatedCompletion(
+          activityController,
+          true,
+          null
+        );
+        return;
+      }
+
+      if (isAndroid) {
+        const intent = new android.content.Intent(android.content.Intent.ACTION_SEND);
+        intent.setType('text/plain');
+        intent.putExtra(android.content.Intent.EXTRA_TEXT, this.preview);
+        const chooser = android.content.Intent.createChooser(intent, 'Share OSP Ticket');
+        const activity = Application.android.foregroundActivity || Application.android.startActivity;
+        activity?.startActivity(chooser);
+        return;
+      }
+
+      throw new Error('Sharing is not available on this device.');
+    } catch (error) {
+      alert({
+        title: 'OSP Template',
+        message: String((error as any)?.message || 'Unable to share the ticket.'),
+        okButtonText: 'OK',
+      });
+    }
   }
 
   private loadTemplate(): void {
