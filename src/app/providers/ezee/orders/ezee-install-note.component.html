@@ -1,0 +1,81 @@
+<ModalStack dismissEnabled="true" class="modal-root">
+  <GridLayout rows="*" columns="*">
+    <StackLayout row="0" col="0" class="backdrop" (tap)="close()"></StackLayout>
+
+    <GridLayout row="0" col="0" rows="auto,*,auto" class="modal-card">
+      <GridLayout row="0" columns="*,auto" class="header">
+        <StackLayout col="0">
+          <Label text="Install Note" class="modal-title"></Label>
+          <Label [text]="'Order #' + order.number" class="order-number"></Label>
+        </StackLayout>
+        <Label col="1" text="&#xf00d;" class="fas close-button" (tap)="close()"></Label>
+      </GridLayout>
+
+      <ScrollView
+        row="1"
+        (loaded)="onScrollViewLoaded($event)"
+        (tap)="onContainerTap($event)">
+        <StackLayout class="form">
+          <Label text="Equipment Location" class="input-label"></Label>
+          <GridLayout columns="*,auto" class="selector" (tap)="selectEquipmentLocation()">
+            <Label col="0" [text]="fields.equipmentLocation || 'Select a location'" [class.placeholder]="!fields.equipmentLocation" verticalAlignment="middle"></Label>
+            <Label col="1" text="&#xf078;" class="fas selector-icon" verticalAlignment="middle"></Label>
+          </GridLayout>
+
+          <Label text="Fiber Installation Process" class="input-label"></Label>
+          <GridLayout columns="*,auto" class="selector" (tap)="selectFiberInstallationProcess()">
+            <Label col="0" [text]="fields.fiberInstallationProcess || 'Select a process'" [class.placeholder]="!fields.fiberInstallationProcess" verticalAlignment="middle"></Label>
+            <Label col="1" text="&#xf078;" class="fas selector-icon" verticalAlignment="middle"></Label>
+          </GridLayout>
+
+          <Label text="Assisted Customer with Router Setup" class="input-label"></Label>
+          <GridLayout columns="auto,*,auto" class="checkbox-row" (tap)="toggleYesNo('assistedRouterSetup')">
+            <Label col="0" [text]="fields.assistedRouterSetup ? '☑' : '☐'" class="checkbox-icon"></Label>
+            <Label col="1" text="Assisted with router setup" verticalAlignment="middle"></Label>
+            <Label col="2" [text]="fields.assistedRouterSetup ? 'Yes' : 'No'" class="checkbox-value" verticalAlignment="middle"></Label>
+          </GridLayout>
+
+          <Label text="Eero Speeds" class="input-label"></Label>
+          <TextField [(ngModel)]="fields.eeroSpeeds" (ngModelChange)="updatePreview()" (tap)="onInputTap()" (focus)="onInputTap()" returnKeyType="done" (returnPress)="dismissKeyboard()" class="input"></TextField>
+
+          <Label text="Terminal Splice" class="input-label"></Label>
+          <GridLayout columns="auto,*,auto" class="checkbox-row" (tap)="toggleYesNo('terminalSplice')">
+            <Label col="0" [text]="fields.terminalSplice ? '☑' : '☐'" class="checkbox-icon"></Label>
+            <Label col="1" text="Terminal splice completed" verticalAlignment="middle"></Label>
+            <Label col="2" [text]="fields.terminalSplice ? 'Yes' : 'No'" class="checkbox-value" verticalAlignment="middle"></Label>
+          </GridLayout>
+
+          <Label text="NID Splice" class="input-label"></Label>
+          <GridLayout columns="auto,*,auto" class="checkbox-row" (tap)="toggleYesNo('nidSplice')">
+            <Label col="0" [text]="fields.nidSplice ? '☑' : '☐'" class="checkbox-icon"></Label>
+            <Label col="1" text="NID splice completed" verticalAlignment="middle"></Label>
+            <Label col="2" [text]="fields.nidSplice ? 'Yes' : 'No'" class="checkbox-value" verticalAlignment="middle"></Label>
+          </GridLayout>
+
+          <Label text="NID Light Levels" class="input-label"></Label>
+          <TextField [(ngModel)]="fields.nidLightLevels" (ngModelChange)="updatePreview()" (tap)="onInputTap()" (focus)="onInputTap()" returnKeyType="done" (returnPress)="dismissKeyboard()" class="input"></TextField>
+
+          <Label text="ONT Light Levels" class="input-label"></Label>
+          <TextField [(ngModel)]="fields.ontLightLevels" (ngModelChange)="updatePreview()" (tap)="onInputTap()" (focus)="onInputTap()" returnKeyType="done" (returnPress)="dismissKeyboard()" class="input"></TextField>
+
+          <Label text="ONT Serial Number" class="input-label"></Label>
+          <TextField [(ngModel)]="fields.ontSerialNumber" (ngModelChange)="updatePreview()" (tap)="onInputTap()" (focus)="onInputTap()" returnKeyType="done" (returnPress)="dismissKeyboard()" class="input"></TextField>
+
+          <Label text="Eero Serial Number" class="input-label"></Label>
+          <TextField [(ngModel)]="fields.eeroSerialNumber" (ngModelChange)="updatePreview()" (tap)="onInputTap()" (focus)="onInputTap()" returnKeyType="done" (returnPress)="dismissKeyboard()" class="input"></TextField>
+
+          <Label text="Tech Notes" class="input-label"></Label>
+          <TextView [(ngModel)]="fields.techNotes" (ngModelChange)="updatePreview()" (tap)="onInputTap()" (touch)="onInputTap()" (focus)="onInputTap()" class="text-area"></TextView>
+
+          <Label text="PREVIEW" class="preview-title"></Label>
+          <TextView [text]="preview" editable="false" class="preview"></TextView>
+        </StackLayout>
+      </ScrollView>
+
+      <GridLayout row="2" columns="*,*" class="footer">
+        <Button col="0" text="Cancel" class="cancel-button footer-button" (tap)="close()"></Button>
+        <Button col="1" text="Add Note" class="add-button footer-button" (tap)="addNote()"></Button>
+      </GridLayout>
+    </GridLayout>
+  </GridLayout>
+</ModalStack>

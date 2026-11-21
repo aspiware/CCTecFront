@@ -19,6 +19,7 @@ import { EzeeOrderEquipmentComponent } from './ezee-order-equipment.component';
 import { EzeeOrderPackagesComponent } from './ezee-order-packages.component';
 import { EzeeWorkOrderInfoComponent } from './ezee-work-order-info.component';
 import { EzeeOspTicketComponent } from './ezee-osp-ticket.component';
+import { EzeeInstallNoteComponent } from './ezee-install-note.component';
 
 @Component({
   standalone: true,
@@ -87,6 +88,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       { name: 'Go In Progress', icon: 'wrench.fill' },
       { name: 'Pre-Provision', icon: 'shippingbox.fill' },
       { name: 'Add Note', icon: 'note.text.badge.plus' },
+      { name: 'Add Install Note', icon: 'text.badge.plus' },
       { name: 'OSP Template', icon: 'ticket.fill' },
       { name: 'Finalize', icon: 'checkmark.circle.fill' },
     ],
@@ -244,16 +246,56 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       return;
     }
     if (event?.index === 4) {
-      this.openOspTicketTemplate(order);
+      this.addInstallNote(order);
       return;
     }
     if (event?.index === 5) {
+      this.openOspTicketTemplate(order);
+      return;
+    }
+    if (event?.index === 6) {
       this.openFinalizeModal(order);
       return;
     }
     this.showUnavailable(
       `${selected?.name || 'This order action'} is not connected for Ezee Fiber yet.`
     );
+  }
+
+  public addInstallNote(order: EzeeOrderListItem): void {
+    if (!order || this.isOrderMenuLoading(order)) {
+      return;
+    }
+
+    const options: any = {
+      context: { order },
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: false,
+      stretched: false,
+      cancelable: true,
+      dismissEnabled: true,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.Custom,
+      },
+    };
+
+    this.modalService.showModal(EzeeInstallNoteComponent, options).then((result) => {
+      if (typeof result !== 'string') {
+        return;
+      }
+      const comment = result.trim();
+      if (comment) {
+        this.saveOrderNote(order, comment);
+      }
+    }).catch((error) => {
+      console.log('[EzeeOrders] Failed to open install note modal', error);
+      alert({
+        title: 'Install Note',
+        message: 'Unable to open the install note editor.',
+        okButtonText: 'OK',
+      });
+    });
   }
 
   public openOspTicketTemplate(order: EzeeOrderListItem): void {
