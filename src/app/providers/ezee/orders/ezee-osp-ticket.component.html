@@ -1,0 +1,72 @@
+<ModalStack dismissEnabled="true" class="modal-root">
+  <GridLayout rows="*" columns="*">
+    <StackLayout row="0" col="0" class="backdrop" (tap)="close()"></StackLayout>
+
+    <GridLayout row="0" col="0" rows="auto,*,auto" class="modal-card">
+      <GridLayout row="0" columns="*,auto" class="header">
+        <StackLayout col="0">
+          <Label text="Create OSP Ticket" class="modal-title"></Label>
+          <Label [text]="'Order #' + order.number" class="order-number"></Label>
+        </StackLayout>
+        <Label col="1" text="&#xf00d;" class="fas close-button" (tap)="close()"></Label>
+      </GridLayout>
+
+      <GridLayout row="1" rows="*" columns="*">
+        <StackLayout *ngIf="isLoading" verticalAlignment="middle" horizontalAlignment="center">
+          <ActivityIndicator [busy]="true" width="32" height="32"></ActivityIndicator>
+          <Label text="Generating OSP ticket..." class="state-message"></Label>
+        </StackLayout>
+
+        <StackLayout *ngIf="!isLoading && errorMessage" verticalAlignment="middle">
+          <Label text="&#xf071;" class="fas error-icon"></Label>
+          <Label [text]="errorMessage" textWrap="true" class="state-message"></Label>
+          <Button text="Try Again" class="retry-button" (tap)="retry()"></Button>
+        </StackLayout>
+
+        <ScrollView *ngIf="!isLoading && !errorMessage">
+          <StackLayout class="form">
+            <Label text="Customer Type" class="input-label"></Label>
+            <TextField [(ngModel)]="fields.customerType" (ngModelChange)="updatePreview()" class="input"></TextField>
+
+            <Label text="Node" class="input-label"></Label>
+            <TextField [(ngModel)]="fields.node" (ngModelChange)="updatePreview()" class="input"></TextField>
+
+            <Label text="Work Order Number" class="input-label"></Label>
+            <TextField [(ngModel)]="fields.workOrderNumber" (ngModelChange)="updatePreview()" class="input"></TextField>
+
+            <Label text="Address" class="input-label"></Label>
+            <TextField [(ngModel)]="fields.address" (ngModelChange)="updatePreview()" class="input"></TextField>
+
+            <Label text="Terminal Location" class="input-label"></Label>
+            <TextField [(ngModel)]="fields.terminalLocation" (ngModelChange)="updatePreview()" hint="Enter terminal location" class="input"></TextField>
+
+            <Label text="Issue" class="input-label"></Label>
+            <TextView [(ngModel)]="fields.issue" (ngModelChange)="updatePreview()" hint="Describe the issue" class="text-area"></TextView>
+
+            <Label text="Service Date" class="input-label"></Label>
+            <TextField [(ngModel)]="fields.serviceDate" (ngModelChange)="updatePreview()" hint="YYYY-MM-DD" class="input"></TextField>
+
+            <Label text="Date of Test" class="input-label"></Label>
+            <TextField [(ngModel)]="fields.dateOfTest" (ngModelChange)="updatePreview()" hint="YYYY-MM-DD" class="input"></TextField>
+
+            <Label text="Tech" class="input-label"></Label>
+            <TextField [(ngModel)]="fields.tech" (ngModelChange)="updatePreview()" class="input"></TextField>
+
+            <Label text="Supervisor" class="input-label"></Label>
+            <TextField [(ngModel)]="fields.supervisor" (ngModelChange)="updatePreview()" hint="Enter supervisor" class="input"></TextField>
+
+            <Label text="Tech Notes" class="input-label"></Label>
+            <TextView [(ngModel)]="fields.techNotes" (ngModelChange)="updatePreview()" hint="Enter technician notes" class="text-area"></TextView>
+
+            <Label text="PREVIEW" class="preview-title"></Label>
+            <TextView [text]="preview" editable="false" class="preview"></TextView>
+          </StackLayout>
+        </ScrollView>
+      </GridLayout>
+
+      <GridLayout *ngIf="!isLoading && !errorMessage" row="2" columns="*" class="footer">
+        <Button text="Copy Ticket" class="copy-button" (tap)="copyTicket()"></Button>
+      </GridLayout>
+    </GridLayout>
+  </GridLayout>
+</ModalStack>

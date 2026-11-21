@@ -18,6 +18,7 @@ import { EzeeSummaryService } from '../home/ezee-summary.service';
 import { EzeeOrderEquipmentComponent } from './ezee-order-equipment.component';
 import { EzeeOrderPackagesComponent } from './ezee-order-packages.component';
 import { EzeeWorkOrderInfoComponent } from './ezee-work-order-info.component';
+import { EzeeOspTicketComponent } from './ezee-osp-ticket.component';
 
 @Component({
   standalone: true,
@@ -86,6 +87,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       { name: 'Go In Progress', icon: 'wrench.fill' },
       { name: 'Pre-Provision', icon: 'shippingbox.fill' },
       { name: 'Add Note', icon: 'note.text.badge.plus' },
+      { name: 'Create OSP Ticket', icon: 'ticket.fill' },
       { name: 'Finalize', icon: 'checkmark.circle.fill' },
     ],
   };
@@ -242,12 +244,44 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       return;
     }
     if (event?.index === 4) {
+      this.openOspTicketTemplate(order);
+      return;
+    }
+    if (event?.index === 5) {
       this.openFinalizeModal(order);
       return;
     }
     this.showUnavailable(
       `${selected?.name || 'This order action'} is not connected for Ezee Fiber yet.`
     );
+  }
+
+  public openOspTicketTemplate(order: EzeeOrderListItem): void {
+    if (!order || this.isOrderMenuLoading(order)) {
+      return;
+    }
+
+    const options: any = {
+      context: { order },
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: false,
+      stretched: false,
+      cancelable: true,
+      dismissEnabled: true,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.Custom,
+      },
+    };
+
+    this.modalService.showModal(EzeeOspTicketComponent, options).catch((error) => {
+      console.log('[EzeeOrders] Failed to open OSP ticket modal', error);
+      alert({
+        title: 'Create OSP Ticket',
+        message: 'Unable to open the OSP ticket template.',
+        okButtonText: 'OK',
+      });
+    });
   }
 
   public openFinalizeModal(order: EzeeOrderListItem): void {

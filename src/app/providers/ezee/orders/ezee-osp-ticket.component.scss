@@ -1,0 +1,129 @@
+.modal-root {
+  width: 100%;
+  height: 100%;
+}
+
+.backdrop {
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+}
+
+.modal-card {
+  width: 92%;
+  height: 88%;
+  padding: 16;
+  border-width: 1;
+  border-color: rgba(255, 255, 255, 0.14);
+  border-radius: 16;
+  background-color: #1c1c1e;
+  vertical-align: middle;
+  horizontal-align: center;
+}
+
+.ns-light .modal-card {
+  border-color: rgba(60, 60, 67, 0.16);
+  background-color: #f2f2f7;
+}
+
+.header {
+  margin-bottom: 10;
+}
+
+.modal-title {
+  font-size: 20;
+  font-weight: 700;
+}
+
+.order-number {
+  margin-top: 3;
+  font-size: 13;
+  opacity: 0.7;
+}
+
+.close-button {
+  width: 38;
+  height: 38;
+  padding-top: 10;
+  font-size: 16;
+  text-align: center;
+}
+
+.form {
+  padding: 0 2 12;
+}
+
+.input-label {
+  margin: 10 2 4;
+  font-size: 13;
+  font-weight: 600;
+}
+
+.input,
+.text-area {
+  padding: 0 12;
+  border-width: 1;
+  border-color: rgba(142, 142, 147, 0.45);
+  border-radius: 9;
+  background-color: rgba(126, 151, 185, 0.1);
+  font-size: 14;
+}
+
+.input {
+  height: 46;
+}
+
+.text-area {
+  height: 82;
+  padding-top: 10;
+}
+
+.preview-title {
+  margin: 22 2 5;
+  font-size: 12;
+  font-weight: 700;
+  opacity: 0.65;
+}
+
+.preview {
+  min-height: 300;
+  padding: 12;
+  border-width: 1;
+  border-color: rgba(10, 132, 255, 0.42);
+  border-radius: 10;
+  background-color: rgba(10, 132, 255, 0.09);
+  font-family: monospace;
+  font-size: 13;
+}
+
+.footer {
+  margin-top: 10;
+}
+
+.copy-button,
+.retry-button {
+  height: 46;
+  color: #ffffff;
+  background-color: #0a84ff;
+  border-radius: 10;
+  font-size: 15;
+  font-weight: 600;
+}
+
+.retry-button {
+  width: 140;
+  margin-top: 8;
+}
+
+.state-message {
+  margin: 12 20;
+  font-size: 14;
+  text-align: center;
+  opacity: 0.75;
+}
+
+.error-icon {
+  color: #ff453a;
+  font-size: 28;
+  text-align: center;
+}

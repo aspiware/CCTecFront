@@ -124,6 +124,30 @@ export interface EzeeWorkOrderInfoResponse {
   };
 }
 
+export interface EzeeOspTicketFields {
+  customerType: string;
+  node: string;
+  workOrderNumber: string;
+  address: string;
+  terminalLocation: string;
+  issue: string;
+  serviceDate: string;
+  dateOfTest: string;
+  tech: string;
+  supervisor: string;
+  techNotes: string;
+}
+
+export interface EzeeOspTicketTemplateResponse {
+  statusCode: number;
+  message: string;
+  error: boolean;
+  data: {
+    fields: EzeeOspTicketFields;
+    template: string;
+  };
+}
+
 export interface EzeeAddOrderEquipmentResponse {
   statusCode: number;
   message: string;

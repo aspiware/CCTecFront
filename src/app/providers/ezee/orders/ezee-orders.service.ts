@@ -14,6 +14,7 @@ import {
   EzeeOrderEquipmentResponse,
   EzeeOrderPackagesResponse,
   EzeeWorkOrderInfoResponse,
+  EzeeOspTicketTemplateResponse,
   EzeeAddOrderEquipmentResponse,
   EzeeSwapOrderEquipmentResponse,
   EzeePreProvisionOrderResponse,
@@ -71,6 +72,18 @@ export class EzeeOrdersService {
 
     return this.httpClient.get<EzeeWorkOrderInfoResponse>(
       `${this.configService.getUrlBase()}/ezee-fiber/orders/address/${encodeURIComponent(number)}`,
+      { headers }
+    ).pipe(timeout(20000));
+  }
+
+  public getOspTicketTemplate(number: string): Observable<EzeeOspTicketTemplateResponse> {
+    const token = getString('token', '');
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`,
+    });
+
+    return this.httpClient.get<EzeeOspTicketTemplateResponse>(
+      `${this.configService.getUrlBase()}/ezee-fiber/orders/osp-ticket-template/${encodeURIComponent(number)}`,
       { headers }
     ).pipe(timeout(20000));
   }
