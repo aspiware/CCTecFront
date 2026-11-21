@@ -88,8 +88,15 @@
       </ScrollView>
 
       <GridLayout row="2" columns="*,*" class="footer">
-        <Button col="0" text="Cancel" class="cancel-button footer-button" (tap)="close()"></Button>
-        <Button col="1" [text]="isLoadingEquipment ? 'Loading...' : 'Add Note'" [isEnabled]="!isLoadingEquipment" class="add-button footer-button" (tap)="addNote()"></Button>
+        <Button col="0" text="Copy" class="copy-button footer-button" (tap)="copyNote()"></Button>
+        <Button *ngIf="isLoadingEquipment" col="1" text="Loading..." isEnabled="false" class="add-button footer-button"></Button>
+        <Button
+          *ngIf="!isLoadingEquipment"
+          col="1"
+          text="Add Note"
+          class="add-button footer-button"
+          (tap)="confirmAddNote($event)">
+        </Button>
       </GridLayout>
     </GridLayout>
   </GridLayout>

@@ -4,7 +4,7 @@ import {
   NativeScriptCommonModule,
   NativeScriptFormsModule,
 } from '@nativescript/angular';
-import { ApplicationSettings, isAndroid, isIOS, Utils } from '@nativescript/core';
+import { alert, Application, ApplicationSettings, confirm, isAndroid, isIOS, Utils } from '@nativescript/core';
 import { finalize, Subscription } from 'rxjs';
 import { MenuButtonAction, MenuEvent } from '../../../shared/components/menu-button';
 import { EzeeOrderEquipment, EzeeOrderListItem } from './ezee-order.model';
@@ -93,6 +93,42 @@ export class EzeeInstallNoteComponent implements OnInit, OnDestroy {
     }
     this.dismissKeyboard();
     this.modalParams.closeCallback(this.buildNote());
+  }
+
+  public copyNote(): void {
+    this.dismissKeyboard();
+    this.updatePreview();
+    Utils.copyToClipboard(this.preview);
+    alert({
+      title: 'Close out Notes',
+      message: 'Note copied to the clipboard.',
+      okButtonText: 'OK',
+    });
+  }
+
+  public confirmAddNote(event: any): void {
+    if (this.isLoadingEquipment) {
+      return;
+    }
+    this.dismissKeyboard();
+
+    if (isIOS && this.showIosAddNoteConfirmation(event?.object?.ios)) {
+      return;
+    }
+    if (isAndroid && this.showAndroidAddNoteConfirmation(event?.object?.android)) {
+      return;
+    }
+
+    confirm({
+      title: 'Add close out note?',
+      message: 'This note will be added to the work order.',
+      okButtonText: 'Add',
+      cancelButtonText: 'Cancel',
+    }).then((confirmed) => {
+      if (confirmed) {
+        this.addNote();
+      }
+    });
   }
 
   public updatePreview(): void {
@@ -251,6 +287,74 @@ export class EzeeInstallNoteComponent implements OnInit, OnDestroy {
         );
       },
     });
+  }
+
+  private showIosAddNoteConfirmation(sourceButton: UIButton | null | undefined): boolean {
+    let viewController = Application.ios?.rootController;
+    while (
+      viewController?.presentedViewController &&
+      !viewController.presentedViewController.beingDismissed
+    ) {
+      viewController = viewController.presentedViewController;
+    }
+    if (!viewController) {
+      return false;
+    }
+
+    const popup = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
+      'Add close out note?',
+      'This note will be added to the work order.',
+      UIAlertControllerStyle.ActionSheet
+    );
+    popup.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Add', UIAlertActionStyle.Default, () => {
+        this.addNote();
+      })
+    );
+    popup.addAction(
+      UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, null)
+    );
+
+    const popover = popup.popoverPresentationController;
+    if (popover) {
+      popover.sourceView = sourceButton || viewController.view;
+      popover.sourceRect = sourceButton
+        ? sourceButton.bounds
+        : CGRectMake(
+            viewController.view.bounds.size.width / 2,
+            viewController.view.bounds.size.height / 2,
+            1,
+            1
+          );
+      popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
+    }
+
+    viewController.presentViewControllerAnimatedCompletion(popup, true, null);
+    return true;
+  }
+
+  private showAndroidAddNoteConfirmation(sourceView: android.view.View | null | undefined): boolean {
+    const activity = Application.android.foregroundActivity || Application.android.startActivity;
+    if (!activity || !sourceView) {
+      return false;
+    }
+
+    const addItemId = 1;
+    const popup = new android.widget.PopupMenu(activity, sourceView);
+    popup.getMenu().add(0, addItemId, 0, 'Add');
+    popup.getMenu().add(0, 2, 1, 'Cancel');
+    popup.setOnMenuItemClickListener(
+      new android.widget.PopupMenu.OnMenuItemClickListener({
+        onMenuItemClick: (item): boolean => {
+          if (item.getItemId() === addItemId) {
+            this.addNote();
+          }
+          return true;
+        },
+      })
+    );
+    popup.show();
+    return true;
   }
 
   private findEquipmentIds(equipment: EzeeOrderEquipment[], modelPattern: RegExp): string {
