@@ -88,7 +88,7 @@
   opacity: 0.5;
 }
 
-.checkbox-row {
+.switch-row {
   height: 50;
   padding: 0 12;
   border-width: 1;
@@ -97,17 +97,15 @@
   background-color: rgba(126, 151, 185, 0.1);
 }
 
-.checkbox-icon {
-  margin-right: 10;
-  color: #0a84ff;
-  font-size: 24;
-  vertical-align: middle;
-}
-
-.checkbox-value {
-  margin-left: 10;
+.switch-value {
   font-weight: 600;
   opacity: 0.75;
+}
+
+.yes-no-switch {
+  margin: 0;
+  vertical-align: middle;
+  horizontal-align: right;
 }
 
 .text-area {

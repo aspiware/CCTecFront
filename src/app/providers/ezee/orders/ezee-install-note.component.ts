@@ -114,8 +114,11 @@ export class EzeeInstallNoteComponent implements OnDestroy {
     }
   }
 
-  public toggleYesNo(field: 'assistedRouterSetup' | 'terminalSplice' | 'nidSplice'): void {
-    this.fields[field] = !this.fields[field];
+  public onYesNoChanged(
+    field: 'assistedRouterSetup' | 'terminalSplice' | 'nidSplice',
+    event: any
+  ): void {
+    this.fields[field] = Boolean(event?.value ?? event?.object?.checked ?? false);
     this.updatePreview();
   }
 
