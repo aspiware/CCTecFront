@@ -1,12 +1,14 @@
-import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy } from '@angular/core';
+import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
 import {
   ModalDialogParams,
   NativeScriptCommonModule,
   NativeScriptFormsModule,
 } from '@nativescript/angular';
 import { ApplicationSettings, isAndroid, isIOS, Utils } from '@nativescript/core';
+import { finalize, Subscription } from 'rxjs';
 import { MenuButtonAction, MenuEvent } from '../../../shared/components/menu-button';
-import { EzeeOrderListItem } from './ezee-order.model';
+import { EzeeOrderEquipment, EzeeOrderListItem } from './ezee-order.model';
+import { EzeeOrdersService } from './ezee-orders.service';
 
 interface EzeeInstallNoteFields {
   address: string;
@@ -34,7 +36,7 @@ interface EzeeInstallNoteFields {
   templateUrl: './ezee-install-note.component.html',
   styleUrl: './ezee-install-note.component.scss',
 })
-export class EzeeInstallNoteComponent implements OnDestroy {
+export class EzeeInstallNoteComponent implements OnInit, OnDestroy {
   public readonly order: EzeeOrderListItem;
   public readonly equipmentLocationOptions: MenuButtonAction[] = [
     { name: 'Living Room' },
@@ -54,19 +56,28 @@ export class EzeeInstallNoteComponent implements OnDestroy {
   ];
   public fields: EzeeInstallNoteFields;
   public preview = '';
+  public isLoadingEquipment = false;
+  public equipmentErrorMessage = '';
+  private equipmentSubscription?: Subscription;
   private dismissKeyboardTimer?: ReturnType<typeof setTimeout>;
   private suppressDismissUntil = 0;
 
   public constructor(
     private modalParams: ModalDialogParams,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private ordersService: EzeeOrdersService
   ) {
     this.order = this.modalParams.context?.order || ({} as EzeeOrderListItem);
     this.fields = this.initialFields();
     this.updatePreview();
   }
 
+  public ngOnInit(): void {
+    this.loadEquipmentSerials();
+  }
+
   public ngOnDestroy(): void {
+    this.equipmentSubscription?.unsubscribe();
     if (this.dismissKeyboardTimer) {
       clearTimeout(this.dismissKeyboardTimer);
     }
@@ -77,6 +88,9 @@ export class EzeeInstallNoteComponent implements OnDestroy {
   }
 
   public addNote(): void {
+    if (this.isLoadingEquipment) {
+      return;
+    }
     this.dismissKeyboard();
     this.modalParams.closeCallback(this.buildNote());
   }
@@ -205,6 +219,51 @@ export class EzeeInstallNoteComponent implements OnDestroy {
     } catch {
       return '';
     }
+  }
+
+  private loadEquipmentSerials(): void {
+    if (!this.order?.number || this.isLoadingEquipment) {
+      return;
+    }
+
+    this.isLoadingEquipment = true;
+    this.equipmentErrorMessage = '';
+    this.equipmentSubscription?.unsubscribe();
+    this.equipmentSubscription = this.ordersService.getOrderEquipment(this.order.number).pipe(
+      finalize(() => {
+        this.isLoadingEquipment = false;
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
+      next: (response) => {
+        if (response?.error) {
+          this.equipmentErrorMessage = response?.message || 'Unable to load equipment serials.';
+          return;
+        }
+        const equipment = Array.isArray(response?.data?.equipment)
+          ? response.data.equipment
+          : [];
+        this.fields.ontSerialNumber = this.findEquipmentSerials(equipment, /\b(?:ont|onu)\b|modem/i);
+        this.fields.eeroSerialNumber = this.findEquipmentSerials(equipment, /eero/i);
+        this.updatePreview();
+      },
+      error: (error) => {
+        this.equipmentErrorMessage = String(
+          error?.error?.message || error?.message || 'Unable to load equipment serials.'
+        );
+      },
+    });
+  }
+
+  private findEquipmentSerials(equipment: EzeeOrderEquipment[], modelPattern: RegExp): string {
+    const currentEquipment = equipment.filter((item) =>
+      !/^remove$/i.test(String(item?.action || '').trim())
+    );
+    return currentEquipment
+      .filter((item) => modelPattern.test(String(item?.model || '')))
+      .map((item) => String(item?.serial || '').trim())
+      .filter((serial, index, serials) => !!serial && serials.indexOf(serial) === index)
+      .join(', ');
   }
 
   private yesNo(value: boolean): string {
