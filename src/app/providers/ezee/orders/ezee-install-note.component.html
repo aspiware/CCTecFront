@@ -47,16 +47,22 @@
           <Label text="Eero Speeds" class="input-label"></Label>
           <TextField [(ngModel)]="fields.eeroSpeeds" (ngModelChange)="updatePreview()" (tap)="onInputTap()" (focus)="onInputTap()" returnKeyType="done" (returnPress)="dismissKeyboard()" class="input"></TextField>
 
-          <Label text="Terminal Splice" class="input-label"></Label>
-          <GridLayout columns="*,auto" class="switch-row">
-            <Label col="0" [text]="fields.terminalSplice ? 'Yes' : 'No'" class="switch-value" verticalAlignment="middle"></Label>
-            <Switch col="1" class="yes-no-switch" verticalAlignment="middle" horizontalAlignment="right" [checked]="fields.terminalSplice" (checkedChange)="onYesNoChanged('terminalSplice', $event)"></Switch>
-          </GridLayout>
+          <GridLayout columns="*,*" class="splice-fields">
+            <StackLayout col="0" class="splice-field splice-field-left">
+              <Label text="Terminal Splice" class="input-label"></Label>
+              <GridLayout columns="*,auto" class="switch-row">
+                <Label col="0" [text]="fields.terminalSplice ? 'Yes' : 'No'" class="switch-value" verticalAlignment="middle"></Label>
+                <Switch col="1" class="yes-no-switch" verticalAlignment="middle" horizontalAlignment="right" [checked]="fields.terminalSplice" (checkedChange)="onYesNoChanged('terminalSplice', $event)"></Switch>
+              </GridLayout>
+            </StackLayout>
 
-          <Label text="NID Splice" class="input-label"></Label>
-          <GridLayout columns="*,auto" class="switch-row">
-            <Label col="0" [text]="fields.nidSplice ? 'Yes' : 'No'" class="switch-value" verticalAlignment="middle"></Label>
-            <Switch col="1" class="yes-no-switch" verticalAlignment="middle" horizontalAlignment="right" [checked]="fields.nidSplice" (checkedChange)="onYesNoChanged('nidSplice', $event)"></Switch>
+            <StackLayout col="1" class="splice-field splice-field-right">
+              <Label text="NID Splice" class="input-label"></Label>
+              <GridLayout columns="*,auto" class="switch-row">
+                <Label col="0" [text]="fields.nidSplice ? 'Yes' : 'No'" class="switch-value" verticalAlignment="middle"></Label>
+                <Switch col="1" class="yes-no-switch" verticalAlignment="middle" horizontalAlignment="right" [checked]="fields.nidSplice" (checkedChange)="onYesNoChanged('nidSplice', $event)"></Switch>
+              </GridLayout>
+            </StackLayout>
           </GridLayout>
 
           <Label text="NID Light Levels" class="input-label"></Label>
