@@ -165,7 +165,7 @@ export class EzeeOrderEquipmentComponent implements OnInit, OnDestroy {
         });
         this.newEquipment = { serial: '' };
         this.isAddingEquipment = false;
-        this.loadEquipment();
+        this.loadEquipment(true);
       },
       error: (error) => {
         const message = String(
@@ -208,7 +208,7 @@ export class EzeeOrderEquipmentComponent implements OnInit, OnDestroy {
         });
         this.replacementEquipment = { id: '' };
         this.swappingEquipment = null;
-        this.loadEquipment();
+        this.loadEquipment(true);
       },
       error: (error) => {
         const message = String(
@@ -220,10 +220,10 @@ export class EzeeOrderEquipmentComponent implements OnInit, OnDestroy {
   }
 
   public retry(): void {
-    this.loadEquipment();
+    this.loadEquipment(true);
   }
 
-  private loadEquipment(): void {
+  private loadEquipment(forceRefresh = false): void {
     if (!this.order?.number || this.isLoading) {
       return;
     }
@@ -232,21 +232,27 @@ export class EzeeOrderEquipmentComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
     this.cdr.detectChanges();
     this.equipmentSubscription?.unsubscribe();
-    this.equipmentSubscription = this.ordersService.getOrderEquipment(this.order.number).pipe(
+    this.equipmentSubscription = this.ordersService.getOrderEquipment(
+      this.order.number,
+      forceRefresh
+    ).pipe(
       finalize(() => {
         this.isLoading = false;
         this.cdr.detectChanges();
       })
     ).subscribe({
       next: (response) => {
+        this.isLoading = false;
         if (response?.error) {
           this.equipment = [];
           this.errorMessage = response?.message || 'Unable to load the order equipment.';
+          this.cdr.detectChanges();
           return;
         }
         this.equipment = Array.isArray(response?.data?.equipment)
           ? response.data.equipment
           : [];
+        this.cdr.detectChanges();
       },
       error: (error) => {
         this.equipment = [];
