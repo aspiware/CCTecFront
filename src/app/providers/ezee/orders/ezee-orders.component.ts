@@ -17,6 +17,7 @@ import { EzeeFinalizeReason } from './ezee-order.model';
 import { EzeeSummaryService } from '../home/ezee-summary.service';
 import { EzeeOrderEquipmentComponent } from './ezee-order-equipment.component';
 import { EzeeOrderPackagesComponent } from './ezee-order-packages.component';
+import { EzeeWorkOrderInfoComponent } from './ezee-work-order-info.component';
 
 @Component({
   standalone: true,
@@ -613,6 +614,34 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       alert({
         title: 'Current Package',
         message: 'Unable to open the customer package.',
+        okButtonText: 'OK',
+      });
+    });
+  }
+
+  public showWorkOrderInfo(order: EzeeOrderListItem): void {
+    if (!order) {
+      return;
+    }
+
+    const options: any = {
+      context: { order },
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: false,
+      stretched: false,
+      cancelable: true,
+      dismissEnabled: true,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.Custom,
+      },
+    };
+
+    this.modalService.showModal(EzeeWorkOrderInfoComponent, options).catch((error) => {
+      console.log('[EzeeOrders] Failed to open work order info modal', error);
+      alert({
+        title: 'Work Order Info',
+        message: 'Unable to open the work order information.',
         okButtonText: 'OK',
       });
     });

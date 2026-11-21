@@ -1,0 +1,113 @@
+.modal-root {
+  width: 100%;
+  height: 100%;
+}
+
+.backdrop {
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+}
+
+.modal-card {
+  width: 90%;
+  height: 76%;
+  padding: 16;
+  border-width: 1;
+  border-color: rgba(255, 255, 255, 0.14);
+  border-radius: 16;
+  background-color: #1c1c1e;
+  vertical-align: middle;
+  horizontal-align: center;
+}
+
+.ns-light .modal-card {
+  border-color: rgba(60, 60, 67, 0.16);
+  background-color: #f2f2f7;
+}
+
+.header {
+  margin-bottom: 12;
+}
+
+.modal-title {
+  font-size: 20;
+  font-weight: 700;
+}
+
+.order-number {
+  margin-top: 3;
+  font-size: 13;
+  opacity: 0.7;
+}
+
+.close-button {
+  width: 38;
+  height: 38;
+  padding-top: 10;
+  font-size: 16;
+  text-align: center;
+}
+
+.address {
+  margin: 4 2 12;
+  padding: 12;
+  border-radius: 10;
+  background-color: rgba(10, 132, 255, 0.12);
+  font-size: 14;
+  font-weight: 600;
+}
+
+.section-title {
+  margin: 14 2 5;
+  font-size: 12;
+  font-weight: 700;
+  opacity: 0.65;
+}
+
+.info-row {
+  min-height: 42;
+  margin-bottom: 5;
+  padding: 10;
+  border-width: 1;
+  border-color: rgba(142, 142, 147, 0.28);
+  border-radius: 9;
+  background-color: rgba(126, 151, 185, 0.1);
+}
+
+.field-label {
+  font-size: 13;
+  opacity: 0.68;
+  vertical-align: middle;
+}
+
+.field-value {
+  font-size: 13;
+  font-weight: 600;
+  text-align: right;
+  vertical-align: middle;
+}
+
+.state-message {
+  margin: 12 20;
+  font-size: 14;
+  text-align: center;
+  opacity: 0.75;
+}
+
+.error-icon {
+  color: #ff453a;
+  font-size: 28;
+  text-align: center;
+}
+
+.retry-button {
+  width: 140;
+  height: 44;
+  margin-top: 8;
+  color: #ffffff;
+  background-color: #0a84ff;
+  border-radius: 10;
+  font-size: 15;
+  font-weight: 600;
+}

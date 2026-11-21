@@ -94,6 +94,36 @@ export interface EzeeOrderPackagesResponse {
   };
 }
 
+export interface EzeeWorkOrderInfo {
+  residenceType: string | null;
+  homeStatus: string | null;
+  activationDate: string | null;
+  aerial: boolean | null;
+  wired: boolean | null;
+  dropConnected: boolean | null;
+  signal: string | null;
+  lightLevels: string | null;
+  headEnd: string | null;
+  propertyType: string | null;
+  designArea: string | null;
+  hub: string | null;
+  mapCode: string | null;
+  node: string | null;
+  segment: string | null;
+  techRegion: string | null;
+  terminal: string | null;
+  terminalType: string | null;
+}
+
+export interface EzeeWorkOrderInfoResponse {
+  statusCode: number;
+  message: string;
+  error: boolean;
+  data: EzeeWorkOrderInfo & {
+    number: string;
+  };
+}
+
 export interface EzeeAddOrderEquipmentResponse {
   statusCode: number;
   message: string;

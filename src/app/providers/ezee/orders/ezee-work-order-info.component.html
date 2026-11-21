@@ -1,0 +1,45 @@
+<ModalStack dismissEnabled="true" class="modal-root">
+  <GridLayout rows="*" columns="*">
+    <StackLayout row="0" col="0" class="backdrop" (tap)="close()"></StackLayout>
+
+    <GridLayout row="0" col="0" rows="auto,*" class="modal-card">
+      <GridLayout row="0" columns="*,auto" class="header">
+        <StackLayout col="0">
+          <Label text="Work Order Info" class="modal-title"></Label>
+          <Label [text]="'Order #' + order.number" class="order-number"></Label>
+        </StackLayout>
+        <Label col="1" text="&#xf00d;" class="fas close-button" (tap)="close()"></Label>
+      </GridLayout>
+
+      <GridLayout row="1" rows="*" columns="*">
+        <StackLayout *ngIf="isLoading" verticalAlignment="middle" horizontalAlignment="center">
+          <ActivityIndicator [busy]="true" width="32" height="32"></ActivityIndicator>
+          <Label text="Loading work order information..." class="state-message"></Label>
+        </StackLayout>
+
+        <StackLayout *ngIf="!isLoading && errorMessage" verticalAlignment="middle">
+          <Label text="&#xf071;" class="fas error-icon"></Label>
+          <Label [text]="errorMessage" textWrap="true" class="state-message"></Label>
+          <Button text="Try Again" class="retry-button" (tap)="retry()"></Button>
+        </StackLayout>
+
+        <ScrollView *ngIf="!isLoading && !errorMessage">
+          <StackLayout>
+            <Label [text]="order.address || 'Address unavailable'" textWrap="true" class="address"></Label>
+
+            <StackLayout *ngFor="let group of groups">
+              <Label [text]="group.title" class="section-title"></Label>
+              <GridLayout
+                *ngFor="let item of group.rows"
+                columns="*,*"
+                class="info-row">
+                <Label col="0" [text]="item.label" class="field-label"></Label>
+                <Label col="1" [text]="item.value" textWrap="true" class="field-value"></Label>
+              </GridLayout>
+            </StackLayout>
+          </StackLayout>
+        </ScrollView>
+      </GridLayout>
+    </GridLayout>
+  </GridLayout>
+</ModalStack>

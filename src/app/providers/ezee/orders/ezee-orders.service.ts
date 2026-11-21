@@ -13,6 +13,7 @@ import {
   EzeeOrderStatusResponse,
   EzeeOrderEquipmentResponse,
   EzeeOrderPackagesResponse,
+  EzeeWorkOrderInfoResponse,
   EzeeAddOrderEquipmentResponse,
   EzeeSwapOrderEquipmentResponse,
   EzeePreProvisionOrderResponse,
@@ -58,6 +59,18 @@ export class EzeeOrdersService {
 
     return this.httpClient.get<EzeeOrderPackagesResponse>(
       `${this.configService.getUrlBase()}/ezee-fiber/orders/packages/${encodeURIComponent(number)}`,
+      { headers }
+    ).pipe(timeout(20000));
+  }
+
+  public getWorkOrderInfo(number: string): Observable<EzeeWorkOrderInfoResponse> {
+    const token = getString('token', '');
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`,
+    });
+
+    return this.httpClient.get<EzeeWorkOrderInfoResponse>(
+      `${this.configService.getUrlBase()}/ezee-fiber/orders/address/${encodeURIComponent(number)}`,
       { headers }
     ).pipe(timeout(20000));
   }
