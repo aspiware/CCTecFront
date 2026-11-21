@@ -4,7 +4,7 @@ import {
   NativeScriptCommonModule,
   NativeScriptFormsModule,
 } from '@nativescript/angular';
-import { alert, Utils } from '@nativescript/core';
+import { alert, isAndroid, isIOS, Utils } from '@nativescript/core';
 import { finalize, Subscription } from 'rxjs';
 import {
   EzeeOspTicketFields,
@@ -27,6 +27,8 @@ export class EzeeOspTicketComponent implements OnInit, OnDestroy {
   public isLoading = false;
   public errorMessage = '';
   private templateSubscription?: Subscription;
+  private dismissKeyboardTimer?: ReturnType<typeof setTimeout>;
+  private suppressDismissUntil = 0;
 
   public constructor(
     private modalParams: ModalDialogParams,
@@ -42,6 +44,9 @@ export class EzeeOspTicketComponent implements OnInit, OnDestroy {
 
   public ngOnDestroy(): void {
     this.templateSubscription?.unsubscribe();
+    if (this.dismissKeyboardTimer) {
+      clearTimeout(this.dismissKeyboardTimer);
+    }
   }
 
   public close(): void {
@@ -56,7 +61,44 @@ export class EzeeOspTicketComponent implements OnInit, OnDestroy {
     this.preview = this.buildTicket();
   }
 
+  public onInputTap(): void {
+    this.suppressDismissUntil = Date.now() + 350;
+    if (this.dismissKeyboardTimer) {
+      clearTimeout(this.dismissKeyboardTimer);
+      this.dismissKeyboardTimer = undefined;
+    }
+  }
+
+  public onContainerTap(event: any): void {
+    if (Date.now() < this.suppressDismissUntil || this.isTextInputTap(event)) {
+      return;
+    }
+    if (this.dismissKeyboardTimer) {
+      clearTimeout(this.dismissKeyboardTimer);
+    }
+    this.dismissKeyboardTimer = setTimeout(() => {
+      this.dismissKeyboard();
+      this.dismissKeyboardTimer = undefined;
+    }, 120);
+  }
+
+  public onScrollViewLoaded(event: any): void {
+    if (!isIOS) {
+      return;
+    }
+    const scrollView = event?.object?.nativeViewProtected;
+    if (scrollView) {
+      scrollView.keyboardDismissMode = UIScrollViewKeyboardDismissMode.OnDrag;
+      scrollView.alwaysBounceVertical = true;
+    }
+  }
+
+  public dismissKeyboard(): void {
+    Utils.dismissKeyboard();
+  }
+
   public copyTicket(): void {
+    this.dismissKeyboard();
     this.preview = this.buildTicket();
     Utils.copyToClipboard(this.preview);
     alert({
@@ -113,6 +155,18 @@ export class EzeeOspTicketComponent implements OnInit, OnDestroy {
       `Supervisor: ${this.fields.supervisor}`,
       `Tech notes: ${this.fields.techNotes}`,
     ].join('\n');
+  }
+
+  private isTextInputTap(event: any): boolean {
+    if (isIOS) {
+      const className = String(event?.ios?.view?.className || '');
+      return className.includes('UITextField') || className.includes('UITextView');
+    }
+    if (isAndroid) {
+      const className = String(event?.android?.view?.getClass?.()?.getName?.() || '');
+      return className.includes('EditText');
+    }
+    return false;
   }
 
   private normalizeFields(value: Partial<EzeeOspTicketFields> | null | undefined): EzeeOspTicketFields {
