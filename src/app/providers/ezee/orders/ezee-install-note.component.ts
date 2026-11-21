@@ -4,7 +4,8 @@ import {
   NativeScriptCommonModule,
   NativeScriptFormsModule,
 } from '@nativescript/angular';
-import { action, ApplicationSettings, isAndroid, isIOS, Utils } from '@nativescript/core';
+import { ApplicationSettings, isAndroid, isIOS, Utils } from '@nativescript/core';
+import { MenuButtonAction, MenuEvent } from '../../../shared/components/menu-button';
 import { EzeeOrderListItem } from './ezee-order.model';
 
 interface EzeeInstallNoteFields {
@@ -35,21 +36,21 @@ interface EzeeInstallNoteFields {
 })
 export class EzeeInstallNoteComponent implements OnDestroy {
   public readonly order: EzeeOrderListItem;
-  public readonly equipmentLocations = [
-    'Living Room',
-    'Bedroom',
-    'Home Office',
-    'Basement',
-    'Garage',
-    'Utility Room',
-    'Closet',
-    'Attic',
-    'Other',
+  public readonly equipmentLocationOptions: MenuButtonAction[] = [
+    { name: 'Living Room' },
+    { name: 'Bedroom' },
+    { name: 'Home Office' },
+    { name: 'Basement' },
+    { name: 'Garage' },
+    { name: 'Utility Room' },
+    { name: 'Closet' },
+    { name: 'Attic' },
+    { name: 'Other' },
   ];
-  public readonly fiberInstallationProcesses = [
-    'Wall Fish',
-    'Wall Penetration',
-    'Duct to Attic',
+  public readonly fiberInstallationProcessOptions: MenuButtonAction[] = [
+    { name: 'Wall Fish' },
+    { name: 'Wall Penetration' },
+    { name: 'Duct to Attic' },
   ];
   public fields: EzeeInstallNoteFields;
   public preview = '';
@@ -84,34 +85,26 @@ export class EzeeInstallNoteComponent implements OnDestroy {
     this.preview = this.buildNote();
   }
 
-  public async selectEquipmentLocation(): Promise<void> {
+  public selectEquipmentLocation(event: MenuEvent): void {
     this.dismissKeyboard();
-    const selected = await action({
-      title: 'Equipment Location',
-      message: 'Select the equipment location',
-      cancelButtonText: 'Cancel',
-      actions: this.equipmentLocations,
-    });
-    if (selected && this.equipmentLocations.includes(selected)) {
-      this.fields.equipmentLocation = selected;
-      this.updatePreview();
-      this.cdr.detectChanges();
+    const selected = this.equipmentLocationOptions[event?.index]?.name;
+    if (!selected) {
+      return;
     }
+    this.fields.equipmentLocation = selected;
+    this.updatePreview();
+    this.cdr.detectChanges();
   }
 
-  public async selectFiberInstallationProcess(): Promise<void> {
+  public selectFiberInstallationProcess(event: MenuEvent): void {
     this.dismissKeyboard();
-    const selected = await action({
-      title: 'Fiber Installation Process',
-      message: 'Select the installation process',
-      cancelButtonText: 'Cancel',
-      actions: this.fiberInstallationProcesses,
-    });
-    if (selected && this.fiberInstallationProcesses.includes(selected)) {
-      this.fields.fiberInstallationProcess = selected;
-      this.updatePreview();
-      this.cdr.detectChanges();
+    const selected = this.fiberInstallationProcessOptions[event?.index]?.name;
+    if (!selected) {
+      return;
     }
+    this.fields.fiberInstallationProcess = selected;
+    this.updatePreview();
+    this.cdr.detectChanges();
   }
 
   public onYesNoChanged(

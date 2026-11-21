@@ -17,16 +17,26 @@
         (tap)="onContainerTap($event)">
         <StackLayout class="form">
           <Label text="Equipment Location" class="input-label"></Label>
-          <GridLayout columns="*,auto" class="selector" (tap)="selectEquipmentLocation()">
-            <Label col="0" [text]="fields.equipmentLocation || 'Select a location'" [class.placeholder]="!fields.equipmentLocation" verticalAlignment="middle"></Label>
-            <Label col="1" text="&#xf078;" class="fas selector-icon" verticalAlignment="middle"></Label>
-          </GridLayout>
+          <MenuButton
+            class="selector"
+            [class.placeholder]="!fields.equipmentLocation"
+            [text]="(fields.equipmentLocation || 'Select a location') + '  ▾'"
+            [options]="equipmentLocationOptions"
+            textAlignment="left"
+            horizontalAlignment="stretch"
+            (selected)="selectEquipmentLocation($event)">
+          </MenuButton>
 
           <Label text="Fiber Installation Process" class="input-label"></Label>
-          <GridLayout columns="*,auto" class="selector" (tap)="selectFiberInstallationProcess()">
-            <Label col="0" [text]="fields.fiberInstallationProcess || 'Select a process'" [class.placeholder]="!fields.fiberInstallationProcess" verticalAlignment="middle"></Label>
-            <Label col="1" text="&#xf078;" class="fas selector-icon" verticalAlignment="middle"></Label>
-          </GridLayout>
+          <MenuButton
+            class="selector"
+            [class.placeholder]="!fields.fiberInstallationProcess"
+            [text]="(fields.fiberInstallationProcess || 'Select a process') + '  ▾'"
+            [options]="fiberInstallationProcessOptions"
+            textAlignment="left"
+            horizontalAlignment="stretch"
+            (selected)="selectFiberInstallationProcess($event)">
+          </MenuButton>
 
           <Label text="Assisted Customer with Router Setup" class="input-label"></Label>
           <GridLayout columns="*,auto" class="switch-row">
