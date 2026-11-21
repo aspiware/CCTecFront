@@ -16,6 +16,7 @@ import { EzeeFinalizeOrderComponent } from './ezee-finalize-order.component';
 import { EzeeFinalizeReason } from './ezee-order.model';
 import { EzeeSummaryService } from '../home/ezee-summary.service';
 import { EzeeOrderEquipmentComponent } from './ezee-order-equipment.component';
+import { EzeeOrderPackagesComponent } from './ezee-order-packages.component';
 
 @Component({
   standalone: true,
@@ -584,6 +585,34 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       alert({
         title: 'Order Equipment',
         message: 'Unable to open the order equipment.',
+        okButtonText: 'OK',
+      });
+    });
+  }
+
+  public showPackages(order: EzeeOrderListItem): void {
+    if (!order) {
+      return;
+    }
+
+    const options: any = {
+      context: { order },
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: false,
+      stretched: false,
+      cancelable: true,
+      dismissEnabled: true,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.Custom,
+      },
+    };
+
+    this.modalService.showModal(EzeeOrderPackagesComponent, options).catch((error) => {
+      console.log('[EzeeOrders] Failed to open order packages modal', error);
+      alert({
+        title: 'Current Package',
+        message: 'Unable to open the customer package.',
         okButtonText: 'OK',
       });
     });

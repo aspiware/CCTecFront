@@ -1,0 +1,78 @@
+<ModalStack dismissEnabled="true" class="modal-root">
+  <GridLayout rows="*" columns="*">
+    <StackLayout row="0" col="0" class="backdrop" (tap)="close()"></StackLayout>
+
+    <GridLayout row="0" col="0" rows="auto,*" class="modal-card">
+      <GridLayout row="0" columns="*,auto" class="header">
+        <StackLayout col="0">
+          <Label text="Customer Package" class="modal-title"></Label>
+          <Label [text]="'Order #' + order.number" class="order-number"></Label>
+        </StackLayout>
+        <Label col="1" text="&#xf00d;" class="fas close-button" (tap)="close()"></Label>
+      </GridLayout>
+
+      <GridLayout row="1" rows="*" columns="*">
+        <StackLayout *ngIf="isLoading" verticalAlignment="middle" horizontalAlignment="center">
+          <ActivityIndicator [busy]="true" width="32" height="32"></ActivityIndicator>
+          <Label text="Loading customer package..." class="state-message"></Label>
+        </StackLayout>
+
+        <StackLayout *ngIf="!isLoading && errorMessage" verticalAlignment="middle">
+          <Label text="&#xf071;" class="fas error-icon"></Label>
+          <Label [text]="errorMessage" textWrap="true" class="state-message"></Label>
+          <Button text="Try Again" class="retry-button" (tap)="retry()"></Button>
+        </StackLayout>
+
+        <ScrollView *ngIf="!isLoading && !errorMessage">
+          <StackLayout>
+            <Label text="CURRENT PACKAGES" class="section-title"></Label>
+            <Label
+              *ngIf="!currentPackages.length"
+              text="No current packages were found."
+              textWrap="true"
+              class="empty-message">
+            </Label>
+
+            <StackLayout *ngFor="let item of currentPackages" class="package-card current-package">
+              <Label [text]="packageTitle(item)" textWrap="true" class="package-name"></Label>
+              <Label *ngIf="item.action" [text]="'Action: ' + item.action" class="package-detail action"></Label>
+              <Label *ngIf="item.startDate" [text]="'Start date: ' + item.startDate" class="package-detail"></Label>
+              <Label *ngIf="item.endDate" [text]="'End date: ' + item.endDate" class="package-detail"></Label>
+            </StackLayout>
+
+            <StackLayout *ngIf="scheduledPackages.length">
+              <Label text="SCHEDULED PACKAGES" class="section-title additional-section"></Label>
+              <StackLayout *ngFor="let item of scheduledPackages" class="package-card scheduled-package">
+                <Label [text]="packageTitle(item)" textWrap="true" class="package-name"></Label>
+                <Label *ngIf="item.action" [text]="'Action: ' + item.action" class="package-detail action"></Label>
+                <Label *ngIf="item.startDate" [text]="'Start date: ' + item.startDate" class="package-detail"></Label>
+                <Label *ngIf="item.endDate" [text]="'End date: ' + item.endDate" class="package-detail"></Label>
+              </StackLayout>
+            </StackLayout>
+
+            <StackLayout *ngIf="otherPackages.length">
+              <Label text="OTHER PACKAGES" class="section-title additional-section"></Label>
+              <StackLayout *ngFor="let item of otherPackages" class="package-card">
+                <Label [text]="packageTitle(item)" textWrap="true" class="package-name"></Label>
+                <Label *ngIf="item.action" [text]="'Action: ' + item.action" class="package-detail action"></Label>
+                <Label *ngIf="item.startDate" [text]="'Start date: ' + item.startDate" class="package-detail"></Label>
+                <Label *ngIf="item.endDate" [text]="'End date: ' + item.endDate" class="package-detail"></Label>
+              </StackLayout>
+            </StackLayout>
+
+            <StackLayout *ngIf="suggestedEquipment.length">
+              <Label text="SUGGESTED EQUIPMENT" class="section-title additional-section"></Label>
+              <GridLayout
+                *ngFor="let item of suggestedEquipment"
+                columns="*,auto"
+                class="suggested-equipment-card">
+                <Label col="0" [text]="item.model" textWrap="true" class="equipment-model"></Label>
+                <Label col="1" [text]="'×' + item.quantity" class="equipment-quantity"></Label>
+              </GridLayout>
+            </StackLayout>
+          </StackLayout>
+        </ScrollView>
+      </GridLayout>
+    </GridLayout>
+  </GridLayout>
+</ModalStack>

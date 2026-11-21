@@ -12,6 +12,7 @@ import {
   EzeeFinalizeReason,
   EzeeOrderStatusResponse,
   EzeeOrderEquipmentResponse,
+  EzeeOrderPackagesResponse,
   EzeeAddOrderEquipmentResponse,
   EzeeSwapOrderEquipmentResponse,
   EzeePreProvisionOrderResponse,
@@ -45,6 +46,18 @@ export class EzeeOrdersService {
 
     return this.httpClient.get<EzeeOrderEquipmentResponse>(
       `${this.configService.getUrlBase()}/ezee-fiber/orders/equipment/${encodeURIComponent(number)}`,
+      { headers }
+    ).pipe(timeout(20000));
+  }
+
+  public getOrderPackages(number: string): Observable<EzeeOrderPackagesResponse> {
+    const token = getString('token', '');
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${token}`,
+    });
+
+    return this.httpClient.get<EzeeOrderPackagesResponse>(
+      `${this.configService.getUrlBase()}/ezee-fiber/orders/packages/${encodeURIComponent(number)}`,
       { headers }
     ).pipe(timeout(20000));
   }

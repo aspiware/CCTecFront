@@ -115,6 +115,12 @@
               </MenuButton>
 
               <MenuButton class="fas job-action-button"
+                [class.job-action-tapped]="isActionTapped(order, 'packages')"
+                style="font-size: 14px; height: 70px; width: 100px; margin-right: 6" text="&#xf49e;"
+                (tap)="markActionTap(order, 'packages'); showPackages(order)">
+              </MenuButton>
+
+              <MenuButton class="fas job-action-button"
                 [class.job-action-tapped]="isActionTapped(order, 'activate-service')"
                 style="font-size: 16px; height: 70px; width: 100px; margin-right: 6" text="&#xe012;"
                 (tap)="markActionTap(order, 'activate-service'); activateService(order)">

@@ -68,6 +68,32 @@ export interface EzeeOrderEquipmentResponse {
   };
 }
 
+export interface EzeeOrderPackage {
+  code: string | null;
+  name: string;
+  action: string | null;
+  startDate: string | null;
+  endDate: string | null;
+}
+
+export interface EzeeSuggestedEquipment {
+  model: string;
+  quantity: number;
+}
+
+export interface EzeeOrderPackagesResponse {
+  statusCode: number;
+  message: string;
+  error: boolean;
+  data: {
+    number: string;
+    currentPackages: EzeeOrderPackage[];
+    scheduledPackages: EzeeOrderPackage[];
+    otherPackages: EzeeOrderPackage[];
+    suggestedEquipment: EzeeSuggestedEquipment[];
+  };
+}
+
 export interface EzeeAddOrderEquipmentResponse {
   statusCode: number;
   message: string;
