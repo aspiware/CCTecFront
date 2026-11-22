@@ -27,7 +27,7 @@ export class EzeeEquipmentScannerComponent implements OnDestroy {
   public permissionError = '';
   public isTorchOn = false;
   public isScannerReady = false;
-  public autoFindDsn = false;
+  public autoFindEquipmentId = false;
   public detectedCode = '';
   private scanner?: MLKitView;
   private hasResult = false;
@@ -73,8 +73,8 @@ export class EzeeEquipmentScannerComponent implements OnDestroy {
     }
 
     const results = Array.isArray(event.data) ? event.data : [event.data];
-    const value = this.autoFindDsn
-      ? this.findDsn(results as BarcodeResult[])
+    const value = this.autoFindEquipmentId
+      ? this.findDsnOrFsan(results as BarcodeResult[])
       : this.firstDetectedValue(results as BarcodeResult[]);
     if (!value) {
       return;
@@ -89,9 +89,9 @@ export class EzeeEquipmentScannerComponent implements OnDestroy {
     this.modalParams.closeCallback(value);
   }
 
-  public onAutoFindDsnChanged(event: any): void {
-    this.autoFindDsn = Boolean(event?.value ?? event?.object?.checked ?? false);
-    if (!this.autoFindDsn) {
+  public onAutoFindEquipmentIdChanged(event: any): void {
+    this.autoFindEquipmentId = Boolean(event?.value ?? event?.object?.checked ?? false);
+    if (!this.autoFindEquipmentId) {
       this.detectedCode = '';
     }
     this.cdr.detectChanges();
@@ -107,7 +107,7 @@ export class EzeeEquipmentScannerComponent implements OnDestroy {
     return '';
   }
 
-  private findDsn(results: BarcodeResult[]): string {
+  private findDsnOrFsan(results: BarcodeResult[]): string {
     for (const barcode of results) {
       const value = String(barcode?.rawValue || barcode?.displayValue || '')
         .trim()
@@ -127,10 +127,20 @@ export class EzeeEquipmentScannerComponent implements OnDestroy {
         return separatedDsn.slice(1, 5).join('');
       }
 
-      const withoutLabel = value.replace(/^DSN\s*:\s*/i, '');
-      const compactDsn = withoutLabel.replace(/[^A-Z0-9]/g, '');
-      if (compactDsn.length === 16 && /[A-Z]/.test(compactDsn)) {
-        return compactDsn;
+      const withoutLabel = value.replace(/^(?:DSN|FSAN)\s*:?\s*/i, '');
+      const compactValue = withoutLabel.replace(/[^A-Z0-9]/g, '');
+      if (compactValue.length === 16 && /[A-Z]/.test(compactValue)) {
+        return compactValue;
+      }
+
+      // A PON FSAN consists of a four-letter vendor ID followed by an
+      // eight-character hexadecimal equipment identifier. Extract it from
+      // the detected payload because some readers include a symbology prefix,
+      // label, control characters, or separators around the barcode value.
+      const compactPayload = value.replace(/[^A-Z0-9]/g, '');
+      const fsan = compactPayload.match(/[A-Z]{4}[0-9A-F]{8}/);
+      if (fsan) {
+        return fsan[0];
       }
     }
     return '';
