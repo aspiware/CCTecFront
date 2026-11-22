@@ -124,13 +124,13 @@ export class EzeeEquipmentScannerComponent implements OnDestroy {
         /(?:^|[^A-Z0-9])([A-Z0-9]{4})[-\s]+([A-Z0-9]{4})[-\s]+([A-Z0-9]{4})[-\s]+([A-Z0-9]{4})(?:$|[^A-Z0-9])/
       );
       if (separatedDsn) {
-        return separatedDsn.slice(1, 5).join('-');
+        return separatedDsn.slice(1, 5).join('');
       }
 
       const withoutLabel = value.replace(/^DSN\s*:\s*/i, '');
       const compactDsn = withoutLabel.replace(/[^A-Z0-9]/g, '');
       if (compactDsn.length === 16 && /[A-Z]/.test(compactDsn)) {
-        return compactDsn.match(/.{4}/g)?.join('-') || compactDsn;
+        return compactDsn;
       }
     }
     return '';
