@@ -24,15 +24,14 @@
       <GridLayout *ngIf="!permissionError" row="0" col="0" rows="*,220,auto,*" columns="*,300,*" class="scanner-overlay">
         <StackLayout row="1" col="1" class="scan-frame"></StackLayout>
         <StackLayout row="2" col="0" colSpan="3" class="scanner-controls">
-          <GridLayout columns="*,auto,auto" class="auto-find-row">
-            <Label col="0" text="Auto Find DSN / FSAN" verticalAlignment="middle" class="auto-find-label"></Label>
-            <Label col="1" [text]="autoFindEquipmentId ? 'Yes' : 'No'" verticalAlignment="middle" class="auto-find-value"></Label>
-            <Switch col="2" [checked]="autoFindEquipmentId" verticalAlignment="middle" (checkedChange)="onAutoFindEquipmentIdChanged($event)"></Switch>
-          </GridLayout>
           <Label [text]="autoFindEquipmentId ? 'Hold the DSN or FSAN code inside the frame' : 'Hold the code inside the frame'" class="scan-hint"></Label>
+          <GridLayout columns="*,auto,auto,auto,*" verticalAlignment="middle" class="auto-find-row">
+            <Label col="1" text="Auto Find DSN / FSAN" verticalAlignment="middle" class="auto-find-label"></Label>
+            <Label col="2" [text]="autoFindEquipmentId ? 'Yes' : 'No'" verticalAlignment="middle" class="auto-find-value"></Label>
+            <Switch col="3" [checked]="autoFindEquipmentId" verticalAlignment="middle" (checkedChange)="onAutoFindEquipmentIdChanged($event)"></Switch>
+          </GridLayout>
           <Label
-            *ngIf="autoFindEquipmentId && detectedCode"
-            [text]="'Detected: ' + detectedCode + ' — looking for DSN / FSAN'"
+            [text]="autoFindEquipmentId && detectedCode ? ('Detected: ' + detectedCode + ' — looking for DSN / FSAN') : ' '"
             textWrap="true"
             class="detected-hint">
           </Label>
