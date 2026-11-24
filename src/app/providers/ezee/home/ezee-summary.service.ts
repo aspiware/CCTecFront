@@ -87,6 +87,29 @@ export class EzeeSummaryService {
     return this.inFlightRequest;
   }
 
+  public applyCurrentWeekTotalDelta(delta: number, date: string): void {
+    const amount = Number(delta);
+    if (!this.cachedResponse || !Number.isFinite(amount) || amount === 0) {
+      return;
+    }
+
+    const totalsPerDay = this.cachedResponse.data.totalsPerDay.map((item) => (
+      item.date === date
+        ? { ...item, total: this.roundCurrency(Number(item.total || 0) + amount) }
+        : item
+    ));
+    this.cachedResponse = {
+      ...this.cachedResponse,
+      data: {
+        ...this.cachedResponse.data,
+        weeklyTotal: this.roundCurrency(
+          Number(this.cachedResponse.data.weeklyTotal || 0) + amount
+        ),
+        totalsPerDay,
+      },
+    };
+  }
+
   public getNextPayment(): Observable<EzeeNextPaymentResponse> {
     const token = getString('token', '');
     const headers = new HttpHeaders({
@@ -138,6 +161,10 @@ export class EzeeSummaryService {
     );
     const value = headerKey ? headers[headerKey] : '';
     return Array.isArray(value) ? String(value[0] || '') : String(value || '');
+  }
+
+  private roundCurrency(value: number): number {
+    return Math.round((value + Number.EPSILON) * 100) / 100;
   }
 
   private getDownloadFileName(contentDisposition: string): string {

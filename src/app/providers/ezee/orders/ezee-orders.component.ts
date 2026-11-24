@@ -627,7 +627,24 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
 
     this.modalService.showModal(EzeeEditOrderComponent, options).then((result) => {
       if (result) {
-        this.ordersService.loadToday();
+        this.ordersService.loadToday((success) => {
+          const refreshedOrder = this.allOrders.find((item) => item.number === order.number);
+          const refreshedTotal = Number(refreshedOrder?.pricing?.total);
+          const priceDelta = refreshedTotal - Number(result.previousTotal);
+          if (
+            success &&
+            refreshedOrder &&
+            Number.isFinite(refreshedTotal) &&
+            Number.isFinite(priceDelta) &&
+            priceDelta !== 0
+          ) {
+            this.weekTotal = Math.round(
+              (this.weekTotal + priceDelta + Number.EPSILON) * 100
+            ) / 100;
+            this.summaryService.applyCurrentWeekTotalDelta(priceDelta, order.date);
+            this.cdr.detectChanges();
+          }
+        });
       }
     }).catch((error) => {
       console.log('[EzeeOrders] Failed to open edit order modal', error);

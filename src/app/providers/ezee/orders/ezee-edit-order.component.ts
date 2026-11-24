@@ -88,6 +88,7 @@ export class EzeeEditOrderComponent implements OnInit {
       return;
     }
 
+    const previousTotal = Number(this.order?.pricing?.total || 0);
     const charges = this.charges
       .filter((charge) => charge.quantity > 0)
       .map((charge) => ({ code: charge.code, quantity: charge.quantity }));
@@ -97,7 +98,7 @@ export class EzeeEditOrderComponent implements OnInit {
     this.ordersService.updateCharges(this.order.number, charges).subscribe({
       next: () => {
         this.isLoading = false;
-        this.modalParams.closeCallback(true);
+        this.modalParams.closeCallback({ previousTotal });
       },
       error: async (error) => {
         this.isLoading = false;

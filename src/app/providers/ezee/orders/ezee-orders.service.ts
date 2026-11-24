@@ -223,10 +223,10 @@ export class EzeeOrdersService {
     ).pipe(timeout(20000));
   }
 
-  public loadToday(onFinished?: () => void): void {
+  public loadToday(onFinished?: (success: boolean) => void): void {
     if (this.loadingSubject.value) {
       console.log('[EzeeOrdersService] GET /ezee-fiber/orders skipped: request already in progress');
-      onFinished?.();
+      onFinished?.(false);
       return;
     }
 
@@ -238,6 +238,7 @@ export class EzeeOrdersService {
     this.loadingSubject.next(true);
     this.errorSubject.next('');
     console.log('[EzeeOrdersService] GET /ezee-fiber/orders request started');
+    let succeeded = false;
 
     this.httpClient.get<EzeeOrdersResponse>(
       `${this.configService.getUrlBase()}/ezee-fiber/orders`,
@@ -246,7 +247,7 @@ export class EzeeOrdersService {
       timeout(20000),
       finalize(() => {
         this.loadingSubject.next(false);
-        onFinished?.();
+        onFinished?.(succeeded);
       })
     ).subscribe({
       next: (response) => {
@@ -260,6 +261,7 @@ export class EzeeOrdersService {
           return;
         }
         const summary = this.normalizeResponse(response);
+        succeeded = true;
         this.summarySubject.next(summary);
         this.ordersSubject.next([
           ...summary.pending.orders.map((order) => ({ ...order, workflowStatus: 'Pending' as const })),
