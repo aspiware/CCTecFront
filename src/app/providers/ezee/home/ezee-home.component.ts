@@ -3,7 +3,11 @@ import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } fro
 import { NativeScriptCommonModule } from '@nativescript/angular';
 import { Application, Page, Utils, alert, isIOS } from '@nativescript/core';
 import { forkJoin, Subscription } from 'rxjs';
-import { EzeeDailyTotal, EzeeSummaryService } from './ezee-summary.service';
+import {
+  EzeeCurrentWeekDelta,
+  EzeeDailyTotal,
+  EzeeSummaryService,
+} from './ezee-summary.service';
 
 @Component({
   standalone: true,
@@ -37,6 +41,7 @@ export class EzeeHomeComponent implements OnInit, OnDestroy {
   };
   private appearanceChangedHandler?: () => void;
   private summarySubscription?: Subscription;
+  private summaryDeltaSubscription?: Subscription;
 
   public constructor(
     private cdr: ChangeDetectorRef,
@@ -46,6 +51,9 @@ export class EzeeHomeComponent implements OnInit, OnDestroy {
 
   public ngOnInit(): void {
     this.syncTheme();
+    this.summaryDeltaSubscription = this.summaryService.currentWeekDelta$.subscribe((change) => {
+      this.applySummaryDelta(change);
+    });
     this.loadCurrentWeek();
     this.appearanceChangedHandler = () => {
       this.syncTheme();
@@ -56,6 +64,7 @@ export class EzeeHomeComponent implements OnInit, OnDestroy {
 
   public ngOnDestroy(): void {
     this.summarySubscription?.unsubscribe();
+    this.summaryDeltaSubscription?.unsubscribe();
     if (this.appearanceChangedHandler) {
       Application.off(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
     }
@@ -171,6 +180,43 @@ export class EzeeHomeComponent implements OnInit, OnDestroy {
       : 0;
   }
 
+  private applySummaryDelta(change: EzeeCurrentWeekDelta): void {
+    const amount = Number(change?.amount);
+    const date = String(change?.date || '');
+    if (!Number.isFinite(amount) || amount === 0 || !date) {
+      return;
+    }
+
+    const currentTotals = Array.isArray(this.weekAverage?.totalsPerDay)
+      ? this.weekAverage.totalsPerDay as EzeeDailyTotal[]
+      : [];
+    const hasDate = currentTotals.some((item) => item.date === date);
+    const totalsPerDay = currentTotals.map((item) => (
+      item.date === date
+        ? { ...item, total: this.roundCurrency(Number(item.total || 0) + amount) }
+        : item
+    ));
+    if (!hasDate) {
+      totalsPerDay.push({ date, total: this.roundCurrency(amount) });
+    }
+    totalsPerDay.sort((left, right) => left.date.localeCompare(right.date));
+
+    this.weekAverage = {
+      totalsPerDay,
+      dailyAverage: this.calculateDailyAverage(totalsPerDay),
+      todayHourlyAverage: this.calculateTodayHourlyAverage(totalsPerDay),
+    };
+
+    if (this.isDateInPaymentPeriod(date)) {
+      this.summaryAmount = {
+        ...this.summaryAmount,
+        gross: this.roundCurrency(Number(this.summaryAmount.gross || 0) + amount),
+        net: this.roundCurrency(Number(this.summaryAmount.net || 0) + amount),
+      };
+    }
+    this.cdr.detectChanges();
+  }
+
   private calculateTodayHourlyAverage(totals: EzeeDailyTotal[]): number {
     const todayKey = this.toDateKey(new Date());
     const todayTotal = Number(totals.find((item) => item.date === todayKey)?.total || 0);
@@ -205,6 +251,24 @@ export class EzeeHomeComponent implements OnInit, OnDestroy {
     const month = `${date.getMonth() + 1}`.padStart(2, '0');
     const day = `${date.getDate()}`.padStart(2, '0');
     return `${year}-${month}-${day}`;
+  }
+
+  private isDateInPaymentPeriod(date: string): boolean {
+    const startDate = this.summaryAmount?.startDate;
+    const endDate = this.summaryAmount?.endDate;
+    if (
+      !(startDate instanceof Date) ||
+      !(endDate instanceof Date) ||
+      Number.isNaN(startDate.getTime()) ||
+      Number.isNaN(endDate.getTime())
+    ) {
+      return false;
+    }
+    return date >= this.toDateKey(startDate) && date <= this.toDateKey(endDate);
+  }
+
+  private roundCurrency(value: number): number {
+    return Math.round((value + Number.EPSILON) * 100) / 100;
   }
 
   private showSummaryError(message: string): void {

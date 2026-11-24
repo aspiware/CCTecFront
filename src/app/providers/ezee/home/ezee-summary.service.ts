@@ -2,12 +2,17 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { File, Http, knownFolders, path } from '@nativescript/core';
 import { getString } from '@nativescript/core/application-settings';
-import { finalize, Observable, of, shareReplay, tap, timeout } from 'rxjs';
+import { finalize, Observable, of, shareReplay, Subject, tap, timeout } from 'rxjs';
 import { ConfigService } from '../../../shared/services/config.service';
 
 export interface EzeeDailyTotal {
   date: string;
   total: number;
+}
+
+export interface EzeeCurrentWeekDelta {
+  date: string;
+  amount: number;
 }
 
 export interface EzeeWeeklySummaryResponse {
@@ -44,6 +49,8 @@ export class EzeeSummaryService {
   private cachedResponse?: EzeeWeeklySummaryResponse;
   private cachedToken = '';
   private inFlightRequest?: Observable<EzeeWeeklySummaryResponse>;
+  private readonly currentWeekDeltaSubject = new Subject<EzeeCurrentWeekDelta>();
+  public readonly currentWeekDelta$ = this.currentWeekDeltaSubject.asObservable();
 
   public constructor(
     private httpClient: HttpClient,
@@ -89,25 +96,33 @@ export class EzeeSummaryService {
 
   public applyCurrentWeekTotalDelta(delta: number, date: string): void {
     const amount = Number(delta);
-    if (!this.cachedResponse || !Number.isFinite(amount) || amount === 0) {
+    if (!Number.isFinite(amount) || amount === 0) {
       return;
     }
 
-    const totalsPerDay = this.cachedResponse.data.totalsPerDay.map((item) => (
-      item.date === date
-        ? { ...item, total: this.roundCurrency(Number(item.total || 0) + amount) }
-        : item
-    ));
-    this.cachedResponse = {
-      ...this.cachedResponse,
-      data: {
-        ...this.cachedResponse.data,
-        weeklyTotal: this.roundCurrency(
-          Number(this.cachedResponse.data.weeklyTotal || 0) + amount
-        ),
-        totalsPerDay,
-      },
-    };
+    if (this.cachedResponse) {
+      const hasDate = this.cachedResponse.data.totalsPerDay.some((item) => item.date === date);
+      const totalsPerDay = this.cachedResponse.data.totalsPerDay.map((item) => (
+        item.date === date
+          ? { ...item, total: this.roundCurrency(Number(item.total || 0) + amount) }
+          : item
+      ));
+      if (!hasDate && date) {
+        totalsPerDay.push({ date, total: this.roundCurrency(amount) });
+      }
+      this.cachedResponse = {
+        ...this.cachedResponse,
+        data: {
+          ...this.cachedResponse.data,
+          weeklyTotal: this.roundCurrency(
+            Number(this.cachedResponse.data.weeklyTotal || 0) + amount
+          ),
+          totalsPerDay,
+        },
+      };
+    }
+
+    this.currentWeekDeltaSubject.next({ date, amount });
   }
 
   public getNextPayment(): Observable<EzeeNextPaymentResponse> {
