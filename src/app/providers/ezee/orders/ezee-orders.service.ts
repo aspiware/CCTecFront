@@ -154,10 +154,12 @@ export class EzeeOrdersService {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     });
+    const normalizedComment = String(comment || '').replace(/\r\n|\r|\n/g, '\r\n');
+    console.log('[EzeeOrders] Sending note to backend:\n' + normalizedComment);
 
     return this.httpClient.post<EzeeAddOrderNoteResponse>(
       `${this.configService.getUrlBase()}/ezee-fiber/orders/${encodeURIComponent(number)}/notes`,
-      { comment },
+      { comment: normalizedComment },
       { headers }
     ).pipe(timeout(20000));
   }
