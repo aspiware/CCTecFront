@@ -106,14 +106,72 @@ export class EzeeOrderHistoryComponent implements OnInit, OnDestroy {
   }
 
   public getHistoryComment(item: any): string {
-    const comment = String(
+    let comment = String(
       item?.comment ?? item?.note ?? item?.text ?? item?.description ?? item?.value ?? ''
     );
-    return comment
+    comment = this.decodeFormEncodedComment(comment);
+    comment = this.decodeHtmlEntities(comment);
+
+    const formattedComment = comment
+      .replace(/\\r\\n|\\n|\\r/g, '\n')
+      .replace(/\r\n?/g, '\n')
       .replace(/<br\s*\/?>/gi, '\n')
-      .replace(/&nbsp;/gi, ' ')
+      .replace(/<li(?:\s[^>]*)?>/gi, '• ')
+      .replace(/<\/(?:p|div|li|tr|h[1-6])\s*>/gi, '\n')
+      .replace(/<(?:p|div|tr|h[1-6])(?:\s[^>]*)?>/gi, '')
       .replace(/<\/?[^>]+(>|$)/g, '')
+      .replace(/[ \t]+\n/g, '\n')
+      .replace(/\n[ \t]+/g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
       .trim();
+    return this.restoreStructuredNoteLineBreaks(formattedComment);
+  }
+
+  private restoreStructuredNoteLineBreaks(value: string): string {
+    return value.replace(
+      /\s+(?=(?:Address|Pre-Installation Walkthrough,\s*Performed With|Equipment Location|Fiber Installation Process|Assisted Customer with Router Setup|Eero Speeds|Terminal Splice|NID Splice|NID Light Levels|ONT Light Levels|ONT Serial Number|Eero Serial Number|Tech notes|Tech Name\/ID|Tech|Date):)/gi,
+      '\n'
+    );
+  }
+
+  private decodeFormEncodedComment(value: string): string {
+    if (!/%[0-9A-F]{2}/i.test(value)) {
+      return value;
+    }
+    try {
+      return decodeURIComponent(value.replace(/\+/g, ' '));
+    } catch {
+      return value;
+    }
+  }
+
+  private decodeHtmlEntities(value: string): string {
+    const namedEntities: Record<string, string> = {
+      amp: '&',
+      apos: "'",
+      gt: '>',
+      lt: '<',
+      nbsp: ' ',
+      quot: '"',
+    };
+    let decoded = value;
+    for (let pass = 0; pass < 2; pass += 1) {
+      decoded = decoded.replace(
+        /&(#x[0-9A-F]+|#\d+|amp|apos|gt|lt|nbsp|quot);/gi,
+        (entity, code: string) => {
+          if (code.startsWith('#x') || code.startsWith('#X')) {
+            const value = Number.parseInt(code.slice(2), 16);
+            return Number.isFinite(value) ? String.fromCodePoint(value) : entity;
+          }
+          if (code.startsWith('#')) {
+            const value = Number.parseInt(code.slice(1), 10);
+            return Number.isFinite(value) ? String.fromCodePoint(value) : entity;
+          }
+          return namedEntities[code.toLowerCase()] ?? entity;
+        }
+      );
+    }
+    return decoded;
   }
 
   private loadOrderNotes(): void {

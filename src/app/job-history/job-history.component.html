@@ -63,7 +63,15 @@
                     class="history-author"
                     [text]="getHistoryAuthor(item)">
                   </Label>
-                  <Label row="2" *ngIf="getHistoryComment(item)" class="history-notes" [text]="getHistoryComment(item)" textWrap="true"></Label>
+                  <TextView
+                    row="2"
+                    *ngIf="getHistoryComment(item)"
+                    class="history-notes"
+                    [text]="getHistoryComment(item)"
+                    editable="false"
+                    isUserInteractionEnabled="false"
+                    textWrap="true">
+                  </TextView>
                 </GridLayout>
               </GridLayout>
             </StackLayout>
