@@ -39,5 +39,14 @@
 			</intent-filter>
 		</activity>
 		<activity android:name="com.tns.ErrorReportActivity"/>
+		<provider
+			android:name="androidx.core.content.FileProvider"
+			android:authorities="${applicationId}.ezee-screenshots"
+			android:exported="false"
+			android:grantUriPermissions="true">
+			<meta-data
+				android:name="android.support.FILE_PROVIDER_PATHS"
+				android:resource="@xml/ezee_screenshot_paths"/>
+		</provider>
 	</application>
 </manifest>

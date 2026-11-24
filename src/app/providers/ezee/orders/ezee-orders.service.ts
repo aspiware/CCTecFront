@@ -1,5 +1,6 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { File, Http, knownFolders, path } from '@nativescript/core';
 import { getString } from '@nativescript/core/application-settings';
 import { BehaviorSubject, finalize, Observable, Subject, timeout } from 'rxjs';
 import { ConfigService } from '../../../shared/services/config.service';
@@ -86,6 +87,31 @@ export class EzeeOrdersService {
       `${this.configService.getUrlBase()}/ezee-fiber/orders/osp-ticket-template/${encodeURIComponent(number)}`,
       { headers }
     ).pipe(timeout(20000));
+  }
+
+  public async downloadOrderScreenshot(number: string): Promise<File> {
+    const token = getString('token', '');
+    const response = await Http.request({
+      url: `${this.configService.getUrlBase()}/ezee-fiber/orders/${encodeURIComponent(number)}/screenshot`,
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}`, Accept: 'image/png' },
+      timeout: 60000,
+    });
+
+    if (response.statusCode !== 200 || !response.content) {
+      const fallback = 'Unable to capture the Ezee Fiber work order.';
+      let message = fallback;
+      try {
+        message = String(response.content?.toJSON()?.message || fallback);
+      } catch {
+        // Keep the default message when the response is not JSON.
+      }
+      throw new Error(message);
+    }
+
+    const fileName = `Ezee_Fiber_Order_${encodeURIComponent(number)}.png`;
+    const screenshotFolder = knownFolders.temp().getFolder('ezee-order-screenshots');
+    return response.content.toFile(path.join(screenshotFolder.path, fileName));
   }
 
   public addOrderEquipment(

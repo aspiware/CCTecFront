@@ -1,13 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } from '@angular/core';
 import { NativeScriptCommonModule } from '@nativescript/angular';
-import { Application, Page, Utils, alert, isIOS } from '@nativescript/core';
+import { Application, Page, alert } from '@nativescript/core';
 import { forkJoin, Subscription } from 'rxjs';
 import {
   EzeeCurrentWeekDelta,
   EzeeDailyTotal,
   EzeeSummaryService,
 } from './ezee-summary.service';
+import { openEzeeFile } from '../ezee-file';
 
 @Component({
   standalone: true,
@@ -286,46 +287,9 @@ export class EzeeHomeComponent implements OnInit, OnDestroy {
   }
 
   private openWeeklyReport(filePath: string): void {
-    if (isIOS) {
-      const visibleViewController = this.getVisibleViewController();
-      if (visibleViewController) {
-        const fileUrl = NSURL.fileURLWithPath(filePath);
-        const activityController = UIActivityViewController.alloc()
-          .initWithActivityItemsApplicationActivities([fileUrl], []);
-        const popover = activityController.popoverPresentationController;
-        if (popover) {
-          popover.sourceView = visibleViewController.view;
-          popover.sourceRect = CGRectMake(
-            visibleViewController.view.bounds.size.width / 2,
-            visibleViewController.view.bounds.size.height / 2,
-            1,
-            1
-          );
-          popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
-        }
-        visibleViewController.presentViewControllerAnimatedCompletion(
-          activityController,
-          true,
-          null
-        );
-        return;
-      }
-    }
-
-    if (!Utils.openFile(filePath, 'Open Weekly Report')) {
+    if (!openEzeeFile(filePath, 'Open Weekly Report')) {
       throw new Error('Unable to open the downloaded weekly report.');
     }
-  }
-
-  private getVisibleViewController(): UIViewController | null {
-    if (!isIOS) {
-      return null;
-    }
-    const sharedApplication = UIApplication.sharedApplication;
-    const keyWindow = sharedApplication.keyWindow ||
-      (sharedApplication.windows?.count ? sharedApplication.windows.objectAtIndex(0) : null);
-    const rootViewController = keyWindow?.rootViewController;
-    return rootViewController ? Utils.ios.getVisibleViewController(rootViewController) : null;
   }
 
   private syncTheme(): void {

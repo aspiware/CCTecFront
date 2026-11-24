@@ -20,6 +20,7 @@ import { EzeeOrderPackagesComponent } from './ezee-order-packages.component';
 import { EzeeWorkOrderInfoComponent } from './ezee-work-order-info.component';
 import { EzeeOspTicketComponent } from './ezee-osp-ticket.component';
 import { EzeeInstallNoteComponent } from './ezee-install-note.component';
+import { shareEzeeOrderScreenshot } from '../ezee-file';
 
 @Component({
   standalone: true,
@@ -91,6 +92,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       { name: 'Add Install Note', icon: 'text.badge.plus' },
       { name: 'OSP Template', icon: 'ticket.fill' },
       { name: 'Finalize', icon: 'checkmark.circle.fill' },
+      { name: 'Order Screenshot', icon: 'camera' },
     ],
   };
   private allOrders: EzeeOrderListItem[] = [];
@@ -100,6 +102,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
   private readonly addingNoteOrders = new Set<string>();
   private readonly finalizingOrders = new Set<string>();
   private readonly updatingStatusOrders = new Set<string>();
+  private screenshotOrderNumber?: string;
   private readonly selectedFinalizeReasons = new Map<string, EzeeFinalizeReason>();
   private isCopyMenuOpen = false;
   private lastCopyMenuTs = 0;
@@ -250,6 +253,10 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       this.openFinalizeModal(order);
       return;
     }
+    if (selected?.name === 'Order Screenshot') {
+      void this.captureOrderScreenshot(order);
+      return;
+    }
     this.showUnavailable(
       `${selected?.name || 'This order action'} is not connected for Ezee Fiber yet.`
     );
@@ -360,7 +367,39 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
   public isOrderMenuLoading(order: EzeeOrderListItem): boolean {
     return this.addingNoteOrders.has(order.number) ||
       this.finalizingOrders.has(order.number) ||
-      this.updatingStatusOrders.has(order.number);
+      this.updatingStatusOrders.has(order.number) ||
+      this.screenshotOrderNumber === order.number;
+  }
+
+  private async captureOrderScreenshot(order: EzeeOrderListItem): Promise<void> {
+    if (!order || this.screenshotOrderNumber || this.isOrderMenuLoading(order)) {
+      return;
+    }
+
+    this.screenshotOrderNumber = order.number;
+    this.cdr.detectChanges();
+    try {
+      const file = await this.ordersService.downloadOrderScreenshot(order.number);
+      if (this.subscriptions.closed) {
+        return;
+      }
+      if (!shareEzeeOrderScreenshot(file.path)) {
+        throw new Error('Unable to open the order screenshot.');
+      }
+    } catch (error) {
+      if (!this.subscriptions.closed) {
+        await alert({
+          title: 'Order Screenshot',
+          message: error instanceof Error ? error.message : 'Unable to capture the work order.',
+          okButtonText: 'OK',
+        });
+      }
+    } finally {
+      this.screenshotOrderNumber = undefined;
+      if (!this.subscriptions.closed) {
+        this.cdr.detectChanges();
+      }
+    }
   }
 
   public openAddNoteModal(order: EzeeOrderListItem): void {
