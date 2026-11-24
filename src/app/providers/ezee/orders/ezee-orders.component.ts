@@ -225,6 +225,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
   }
 
   public onSelectedOrderMenu(event: MenuEvent, order: EzeeOrderListItem): void {
+    this.selectOrder(order);
     const selected = this.orderMenu.options[event?.index ?? 0];
     if (event?.index === 0) {
       this.setOrderEnroute(order);
@@ -267,6 +268,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     if (!order || this.isOrderMenuLoading(order)) {
       return;
     }
+    this.selectOrder(order);
 
     const options: any = {
       context: { order },
@@ -303,6 +305,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     if (!order || this.isOrderMenuLoading(order)) {
       return;
     }
+    this.selectOrder(order);
 
     const options: any = {
       context: { order },
@@ -331,6 +334,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     if (!order || this.isOrderMenuLoading(order)) {
       return;
     }
+    this.selectOrder(order);
 
     const selectedReason = this.selectedFinalizeReasons.get(order.number);
     const options: any = {
@@ -407,6 +411,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     if (!order || this.isOrderMenuLoading(order)) {
       return;
     }
+    this.selectOrder(order);
 
     const options: any = {
       context: { note: '' },
@@ -545,6 +550,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     if (!order) {
       return;
     }
+    this.selectOrder(order);
 
     const modalWidth = Math.min(380, Math.max(300, Screen.mainScreen.widthDIPs - 32));
     const modalHeight = Math.min(620, Math.max(420, Screen.mainScreen.heightDIPs - 120));
@@ -629,6 +635,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     if (!order) {
       return;
     }
+    this.selectOrder(order);
 
     const options: any = {
       context: order,
@@ -657,6 +664,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     if (!order) {
       return;
     }
+    this.selectOrder(order);
 
     const options: any = {
       context: order,
@@ -705,6 +713,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     if (!order) {
       return;
     }
+    this.selectOrder(order);
 
     const options: any = {
       context: { order },
@@ -733,6 +742,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     if (!order) {
       return;
     }
+    this.selectOrder(order);
 
     const options: any = {
       context: { order },
@@ -761,6 +771,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     if (!order) {
       return;
     }
+    this.selectOrder(order);
 
     const options: any = {
       context: { order },
@@ -785,7 +796,8 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     });
   }
 
-  public activateService(_order: EzeeOrderListItem): void {
+  public activateService(order: EzeeOrderListItem): void {
+    this.selectOrder(order);
     this.showUnavailable('Service activation is not connected for Ezee Fiber yet.');
   }
 

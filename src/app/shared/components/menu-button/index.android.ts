@@ -81,6 +81,7 @@ export class MenuButton extends MenuButtonBase {
       );
     }
 
+    this.notify({ eventName: "menuOpened", object: this });
     popupMenu.show();
   }
 }

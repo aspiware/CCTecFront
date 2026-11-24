@@ -15,6 +15,8 @@ import {
 } from './common';
 
 export class MenuButton extends MenuButtonBase {
+  private readonly menuOpenedActionIdentifier = 'com.cctec.menu-button.opened';
+
   [optionsProperty.setNative](value: Array<MenuButtonAction>) {
     this.resetMenu();
   }
@@ -195,6 +197,7 @@ export class MenuButton extends MenuButtonBase {
     if (rootChildren.length === 0) {
       iosButton.menu = null;
       iosButton.showsMenuAsPrimaryAction = false;
+      this.configureMenuOpenedEvent(iosButton, false);
       return;
     }
 
@@ -210,6 +213,34 @@ export class MenuButton extends MenuButtonBase {
       );
     }
     iosButton.showsMenuAsPrimaryAction = true;
+    this.configureMenuOpenedEvent(iosButton, true);
+  }
+
+  private configureMenuOpenedEvent(iosButton: UIButton, enabled: boolean): void {
+    const controlEvent = UIControlEvents.MenuActionTriggered;
+    if (typeof iosButton.removeActionForIdentifierForControlEvents === 'function') {
+      iosButton.removeActionForIdentifierForControlEvents(
+        this.menuOpenedActionIdentifier,
+        controlEvent
+      );
+    }
+    if (
+      !enabled ||
+      typeof UIAction === 'undefined' ||
+      typeof iosButton.addActionForControlEvents !== 'function'
+    ) {
+      return;
+    }
+
+    const action = UIAction.actionWithTitleImageIdentifierHandler(
+      '',
+      null,
+      this.menuOpenedActionIdentifier,
+      () => {
+        this.notify({ eventName: 'menuOpened', object: this });
+      }
+    );
+    iosButton.addActionForControlEvents(action, controlEvent);
   }
 
   private createMenuElement(

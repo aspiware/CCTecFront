@@ -71,15 +71,15 @@
             <Label col="1" class="first-row amount" [text]="(order.pricing?.total || 0) | currency"></Label>
           </GridLayout>
 
-          <Label class="second-row" (longPress)="showMenu($event, order.address, 'address')"
+          <Label class="second-row" (longPress)="selectOrder(order); showMenu($event, order.address, 'address')"
             [text]="order.address || 'Address unavailable'">
           </Label>
 
           <GridLayout rows="auto" columns="auto, *, auto" class="meta-row">
-            <Label col="0" (longPress)="showMenu($event, order.number, 'order')" class="secondRow"
+            <Label col="0" (longPress)="selectOrder(order); showMenu($event, order.number, 'order')" class="secondRow"
               [text]="'Order#: ' + (order.number || 'n/a')" style="margin-right: 10;">
             </Label>
-            <Label col="1" (longPress)="showMenu($event, order.customer.subscriberNumber, 'account')" class="secondRow"
+            <Label col="1" (longPress)="selectOrder(order); showMenu($event, order.customer.subscriberNumber, 'account')" class="secondRow"
               [text]="'Account#: ' + (order.customer.subscriberNumber || 'n/a')">
             </Label>
             <Label col="2" class="secondRow units" [text]="'Units: ' + (order.workUnits || 'n/a')"></Label>
@@ -146,6 +146,7 @@
                   [imageInsets]="{ top: 0, left: 0, bottom: 0, right: 0 }"
                   [options]="orderMenu.options"
                   (tap)="markActionTap(order, 'order-menu')"
+                  (menuOpened)="selectOrder(order)"
                   (selected)="onSelectedOrderMenu($event, order)">
                 </MenuButton>
               </StackLayout>
