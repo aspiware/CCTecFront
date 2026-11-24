@@ -49,6 +49,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
   public isOnShift = true;
   public statusFilterItems: SegmentedBarItem[] = [];
   public selectedStatusFilterIndex = 0;
+  public selectedOrderNumber = '';
   public item: any;
   public mainMenu: Item = {
     name: 'Main Menu',
@@ -511,6 +512,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
   }
 
   public markActionTap(order: EzeeOrderListItem, action: string): void {
+    this.selectOrder(order);
     const key = `${order.number}:${action}`;
     this.actionTapStates[key] = true;
     this.cdr.detectChanges();
@@ -525,6 +527,18 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
 
   public isActionTapped(order: EzeeOrderListItem, action: string): boolean {
     return !!this.actionTapStates[`${order.number}:${action}`];
+  }
+
+  public selectOrder(order: EzeeOrderListItem): void {
+    const orderNumber = String(order?.number || '');
+    if (orderNumber && this.selectedOrderNumber !== orderNumber) {
+      this.selectedOrderNumber = orderNumber;
+      this.cdr.detectChanges();
+    }
+  }
+
+  public isOrderSelected(order: EzeeOrderListItem): boolean {
+    return !!this.selectedOrderNumber && this.selectedOrderNumber === String(order?.number || '');
   }
 
   public showCustomer(order: EzeeOrderListItem): void {

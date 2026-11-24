@@ -60,7 +60,10 @@
     (pullToRefreshInitiated)="onPullToRefresh($event)" height="100%" class="jobs-list">
     <ng-template tkListItemTemplate let-order="item">
       <GridLayout clipToBounds="false">
-        <StackLayout class="item-bag">
+        <StackLayout
+          class="item-bag"
+          [class.order-card-selected]="isOrderSelected(order)"
+          (tap)="selectOrder(order)">
           <GridLayout columns="*,auto" width="100%" class="item-header">
             <Label col="0" class="first-row"
               [text]="(order.workType || 'Order') + (order.initialReason ? ' - ' + order.initialReason : '')">
