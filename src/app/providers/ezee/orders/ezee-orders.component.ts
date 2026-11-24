@@ -94,6 +94,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     ],
   };
   private allOrders: EzeeOrderListItem[] = [];
+  private allWeekTotal = 0;
   private readonly actionTapStates: Record<string, boolean> = {};
   private readonly actionTapTimers: Record<string, any> = {};
   private readonly addingNoteOrders = new Set<string>();
@@ -132,14 +133,6 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
 
     this.subscriptions.add(this.ordersService.orders$.subscribe((orders) => {
       this.allOrders = orders;
-      this.todayTotal = orders.reduce((total, order) => {
-        const orderTotal = Number(order.pricing?.total);
-        return total + (Number.isFinite(orderTotal) ? orderTotal : 0);
-      }, 0);
-      this.totalUnits = orders.reduce((total, order) => {
-        const orderUnits = Number(order.workUnits);
-        return total + (Number.isFinite(orderUnits) ? orderUnits : 0);
-      }, 0);
       this.applyOrdersFilter();
       this.cdr.detectChanges();
     }));
@@ -638,9 +631,8 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
             Number.isFinite(priceDelta) &&
             priceDelta !== 0
           ) {
-            this.weekTotal = Math.round(
-              (this.weekTotal + priceDelta + Number.EPSILON) * 100
-            ) / 100;
+            this.allWeekTotal = this.roundCurrency(this.allWeekTotal + priceDelta);
+            this.updateDisplayedTotals();
             this.summaryService.applyCurrentWeekTotalDelta(priceDelta, order.date);
             this.cdr.detectChanges();
           }
@@ -842,7 +834,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
         ? 'Completed'
         : null;
     const source = selectedStatus
-      ? this.allOrders.filter((order) => order.workflowStatus === selectedStatus)
+      ? this.allOrders.filter((order) => this.matchesWorkflowStatus(order, selectedStatus))
       : this.allOrders;
     const filtered = !query
       ? [...source]
@@ -855,6 +847,78 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
           order.customer?.subscriberNumber,
         ].some((value) => String(value || '').toLowerCase().includes(query)));
     this.orders = new ObservableArray(filtered);
+    this.updateDisplayedTotals();
+  }
+
+  private updateDisplayedTotals(): void {
+    const statusOrders = this.selectedStatusFilterIndex === 1
+      ? this.allOrders.filter((order) => this.matchesWorkflowStatus(order, 'Pending'))
+      : this.selectedStatusFilterIndex === 2
+        ? this.allOrders.filter((order) => this.matchesWorkflowStatus(order, 'Completed'))
+        : this.allOrders;
+    const hasStatusMatches = this.selectedStatusFilterIndex === 0 || statusOrders.length > 0;
+    const ordersForTotals = hasStatusMatches ? statusOrders : this.allOrders;
+    const pendingTodayTotal = this.sumOrderPrices(
+      this.allOrders.filter((order) => this.matchesWorkflowStatus(order, 'Pending'))
+    );
+
+    this.todayTotal = this.sumOrderPrices(ordersForTotals);
+    this.totalUnits = ordersForTotals.reduce((total, order) => {
+      const orderUnits = Number(order.workUnits);
+      return total + (Number.isFinite(orderUnits) ? orderUnits : 0);
+    }, 0);
+    this.weekTotal = !hasStatusMatches || this.selectedStatusFilterIndex === 0
+      ? this.allWeekTotal
+      : this.selectedStatusFilterIndex === 1
+        ? pendingTodayTotal
+        : this.roundCurrency(Math.max(0, this.allWeekTotal - pendingTodayTotal));
+  }
+
+  private sumOrderPrices(orders: EzeeOrderListItem[]): number {
+    return this.roundCurrency(orders.reduce((total, order) => {
+      return total + this.getOrderPrice(order);
+    }, 0));
+  }
+
+  private getOrderPrice(order: EzeeOrderListItem): number {
+    const pricing = order?.pricing;
+    if (!pricing) {
+      return 0;
+    }
+
+    const baseTotal = this.getPricingItemTotal(pricing.base);
+    const extrasTotal = (Array.isArray(pricing.extras) ? pricing.extras : []).reduce(
+      (total, item) => total + this.getPricingItemTotal(item),
+      0
+    );
+    const calculatedTotal = baseTotal + extrasTotal;
+    const reportedTotal = Number(pricing.total);
+    return Number.isFinite(reportedTotal) && (reportedTotal !== 0 || calculatedTotal === 0)
+      ? reportedTotal
+      : calculatedTotal;
+  }
+
+  private getPricingItemTotal(item: any): number {
+    if (!item) {
+      return 0;
+    }
+    const calculatedTotal = Number(item.quantity || 0) * Number(item.unitPrice || 0);
+    const reportedTotal = Number(item.total);
+    return Number.isFinite(reportedTotal) && (reportedTotal !== 0 || calculatedTotal === 0)
+      ? reportedTotal
+      : calculatedTotal;
+  }
+
+  private matchesWorkflowStatus(
+    order: EzeeOrderListItem,
+    status: 'Pending' | 'Completed'
+  ): boolean {
+    return String(order?.workflowStatus || order?.status || '').trim().toLowerCase() ===
+      status.toLowerCase();
+  }
+
+  private roundCurrency(value: number): number {
+    return Math.round((value + Number.EPSILON) * 100) / 100;
   }
 
   private loadWeeklyTotal(forceRefresh = false): void {
@@ -862,7 +926,8 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       this.summaryService.getCurrentWeek(forceRefresh).subscribe({
         next: (response) => {
           if (!response?.error) {
-            this.weekTotal = Number(response?.data?.weeklyTotal || 0);
+            this.allWeekTotal = Number(response?.data?.weeklyTotal || 0);
+            this.updateDisplayedTotals();
             this.cdr.detectChanges();
           }
         },
