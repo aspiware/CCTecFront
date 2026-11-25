@@ -95,6 +95,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       { name: 'OSP Template', icon: 'ticket.fill' },
       { name: 'Finalize', icon: 'checkmark.circle.fill' },
       { name: 'Timestamp Photo', icon: 'camera.viewfinder' },
+      { name: 'Continuous Photos', icon: 'camera.badge.ellipsis' },
       { name: 'Order Screenshot', icon: 'camera' },
     ],
   };
@@ -106,6 +107,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
   private readonly finalizingOrders = new Set<string>();
   private readonly updatingStatusOrders = new Set<string>();
   private timestampPhotoOrderNumber?: string;
+  private continuousPhotoOrderNumber?: string;
   private screenshotOrderNumber?: string;
   private readonly selectedFinalizeReasons = new Map<string, EzeeFinalizeReason>();
   private isCopyMenuOpen = false;
@@ -263,6 +265,10 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       void this.captureTimestampPhoto(order);
       return;
     }
+    if (selected?.name === 'Continuous Photos') {
+      void this.captureContinuousPhotos(order);
+      return;
+    }
     if (selected?.name === 'Order Screenshot') {
       void this.captureOrderScreenshot(order);
       return;
@@ -382,7 +388,46 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       this.finalizingOrders.has(order.number) ||
       this.updatingStatusOrders.has(order.number) ||
       this.timestampPhotoOrderNumber === order.number ||
+      this.continuousPhotoOrderNumber === order.number ||
       this.screenshotOrderNumber === order.number;
+  }
+
+  private async captureContinuousPhotos(order: EzeeOrderListItem): Promise<void> {
+    if (!order || this.continuousPhotoOrderNumber || this.isOrderMenuLoading(order)) {
+      return;
+    }
+
+    await new Promise<void>((resolve) => setTimeout(resolve, 350));
+    if (this.continuousPhotoOrderNumber || this.isOrderMenuLoading(order)) {
+      return;
+    }
+
+    this.continuousPhotoOrderNumber = order.number;
+    this.cdr.detectChanges();
+    try {
+      const photoCount = await this.timestampCameraService.captureContinuous(order);
+      if (!this.subscriptions.closed && photoCount > 0) {
+        await alert({
+          title: 'Continuous Photos',
+          message: `${photoCount} photo${photoCount === 1 ? '' : 's'} saved to Photos.`,
+          okButtonText: 'OK',
+        });
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to open continuous camera.';
+      if (!this.subscriptions.closed && !/cancel/i.test(message)) {
+        await alert({
+          title: 'Continuous Photos',
+          message,
+          okButtonText: 'OK',
+        });
+      }
+    } finally {
+      this.continuousPhotoOrderNumber = undefined;
+      if (!this.subscriptions.closed) {
+        this.cdr.detectChanges();
+      }
+    }
   }
 
   private async captureTimestampPhoto(order: EzeeOrderListItem): Promise<void> {

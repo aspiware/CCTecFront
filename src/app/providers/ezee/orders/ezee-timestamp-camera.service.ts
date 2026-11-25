@@ -27,6 +27,37 @@ export class EzeeTimestampCameraService {
   private iosDateLabel?: UILabel;
   private iosWeekdayLabel?: UILabel;
 
+  public async captureContinuous(order: EzeeOrderListItem): Promise<number> {
+    if (!isIOS || !camera.isAvailable()) {
+      throw new Error('Continuous camera mode is not available on this device.');
+    }
+
+    const cameraPermission = await camera.requestCameraPermissions();
+    if (!cameraPermission?.Success) {
+      throw new Error('Camera permission is required to capture order photos.');
+    }
+    const photosPermission = await camera.requestPhotosPermissions();
+    if (!photosPermission?.Success) {
+      throw new Error('Photo library permission is required for continuous photos.');
+    }
+
+    await this.requestLocationPermission();
+    const locationSession = ++this.locationSession;
+    this.latestLocation = undefined;
+    const locationPromise = this.getLocation().then((location) => {
+      if (location && locationSession === this.locationSession) {
+        this.applyTrackedLocation(location);
+      }
+      return location;
+    });
+    this.startLocationTracking(locationSession);
+    try {
+      return await this.takeContinuousIosPhotos(order, locationPromise);
+    } finally {
+      this.stopLocationTracking(locationSession);
+    }
+  }
+
   public async capture(order: EzeeOrderListItem): Promise<string> {
     console.log('[EzeeTimestampCamera] Capture started');
     if (!camera.isAvailable()) {
@@ -292,6 +323,183 @@ export class EzeeTimestampCameraService {
     label.layer.shadowRadius = 2;
     label.layer.shadowOffset = CGSizeMake(1, 1);
     return label;
+  }
+
+  private takeContinuousIosPhotos(
+    order: EzeeOrderListItem,
+    locationPromise: Promise<geolocation.Location | null>
+  ): Promise<number> {
+    return new Promise((resolve, reject) => {
+      try {
+        const visibleViewController = this.getVisibleIosViewController();
+        if (!visibleViewController) {
+          reject(new Error('Unable to present the continuous camera.'));
+          return;
+        }
+
+        const picker = UIImagePickerController.new();
+        picker.sourceType = UIImagePickerControllerSourceType.Camera;
+        picker.cameraDevice = UIImagePickerControllerCameraDevice.Rear;
+        picker.mediaTypes = NSArray.arrayWithObject('public.image');
+        picker.showsCameraControls = false;
+        picker.allowsEditing = false;
+        const coordinateLabel = this.createIosCameraOverlay(picker, order);
+        this.iosCoordinateLabel = coordinateLabel;
+        if (this.latestLocation) {
+          coordinateLabel.text = this.coordinateText(this.latestLocation);
+        }
+        void locationPromise.then((location) => {
+          if (!this.latestLocation) {
+            Utils.executeOnMainThread(() => {
+              coordinateLabel.text = this.coordinateText(location);
+            });
+          }
+        });
+
+        const overlay = picker.cameraOverlayView;
+        overlay.userInteractionEnabled = true;
+        const bounds = picker.view.bounds;
+        const countLabel = this.makeOverlayLabel(
+          CGRectMake((bounds.size.width - 180) / 2, 44, 180, 30),
+          '0 photos saved',
+          16
+        );
+        countLabel.textAlignment = NSTextAlignment.Center;
+        overlay.addSubview(countLabel);
+
+        let photoCount = 0;
+        let isCapturing = false;
+        let isFinished = false;
+        const finish = () => {
+          if (isFinished || isCapturing) {
+            return;
+          }
+          isFinished = true;
+          picker.dismissViewControllerAnimatedCompletion(true, () => {
+            this.iosCameraDelegate = undefined;
+            resolve(photoCount);
+          });
+        };
+
+        const doneButton = UIButton.buttonWithType(UIButtonType.System);
+        doneButton.frame = CGRectMake(bounds.size.width - 88, bounds.size.height - 102, 72, 44);
+        doneButton.setTitleForState('Done', UIControlState.Normal);
+        doneButton.setTitleColorForState(UIColor.whiteColor, UIControlState.Normal);
+        doneButton.titleLabel.font = UIFont.boldSystemFontOfSize(17);
+        doneButton.backgroundColor = UIColor.colorWithWhiteAlpha(0, 0.55);
+        doneButton.layer.cornerRadius = 12;
+        doneButton.addActionForControlEvents(
+          UIAction.actionWithHandler(() => finish()),
+          UIControlEvents.TouchUpInside
+        );
+        overlay.addSubview(doneButton);
+
+        const cancelButton = UIButton.buttonWithType(UIButtonType.System);
+        cancelButton.frame = CGRectMake(16, 42, 76, 40);
+        cancelButton.setTitleForState('Cancel', UIControlState.Normal);
+        cancelButton.setTitleColorForState(UIColor.whiteColor, UIControlState.Normal);
+        cancelButton.titleLabel.font = UIFont.boldSystemFontOfSize(16);
+        cancelButton.backgroundColor = UIColor.colorWithWhiteAlpha(0, 0.45);
+        cancelButton.layer.cornerRadius = 10;
+        cancelButton.addActionForControlEvents(
+          UIAction.actionWithHandler(() => finish()),
+          UIControlEvents.TouchUpInside
+        );
+        overlay.addSubview(cancelButton);
+
+        const shutter = UIButton.buttonWithType(UIButtonType.Custom);
+        shutter.frame = CGRectMake((bounds.size.width - 72) / 2, bounds.size.height - 104, 72, 72);
+        shutter.backgroundColor = UIColor.whiteColor;
+        shutter.layer.cornerRadius = 36;
+        shutter.layer.borderColor = UIColor.colorWithWhiteAlpha(1, 0.7).CGColor;
+        shutter.layer.borderWidth = 5;
+        shutter.addActionForControlEvents(
+          UIAction.actionWithHandler(() => {
+            if (isFinished || isCapturing) {
+              return;
+            }
+            isCapturing = true;
+            shutter.alpha = 0.45;
+            picker.takePicture();
+          }),
+          UIControlEvents.TouchUpInside
+        );
+        overlay.addSubview(shutter);
+
+        const owner = new WeakRef(this);
+        const DelegateClass = (NSObject as any).extend(
+          {
+            imagePickerControllerDidFinishPickingMediaWithInfo(
+              _controller: UIImagePickerController,
+              info: NSDictionary<any, any>
+            ) {
+              const service = owner.deref();
+              const image =
+                info?.objectForKey(UIImagePickerControllerOriginalImage) ||
+                info?.objectForKey(UIImagePickerControllerEditedImage);
+              if (!service || !image) {
+                isCapturing = false;
+                shutter.alpha = 1;
+                return;
+              }
+              void service.saveContinuousIosPhoto(new ImageSource(image), order)
+                .then(() => {
+                  photoCount += 1;
+                  Utils.executeOnMainThread(() => {
+                    countLabel.text = `${photoCount} photo${photoCount === 1 ? '' : 's'} saved`;
+                  });
+                })
+                .catch((error) => {
+                  console.log('[EzeeTimestampCamera] Unable to save continuous photo', error);
+                  Utils.executeOnMainThread(() => {
+                    countLabel.text = 'Unable to save photo';
+                  });
+                })
+                .finally(() => {
+                  Utils.executeOnMainThread(() => {
+                    isCapturing = false;
+                    shutter.alpha = 1;
+                  });
+                });
+            },
+          },
+          {
+            protocols: [UIImagePickerControllerDelegate, UINavigationControllerDelegate],
+            name: `EzeeContinuousCameraDelegate${Date.now()}`,
+          }
+        );
+
+        this.iosCameraDelegate = DelegateClass.new();
+        picker.delegate = this.iosCameraDelegate;
+        visibleViewController.presentViewControllerAnimatedCompletion(picker, true, null);
+      } catch (error) {
+        this.iosCameraDelegate = undefined;
+        reject(error);
+      }
+    });
+  }
+
+  private async saveContinuousIosPhoto(
+    source: ImageSource,
+    order: EzeeOrderListItem
+  ): Promise<string> {
+    const capturedAt = new Date();
+    const stamped = this.stampIos(source, order, capturedAt, this.latestLocation || null);
+    const folder = knownFolders.documents().getFolder('ezee-timestamp-photos');
+    const fileName = `ezee-${this.safeFilePart(order.number)}-${this.fileTimestamp(capturedAt)}.jpg`;
+    const filePath = path.join(folder.path, fileName);
+    if (!stamped.saveToFile(filePath, 'jpg', 92)) {
+      throw new Error('Unable to save the timestamped photo.');
+    }
+    await new Promise<void>((resolve, reject) => {
+      PHPhotoLibrary.sharedPhotoLibrary().performChangesCompletionHandler(
+        () => {
+          PHAssetChangeRequest.creationRequestForAssetFromImage(stamped.ios);
+        },
+        (success, error) => success ? resolve() : reject(error)
+      );
+    });
+    return filePath;
   }
 
   private getVisibleIosViewController(): UIViewController | null {
