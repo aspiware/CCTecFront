@@ -16,6 +16,11 @@ import { EzeeOrderListItem } from './ezee-order.model';
 @Injectable({ providedIn: 'root' })
 export class EzeeTimestampCameraService {
   private iosCameraDelegate?: UIImagePickerControllerDelegate & UINavigationControllerDelegate;
+  private iosCoordinateLabel?: UILabel;
+  private locationWatchId?: number;
+  private locationWatchStarting?: Promise<number>;
+  private locationSession = 0;
+  private latestLocation?: geolocation.Location;
 
   public async capture(order: EzeeOrderListItem): Promise<string> {
     console.log('[EzeeTimestampCamera] Capture started');
@@ -30,33 +35,48 @@ export class EzeeTimestampCameraService {
 
     console.log('[EzeeTimestampCamera] Camera permission granted');
     await this.requestLocationPermission();
-    const locationPromise = this.getLocation();
-    const source = isIOS
-      ? await this.takeIosPicture(order, locationPromise)
-      : await ImageSource.fromAsset(await camera.takePicture({
-          width: 2048,
-          height: 2048,
-          keepAspectRatio: true,
-          saveToGallery: false,
-          cameraFacing: 'rear',
-        }));
-    console.log('[EzeeTimestampCamera] Photo captured');
-    const location = await locationPromise;
-    const capturedAt = new Date();
-    const lines = this.buildStampLines(order, capturedAt, location);
-    const stamped = isIOS
-      ? this.stampIos(source, order, capturedAt, location)
-      : isAndroid
-        ? this.stampAndroid(source, lines)
-        : source;
-
-    const folder = knownFolders.documents().getFolder('ezee-timestamp-photos');
-    const fileName = `ezee-${this.safeFilePart(order.number)}-${this.fileTimestamp(capturedAt)}.jpg`;
-    const filePath = path.join(folder.path, fileName);
-    if (!stamped.saveToFile(filePath, 'jpg', 92)) {
-      throw new Error('Unable to save the timestamped photo.');
+    const locationSession = ++this.locationSession;
+    this.latestLocation = undefined;
+    const locationPromise = this.getLocation().then((location) => {
+      if (location && locationSession === this.locationSession) {
+        this.applyTrackedLocation(location);
+      }
+      return location;
+    });
+    if (isIOS) {
+      this.startLocationTracking(locationSession);
     }
-    return filePath;
+
+    try {
+      const source = isIOS
+        ? await this.takeIosPicture(order, locationPromise)
+        : await ImageSource.fromAsset(await camera.takePicture({
+            width: 2048,
+            height: 2048,
+            keepAspectRatio: true,
+            saveToGallery: false,
+            cameraFacing: 'rear',
+          }));
+      console.log('[EzeeTimestampCamera] Photo captured');
+      const location = this.latestLocation || await locationPromise;
+      const capturedAt = new Date();
+      const lines = this.buildStampLines(order, capturedAt, location);
+      const stamped = isIOS
+        ? this.stampIos(source, order, capturedAt, location)
+        : isAndroid
+          ? this.stampAndroid(source, lines)
+          : source;
+
+      const folder = knownFolders.documents().getFolder('ezee-timestamp-photos');
+      const fileName = `ezee-${this.safeFilePart(order.number)}-${this.fileTimestamp(capturedAt)}.jpg`;
+      const filePath = path.join(folder.path, fileName);
+      if (!stamped.saveToFile(filePath, 'jpg', 92)) {
+        throw new Error('Unable to save the timestamped photo.');
+      }
+      return filePath;
+    } finally {
+      this.stopLocationTracking(locationSession);
+    }
   }
 
   private takeIosPicture(
@@ -77,10 +97,16 @@ export class EzeeTimestampCameraService {
         picker.mediaTypes = NSArray.arrayWithObject('public.image');
         picker.allowsEditing = false;
         const coordinateLabel = this.createIosCameraOverlay(picker, order);
+        this.iosCoordinateLabel = coordinateLabel;
+        if (this.latestLocation) {
+          coordinateLabel.text = this.coordinateText(this.latestLocation);
+        }
         void locationPromise.then((location) => {
-          Utils.executeOnMainThread(() => {
-            coordinateLabel.text = this.coordinateText(location);
-          });
+          if (!this.latestLocation) {
+            Utils.executeOnMainThread(() => {
+              coordinateLabel.text = this.coordinateText(location);
+            });
+          }
         });
 
         const owner = new WeakRef(this);
@@ -297,6 +323,66 @@ export class EzeeTimestampCameraService {
       console.log('[EzeeTimestampCamera] Location unavailable');
       return null;
     }
+  }
+
+  private startLocationTracking(locationSession: number): void {
+    const starting = geolocation.watchLocation(
+      (location) => {
+        if (locationSession === this.locationSession) {
+          this.applyTrackedLocation(location);
+        }
+      },
+      (error) => {
+        console.log('[EzeeTimestampCamera] Live location update failed', error);
+      },
+      {
+        desiredAccuracy: CoreTypes.Accuracy.high,
+        updateDistance: 1,
+        updateTime: 1000,
+        minimumUpdateTime: 1000,
+        maximumAge: 1000,
+        iosPausesLocationUpdatesAutomatically: false,
+      }
+    );
+    this.locationWatchStarting = starting;
+    void starting.then((watchId) => {
+      if (locationSession !== this.locationSession) {
+        geolocation.clearWatch(watchId);
+        return;
+      }
+      this.locationWatchId = watchId;
+      console.log('[EzeeTimestampCamera] Live location tracking started');
+    }).catch((error) => {
+      console.log('[EzeeTimestampCamera] Unable to start live location tracking', error);
+    }).finally(() => {
+      if (this.locationWatchStarting === starting) {
+        this.locationWatchStarting = undefined;
+      }
+    });
+  }
+
+  private applyTrackedLocation(location: geolocation.Location): void {
+    this.latestLocation = location;
+    const coordinateLabel = this.iosCoordinateLabel;
+    if (coordinateLabel) {
+      Utils.executeOnMainThread(() => {
+        coordinateLabel.text = this.coordinateText(location);
+      });
+    }
+  }
+
+  private stopLocationTracking(locationSession: number): void {
+    if (locationSession !== this.locationSession) {
+      return;
+    }
+    this.locationSession += 1;
+    this.iosCoordinateLabel = undefined;
+    if (this.locationWatchId !== undefined) {
+      geolocation.clearWatch(this.locationWatchId);
+      this.locationWatchId = undefined;
+    }
+    this.locationWatchStarting = undefined;
+    console.log('[EzeeTimestampCamera] Live location tracking stopped');
   }
 
   private buildStampLines(
