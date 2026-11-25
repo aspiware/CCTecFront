@@ -221,7 +221,7 @@ export class EzeeTimestampCameraService {
     const appIcon = this.iosAppIcon();
     if (appIcon) {
       const iconView = UIImageView.alloc().initWithFrame(
-        CGRectMake(bounds.size.width - 142, startY + 280, 24, 24)
+        CGRectMake(bounds.size.width - 142, bounds.size.height - 31, 24, 24)
       );
       iconView.image = appIcon;
       iconView.contentMode = UIViewContentMode.ScaleAspectFit;
@@ -230,7 +230,7 @@ export class EzeeTimestampCameraService {
       overlay.addSubview(iconView);
     }
     const credit = this.makeOverlayLabel(
-      CGRectMake(bounds.size.width - 114, startY + 282, 96, 22),
+      CGRectMake(bounds.size.width - 114, bounds.size.height - 29, 96, 22),
       'Photo by CCTec',
       12
     );
@@ -509,12 +509,12 @@ export class EzeeTimestampCameraService {
     const appIcon = this.iosAppIcon();
     if (appIcon) {
       appIcon.drawInRect(
-        CGRectMake(width - (310 * scale), detailsY + (97 * scale), 36 * scale, 36 * scale)
+        CGRectMake(width - (310 * scale), height - (48 * scale), 36 * scale, 36 * scale)
       );
     }
     drawText(
       'Photo by CCTec',
-      CGRectMake(width - (264 * scale), detailsY + (96 * scale), 230 * scale, 38 * scale),
+      CGRectMake(width - (264 * scale), height - (46 * scale), 230 * scale, 38 * scale),
       UIFont.systemFontOfSize(25 * scale),
       UIColor.whiteColor,
       NSTextAlignment.Right
