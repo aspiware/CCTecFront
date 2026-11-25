@@ -162,16 +162,11 @@ export class EzeeTimestampCameraService {
     const logo = UIView.alloc().initWithFrame(CGRectMake(left, startY, 142, 62));
     logo.backgroundColor = UIColor.colorWithWhiteAlpha(1, 0.92);
     logo.layer.cornerRadius = 9;
-    const dot = UIView.alloc().initWithFrame(CGRectMake(12, 20, 20, 20));
-    dot.backgroundColor = UIColor.colorWithRedGreenBlueAlpha(0.96, 0.36, 0.12, 1);
-    dot.layer.cornerRadius = 10;
-    logo.addSubview(dot);
-    const logoName = this.makeOverlayLabel(CGRectMake(39, 4, 96, 38), 'ezee', 34, UIColor.blackColor);
-    logoName.font = UIFont.systemFontOfSizeWeight(34, UIFontWeightLight);
-    logo.addSubview(logoName);
-    const logoSub = this.makeOverlayLabel(CGRectMake(42, 40, 92, 14), 'FIBER INTERNET', 8, UIColor.darkGrayColor);
-    logoSub.font = UIFont.boldSystemFontOfSize(8);
-    logo.addSubview(logoSub);
+    logo.layer.masksToBounds = true;
+    const ezeeLogo = UIImageView.alloc().initWithFrame(CGRectMake(8, 7, 126, 48));
+    ezeeLogo.image = this.iosEzeeLogo();
+    ezeeLogo.contentMode = UIViewContentMode.ScaleAspectFit;
+    logo.addSubview(ezeeLogo);
     overlay.addSubview(logo);
 
     const now = new Date();
@@ -384,6 +379,10 @@ export class EzeeTimestampCameraService {
       UIImage.imageNamed('AppIcon60x60@2x');
   }
 
+  private iosEzeeLogo(): UIImage | null {
+    return UIImage.imageNamed('EzeeLogo');
+  }
+
   private stampAndroid(source: ImageSource, rawLines: string[]): ImageSource {
     const original = source.android as android.graphics.Bitmap;
     const bitmap = original.copy(android.graphics.Bitmap.Config.ARGB_8888, true);
@@ -458,21 +457,8 @@ export class EzeeTimestampCameraService {
       CGRectMake(left, panelTop, 250 * scale, 100 * scale),
       14 * scale
     ).fill();
-    UIColor.colorWithRedGreenBlueAlpha(0.96, 0.36, 0.12, 1).setFill();
-    UIBezierPath.bezierPathWithOvalInRect(
-      CGRectMake(left + (20 * scale), panelTop + (34 * scale), 32 * scale, 32 * scale)
-    ).fill();
-    drawText(
-      'ezee',
-      CGRectMake(left + (65 * scale), panelTop + (2 * scale), 170 * scale, 66 * scale),
-      UIFont.systemFontOfSizeWeight(58 * scale, UIFontWeightLight),
-      UIColor.blackColor
-    );
-    drawText(
-      'FIBER INTERNET',
-      CGRectMake(left + (68 * scale), panelTop + (66 * scale), 160 * scale, 22 * scale),
-      UIFont.boldSystemFontOfSize(15 * scale),
-      UIColor.darkGrayColor
+    this.iosEzeeLogo()?.drawInRect(
+      CGRectMake(left + (12 * scale), panelTop + (12 * scale), 226 * scale, 76 * scale)
     );
 
     const timeY = panelTop + (112 * scale);
