@@ -199,32 +199,32 @@ export class EzeeTimestampCameraService {
     overlay.addSubview(weekday);
 
     const address = this.makeOverlayLabel(
-      CGRectMake(left, startY + 145, contentWidth, 46),
-      String(order?.address || 'Address unavailable'),
-      18
+      CGRectMake(left, startY + 145, contentWidth, 40),
+      this.formatAddress(order?.address),
+      15
     );
     address.numberOfLines = 2;
     overlay.addSubview(address);
-    const technician = this.makeOverlayLabel(
-      CGRectMake(left, startY + 196, contentWidth, 28),
-      this.getTechnician() || 'Technician unavailable',
-      17
-    );
-    overlay.addSubview(technician);
     const coordinates = this.makeOverlayLabel(
-      CGRectMake(left, startY + 232, contentWidth, 28),
+      CGRectMake(left, startY + 188, contentWidth, 28),
       'Coordinate: locating…',
-      16
+      15
     );
     overlay.addSubview(coordinates);
     const orderLabel = this.makeOverlayLabel(
-      CGRectMake(left, startY + 266, contentWidth, 25),
-      `Order #${String(order?.number || 'n/a')}`,
+      CGRectMake(left, startY + 221, contentWidth, 26),
+      `Order: ${String(order?.number || 'n/a')}`,
       15
     );
     overlay.addSubview(orderLabel);
+    const technician = this.makeOverlayLabel(
+      CGRectMake(left, startY + 251, contentWidth, 28),
+      `Tech: ${this.getTechnician() || 'unavailable'}`,
+      16
+    );
+    overlay.addSubview(technician);
     const credit = this.makeOverlayLabel(
-      CGRectMake(bounds.size.width - 130, startY + 266, 112, 25),
+      CGRectMake(bounds.size.width - 130, startY + 282, 112, 22),
       'Photo by CCTec',
       13
     );
@@ -300,9 +300,10 @@ export class EzeeTimestampCameraService {
     const technician = this.getTechnician();
     return [
       this.formatDateTime(capturedAt),
-      String(order?.address || 'Address unavailable'),
+      this.formatAddress(order?.address),
       coordinates,
-      `Order #${String(order?.number || 'n/a')}${technician ? `  •  ${technician}` : ''}`,
+      `Order: ${String(order?.number || 'n/a')}`,
+      `Tech: ${technician || 'unavailable'}`,
     ];
   }
 
@@ -314,7 +315,7 @@ export class EzeeTimestampCameraService {
         .filter(Boolean)
         .join(' ');
       const techId = String(user?.techCode || user?.techNumber || '').trim();
-      return name && techId ? `${name} (${techId})` : name || techId;
+      return name && techId ? `${techId} - ${name}` : techId || name;
     } catch {
       return '';
     }
@@ -361,6 +362,13 @@ export class EzeeTimestampCameraService {
     return `Coordinate: ${latitude}, ${longitude}`;
   }
 
+  private formatAddress(value: unknown): string {
+    return String(value || 'Address unavailable')
+      .replace(/\b(\d{5})-\d{4}\b/g, '$1')
+      .replace(/-\s*$/, '')
+      .trim();
+  }
+
   private stampAndroid(source: ImageSource, rawLines: string[]): ImageSource {
     const original = source.android as android.graphics.Bitmap;
     const bitmap = original.copy(android.graphics.Bitmap.Config.ARGB_8888, true);
@@ -399,7 +407,7 @@ export class EzeeTimestampCameraService {
     const scale = width / 1200;
     const left = 34 * scale;
     const bottom = 34 * scale;
-    const panelHeight = 390 * scale;
+    const panelHeight = 430 * scale;
     const panelTop = Math.max(0, height - panelHeight - bottom);
     const timeParts = this.timeParts(capturedAt);
     const technician = this.getTechnician() || 'Technician unavailable';
@@ -478,28 +486,28 @@ export class EzeeTimestampCameraService {
 
     const detailsY = panelTop + (235 * scale);
     drawText(
-      String(order?.address || 'Address unavailable'),
-      CGRectMake(left, detailsY, width - (left * 2), 58 * scale),
-      UIFont.systemFontOfSize(34 * scale)
-    );
-    drawText(
-      technician,
-      CGRectMake(left, detailsY + (62 * scale), width - (left * 2), 45 * scale),
-      UIFont.systemFontOfSize(31 * scale)
-    );
-    drawText(
-      this.coordinateText(location),
-      CGRectMake(left, detailsY + (112 * scale), width - (left * 2), 43 * scale),
-      UIFont.systemFontOfSize(29 * scale)
-    );
-    drawText(
-      `Order #${String(order?.number || 'n/a')}`,
-      CGRectMake(left, detailsY + (158 * scale), 350 * scale, 38 * scale),
+      this.formatAddress(order?.address),
+      CGRectMake(left, detailsY, width - (left * 2), 48 * scale),
       UIFont.systemFontOfSize(27 * scale)
     );
     drawText(
+      this.coordinateText(location),
+      CGRectMake(left, detailsY + (50 * scale), width - (left * 2), 40 * scale),
+      UIFont.systemFontOfSize(27 * scale)
+    );
+    drawText(
+      `Order: ${String(order?.number || 'n/a')}`,
+      CGRectMake(left, detailsY + (96 * scale), 430 * scale, 38 * scale),
+      UIFont.systemFontOfSize(28 * scale)
+    );
+    drawText(
+      `Tech: ${technician}`,
+      CGRectMake(left, detailsY + (140 * scale), width - (left * 2), 40 * scale),
+      UIFont.systemFontOfSize(29 * scale)
+    );
+    drawText(
       'Photo by CCTec',
-      CGRectMake(width - (300 * scale), detailsY + (158 * scale), 266 * scale, 38 * scale),
+      CGRectMake(width - (300 * scale), detailsY + (96 * scale), 266 * scale, 38 * scale),
       UIFont.systemFontOfSize(25 * scale),
       UIColor.whiteColor,
       NSTextAlignment.Right
