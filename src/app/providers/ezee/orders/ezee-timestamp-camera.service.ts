@@ -213,7 +213,7 @@ export class EzeeTimestampCameraService {
     overlay.addSubview(coordinates);
     const orderLabel = this.makeOverlayLabel(
       CGRectMake(left, startY + 221, contentWidth, 26),
-      `Order: ${String(order?.number || 'n/a')}`,
+      `Order #: ${String(order?.number || 'n/a')}`,
       15
     );
     overlay.addSubview(orderLabel);
@@ -302,7 +302,7 @@ export class EzeeTimestampCameraService {
       this.formatDateTime(capturedAt),
       this.formatAddress(order?.address),
       coordinates,
-      `Order: ${String(order?.number || 'n/a')}`,
+      `Order #: ${String(order?.number || 'n/a')}`,
       `Tech: ${technician || 'unavailable'}`,
     ];
   }
@@ -347,7 +347,7 @@ export class EzeeTimestampCameraService {
   }
 
   private weekdayText(value: Date): string {
-    return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][value.getDay()];
+    return ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][value.getDay()];
   }
 
   private coordinateText(location: geolocation.Location | null | undefined): string {
@@ -357,9 +357,7 @@ export class EzeeTimestampCameraService {
     if (!location) {
       return 'Coordinate: unavailable';
     }
-    const latitude = `${Math.abs(location.latitude).toFixed(6)}°${location.latitude >= 0 ? 'N' : 'S'}`;
-    const longitude = `${Math.abs(location.longitude).toFixed(6)}°${location.longitude >= 0 ? 'E' : 'W'}`;
-    return `Coordinate: ${latitude}, ${longitude}`;
+    return `Coordinate: ${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`;
   }
 
   private formatAddress(value: unknown): string {
@@ -496,7 +494,7 @@ export class EzeeTimestampCameraService {
       UIFont.systemFontOfSize(27 * scale)
     );
     drawText(
-      `Order: ${String(order?.number || 'n/a')}`,
+      `Order #: ${String(order?.number || 'n/a')}`,
       CGRectMake(left, detailsY + (96 * scale), 430 * scale, 38 * scale),
       UIFont.systemFontOfSize(28 * scale)
     );
