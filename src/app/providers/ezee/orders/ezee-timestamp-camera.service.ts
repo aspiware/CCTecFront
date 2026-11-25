@@ -368,6 +368,7 @@ export class EzeeTimestampCameraService {
         overlay.addSubview(countLabel);
 
         let photoCount = 0;
+        let lastPhotoPath = '';
         let isCapturing = false;
         let isFinished = false;
         const finish = () => {
@@ -380,6 +381,25 @@ export class EzeeTimestampCameraService {
             resolve(photoCount);
           });
         };
+
+        const thumbnailButton = UIButton.buttonWithType(UIButtonType.Custom);
+        thumbnailButton.frame = CGRectMake(16, bounds.size.height - 104, 72, 72);
+        thumbnailButton.backgroundColor = UIColor.colorWithWhiteAlpha(0, 0.5);
+        thumbnailButton.layer.cornerRadius = 10;
+        thumbnailButton.layer.borderColor = UIColor.whiteColor.CGColor;
+        thumbnailButton.layer.borderWidth = 2;
+        thumbnailButton.layer.masksToBounds = true;
+        thumbnailButton.imageView.contentMode = UIViewContentMode.ScaleAspectFill;
+        thumbnailButton.hidden = true;
+        thumbnailButton.addActionForControlEvents(
+          UIAction.actionWithHandler(() => {
+            if (lastPhotoPath && !isCapturing) {
+              this.presentContinuousPhotoPreview(picker, lastPhotoPath);
+            }
+          }),
+          UIControlEvents.TouchUpInside
+        );
+        overlay.addSubview(thumbnailButton);
 
         const doneButton = UIButton.buttonWithType(UIButtonType.System);
         doneButton.frame = CGRectMake(bounds.size.width - 88, bounds.size.height - 102, 72, 44);
@@ -443,10 +463,14 @@ export class EzeeTimestampCameraService {
                 return;
               }
               void service.saveContinuousIosPhoto(new ImageSource(image), order)
-                .then(() => {
+                .then((filePath) => {
                   photoCount += 1;
+                  lastPhotoPath = filePath;
                   Utils.executeOnMainThread(() => {
                     countLabel.text = `${photoCount} photo${photoCount === 1 ? '' : 's'} saved`;
+                    const thumbnail = ImageSource.fromFileSync(filePath);
+                    thumbnailButton.setImageForState(thumbnail?.ios || null, UIControlState.Normal);
+                    thumbnailButton.hidden = false;
                   });
                 })
                 .catch((error) => {
@@ -500,6 +524,66 @@ export class EzeeTimestampCameraService {
       );
     });
     return filePath;
+  }
+
+  private presentContinuousPhotoPreview(
+    cameraController: UIImagePickerController,
+    filePath: string
+  ): void {
+    const source = ImageSource.fromFileSync(filePath);
+    if (!source?.ios) {
+      return;
+    }
+
+    const preview = UIViewController.new();
+    preview.modalPresentationStyle = UIModalPresentationStyle.FullScreen;
+    preview.view.backgroundColor = UIColor.blackColor;
+    const bounds = UIScreen.mainScreen.bounds;
+    const imageView = UIImageView.alloc().initWithFrame(bounds);
+    imageView.image = source.ios;
+    imageView.contentMode = UIViewContentMode.ScaleAspectFit;
+    imageView.autoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight;
+    preview.view.addSubview(imageView);
+
+    const closeButton = UIButton.buttonWithType(UIButtonType.System);
+    closeButton.frame = CGRectMake(18, 48, 72, 42);
+    closeButton.setTitleForState('Close', UIControlState.Normal);
+    closeButton.setTitleColorForState(UIColor.whiteColor, UIControlState.Normal);
+    closeButton.titleLabel.font = UIFont.boldSystemFontOfSize(17);
+    closeButton.backgroundColor = UIColor.colorWithWhiteAlpha(0, 0.55);
+    closeButton.layer.cornerRadius = 11;
+    closeButton.addActionForControlEvents(
+      UIAction.actionWithHandler(() => {
+        preview.dismissViewControllerAnimatedCompletion(true, null);
+      }),
+      UIControlEvents.TouchUpInside
+    );
+    preview.view.addSubview(closeButton);
+
+    const shareButton = UIButton.buttonWithType(UIButtonType.System);
+    shareButton.frame = CGRectMake(bounds.size.width - 90, 48, 72, 42);
+    shareButton.setTitleForState('Share', UIControlState.Normal);
+    shareButton.setTitleColorForState(UIColor.whiteColor, UIControlState.Normal);
+    shareButton.titleLabel.font = UIFont.boldSystemFontOfSize(17);
+    shareButton.backgroundColor = UIColor.colorWithWhiteAlpha(0, 0.55);
+    shareButton.layer.cornerRadius = 11;
+    shareButton.addActionForControlEvents(
+      UIAction.actionWithHandler(() => {
+        const fileUrl = NSURL.fileURLWithPath(filePath);
+        const activity = UIActivityViewController.alloc()
+          .initWithActivityItemsApplicationActivities([fileUrl], []);
+        const popover = activity.popoverPresentationController;
+        if (popover) {
+          popover.sourceView = shareButton;
+          popover.sourceRect = shareButton.bounds;
+          popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
+        }
+        preview.presentViewControllerAnimatedCompletion(activity, true, null);
+      }),
+      UIControlEvents.TouchUpInside
+    );
+    preview.view.addSubview(shareButton);
+    cameraController.presentViewControllerAnimatedCompletion(preview, true, null);
   }
 
   private getVisibleIosViewController(): UIViewController | null {
