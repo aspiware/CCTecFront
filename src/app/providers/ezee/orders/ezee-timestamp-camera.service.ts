@@ -218,10 +218,20 @@ export class EzeeTimestampCameraService {
       16
     );
     overlay.addSubview(technician);
+    const credit = this.makeOverlayLabel(
+      CGRectMake(0, 0, 1, 22),
+      'Photo by CCTec',
+      12
+    );
+    credit.textAlignment = NSTextAlignment.Left;
+    credit.sizeToFit();
+    const creditWidth = credit.frame.size.width;
+    const creditX = bounds.size.width - 18 - creditWidth;
+    credit.frame = CGRectMake(creditX, bounds.size.height - 29, creditWidth, 22);
     const appIcon = this.iosAppIcon();
     if (appIcon) {
       const iconView = UIImageView.alloc().initWithFrame(
-        CGRectMake(bounds.size.width - 142, bounds.size.height - 31, 24, 24)
+        CGRectMake(creditX - 28, bounds.size.height - 31, 24, 24)
       );
       iconView.image = appIcon;
       iconView.contentMode = UIViewContentMode.ScaleAspectFit;
@@ -229,12 +239,6 @@ export class EzeeTimestampCameraService {
       iconView.layer.masksToBounds = true;
       overlay.addSubview(iconView);
     }
-    const credit = this.makeOverlayLabel(
-      CGRectMake(bounds.size.width - 114, bounds.size.height - 29, 96, 22),
-      'Photo by CCTec',
-      12
-    );
-    credit.textAlignment = NSTextAlignment.Right;
     overlay.addSubview(credit);
     picker.cameraOverlayView = overlay;
     return coordinates;
@@ -506,18 +510,26 @@ export class EzeeTimestampCameraService {
       CGRectMake(left, detailsY + (140 * scale), width - (left * 2), 40 * scale),
       UIFont.systemFontOfSize(29 * scale)
     );
+    const creditFont = UIFont.systemFontOfSize(25 * scale);
+    const creditAttributes = NSDictionary.dictionaryWithObjectsForKeys<string, any>(
+      [creditFont],
+      [NSFontAttributeName]
+    );
+    const creditSize = NSString.stringWithString('Photo by CCTec').sizeWithAttributes(creditAttributes);
+    const creditX = width - (34 * scale) - creditSize.width;
+    const iconSize = 36 * scale;
     const appIcon = this.iosAppIcon();
     if (appIcon) {
       appIcon.drawInRect(
-        CGRectMake(width - (310 * scale), height - (48 * scale), 36 * scale, 36 * scale)
+        CGRectMake(creditX - iconSize - (5 * scale), height - (48 * scale), iconSize, iconSize)
       );
     }
     drawText(
       'Photo by CCTec',
-      CGRectMake(width - (264 * scale), height - (46 * scale), 230 * scale, 38 * scale),
-      UIFont.systemFontOfSize(25 * scale),
+      CGRectMake(creditX, height - (46 * scale), creditSize.width + (2 * scale), 38 * scale),
+      creditFont,
       UIColor.whiteColor,
-      NSTextAlignment.Right
+      NSTextAlignment.Left
     );
     const stamped = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
