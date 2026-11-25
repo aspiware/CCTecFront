@@ -223,10 +223,21 @@ export class EzeeTimestampCameraService {
       16
     );
     overlay.addSubview(technician);
+    const appIcon = this.iosAppIcon();
+    if (appIcon) {
+      const iconView = UIImageView.alloc().initWithFrame(
+        CGRectMake(bounds.size.width - 142, startY + 280, 24, 24)
+      );
+      iconView.image = appIcon;
+      iconView.contentMode = UIViewContentMode.ScaleAspectFit;
+      iconView.layer.cornerRadius = 5;
+      iconView.layer.masksToBounds = true;
+      overlay.addSubview(iconView);
+    }
     const credit = this.makeOverlayLabel(
-      CGRectMake(bounds.size.width - 130, startY + 282, 112, 22),
+      CGRectMake(bounds.size.width - 114, startY + 282, 96, 22),
       'Photo by CCTec',
-      13
+      12
     );
     credit.textAlignment = NSTextAlignment.Right;
     overlay.addSubview(credit);
@@ -367,6 +378,12 @@ export class EzeeTimestampCameraService {
       .trim();
   }
 
+  private iosAppIcon(): UIImage | null {
+    return UIImage.imageNamed('AppIcon60x60') ||
+      UIImage.imageNamed('AppIcon') ||
+      UIImage.imageNamed('AppIcon60x60@2x');
+  }
+
   private stampAndroid(source: ImageSource, rawLines: string[]): ImageSource {
     const original = source.android as android.graphics.Bitmap;
     const bitmap = original.copy(android.graphics.Bitmap.Config.ARGB_8888, true);
@@ -503,9 +520,15 @@ export class EzeeTimestampCameraService {
       CGRectMake(left, detailsY + (140 * scale), width - (left * 2), 40 * scale),
       UIFont.systemFontOfSize(29 * scale)
     );
+    const appIcon = this.iosAppIcon();
+    if (appIcon) {
+      appIcon.drawInRect(
+        CGRectMake(width - (310 * scale), detailsY + (97 * scale), 36 * scale, 36 * scale)
+      );
+    }
     drawText(
       'Photo by CCTec',
-      CGRectMake(width - (300 * scale), detailsY + (96 * scale), 266 * scale, 38 * scale),
+      CGRectMake(width - (264 * scale), detailsY + (96 * scale), 230 * scale, 38 * scale),
       UIFont.systemFontOfSize(25 * scale),
       UIColor.whiteColor,
       NSTextAlignment.Right
