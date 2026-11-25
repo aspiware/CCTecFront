@@ -21,6 +21,11 @@ export class EzeeTimestampCameraService {
   private locationWatchStarting?: Promise<number>;
   private locationSession = 0;
   private latestLocation?: geolocation.Location;
+  private iosClockTimer?: ReturnType<typeof setInterval>;
+  private iosTimeLabel?: UILabel;
+  private iosMeridiemLabel?: UILabel;
+  private iosDateLabel?: UILabel;
+  private iosWeekdayLabel?: UILabel;
 
   public async capture(order: EzeeOrderListItem): Promise<string> {
     console.log('[EzeeTimestampCamera] Capture started');
@@ -218,6 +223,7 @@ export class EzeeTimestampCameraService {
       20
     );
     overlay.addSubview(weekday);
+    this.startIosClock(time, meridiem, date, weekday);
 
     const address = this.makeOverlayLabel(
       CGRectMake(left, startY + 145, contentWidth, 40),
@@ -377,12 +383,57 @@ export class EzeeTimestampCameraService {
     }
     this.locationSession += 1;
     this.iosCoordinateLabel = undefined;
+    this.stopIosClock();
     if (this.locationWatchId !== undefined) {
       geolocation.clearWatch(this.locationWatchId);
       this.locationWatchId = undefined;
     }
     this.locationWatchStarting = undefined;
     console.log('[EzeeTimestampCamera] Live location tracking stopped');
+  }
+
+  private startIosClock(
+    timeLabel: UILabel,
+    meridiemLabel: UILabel,
+    dateLabel: UILabel,
+    weekdayLabel: UILabel
+  ): void {
+    this.stopIosClock();
+    this.iosTimeLabel = timeLabel;
+    this.iosMeridiemLabel = meridiemLabel;
+    this.iosDateLabel = dateLabel;
+    this.iosWeekdayLabel = weekdayLabel;
+    const update = () => {
+      const now = new Date();
+      const time = this.timeParts(now);
+      if (this.iosTimeLabel) {
+        this.iosTimeLabel.text = time.time;
+      }
+      if (this.iosMeridiemLabel) {
+        this.iosMeridiemLabel.text = time.meridiem;
+      }
+      if (this.iosDateLabel) {
+        this.iosDateLabel.text = this.dateText(now);
+      }
+      if (this.iosWeekdayLabel) {
+        this.iosWeekdayLabel.text = this.weekdayText(now);
+      }
+    };
+    update();
+    this.iosClockTimer = setInterval(update, 1000);
+    console.log('[EzeeTimestampCamera] Live clock started');
+  }
+
+  private stopIosClock(): void {
+    if (this.iosClockTimer !== undefined) {
+      clearInterval(this.iosClockTimer);
+      this.iosClockTimer = undefined;
+      console.log('[EzeeTimestampCamera] Live clock stopped');
+    }
+    this.iosTimeLabel = undefined;
+    this.iosMeridiemLabel = undefined;
+    this.iosDateLabel = undefined;
+    this.iosWeekdayLabel = undefined;
   }
 
   private buildStampLines(
