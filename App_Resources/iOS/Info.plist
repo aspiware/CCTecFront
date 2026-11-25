@@ -7,9 +7,11 @@
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>We need your location to provide better services</string>
 	<key>NSCameraUsageDescription</key>
-	<string>We need camera access so you can scan equipment codes and attach photos to expenses.</string>
+	<string>We need camera access so you can scan equipment codes and capture timestamped work order photos.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>We need photo library access so you can attach photos to expenses.</string>
+	<string>We need photo library access so you can save and share work order photos.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>We need permission to save timestamped work order photos to your library.</string>
 	<key>TNSGoogleMapsAPIKey</key>
     <string>AIzaSyBNVIJXKHOqApWiY7MTkfNIphBBeE75jcI</string>
 	<key>CFBundleDevelopmentRegion</key>

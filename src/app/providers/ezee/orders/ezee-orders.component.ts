@@ -20,7 +20,8 @@ import { EzeeOrderPackagesComponent } from './ezee-order-packages.component';
 import { EzeeWorkOrderInfoComponent } from './ezee-work-order-info.component';
 import { EzeeOspTicketComponent } from './ezee-osp-ticket.component';
 import { EzeeInstallNoteComponent } from './ezee-install-note.component';
-import { shareEzeeOrderScreenshot } from '../ezee-file';
+import { shareEzeeImage, shareEzeeOrderScreenshot } from '../ezee-file';
+import { EzeeTimestampCameraService } from './ezee-timestamp-camera.service';
 
 @Component({
   standalone: true,
@@ -93,6 +94,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       { name: 'Add Install Note', icon: 'text.badge.plus' },
       { name: 'OSP Template', icon: 'ticket.fill' },
       { name: 'Finalize', icon: 'checkmark.circle.fill' },
+      { name: 'Timestamp Photo', icon: 'camera.viewfinder' },
       { name: 'Order Screenshot', icon: 'camera' },
     ],
   };
@@ -103,6 +105,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
   private readonly addingNoteOrders = new Set<string>();
   private readonly finalizingOrders = new Set<string>();
   private readonly updatingStatusOrders = new Set<string>();
+  private timestampPhotoOrderNumber?: string;
   private screenshotOrderNumber?: string;
   private readonly selectedFinalizeReasons = new Map<string, EzeeFinalizeReason>();
   private isCopyMenuOpen = false;
@@ -119,7 +122,8 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     private routerExtensions: RouterExtensions,
     private modalService: ModalDialogService,
     private vcRef: ViewContainerRef,
-    private summaryService: EzeeSummaryService
+    private summaryService: EzeeSummaryService,
+    private timestampCameraService: EzeeTimestampCameraService
   ) {}
 
   public ngOnInit(): void {
@@ -255,6 +259,10 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       this.openFinalizeModal(order);
       return;
     }
+    if (selected?.name === 'Timestamp Photo') {
+      void this.captureTimestampPhoto(order);
+      return;
+    }
     if (selected?.name === 'Order Screenshot') {
       void this.captureOrderScreenshot(order);
       return;
@@ -373,7 +381,46 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     return this.addingNoteOrders.has(order.number) ||
       this.finalizingOrders.has(order.number) ||
       this.updatingStatusOrders.has(order.number) ||
+      this.timestampPhotoOrderNumber === order.number ||
       this.screenshotOrderNumber === order.number;
+  }
+
+  private async captureTimestampPhoto(order: EzeeOrderListItem): Promise<void> {
+    if (!order || this.timestampPhotoOrderNumber || this.isOrderMenuLoading(order)) {
+      return;
+    }
+
+    // Let the native order menu finish dismissing before presenting the camera.
+    await new Promise<void>((resolve) => setTimeout(resolve, 350));
+    if (this.timestampPhotoOrderNumber || this.isOrderMenuLoading(order)) {
+      return;
+    }
+
+    this.timestampPhotoOrderNumber = order.number;
+    this.cdr.detectChanges();
+    try {
+      const filePath = await this.timestampCameraService.capture(order);
+      if (this.subscriptions.closed) {
+        return;
+      }
+      if (!shareEzeeImage(filePath, 'Share Timestamp Photo', 'image/jpeg')) {
+        throw new Error('Unable to open the timestamped photo.');
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to capture the photo.';
+      if (!this.subscriptions.closed && !/cancel/i.test(message)) {
+        await alert({
+          title: 'Timestamp Photo',
+          message,
+          okButtonText: 'OK',
+        });
+      }
+    } finally {
+      this.timestampPhotoOrderNumber = undefined;
+      if (!this.subscriptions.closed) {
+        this.cdr.detectChanges();
+      }
+    }
   }
 
   private async captureOrderScreenshot(order: EzeeOrderListItem): Promise<void> {
