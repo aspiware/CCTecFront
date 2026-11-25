@@ -132,6 +132,7 @@ export class EzeeTimestampCameraService {
         picker.cameraDevice = UIImagePickerControllerCameraDevice.Rear;
         picker.mediaTypes = NSArray.arrayWithObject('public.image');
         picker.allowsEditing = false;
+        this.configureIosCameraAspectFill(picker);
         const coordinateLabel = this.createIosCameraOverlay(picker, order);
         this.iosCoordinateLabel = coordinateLabel;
         if (this.latestLocation) {
@@ -343,6 +344,7 @@ export class EzeeTimestampCameraService {
         picker.mediaTypes = NSArray.arrayWithObject('public.image');
         picker.showsCameraControls = false;
         picker.allowsEditing = false;
+        this.configureIosCameraAspectFill(picker);
         const coordinateLabel = this.createIosCameraOverlay(picker, order);
         this.iosCoordinateLabel = coordinateLabel;
         if (this.latestLocation) {
@@ -592,6 +594,13 @@ export class EzeeTimestampCameraService {
       (application.windows?.count ? application.windows.objectAtIndex(0) : null);
     const rootViewController = keyWindow?.rootViewController;
     return rootViewController ? Utils.ios.getVisibleViewController(rootViewController) : null;
+  }
+
+  private configureIosCameraAspectFill(picker: UIImagePickerController): void {
+    const screenSize = UIScreen.mainScreen.bounds.size;
+    const nativePreviewHeight = screenSize.width * (4 / 3);
+    const scale = Math.max(1, screenSize.height / nativePreviewHeight);
+    picker.cameraViewTransform = CGAffineTransformMakeScale(scale, scale);
   }
 
   private async requestLocationPermission(): Promise<void> {
