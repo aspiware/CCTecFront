@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
 	<cache-path name="ezee_order_screenshots" path="ezee-order-screenshots/"/>
+	<files-path name="ezee_timestamp_photos" path="ezee-timestamp-photos/"/>
 </paths>

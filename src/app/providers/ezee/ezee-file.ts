@@ -1,8 +1,16 @@
 import { Utils, isIOS } from '@nativescript/core';
 
 export function shareEzeeOrderScreenshot(filePath: string): boolean {
+  return shareEzeeImage(filePath, 'Share Order Screenshot', 'image/png');
+}
+
+export function shareEzeeImage(
+  filePath: string,
+  title = 'Share Order Photo',
+  mimeType = 'image/jpeg'
+): boolean {
   if (isIOS) {
-    return openEzeeFile(filePath, 'Open Order Screenshot');
+    return openEzeeFile(filePath, title);
   }
 
   const context = Utils.android.getApplicationContext();
@@ -12,10 +20,10 @@ export function shareEzeeOrderScreenshot(filePath: string): boolean {
     new java.io.File(filePath),
   );
   const intent = new android.content.Intent(android.content.Intent.ACTION_SEND);
-  intent.setType('image/png');
+  intent.setType(mimeType);
   intent.putExtra(android.content.Intent.EXTRA_STREAM, uri);
   intent.addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION);
-  const chooser = android.content.Intent.createChooser(intent, 'Share Order Screenshot');
+  const chooser = android.content.Intent.createChooser(intent, title);
   chooser.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
   context.startActivity(chooser);
   return true;
