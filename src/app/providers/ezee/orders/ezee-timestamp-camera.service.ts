@@ -350,9 +350,12 @@ export class EzeeTimestampCameraService {
       credit.font = UIFont.systemFontOfSize(28 * scale);
       credit.sizeToFit();
       const creditBottom = creditFrame.origin.y + creditFrame.size.height;
+      const isFourThreeCredit = creditFrame.size.height < bounds.size.height;
+      const creditRightMargin = isFourThreeCredit ? 50 : 90;
+      const creditBottomMargin = isFourThreeCredit ? 24 : 44;
       const creditX = creditFrame.origin.x + creditFrame.size.width -
-        (90 * scale) - credit.frame.size.width;
-      const creditY = creditBottom - (44 * scale) - credit.frame.size.height;
+        (creditRightMargin * scale) - credit.frame.size.width;
+      const creditY = creditBottom - (creditBottomMargin * scale) - credit.frame.size.height;
       credit.frame = CGRectMake(
         creditX,
         creditY,
@@ -363,7 +366,7 @@ export class EzeeTimestampCameraService {
         const iconSize = 36 * scale;
         iconView.frame = CGRectMake(
           creditX - iconSize - (5 * scale),
-          creditBottom - (44 * scale) - iconSize,
+          creditBottom - (creditBottomMargin * scale) - iconSize,
           iconSize,
           iconSize
         );
@@ -678,7 +681,13 @@ export class EzeeTimestampCameraService {
   ): Promise<string> {
     const capturedAt = new Date();
     const cropped = this.prepareIosImageForAspect(source, aspectMode);
-    const stamped = this.stampIos(cropped, order, capturedAt, this.latestLocation || null);
+    const stamped = this.stampIos(
+      cropped,
+      order,
+      capturedAt,
+      this.latestLocation || null,
+      aspectMode
+    );
     const folder = knownFolders.documents().getFolder('ezee-timestamp-photos');
     const fileName = `ezee-${this.safeFilePart(order.number)}-${this.fileTimestamp(capturedAt)}.jpg`;
     const filePath = path.join(folder.path, fileName);
@@ -1114,7 +1123,8 @@ export class EzeeTimestampCameraService {
     source: ImageSource,
     order: EzeeOrderListItem,
     capturedAt: Date,
-    location: geolocation.Location | null
+    location: geolocation.Location | null,
+    aspectMode?: IosPhotoAspectMode
   ): ImageSource {
     const image = source.ios as UIImage;
     const size = image.size;
@@ -1219,9 +1229,12 @@ export class EzeeTimestampCameraService {
       [NSFontAttributeName, NSForegroundColorAttributeName]
     );
     const creditSize = creditText.sizeWithAttributes(creditAttributes);
-    const creditX = width - (90 * scale) - creditSize.width;
+    const isFourThree = aspectMode === '4:3';
+    const creditRightMargin = isFourThree ? 50 : 90;
+    const creditBottomMargin = isFourThree ? 24 : 44;
+    const creditX = width - (creditRightMargin * scale) - creditSize.width;
     const iconSize = 36 * scale;
-    const creditBottom = 44 * scale;
+    const creditBottom = creditBottomMargin * scale;
     const creditY = height - creditBottom - creditSize.height;
     const appIcon = this.iosAppIcon();
     if (appIcon) {
