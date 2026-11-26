@@ -36,20 +36,20 @@
 <StackLayout [class]="'container ' + (isDarkTheme ? 'theme-dark' : 'theme-light')" (loaded)="onRootLoaded()">
   <GridLayout *ngIf="historyMode" rows="auto,auto" columns="*"
     style="margin-left: 10; margin-right: 10; margin-top: 10;">
-    <GridLayout row="0" columns="*,*" style="margin-bottom: 10;">
-      <StackLayout col="0" horizontalAlignment="left">
-        <Label text="From" class="secondRow"></Label>
-        <DatePicker class="today-date-picker" [date]="startDate"
-          (dateChange)="onStartDateChange($event)"></DatePicker>
-      </StackLayout>
-      <StackLayout col="1" horizontalAlignment="right">
-        <Label text="To" class="secondRow"></Label>
-        <DatePicker class="today-date-picker" [date]="endDate"
-          (dateChange)="onEndDateChange($event)"></DatePicker>
-      </StackLayout>
+    <GridLayout row="0" columns="auto,auto,*" style="margin-bottom: 10;">
+      <GridLayout col="0" columns="auto" width="130" horizontalAlignment="left">
+        <DatePicker col="0" width="130" horizontalAlignment="left" backgroundColor="transparent"
+          [date]="startDate" (dateChange)="onStartDateChange($event)"></DatePicker>
+      </GridLayout>
+      <GridLayout col="1" columns="auto" width="130" horizontalAlignment="left">
+        <DatePicker col="0" width="130" horizontalAlignment="left" backgroundColor="transparent"
+          [date]="endDate" (dateChange)="onEndDateChange($event)"></DatePicker>
+      </GridLayout>
+      <Label col="2" horizontalAlignment="right" verticalAlignment="middle"
+        class="action-bar-title today-label" [text]="todayTotal | currency"></Label>
     </GridLayout>
 
-    <GridLayout row="1" columns="*,auto" class="input-shell" width="100%">
+    <GridLayout row="1" columns="*,auto" class="input-shell" width="100%" style="margin-bottom: 15;">
       <TextField col="0" hint="Search orders" [text]="ordersSearch"
         (textChange)="onOrdersSearchChange($event.value)" class="custom-tf-inline">
       </TextField>
@@ -74,7 +74,8 @@
     </StackLayout>
   </GridLayout>
 
-  <GridLayout rows="auto" columns="*" style="margin-left: 10; margin-right: 10; margin-top: 10; margin-bottom: 20;">
+  <GridLayout *ngIf="!historyMode" rows="auto" columns="*"
+    style="margin-left: 10; margin-right: 10; margin-top: 10; margin-bottom: 20;">
     <SegmentedBar
       [items]="statusFilterItems"
       [selectedIndex]="selectedStatusFilterIndex"

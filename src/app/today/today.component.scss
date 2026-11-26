@@ -159,3 +159,71 @@
   border-radius: 8;
   margin-right: 6 !important;
 }
+
+.input-shell {
+  margin-top: 6;
+  margin-bottom: 6;
+  height: 44;
+  border-radius: 50%;
+  border-width: 1;
+  background-color: #ffffff;
+  border-color: #d1d1d6;
+}
+
+TextField.custom-tf-inline {
+  height: 44;
+  font-size: 17;
+  padding-left: 12;
+  padding-right: 5;
+  padding-top: 0;
+  padding-bottom: 0;
+  margin: 0;
+  border-width: 0;
+  background-color: transparent;
+  vertical-align: middle;
+  color: #000000;
+  placeholder-color: #8e8e93;
+}
+
+.search-icon {
+  font-size: 16;
+  width: 34;
+  height: 44;
+  margin-right: 5;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.ns-light .input-shell,
+.container.theme-light .input-shell {
+  background-color: #ffffff;
+  border-color: #d1d1d6;
+}
+
+.ns-light TextField.custom-tf-inline,
+.container.theme-light TextField.custom-tf-inline {
+  color: #000000;
+  placeholder-color: #8e8e93;
+}
+
+.ns-light .search-icon,
+.container.theme-light .search-icon {
+  color: #3a3a3c;
+}
+
+.ns-dark .input-shell,
+.container.theme-dark .input-shell {
+  background-color: rgba(128, 128, 128, 0.219) !important;
+  border-color: #48484a !important;
+}
+
+.ns-dark TextField.custom-tf-inline,
+.container.theme-dark TextField.custom-tf-inline {
+  color: #ffffff !important;
+  placeholder-color: #aeaeb2 !important;
+}
+
+.ns-dark .search-icon,
+.container.theme-dark .search-icon {
+  color: #f2f2f7 !important;
+}

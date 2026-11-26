@@ -134,7 +134,10 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
 
   public ngOnInit(): void {
     this.syncTheme();
-    this.statusFilterItems = ['All', 'Pending', 'Completed'].map((label) => {
+    const statusLabels = this.historyMode
+      ? []
+      : ['All', 'Pending', 'Completed'];
+    this.statusFilterItems = statusLabels.map((label) => {
       const item = new SegmentedBarItem();
       item.title = label;
       return item;
@@ -615,7 +618,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
 
   public onStatusFilterChanged(event: any): void {
     const index = Number(event?.value);
-    if (Number.isNaN(index) || index < 0 || index > 2) {
+    if (Number.isNaN(index) || index < 0 || index >= this.statusFilterItems.length) {
       return;
     }
     this.selectedStatusFilterIndex = index;
@@ -634,6 +637,9 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
   }
 
   public statusClass(order: EzeeOrderListItem): string {
+    if (this.historyMode) {
+      return 'status-closed';
+    }
     const status = this.normalizedOrderStatus(order);
     if (status === 'enroute' || status === 'inprogress') {
       return 'status-current';
@@ -642,6 +648,9 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
   }
 
   public statusIcon(order: EzeeOrderListItem): string {
+    if (this.historyMode) {
+      return '\uf058';
+    }
     const status = this.normalizedOrderStatus(order);
     if (status === 'enroute') {
       return '\uf1b9';
@@ -1032,11 +1041,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
 
   private applyOrdersFilter(): void {
     const query = this.ordersSearch.trim().toLowerCase();
-    const selectedStatus = this.selectedStatusFilterIndex === 1
-      ? 'Pending'
-      : this.selectedStatusFilterIndex === 2
-        ? 'Completed'
-        : null;
+    const selectedStatus = this.getSelectedWorkflowStatus();
     const source = selectedStatus
       ? this.allOrders.filter((order) => this.matchesWorkflowStatus(order, selectedStatus))
       : this.allOrders;
@@ -1055,12 +1060,11 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
   }
 
   private updateDisplayedTotals(): void {
-    const statusOrders = this.selectedStatusFilterIndex === 1
-      ? this.allOrders.filter((order) => this.matchesWorkflowStatus(order, 'Pending'))
-      : this.selectedStatusFilterIndex === 2
-        ? this.allOrders.filter((order) => this.matchesWorkflowStatus(order, 'Completed'))
-        : this.allOrders;
-    const hasStatusMatches = this.selectedStatusFilterIndex === 0 || statusOrders.length > 0;
+    const selectedStatus = this.getSelectedWorkflowStatus();
+    const statusOrders = selectedStatus
+      ? this.allOrders.filter((order) => this.matchesWorkflowStatus(order, selectedStatus))
+      : this.allOrders;
+    const hasStatusMatches = !selectedStatus || statusOrders.length > 0;
     const ordersForTotals = hasStatusMatches ? statusOrders : this.allOrders;
     const pendingTodayTotal = this.sumOrderPrices(
       this.allOrders.filter((order) => this.matchesWorkflowStatus(order, 'Pending'))
@@ -1071,11 +1075,22 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       const orderUnits = Number(order.workUnits);
       return total + (Number.isFinite(orderUnits) ? orderUnits : 0);
     }, 0);
-    this.weekTotal = !hasStatusMatches || this.selectedStatusFilterIndex === 0
+    this.weekTotal = !hasStatusMatches || !selectedStatus
       ? this.allWeekTotal
-      : this.selectedStatusFilterIndex === 1
+      : selectedStatus === 'Pending'
         ? pendingTodayTotal
         : this.roundCurrency(Math.max(0, this.allWeekTotal - pendingTodayTotal));
+  }
+
+  private getSelectedWorkflowStatus(): 'Pending' | 'Completed' | null {
+    if (this.historyMode) {
+      return null;
+    }
+    return this.selectedStatusFilterIndex === 1
+      ? 'Pending'
+      : this.selectedStatusFilterIndex === 2
+        ? 'Completed'
+        : null;
   }
 
   private sumOrderPrices(orders: EzeeOrderListItem[]): number {
