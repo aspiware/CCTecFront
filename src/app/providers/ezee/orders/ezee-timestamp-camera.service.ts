@@ -1122,18 +1122,48 @@ export class EzeeTimestampCameraService {
         );
         overlay.addSubview(flipButton);
 
+        const shutterHalo = UIView.alloc().initWithFrame(
+          CGRectMake((bounds.size.width - 88) / 2, bounds.size.height - 112, 88, 88)
+        );
+        shutterHalo.backgroundColor = UIColor.colorWithWhiteAlpha(1, 0.24);
+        shutterHalo.layer.cornerRadius = 44;
+        shutterHalo.userInteractionEnabled = false;
+        overlay.addSubview(shutterHalo);
+
         const shutter = UIButton.buttonWithType(UIButtonType.Custom);
         shutter.frame = CGRectMake((bounds.size.width - 72) / 2, bounds.size.height - 104, 72, 72);
         shutter.backgroundColor = UIColor.whiteColor;
         shutter.layer.cornerRadius = 36;
         shutter.layer.borderColor = UIColor.colorWithWhiteAlpha(1, 0.7).CGColor;
         shutter.layer.borderWidth = 5;
+        const setShutterPressed = (pressed: boolean) => {
+          UIView.animateWithDurationAnimations(0.08, () => {
+            shutter.transform = pressed
+              ? CGAffineTransformMakeScale(0.88, 0.88)
+              : CGAffineTransformIdentity;
+            shutter.alpha = pressed ? 0.72 : (isCapturing ? 0.45 : 1);
+            shutterHalo.transform = pressed
+              ? CGAffineTransformMakeScale(0.94, 0.94)
+              : CGAffineTransformIdentity;
+            shutterHalo.alpha = pressed ? 0.65 : 1;
+          });
+        };
+        shutter.addActionForControlEvents(
+          UIAction.actionWithHandler(() => setShutterPressed(true)),
+          UIControlEvents.TouchDown
+        );
+        shutter.addActionForControlEvents(
+          UIAction.actionWithHandler(() => setShutterPressed(false)),
+          UIControlEvents.TouchUpOutside | UIControlEvents.TouchCancel
+        );
         shutter.addActionForControlEvents(
           UIAction.actionWithHandler(() => {
             if (isFinished || isCapturing) {
+              setShutterPressed(false);
               return;
             }
             isCapturing = true;
+            setShutterPressed(false);
             captureStartedAt = Date.now();
             captureAspectMode = aspectMode;
             captureSaveToPhotos = saveToPhotos;
