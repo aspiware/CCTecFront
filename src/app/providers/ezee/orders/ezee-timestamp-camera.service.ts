@@ -226,11 +226,12 @@ export class EzeeTimestampCameraService {
   private buildIosCameraOverlay(
     bounds: CGRect,
     order: EzeeOrderListItem,
-    initialContentFrame: CGRect = bounds
+    initialContentFrame: CGRect = bounds,
+    initialCreditFrame: CGRect = initialContentFrame
   ): {
     overlay: UIView;
     coordinateLabel: UILabel;
-    updateContentFrame: (contentFrame: CGRect) => void;
+    updateContentFrame: (contentFrame: CGRect, creditFrame?: CGRect) => void;
   } {
     const overlay = UIView.alloc().initWithFrame(bounds);
     overlay.backgroundColor = UIColor.clearColor;
@@ -292,7 +293,7 @@ export class EzeeTimestampCameraService {
     }
     overlay.addSubview(credit);
 
-    const updateContentFrame = (contentFrame: CGRect) => {
+    const updateContentFrame = (contentFrame: CGRect, creditFrame: CGRect = contentFrame) => {
       const scale = contentFrame.size.width / 1200;
       const left = contentFrame.origin.x + (34 * scale);
       const contentWidth = contentFrame.size.width - (68 * scale);
@@ -348,9 +349,10 @@ export class EzeeTimestampCameraService {
 
       credit.font = UIFont.systemFontOfSize(28 * scale);
       credit.sizeToFit();
-      const creditX = contentFrame.origin.x + contentFrame.size.width -
+      const creditBottom = creditFrame.origin.y + creditFrame.size.height;
+      const creditX = creditFrame.origin.x + creditFrame.size.width -
         (90 * scale) - credit.frame.size.width;
-      const creditY = contentBottom - (44 * scale) - credit.frame.size.height;
+      const creditY = creditBottom - (44 * scale) - credit.frame.size.height;
       credit.frame = CGRectMake(
         creditX,
         creditY,
@@ -361,14 +363,14 @@ export class EzeeTimestampCameraService {
         const iconSize = 36 * scale;
         iconView.frame = CGRectMake(
           creditX - iconSize - (5 * scale),
-          contentBottom - (44 * scale) - iconSize,
+          creditBottom - (44 * scale) - iconSize,
           iconSize,
           iconSize
         );
         iconView.layer.cornerRadius = 5 * scale;
       }
     };
-    updateContentFrame(initialContentFrame);
+    updateContentFrame(initialContentFrame, initialCreditFrame);
     return { overlay, coordinateLabel: coordinates, updateContentFrame };
   }
 
@@ -435,7 +437,8 @@ export class EzeeTimestampCameraService {
         const previewLayer = AVCaptureVideoPreviewLayer.layerWithSession(session);
         let aspectMode = this.savedIosPhotoAspectMode();
         let captureAspectMode = aspectMode;
-        let updateOverlayContentFrame: ((contentFrame: CGRect) => void) | undefined;
+        let updateOverlayContentFrame:
+          ((contentFrame: CGRect, creditFrame?: CGRect) => void) | undefined;
         const previewFrameForMode = (mode: IosPhotoAspectMode): CGRect => {
           if (mode !== '4:3') {
             return bounds;
@@ -453,14 +456,22 @@ export class EzeeTimestampCameraService {
           ApplicationSettings.setString('ezee-camera-aspect-mode', mode);
           previewLayer.frame = previewFrameForMode(mode);
           previewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
-          updateOverlayContentFrame?.(previewLayer.frame);
+          updateOverlayContentFrame?.(
+            previewFrameForMode('4:3'),
+            mode === 'full' ? bounds : previewFrameForMode('4:3')
+          );
         };
         applyAspectMode(aspectMode);
         this.configureIosCaptureConnection(previewLayer.connection);
         this.configureIosCaptureConnection(photoOutput.connectionWithMediaType(AVMediaTypeVideo));
         controller.view.layer.addSublayer(previewLayer);
 
-        const overlayResult = this.buildIosCameraOverlay(bounds, order, previewLayer.frame);
+        const overlayResult = this.buildIosCameraOverlay(
+          bounds,
+          order,
+          previewFrameForMode('4:3'),
+          aspectMode === 'full' ? bounds : previewFrameForMode('4:3')
+        );
         updateOverlayContentFrame = overlayResult.updateContentFrame;
         const overlay = overlayResult.overlay;
         const coordinateLabel = overlayResult.coordinateLabel;
