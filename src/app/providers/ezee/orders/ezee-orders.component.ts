@@ -405,14 +405,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     this.continuousPhotoOrderNumber = order.number;
     this.cdr.detectChanges();
     try {
-      const photoCount = await this.timestampCameraService.captureContinuous(order);
-      if (!this.subscriptions.closed && photoCount > 0) {
-        await alert({
-          title: 'Continuous Photos',
-          message: `${photoCount} photo${photoCount === 1 ? '' : 's'} saved to Photos.`,
-          okButtonText: 'OK',
-        });
-      }
+      await this.timestampCameraService.captureContinuous(order);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unable to open continuous camera.';
       if (!this.subscriptions.closed && !/cancel/i.test(message)) {

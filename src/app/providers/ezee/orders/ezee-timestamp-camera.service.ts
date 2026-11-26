@@ -415,18 +415,22 @@ export class EzeeTimestampCameraService {
 
         const session = AVCaptureSession.new();
         session.sessionPreset = AVCaptureSessionPresetPhoto;
-        const device = AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeVideo);
-        if (!device) {
+        let activeDevice = AVCaptureDevice.defaultDeviceWithDeviceTypeMediaTypePosition(
+          AVCaptureDeviceTypeBuiltInWideAngleCamera,
+          AVMediaTypeVideo,
+          AVCaptureDevicePosition.Back
+        );
+        if (!activeDevice) {
           reject(new Error('Rear camera is not available.'));
           return;
         }
         const inputError = new interop.Reference<NSError>();
-        const input = AVCaptureDeviceInput.deviceInputWithDeviceError(device, inputError);
-        if (!input || !session.canAddInput(input)) {
+        let activeInput = AVCaptureDeviceInput.deviceInputWithDeviceError(activeDevice, inputError);
+        if (!activeInput || !session.canAddInput(activeInput)) {
           reject(new Error(inputError.value?.localizedDescription || 'Unable to configure camera input.'));
           return;
         }
-        session.addInput(input);
+        session.addInput(activeInput);
 
         const photoOutput = AVCapturePhotoOutput.new();
         if (!session.canAddOutput(photoOutput)) {
@@ -497,16 +501,9 @@ export class EzeeTimestampCameraService {
         });
         overlay.userInteractionEnabled = true;
         controller.view.addSubview(overlay);
-        const countLabel = this.makeOverlayLabel(
-          CGRectMake((bounds.size.width - 180) / 2, 44, 180, 30),
-          '0 photos saved',
-          16
-        );
-        countLabel.textAlignment = NSTextAlignment.Center;
-        overlay.addSubview(countLabel);
 
         const formatControl = UISegmentedControl.alloc().initWithItems(['Full', '4:3']);
-        formatControl.frame = CGRectMake((bounds.size.width - 150) / 2, 82, 150, 34);
+        formatControl.frame = CGRectMake((bounds.size.width - 150) / 2, 92, 150, 34);
         formatControl.selectedSegmentIndex = aspectMode === '4:3' ? 1 : 0;
         formatControl.selectedSegmentTintColor = UIColor.whiteColor;
         formatControl.backgroundColor = UIColor.colorWithWhiteAlpha(0, 0.5);
@@ -594,6 +591,109 @@ export class EzeeTimestampCameraService {
         );
         overlay.addSubview(cancelButton);
 
+        let flashMode = AVCaptureFlashMode.Off;
+        const flashButton = UIButton.buttonWithType(UIButtonType.System);
+        flashButton.frame = CGRectMake(
+          formatControl.frame.origin.x - 44,
+          formatControl.frame.origin.y,
+          34,
+          34
+        );
+        flashButton.tintColor = UIColor.whiteColor;
+        flashButton.backgroundColor = UIColor.colorWithWhiteAlpha(0, 0.45);
+        flashButton.layer.cornerRadius = 17;
+        const updateFlashButton = () => {
+          const flashAvailable = activeDevice.hasFlash;
+          flashButton.enabled = flashAvailable;
+          flashButton.alpha = flashAvailable ? 1 : 0.45;
+          const symbolName = !flashAvailable || flashMode === AVCaptureFlashMode.Off
+            ? 'bolt.slash.fill'
+            : flashMode === AVCaptureFlashMode.Auto
+              ? 'bolt.badge.a.fill'
+              : 'bolt.fill';
+          const image = UIImage.systemImageNamed(symbolName) || UIImage.systemImageNamed('bolt.fill');
+          flashButton.setImageForState(image, UIControlState.Normal);
+        };
+        flashButton.addActionForControlEvents(
+          UIAction.actionWithHandler(() => {
+            if (!activeDevice.hasFlash || isCapturing) {
+              return;
+            }
+            flashMode = flashMode === AVCaptureFlashMode.Off
+              ? AVCaptureFlashMode.On
+              : flashMode === AVCaptureFlashMode.On
+                ? AVCaptureFlashMode.Auto
+                : AVCaptureFlashMode.Off;
+            updateFlashButton();
+          }),
+          UIControlEvents.TouchUpInside
+        );
+        updateFlashButton();
+        overlay.addSubview(flashButton);
+
+        const flipButton = UIButton.buttonWithType(UIButtonType.System);
+        flipButton.frame = CGRectMake(
+          formatControl.frame.origin.x + formatControl.frame.size.width + 10,
+          formatControl.frame.origin.y,
+          34,
+          34
+        );
+        flipButton.tintColor = UIColor.whiteColor;
+        flipButton.setImageForState(
+          UIImage.systemImageNamed('arrow.triangle.2.circlepath.camera.fill') ||
+            UIImage.systemImageNamed('arrow.triangle.2.circlepath.camera'),
+          UIControlState.Normal
+        );
+        flipButton.backgroundColor = UIColor.colorWithWhiteAlpha(0, 0.45);
+        flipButton.layer.cornerRadius = 17;
+        flipButton.addActionForControlEvents(
+          UIAction.actionWithHandler(() => {
+            if (isCapturing || isFinished) {
+              return;
+            }
+            const nextPosition = activeDevice.position === AVCaptureDevicePosition.Back
+              ? AVCaptureDevicePosition.Front
+              : AVCaptureDevicePosition.Back;
+            const nextDevice = AVCaptureDevice.defaultDeviceWithDeviceTypeMediaTypePosition(
+              AVCaptureDeviceTypeBuiltInWideAngleCamera,
+              AVMediaTypeVideo,
+              nextPosition
+            );
+            if (!nextDevice) {
+              return;
+            }
+            const nextInputError = new interop.Reference<NSError>();
+            const nextInput = AVCaptureDeviceInput.deviceInputWithDeviceError(
+              nextDevice,
+              nextInputError
+            );
+            if (!nextInput) {
+              console.log(
+                '[EzeeTimestampCamera] Unable to switch camera',
+                nextInputError.value?.localizedDescription || 'input unavailable'
+              );
+              return;
+            }
+            session.beginConfiguration();
+            session.removeInput(activeInput);
+            if (session.canAddInput(nextInput)) {
+              session.addInput(nextInput);
+              activeInput = nextInput;
+              activeDevice = nextDevice;
+            } else {
+              session.addInput(activeInput);
+            }
+            session.commitConfiguration();
+            this.configureIosCaptureConnection(previewLayer.connection);
+            this.configureIosCaptureConnection(
+              photoOutput.connectionWithMediaType(AVMediaTypeVideo)
+            );
+            updateFlashButton();
+          }),
+          UIControlEvents.TouchUpInside
+        );
+        overlay.addSubview(flipButton);
+
         const shutter = UIButton.buttonWithType(UIButtonType.Custom);
         shutter.frame = CGRectMake((bounds.size.width - 72) / 2, bounds.size.height - 104, 72, 72);
         shutter.backgroundColor = UIColor.whiteColor;
@@ -612,6 +712,10 @@ export class EzeeTimestampCameraService {
             const settings = AVCapturePhotoSettings.photoSettings();
             settings.highResolutionPhotoEnabled = true;
             settings.photoQualityPrioritization = AVCapturePhotoQualityPrioritization.Speed;
+            settings.flashMode = activeDevice.hasFlash &&
+              activeDevice.isFlashModeSupported(flashMode)
+              ? flashMode
+              : AVCaptureFlashMode.Off;
             photoOutput.capturePhotoWithSettingsDelegate(
               settings,
               this.iosPhotoCaptureDelegate!
@@ -649,7 +753,6 @@ export class EzeeTimestampCameraService {
                   photoCount += 1;
                   lastPhotoPath = filePath;
                   Utils.executeOnMainThread(() => {
-                    countLabel.text = `${photoCount} photo${photoCount === 1 ? '' : 's'} saved`;
                     const thumbnail = ImageSource.fromFileSync(filePath);
                     thumbnailButton.setImageForState(thumbnail?.ios || null, UIControlState.Normal);
                     thumbnailButton.hidden = false;
@@ -657,9 +760,6 @@ export class EzeeTimestampCameraService {
                 })
                 .catch((error) => {
                   console.log('[EzeeTimestampCamera] Unable to save continuous photo', error);
-                  Utils.executeOnMainThread(() => {
-                    countLabel.text = 'Unable to save photo';
-                  });
                 })
                 .finally(() => {
                   console.log(
