@@ -48,9 +48,11 @@ export class EzeeTimestampCameraService {
     if (!cameraPermission?.Success) {
       throw new Error('Camera permission is required to capture order photos.');
     }
-    const photosPermission = await camera.requestPhotosPermissions();
-    if (!photosPermission?.Success) {
-      throw new Error('Photo library permission is required for continuous photos.');
+    if (this.savedSaveToPhotosPreference()) {
+      const photosPermission = await camera.requestPhotosPermissions();
+      if (!photosPermission?.Success) {
+        ApplicationSettings.setBoolean('ezee-camera-save-to-photos', false);
+      }
     }
 
     await this.requestLocationPermission();
@@ -475,6 +477,8 @@ export class EzeeTimestampCameraService {
         const previewLayer = AVCaptureVideoPreviewLayer.layerWithSession(session);
         let aspectMode = this.savedIosPhotoAspectMode();
         let captureAspectMode = aspectMode;
+        let saveToPhotos = this.savedSaveToPhotosPreference();
+        let captureSaveToPhotos = saveToPhotos;
         let updateOverlayContentFrame:
           ((contentFrame: CGRect, creditFrame?: CGRect) => void) | undefined;
         const previewFrameForMode = (mode: IosPhotoAspectMode): CGRect => {
@@ -587,6 +591,39 @@ export class EzeeTimestampCameraService {
           UIControlEvents.ValueChanged
         );
         overlay.addSubview(formatControl);
+
+        const saveToPhotosLabel = this.makeOverlayLabel(
+          CGRectMake((bounds.size.width - 190) / 2, 138, 125, 34),
+          'Save to Photos',
+          1
+        );
+        saveToPhotosLabel.font = UIFont.boldSystemFontOfSize(14);
+        saveToPhotosLabel.textAlignment = NSTextAlignment.Right;
+        overlay.addSubview(saveToPhotosLabel);
+
+        const saveToPhotosSwitch = UISwitch.alloc().initWithFrame(
+          CGRectMake((bounds.size.width - 190) / 2 + 137, 139, 52, 32)
+        );
+        saveToPhotosSwitch.on = saveToPhotos;
+        saveToPhotosSwitch.onTintColor = UIColor.colorWithRedGreenBlueAlpha(1, 0.45, 0.12, 1);
+        saveToPhotosSwitch.addActionForControlEvents(
+          UIAction.actionWithHandler(() => {
+            if (!saveToPhotosSwitch.on) {
+              saveToPhotos = false;
+              ApplicationSettings.setBoolean('ezee-camera-save-to-photos', false);
+              return;
+            }
+            void camera.requestPhotosPermissions().then((permission) => {
+              Utils.executeOnMainThread(() => {
+                saveToPhotos = !!permission?.Success;
+                saveToPhotosSwitch.setOnAnimated(saveToPhotos, true);
+                ApplicationSettings.setBoolean('ezee-camera-save-to-photos', saveToPhotos);
+              });
+            });
+          }),
+          UIControlEvents.ValueChanged
+        );
+        overlay.addSubview(saveToPhotosSwitch);
 
         let photoCount = 0;
         let lastPhotoPath = '';
@@ -769,6 +806,7 @@ export class EzeeTimestampCameraService {
             isCapturing = true;
             captureStartedAt = Date.now();
             captureAspectMode = aspectMode;
+            captureSaveToPhotos = saveToPhotos;
             shutter.alpha = 0.45;
             const settings = AVCapturePhotoSettings.photoSettings();
             settings.highResolutionPhotoEnabled = true;
@@ -809,7 +847,12 @@ export class EzeeTimestampCameraService {
                 shutter.alpha = 1;
                 return;
               }
-              void service.saveContinuousIosPhoto(new ImageSource(image), order, captureAspectMode)
+              void service.saveContinuousIosPhoto(
+                new ImageSource(image),
+                order,
+                captureAspectMode,
+                captureSaveToPhotos
+              )
                 .then((filePath) => {
                   photoCount += 1;
                   lastPhotoPath = filePath;
@@ -856,7 +899,8 @@ export class EzeeTimestampCameraService {
   private async saveContinuousIosPhoto(
     source: ImageSource,
     order: EzeeOrderListItem,
-    aspectMode: IosPhotoAspectMode
+    aspectMode: IosPhotoAspectMode,
+    saveToPhotos: boolean
   ): Promise<string> {
     const capturedAt = new Date();
     const cropped = this.prepareIosImageForAspect(source, aspectMode);
@@ -873,14 +917,21 @@ export class EzeeTimestampCameraService {
     if (!stamped.saveToFile(filePath, 'jpg', 92)) {
       throw new Error('Unable to save the timestamped photo.');
     }
-    await new Promise<void>((resolve, reject) => {
-      PHPhotoLibrary.sharedPhotoLibrary().performChangesCompletionHandler(
-        () => {
-          PHAssetChangeRequest.creationRequestForAssetFromImage(stamped.ios);
-        },
-        (success, error) => success ? resolve() : reject(error)
-      );
-    });
+    if (saveToPhotos) {
+      try {
+        await new Promise<void>((resolve, reject) => {
+          PHPhotoLibrary.sharedPhotoLibrary().performChangesCompletionHandler(
+            () => {
+              PHAssetChangeRequest.creationRequestForAssetFromImage(stamped.ios);
+            },
+            (success, error) => success ? resolve() : reject(error)
+          );
+        });
+      } catch (error) {
+        console.log('[EzeeTimestampCamera] Unable to save copy to Photos', error);
+        ApplicationSettings.setBoolean('ezee-camera-save-to-photos', false);
+      }
+    }
     return filePath;
   }
 
@@ -944,6 +995,10 @@ export class EzeeTimestampCameraService {
     return ApplicationSettings.getString('ezee-camera-aspect-mode', 'full') === '4:3'
       ? '4:3'
       : 'full';
+  }
+
+  private savedSaveToPhotosPreference(): boolean {
+    return ApplicationSettings.getBoolean('ezee-camera-save-to-photos', true);
   }
 
   private exifOrientation(orientation: UIImageOrientation): CGImagePropertyOrientation {
