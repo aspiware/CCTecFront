@@ -16,6 +16,7 @@ import { EzeeOrderListItem } from './ezee-order.model';
 @Injectable({ providedIn: 'root' })
 export class EzeeTimestampCameraService {
   private iosCameraDelegate?: UIImagePickerControllerDelegate & UINavigationControllerDelegate;
+  private iosPhotoCaptureDelegate?: AVCapturePhotoCaptureDelegate;
   private iosCoordinateLabel?: UILabel;
   private locationWatchId?: number;
   private locationWatchStarting?: Promise<number>;
@@ -212,7 +213,15 @@ export class EzeeTimestampCameraService {
     picker: UIImagePickerController,
     order: EzeeOrderListItem
   ): UILabel {
-    const bounds = picker.view.bounds;
+    const result = this.buildIosCameraOverlay(picker.view.bounds, order);
+    picker.cameraOverlayView = result.overlay;
+    return result.coordinateLabel;
+  }
+
+  private buildIosCameraOverlay(
+    bounds: CGRect,
+    order: EzeeOrderListItem
+  ): { overlay: UIView; coordinateLabel: UILabel } {
     const overlay = UIView.alloc().initWithFrame(bounds);
     overlay.backgroundColor = UIColor.clearColor;
     overlay.userInteractionEnabled = false;
@@ -304,8 +313,7 @@ export class EzeeTimestampCameraService {
       overlay.addSubview(iconView);
     }
     overlay.addSubview(credit);
-    picker.cameraOverlayView = overlay;
-    return coordinates;
+    return { overlay, coordinateLabel: coordinates };
   }
 
   private makeOverlayLabel(
@@ -338,14 +346,44 @@ export class EzeeTimestampCameraService {
           return;
         }
 
-        const picker = UIImagePickerController.new();
-        picker.sourceType = UIImagePickerControllerSourceType.Camera;
-        picker.cameraDevice = UIImagePickerControllerCameraDevice.Rear;
-        picker.mediaTypes = NSArray.arrayWithObject('public.image');
-        picker.showsCameraControls = false;
-        picker.allowsEditing = false;
-        this.configureIosCameraAspectFill(picker);
-        const coordinateLabel = this.createIosCameraOverlay(picker, order);
+        const controller = UIViewController.new();
+        controller.modalPresentationStyle = UIModalPresentationStyle.FullScreen;
+        controller.view.backgroundColor = UIColor.blackColor;
+        const bounds = UIScreen.mainScreen.bounds;
+        controller.view.frame = bounds;
+
+        const session = AVCaptureSession.new();
+        session.sessionPreset = AVCaptureSessionPresetPhoto;
+        const device = AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeVideo);
+        if (!device) {
+          reject(new Error('Rear camera is not available.'));
+          return;
+        }
+        const inputError = new interop.Reference<NSError>();
+        const input = AVCaptureDeviceInput.deviceInputWithDeviceError(device, inputError);
+        if (!input || !session.canAddInput(input)) {
+          reject(new Error(inputError.value?.localizedDescription || 'Unable to configure camera input.'));
+          return;
+        }
+        session.addInput(input);
+
+        const photoOutput = AVCapturePhotoOutput.new();
+        if (!session.canAddOutput(photoOutput)) {
+          reject(new Error('Unable to configure photo capture.'));
+          return;
+        }
+        session.addOutput(photoOutput);
+
+        const previewLayer = AVCaptureVideoPreviewLayer.layerWithSession(session);
+        previewLayer.frame = bounds;
+        previewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
+        this.configureIosCaptureConnection(previewLayer.connection);
+        this.configureIosCaptureConnection(photoOutput.connectionWithMediaType(AVMediaTypeVideo));
+        controller.view.layer.addSublayer(previewLayer);
+
+        const overlayResult = this.buildIosCameraOverlay(bounds, order);
+        const overlay = overlayResult.overlay;
+        const coordinateLabel = overlayResult.coordinateLabel;
         this.iosCoordinateLabel = coordinateLabel;
         if (this.latestLocation) {
           coordinateLabel.text = this.coordinateText(this.latestLocation);
@@ -357,10 +395,8 @@ export class EzeeTimestampCameraService {
             });
           }
         });
-
-        const overlay = picker.cameraOverlayView;
         overlay.userInteractionEnabled = true;
-        const bounds = picker.view.bounds;
+        controller.view.addSubview(overlay);
         const countLabel = this.makeOverlayLabel(
           CGRectMake((bounds.size.width - 180) / 2, 44, 180, 30),
           '0 photos saved',
@@ -378,8 +414,9 @@ export class EzeeTimestampCameraService {
             return;
           }
           isFinished = true;
-          picker.dismissViewControllerAnimatedCompletion(true, () => {
-            this.iosCameraDelegate = undefined;
+          session.stopRunning();
+          controller.dismissViewControllerAnimatedCompletion(true, () => {
+            this.iosPhotoCaptureDelegate = undefined;
             resolve(photoCount);
           });
         };
@@ -396,7 +433,7 @@ export class EzeeTimestampCameraService {
         thumbnailButton.addActionForControlEvents(
           UIAction.actionWithHandler(() => {
             if (lastPhotoPath && !isCapturing) {
-              this.presentContinuousPhotoPreview(picker, lastPhotoPath);
+              this.presentContinuousPhotoPreview(controller, lastPhotoPath);
             }
           }),
           UIControlEvents.TouchUpInside
@@ -442,7 +479,10 @@ export class EzeeTimestampCameraService {
             }
             isCapturing = true;
             shutter.alpha = 0.45;
-            picker.takePicture();
+            photoOutput.capturePhotoWithSettingsDelegate(
+              AVCapturePhotoSettings.photoSettings(),
+              this.iosPhotoCaptureDelegate!
+            );
           }),
           UIControlEvents.TouchUpInside
         );
@@ -451,15 +491,18 @@ export class EzeeTimestampCameraService {
         const owner = new WeakRef(this);
         const DelegateClass = (NSObject as any).extend(
           {
-            imagePickerControllerDidFinishPickingMediaWithInfo(
-              _controller: UIImagePickerController,
-              info: NSDictionary<any, any>
+            captureOutputDidFinishProcessingPhotoError(
+              _output: AVCapturePhotoOutput,
+              photo: AVCapturePhoto,
+              error: NSError
             ) {
               const service = owner.deref();
-              const image =
-                info?.objectForKey(UIImagePickerControllerOriginalImage) ||
-                info?.objectForKey(UIImagePickerControllerEditedImage);
-              if (!service || !image) {
+              const data = !error ? photo?.fileDataRepresentation() : null;
+              const image = data ? UIImage.imageWithData(data) : null;
+              if (!service || !image || error) {
+                if (error) {
+                  console.log('[EzeeTimestampCamera] Photo capture failed', error);
+                }
                 isCapturing = false;
                 shutter.alpha = 1;
                 return;
@@ -490,16 +533,17 @@ export class EzeeTimestampCameraService {
             },
           },
           {
-            protocols: [UIImagePickerControllerDelegate, UINavigationControllerDelegate],
-            name: `EzeeContinuousCameraDelegate${Date.now()}`,
+            protocols: [AVCapturePhotoCaptureDelegate],
+            name: `EzeeContinuousPhotoCaptureDelegate${Date.now()}`,
           }
         );
 
-        this.iosCameraDelegate = DelegateClass.new();
-        picker.delegate = this.iosCameraDelegate;
-        visibleViewController.presentViewControllerAnimatedCompletion(picker, true, null);
+        this.iosPhotoCaptureDelegate = DelegateClass.new();
+        visibleViewController.presentViewControllerAnimatedCompletion(controller, true, () => {
+          session.startRunning();
+        });
       } catch (error) {
-        this.iosCameraDelegate = undefined;
+        this.iosPhotoCaptureDelegate = undefined;
         reject(error);
       }
     });
@@ -529,7 +573,7 @@ export class EzeeTimestampCameraService {
   }
 
   private presentContinuousPhotoPreview(
-    cameraController: UIImagePickerController,
+    cameraController: UIViewController,
     filePath: string
   ): void {
     const source = ImageSource.fromFileSync(filePath);
@@ -601,6 +645,21 @@ export class EzeeTimestampCameraService {
     const nativePreviewHeight = screenSize.width * (4 / 3);
     const scale = Math.max(1, screenSize.height / nativePreviewHeight);
     picker.cameraViewTransform = CGAffineTransformMakeScale(scale, scale);
+  }
+
+  private configureIosCaptureConnection(connection: AVCaptureConnection | null): void {
+    if (!connection) {
+      return;
+    }
+    const compatibleConnection = connection as any;
+    if (
+      typeof compatibleConnection.isVideoRotationAngleSupported === 'function' &&
+      compatibleConnection.isVideoRotationAngleSupported(90)
+    ) {
+      compatibleConnection.videoRotationAngle = 90;
+      return;
+    }
+    compatibleConnection.videoOrientation = AVCaptureVideoOrientation.Portrait;
   }
 
   private async requestLocationPermission(): Promise<void> {
