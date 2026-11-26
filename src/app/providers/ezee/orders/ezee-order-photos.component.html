@@ -18,7 +18,8 @@
 
       <ScrollView *ngIf="photos.length">
         <WrapLayout orientation="horizontal" class="photos-grid">
-          <GridLayout *ngFor="let photo of photos" rows="110" columns="110" class="photo-cell">
+          <GridLayout *ngFor="let photo of photos" rows="*" columns="*"
+            [width]="photoCellSize" [height]="photoCellSize" class="photo-cell">
             <Image row="0" col="0" [src]="photo.path" stretch="aspectFill" class="photo-thumbnail"
               (tap)="openPreview(photo)"></Image>
             <Label row="0" col="0" horizontalAlignment="right" verticalAlignment="top"
@@ -33,8 +34,11 @@
     <GridLayout row="2" columns="*,*" class="photos-footer">
       <Button col="0" [text]="selectedCount ? 'Share Selected' : 'Share All'"
         class="share-button" [isEnabled]="!!photos.length && !isDeleting" (tap)="share()"></Button>
-      <Button col="1" [text]="isDeleting ? 'Deleting...' : 'Delete Selected'"
-        class="delete-button" [isEnabled]="!!selectedCount && !isDeleting" (tap)="deleteSelected()"></Button>
+      <MenuButton col="1" [text]="isDeleting ? 'Deleting...' : 'Delete Selected'"
+        class="delete-button" [isEnabled]="!!selectedCount && !isDeleting"
+        [isRightSide]="true" [options]="deleteMenu.options"
+        (selected)="onDeleteMenuSelected($event)">
+      </MenuButton>
     </GridLayout>
 
     <GridLayout *ngIf="previewPhoto" row="0" rowSpan="3" class="preview-overlay">

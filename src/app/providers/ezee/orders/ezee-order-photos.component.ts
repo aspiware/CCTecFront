@@ -1,6 +1,8 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnInit } from '@angular/core';
 import { ModalDialogParams, NativeScriptCommonModule } from '@nativescript/angular';
-import { action, alert, confirm } from '@nativescript/core';
+import { Screen, alert, confirm } from '@nativescript/core';
+import { MenuEvent } from '../../../shared/components/menu-button/common';
+import { Item } from '../../../shared/components/menu-button/item';
 import { shareEzeeImages } from '../ezee-file';
 import { EzeeOrderListItem } from './ezee-order.model';
 import {
@@ -21,6 +23,14 @@ export class EzeeOrderPhotosComponent implements OnInit {
   public photos: EzeeOrderPhoto[] = [];
   public previewPhoto?: EzeeOrderPhoto;
   public isDeleting = false;
+  public readonly photoCellSize = Math.floor((Screen.mainScreen.widthDIPs - 40) / 3);
+  public readonly deleteMenu: Item = {
+    name: 'Delete Photos',
+    options: [
+      { name: 'Delete from CCTec', icon: 'trash', destructive: true },
+      { name: 'Delete Everywhere', icon: 'trash.slash', destructive: true },
+    ],
+  };
   private readonly selectedPaths = new Set<string>();
 
   public constructor(
@@ -88,23 +98,21 @@ export class EzeeOrderPhotosComponent implements OnInit {
     }
   }
 
-  public async deleteSelected(): Promise<void> {
+  public onDeleteMenuSelected(event: MenuEvent): void {
+    const selected = this.deleteMenu.options[event?.index ?? -1];
+    if (selected?.name === 'Delete from CCTec') {
+      void this.deleteSelected(false);
+    } else if (selected?.name === 'Delete Everywhere') {
+      void this.deleteSelected(true);
+    }
+  }
+
+  private async deleteSelected(deleteEverywhere: boolean): Promise<void> {
     const photos = this.selectedPhotos();
     if (!photos.length || this.isDeleting) {
       return;
     }
-
-    const choice = await action({
-      title: `Delete ${photos.length} Photo${photos.length === 1 ? '' : 's'}`,
-      message: 'Choose where the selected photos should be deleted.',
-      cancelButtonText: 'Cancel',
-      actions: ['Delete from CCTec', 'Delete Everywhere'],
-    });
-    if (choice !== 'Delete from CCTec' && choice !== 'Delete Everywhere') {
-      return;
-    }
-
-    const deleteEverywhere = choice === 'Delete Everywhere';
+    const choice = deleteEverywhere ? 'Delete Everywhere' : 'Delete from CCTec';
     const confirmed = await confirm({
       title: choice,
       message: deleteEverywhere
