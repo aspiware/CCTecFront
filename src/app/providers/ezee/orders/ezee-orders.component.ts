@@ -416,10 +416,17 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
   }
 
   public isOrderMenuLoading(order: EzeeOrderListItem): boolean {
+    return this.isWorkflowMenuLoading(order) || this.isPhotoMenuLoading(order);
+  }
+
+  public isWorkflowMenuLoading(order: EzeeOrderListItem): boolean {
     return this.addingNoteOrders.has(order.number) ||
       this.finalizingOrders.has(order.number) ||
-      this.updatingStatusOrders.has(order.number) ||
-      this.timestampPhotoOrderNumber === order.number ||
+      this.updatingStatusOrders.has(order.number);
+  }
+
+  public isPhotoMenuLoading(order: EzeeOrderListItem): boolean {
+    return this.timestampPhotoOrderNumber === order.number ||
       this.continuousPhotoOrderNumber === order.number ||
       this.screenshotOrderNumber === order.number;
   }
