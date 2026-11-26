@@ -703,7 +703,7 @@ export class EzeeTimestampCameraService {
         overlay.addSubview(saveToPhotosSwitch);
 
         let photoCount = 0;
-        let lastPhotoPath = '';
+        const photoPaths: string[] = [];
         let isCapturing = false;
         let isFinished = false;
         let captureStartedAt = 0;
@@ -721,24 +721,42 @@ export class EzeeTimestampCameraService {
           });
         };
 
-        const thumbnailButton = UIButton.buttonWithType(UIButtonType.Custom);
-        thumbnailButton.frame = CGRectMake(16, bounds.size.height - 104, 72, 72);
-        thumbnailButton.backgroundColor = UIColor.colorWithWhiteAlpha(0, 0.5);
-        thumbnailButton.layer.cornerRadius = 10;
-        thumbnailButton.layer.borderColor = UIColor.whiteColor.CGColor;
-        thumbnailButton.layer.borderWidth = 2;
-        thumbnailButton.layer.masksToBounds = true;
-        thumbnailButton.imageView.contentMode = UIViewContentMode.ScaleAspectFill;
-        thumbnailButton.hidden = true;
-        thumbnailButton.addActionForControlEvents(
-          UIAction.actionWithHandler(() => {
-            if (lastPhotoPath && !isCapturing) {
-              this.presentContinuousPhotoPreview(controller, lastPhotoPath);
-            }
-          }),
-          UIControlEvents.TouchUpInside
+        const thumbnailStrip = UIScrollView.alloc().initWithFrame(
+          CGRectMake(12, bounds.size.height - 98, 136, 64)
         );
-        overlay.addSubview(thumbnailButton);
+        thumbnailStrip.backgroundColor = UIColor.colorWithWhiteAlpha(0, 0.35);
+        thumbnailStrip.layer.cornerRadius = 10;
+        thumbnailStrip.showsHorizontalScrollIndicator = false;
+        thumbnailStrip.alwaysBounceHorizontal = true;
+        thumbnailStrip.hidden = true;
+        overlay.addSubview(thumbnailStrip);
+
+        const addPhotoThumbnail = (filePath: string) => {
+          const index = photoPaths.push(filePath) - 1;
+          const thumbnailButton = UIButton.buttonWithType(UIButtonType.Custom);
+          thumbnailButton.frame = CGRectMake(4 + (index * 62), 3, 58, 58);
+          thumbnailButton.backgroundColor = UIColor.colorWithWhiteAlpha(0, 0.5);
+          thumbnailButton.layer.cornerRadius = 8;
+          thumbnailButton.layer.borderColor = UIColor.whiteColor.CGColor;
+          thumbnailButton.layer.borderWidth = 1.5;
+          thumbnailButton.layer.masksToBounds = true;
+          thumbnailButton.imageView.contentMode = UIViewContentMode.ScaleAspectFill;
+          const thumbnail = ImageSource.fromFileSync(filePath);
+          thumbnailButton.setImageForState(thumbnail?.ios || null, UIControlState.Normal);
+          thumbnailButton.addActionForControlEvents(
+            UIAction.actionWithHandler(() => {
+              if (!isCapturing) {
+                this.presentContinuousPhotoPreview(controller, photoPaths.slice(), index);
+              }
+            }),
+            UIControlEvents.TouchUpInside
+          );
+          thumbnailStrip.addSubview(thumbnailButton);
+          thumbnailStrip.contentSize = CGSizeMake(8 + (photoPaths.length * 62), 64);
+          thumbnailStrip.hidden = false;
+          const latestX = Math.max(0, thumbnailStrip.contentSize.width - thumbnailStrip.bounds.size.width);
+          thumbnailStrip.setContentOffsetAnimated(CGPointMake(latestX, 0), true);
+        };
 
         const doneButton = UIButton.buttonWithType(UIButtonType.System);
         doneButton.frame = CGRectMake(bounds.size.width - 88, bounds.size.height - 102, 72, 44);
@@ -932,11 +950,8 @@ export class EzeeTimestampCameraService {
               )
                 .then((filePath) => {
                   photoCount += 1;
-                  lastPhotoPath = filePath;
                   Utils.executeOnMainThread(() => {
-                    const thumbnail = ImageSource.fromFileSync(filePath);
-                    thumbnailButton.setImageForState(thumbnail?.ios || null, UIControlState.Normal);
-                    thumbnailButton.hidden = false;
+                    addPhotoThumbnail(filePath);
                   });
                 })
                 .catch((error) => {
@@ -1124,10 +1139,11 @@ export class EzeeTimestampCameraService {
 
   private presentContinuousPhotoPreview(
     cameraController: UIViewController,
-    filePath: string
+    filePaths: string[],
+    initialIndex: number
   ): void {
-    const source = ImageSource.fromFileSync(filePath);
-    if (!source?.ios) {
+    const availablePaths = filePaths.filter((filePath) => !!ImageSource.fromFileSync(filePath)?.ios);
+    if (!availablePaths.length) {
       return;
     }
 
@@ -1135,11 +1151,24 @@ export class EzeeTimestampCameraService {
     preview.modalPresentationStyle = UIModalPresentationStyle.FullScreen;
     preview.view.backgroundColor = UIColor.blackColor;
     const bounds = UIScreen.mainScreen.bounds;
-    const imageView = UIImageView.alloc().initWithFrame(bounds);
-    imageView.image = source.ios;
-    imageView.contentMode = UIViewContentMode.ScaleAspectFit;
-    imageView.autoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight;
-    preview.view.addSubview(imageView);
+    const scrollView = UIScrollView.alloc().initWithFrame(bounds);
+    scrollView.pagingEnabled = true;
+    scrollView.showsHorizontalScrollIndicator = false;
+    scrollView.showsVerticalScrollIndicator = false;
+    scrollView.alwaysBounceHorizontal = availablePaths.length > 1;
+    scrollView.contentSize = CGSizeMake(bounds.size.width * availablePaths.length, bounds.size.height);
+    availablePaths.forEach((filePath, index) => {
+      const source = ImageSource.fromFileSync(filePath);
+      const imageView = UIImageView.alloc().initWithFrame(
+        CGRectMake(bounds.size.width * index, 0, bounds.size.width, bounds.size.height)
+      );
+      imageView.image = source?.ios || null;
+      imageView.contentMode = UIViewContentMode.ScaleAspectFit;
+      scrollView.addSubview(imageView);
+    });
+    const safeInitialIndex = Math.max(0, Math.min(availablePaths.length - 1, initialIndex));
+    scrollView.contentOffset = CGPointMake(bounds.size.width * safeInitialIndex, 0);
+    preview.view.addSubview(scrollView);
 
     const closeButton = UIButton.buttonWithType(UIButtonType.System);
     closeButton.frame = CGRectMake(18, 48, 72, 42);
@@ -1165,7 +1194,14 @@ export class EzeeTimestampCameraService {
     shareButton.layer.cornerRadius = 11;
     shareButton.addActionForControlEvents(
       UIAction.actionWithHandler(() => {
-        const fileUrl = NSURL.fileURLWithPath(filePath);
+        const currentIndex = Math.max(
+          0,
+          Math.min(
+            availablePaths.length - 1,
+            Math.round(scrollView.contentOffset.x / Math.max(1, bounds.size.width))
+          )
+        );
+        const fileUrl = NSURL.fileURLWithPath(availablePaths[currentIndex]);
         const activity = UIActivityViewController.alloc()
           .initWithActivityItemsApplicationActivities([fileUrl], []);
         const popover = activity.popoverPresentationController;
