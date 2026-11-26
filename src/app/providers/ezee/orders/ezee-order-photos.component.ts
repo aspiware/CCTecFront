@@ -9,6 +9,7 @@ import {
   EzeeOrderPhoto,
   EzeeTimestampCameraService,
 } from './ezee-timestamp-camera.service';
+import { EzeeOrdersService } from './ezee-orders.service';
 
 @Component({
   standalone: true,
@@ -23,6 +24,8 @@ export class EzeeOrderPhotosComponent implements OnInit {
   public photos: EzeeOrderPhoto[] = [];
   public previewPhoto?: EzeeOrderPhoto;
   public isDeleting = false;
+  public includeOrderScreenshot = false;
+  public isGeneratingScreenshot = false;
   public readonly photoCellSize = Math.floor((Screen.mainScreen.widthDIPs - 40) / 3);
   public readonly deleteMenu: Item = {
     name: 'Delete Photos',
@@ -36,6 +39,7 @@ export class EzeeOrderPhotosComponent implements OnInit {
   public constructor(
     private modalParams: ModalDialogParams,
     private cameraService: EzeeTimestampCameraService,
+    private ordersService: EzeeOrdersService,
     private cdr: ChangeDetectorRef
   ) {
     this.order = this.modalParams.context?.order || ({} as EzeeOrderListItem);
@@ -87,10 +91,33 @@ export class EzeeOrderPhotosComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  public share(): void {
+  public onIncludeScreenshotChanged(event: any): void {
+    this.includeOrderScreenshot = !!event?.value;
+  }
+
+  public async share(): Promise<void> {
     const photos = this.selectedPhotosOrAll();
-    if (!shareEzeeImages(photos.map((photo) => photo.path), `Share Order ${this.order.number} Photos`)) {
-      void alert({
+    const filePaths = photos.map((photo) => photo.path);
+    if (this.includeOrderScreenshot) {
+      this.isGeneratingScreenshot = true;
+      this.cdr.detectChanges();
+      try {
+        const screenshot = await this.ordersService.downloadOrderScreenshot(this.order.number);
+        filePaths.push(screenshot.path);
+      } catch (error) {
+        await alert({
+          title: 'Order Screenshot',
+          message: String((error as any)?.message || 'Unable to generate the order screenshot.'),
+          okButtonText: 'OK',
+        });
+        return;
+      } finally {
+        this.isGeneratingScreenshot = false;
+        this.cdr.detectChanges();
+      }
+    }
+    if (!shareEzeeImages(filePaths, `Share Order ${this.order.number} Photos`)) {
+      await alert({
         title: 'Order Photos',
         message: 'Unable to open the share menu.',
         okButtonText: 'OK',

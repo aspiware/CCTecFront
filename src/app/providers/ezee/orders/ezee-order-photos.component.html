@@ -4,19 +4,29 @@
       <StackLayout col="0">
         <Label text="Order Photos" class="photos-title"></Label>
         <Label [text]="'Order #' + order.number + ' · ' + photos.length + ' photos'" class="photos-subtitle"></Label>
+        <Label [text]="order.address || 'Address unavailable'" textWrap="true" class="photos-address"></Label>
       </StackLayout>
       <Button col="1" [text]="selectedCount === photos.length && photos.length ? 'Clear' : 'Select All'"
         class="header-button" (tap)="toggleSelectAll()"></Button>
       <Label col="2" text="&#xf00d;" class="fas close-button" (tap)="close()"></Label>
     </GridLayout>
 
-    <GridLayout row="1">
-      <StackLayout *ngIf="!photos.length" verticalAlignment="middle" horizontalAlignment="center">
+    <GridLayout row="1" rows="auto,*">
+      <GridLayout row="0" columns="*,auto" class="screenshot-option">
+        <StackLayout col="0" verticalAlignment="middle">
+          <Label text="Include Order Screenshot" class="screenshot-title"></Label>
+          <Label text="Generate and attach it when sharing" class="screenshot-subtitle"></Label>
+        </StackLayout>
+        <Switch col="1" [checked]="includeOrderScreenshot" [isEnabled]="!isGeneratingScreenshot"
+          (checkedChange)="onIncludeScreenshotChanged($event)" verticalAlignment="middle"></Switch>
+      </GridLayout>
+
+      <StackLayout row="1" *ngIf="!photos.length" verticalAlignment="middle" horizontalAlignment="center">
         <Label text="&#xf03e;" class="fas empty-icon"></Label>
         <Label text="No photos saved for this order." class="empty-text"></Label>
       </StackLayout>
 
-      <ScrollView *ngIf="photos.length">
+      <ScrollView row="1" *ngIf="photos.length">
         <WrapLayout orientation="horizontal" class="photos-grid">
           <GridLayout *ngFor="let photo of photos" rows="*" columns="*"
             [width]="photoCellSize" [height]="photoCellSize" class="photo-cell">
@@ -32,13 +42,15 @@
     </GridLayout>
 
     <GridLayout row="2" columns="*,*" class="photos-footer">
-      <Button col="0" [text]="selectedCount ? 'Share Selected' : 'Share All'"
-        class="share-button" [isEnabled]="!!photos.length && !isDeleting" (tap)="share()"></Button>
-      <MenuButton col="1" [text]="isDeleting ? 'Deleting...' : 'Delete Selected'"
+      <MenuButton col="0" [text]="isDeleting ? 'Deleting...' : 'Delete Selected'"
         class="delete-button" [isEnabled]="!!selectedCount && !isDeleting"
         [isRightSide]="true" [options]="deleteMenu.options"
         (selected)="onDeleteMenuSelected($event)">
       </MenuButton>
+      <Button col="1" class="share-button"
+        [text]="isGeneratingScreenshot ? 'Generating...' : (selectedCount ? 'Share Selected' : (photos.length ? 'Share All' : 'Share Screenshot'))"
+        [isEnabled]="(!!photos.length || includeOrderScreenshot) && !isDeleting && !isGeneratingScreenshot"
+        (tap)="share()"></Button>
     </GridLayout>
 
     <GridLayout *ngIf="previewPhoto" row="0" rowSpan="3" class="preview-overlay">
