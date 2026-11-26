@@ -13,6 +13,11 @@ import {
 } from '@nativescript/core';
 import { EzeeOrderListItem } from './ezee-order.model';
 
+declare const CIImage: any;
+declare const CIContext: any;
+
+type IosPhotoAspectMode = 'full' | '4:3';
+
 @Injectable({ providedIn: 'root' })
 export class EzeeTimestampCameraService {
   private iosCameraDelegate?: UIImagePickerControllerDelegate & UINavigationControllerDelegate;
@@ -373,10 +378,29 @@ export class EzeeTimestampCameraService {
           return;
         }
         session.addOutput(photoOutput);
+        photoOutput.highResolutionCaptureEnabled = true;
+        photoOutput.maxPhotoQualityPrioritization = AVCapturePhotoQualityPrioritization.Quality;
 
         const previewLayer = AVCaptureVideoPreviewLayer.layerWithSession(session);
-        previewLayer.frame = bounds;
-        previewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
+        let aspectMode = this.savedIosPhotoAspectMode();
+        let captureAspectMode = aspectMode;
+        const applyAspectMode = (mode: IosPhotoAspectMode) => {
+          aspectMode = mode;
+          ApplicationSettings.setString('ezee-camera-aspect-mode', mode);
+          if (mode === '4:3') {
+            const previewHeight = bounds.size.width * (4 / 3);
+            previewLayer.frame = CGRectMake(
+              0,
+              (bounds.size.height - previewHeight) / 2,
+              bounds.size.width,
+              previewHeight
+            );
+          } else {
+            previewLayer.frame = bounds;
+          }
+          previewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
+        };
+        applyAspectMode(aspectMode);
         this.configureIosCaptureConnection(previewLayer.connection);
         this.configureIosCaptureConnection(photoOutput.connectionWithMediaType(AVMediaTypeVideo));
         controller.view.layer.addSublayer(previewLayer);
@@ -404,6 +428,33 @@ export class EzeeTimestampCameraService {
         );
         countLabel.textAlignment = NSTextAlignment.Center;
         overlay.addSubview(countLabel);
+
+        const formatControl = UISegmentedControl.alloc().initWithItems(['Full', '4:3']);
+        formatControl.frame = CGRectMake((bounds.size.width - 150) / 2, 82, 150, 34);
+        formatControl.selectedSegmentIndex = aspectMode === '4:3' ? 1 : 0;
+        formatControl.selectedSegmentTintColor = UIColor.whiteColor;
+        formatControl.backgroundColor = UIColor.colorWithWhiteAlpha(0, 0.5);
+        formatControl.setTitleTextAttributesForState(
+          NSDictionary.dictionaryWithObjectsForKeys(
+            [UIColor.whiteColor, UIFont.boldSystemFontOfSize(14)],
+            [NSForegroundColorAttributeName, NSFontAttributeName]
+          ),
+          UIControlState.Normal
+        );
+        formatControl.setTitleTextAttributesForState(
+          NSDictionary.dictionaryWithObjectsForKeys(
+            [UIColor.blackColor, UIFont.boldSystemFontOfSize(14)],
+            [NSForegroundColorAttributeName, NSFontAttributeName]
+          ),
+          UIControlState.Selected
+        );
+        formatControl.addActionForControlEvents(
+          UIAction.actionWithHandler(() => {
+            applyAspectMode(formatControl.selectedSegmentIndex === 1 ? '4:3' : 'full');
+          }),
+          UIControlEvents.ValueChanged
+        );
+        overlay.addSubview(formatControl);
 
         let photoCount = 0;
         let lastPhotoPath = '';
@@ -478,9 +529,13 @@ export class EzeeTimestampCameraService {
               return;
             }
             isCapturing = true;
+            captureAspectMode = aspectMode;
             shutter.alpha = 0.45;
+            const settings = AVCapturePhotoSettings.photoSettings();
+            settings.highResolutionPhotoEnabled = true;
+            settings.photoQualityPrioritization = AVCapturePhotoQualityPrioritization.Quality;
             photoOutput.capturePhotoWithSettingsDelegate(
-              AVCapturePhotoSettings.photoSettings(),
+              settings,
               this.iosPhotoCaptureDelegate!
             );
           }),
@@ -507,7 +562,7 @@ export class EzeeTimestampCameraService {
                 shutter.alpha = 1;
                 return;
               }
-              void service.saveContinuousIosPhoto(new ImageSource(image), order)
+              void service.saveContinuousIosPhoto(new ImageSource(image), order, captureAspectMode)
                 .then((filePath) => {
                   photoCount += 1;
                   lastPhotoPath = filePath;
@@ -551,10 +606,12 @@ export class EzeeTimestampCameraService {
 
   private async saveContinuousIosPhoto(
     source: ImageSource,
-    order: EzeeOrderListItem
+    order: EzeeOrderListItem,
+    aspectMode: IosPhotoAspectMode
   ): Promise<string> {
     const capturedAt = new Date();
-    const stamped = this.stampIos(source, order, capturedAt, this.latestLocation || null);
+    const cropped = this.prepareIosImageForAspect(source, aspectMode);
+    const stamped = this.stampIos(cropped, order, capturedAt, this.latestLocation || null);
     const folder = knownFolders.documents().getFolder('ezee-timestamp-photos');
     const fileName = `ezee-${this.safeFilePart(order.number)}-${this.fileTimestamp(capturedAt)}.jpg`;
     const filePath = path.join(folder.path, fileName);
@@ -570,6 +627,83 @@ export class EzeeTimestampCameraService {
       );
     });
     return filePath;
+  }
+
+  private prepareIosImageForAspect(
+    source: ImageSource,
+    aspectMode: IosPhotoAspectMode
+  ): ImageSource {
+    const original = source.ios as UIImage;
+    const originalCgImage = original.CGImage;
+    if (!originalCgImage) {
+      return source;
+    }
+    let image = CIImage.imageWithCGImage(originalCgImage)
+      .imageByApplyingCGOrientation(this.exifOrientation(original.imageOrientation));
+    const extent = image.extent;
+    let cropRect = extent;
+    if (aspectMode === 'full') {
+      const previewSize = UIScreen.mainScreen.bounds.size;
+      const previewAspect = previewSize.width / previewSize.height;
+      const sourceAspect = extent.size.width / extent.size.height;
+      let cropWidth = extent.size.width;
+      let cropHeight = extent.size.height;
+      if (sourceAspect > previewAspect) {
+        cropWidth = cropHeight * previewAspect;
+      } else {
+        cropHeight = cropWidth / previewAspect;
+      }
+      cropRect = CGRectMake(
+        extent.origin.x + ((extent.size.width - cropWidth) / 2),
+        extent.origin.y + ((extent.size.height - cropHeight) / 2),
+        cropWidth,
+        cropHeight
+      );
+    }
+    image = image.imageByCroppingToRect(cropRect);
+
+    const renderedExtent = image.extent;
+    const rendered = CIContext.context().createCGImageFromRect(image, renderedExtent);
+    if (!rendered) {
+      return source;
+    }
+    const cropped = UIImage.imageWithCGImageScaleOrientation(
+      rendered,
+      1,
+      UIImageOrientation.Up
+    );
+    console.log(
+      `[EzeeTimestampCamera] Prepared ${aspectMode} photo`,
+      `${Math.round(renderedExtent.size.width)}x${Math.round(renderedExtent.size.height)}`
+    );
+    return new ImageSource(cropped);
+  }
+
+  private savedIosPhotoAspectMode(): IosPhotoAspectMode {
+    return ApplicationSettings.getString('ezee-camera-aspect-mode', 'full') === '4:3'
+      ? '4:3'
+      : 'full';
+  }
+
+  private exifOrientation(orientation: UIImageOrientation): CGImagePropertyOrientation {
+    switch (orientation) {
+      case UIImageOrientation.Down:
+        return CGImagePropertyOrientation.kCGImagePropertyOrientationDown;
+      case UIImageOrientation.Left:
+        return CGImagePropertyOrientation.kCGImagePropertyOrientationLeft;
+      case UIImageOrientation.Right:
+        return CGImagePropertyOrientation.kCGImagePropertyOrientationRight;
+      case UIImageOrientation.UpMirrored:
+        return CGImagePropertyOrientation.kCGImagePropertyOrientationUpMirrored;
+      case UIImageOrientation.DownMirrored:
+        return CGImagePropertyOrientation.kCGImagePropertyOrientationDownMirrored;
+      case UIImageOrientation.LeftMirrored:
+        return CGImagePropertyOrientation.kCGImagePropertyOrientationLeftMirrored;
+      case UIImageOrientation.RightMirrored:
+        return CGImagePropertyOrientation.kCGImagePropertyOrientationRightMirrored;
+      default:
+        return CGImagePropertyOrientation.kCGImagePropertyOrientationUp;
+    }
   }
 
   private presentContinuousPhotoPreview(
