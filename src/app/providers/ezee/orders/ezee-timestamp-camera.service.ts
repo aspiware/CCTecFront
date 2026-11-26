@@ -13,7 +13,9 @@ import {
   isIOS,
   knownFolders,
   path,
+  PanGestureEventData,
   PinchGestureEventData,
+  TapGestureEventData,
   Utils,
 } from '@nativescript/core';
 import { EzeeOrderListItem } from './ezee-order.model';
@@ -46,6 +48,8 @@ export class EzeeTimestampCameraService {
   private iosDateLabel?: UILabel;
   private iosWeekdayLabel?: UILabel;
   private iosPinchZoomObserver?: GesturesObserver;
+  private iosTapFocusObserver?: GesturesObserver;
+  private iosExposurePanObserver?: GesturesObserver;
 
   public async captureContinuous(order: EzeeOrderListItem): Promise<number> {
     if (!isIOS || !camera.isAvailable()) {
@@ -622,6 +626,116 @@ export class EzeeTimestampCameraService {
         zoomIndicator.layer.masksToBounds = true;
         overlay.addSubview(zoomIndicator);
 
+        const focusColor = UIColor.colorWithRedGreenBlueAlpha(1, 0.82, 0.08, 1);
+        const focusBox = UIView.alloc().initWithFrame(CGRectMake(0, 0, 72, 72));
+        focusBox.backgroundColor = UIColor.clearColor;
+        focusBox.layer.borderColor = focusColor.CGColor;
+        focusBox.layer.borderWidth = 1.5;
+        focusBox.layer.cornerRadius = 3;
+        focusBox.hidden = true;
+        focusBox.userInteractionEnabled = false;
+        overlay.addSubview(focusBox);
+
+        const exposureTrack = UIView.alloc().initWithFrame(CGRectMake(0, 0, 2, 82));
+        exposureTrack.backgroundColor = UIColor.colorWithRedGreenBlueAlpha(1, 0.82, 0.08, 0.7);
+        exposureTrack.hidden = true;
+        exposureTrack.userInteractionEnabled = false;
+        overlay.addSubview(exposureTrack);
+
+        const exposureSun = UILabel.alloc().initWithFrame(CGRectMake(0, 0, 34, 34));
+        exposureSun.text = '\u2600\ufe0e';
+        exposureSun.textColor = focusColor;
+        exposureSun.font = UIFont.systemFontOfSize(28);
+        exposureSun.textAlignment = NSTextAlignment.Center;
+        exposureSun.hidden = true;
+        exposureSun.userInteractionEnabled = false;
+        overlay.addSubview(exposureSun);
+
+        let focusCenter = CGPointMake(bounds.size.width / 2, bounds.size.height / 2);
+        let exposurePanStartBias = 0;
+        let exposurePanActive = false;
+        let focusIndicatorTimer: ReturnType<typeof setTimeout> | undefined;
+        const hideFocusControl = () => {
+          focusBox.hidden = true;
+          exposureTrack.hidden = true;
+          exposureSun.hidden = true;
+        };
+        const scheduleFocusControlHide = () => {
+          if (focusIndicatorTimer) {
+            clearTimeout(focusIndicatorTimer);
+          }
+          focusIndicatorTimer = setTimeout(() => {
+            Utils.executeOnMainThread(() => {
+              hideFocusControl();
+              focusIndicatorTimer = undefined;
+            });
+          }, 2500);
+        };
+        const positionExposureControl = (bias: number) => {
+          const showOnLeft = focusCenter.x + 58 > bounds.size.width - 18;
+          const controlX = showOnLeft ? focusCenter.x - 52 : focusCenter.x + 50;
+          const trackTop = focusCenter.y - 41;
+          exposureTrack.frame = CGRectMake(controlX, trackTop, 2, 82);
+          const minBias = activeDevice.minExposureTargetBias;
+          const maxBias = activeDevice.maxExposureTargetBias;
+          const range = Math.max(0.1, maxBias - minBias);
+          const progress = Math.max(0, Math.min(1, (bias - minBias) / range));
+          exposureSun.frame = CGRectMake(controlX - 16, trackTop + ((1 - progress) * 82) - 17, 34, 34);
+        };
+        const showFocusControl = (point: CGPoint) => {
+          focusCenter = point;
+          focusBox.frame = CGRectMake(point.x - 36, point.y - 36, 72, 72);
+          focusBox.hidden = false;
+          exposureTrack.hidden = true;
+          exposureSun.hidden = false;
+          positionExposureControl(activeDevice.exposureTargetBias);
+          focusBox.transform = CGAffineTransformMakeScale(1.18, 1.18);
+          focusBox.alpha = 0.55;
+          UIView.animateWithDurationAnimations(0.18, () => {
+            focusBox.transform = CGAffineTransformIdentity;
+            focusBox.alpha = 1;
+          });
+          scheduleFocusControlHide();
+        };
+        const pointIsAvailableForFocus = (point: CGPoint) => {
+          const previewFrame = previewLayer.frame;
+          return point.x >= previewFrame.origin.x + 36 &&
+            point.x <= previewFrame.origin.x + previewFrame.size.width - 36 &&
+            point.y >= Math.max(previewFrame.origin.y + 36, 180) &&
+            point.y <= Math.min(
+              previewFrame.origin.y + previewFrame.size.height - 36,
+              bounds.size.height - 180
+            );
+        };
+        const focusAtPoint = (point: CGPoint) => {
+          if (!pointIsAvailableForFocus(point)) {
+            return;
+          }
+          const devicePoint = previewLayer.captureDevicePointOfInterestForPoint(point);
+          const focusError = new interop.Reference<NSError>();
+          if (!activeDevice.lockForConfiguration(focusError)) {
+            return;
+          }
+          if (
+            activeDevice.focusPointOfInterestSupported &&
+            activeDevice.isFocusModeSupported(AVCaptureFocusMode.AutoFocus)
+          ) {
+            activeDevice.focusPointOfInterest = devicePoint;
+            activeDevice.focusMode = AVCaptureFocusMode.AutoFocus;
+          }
+          if (
+            activeDevice.exposurePointOfInterestSupported &&
+            activeDevice.isExposureModeSupported(AVCaptureExposureMode.ContinuousAutoExposure)
+          ) {
+            activeDevice.exposurePointOfInterest = devicePoint;
+            activeDevice.exposureMode = AVCaptureExposureMode.ContinuousAutoExposure;
+            activeDevice.setExposureTargetBiasCompletionHandler(0, () => undefined);
+          }
+          activeDevice.unlockForConfiguration();
+          showFocusControl(point);
+          positionExposureControl(0);
+        };
+
         let pinchStartZoom = activeDevice.videoZoomFactor;
         const updateZoomIndicator = (zoom: number) => {
           zoomIndicator.text = `${zoom.toFixed(1)}\u00d7`;
@@ -660,6 +774,72 @@ export class EzeeTimestampCameraService {
           this
         );
         this.iosPinchZoomObserver.observe(GestureTypes.pinch);
+
+        this.iosTapFocusObserver = new GesturesObserver(
+          gestureTarget,
+          (event: TapGestureEventData) => {
+            focusAtPoint(CGPointMake(event.getX(), event.getY()));
+          },
+          this
+        );
+        this.iosTapFocusObserver.observe(GestureTypes.tap);
+        if (overlay.gestureRecognizers?.count) {
+          overlay.gestureRecognizers
+            .objectAtIndex(overlay.gestureRecognizers.count - 1)
+            .cancelsTouchesInView = false;
+        }
+
+        this.iosExposurePanObserver = new GesturesObserver(
+          gestureTarget,
+          (event: PanGestureEventData) => {
+            if (event.state === GestureStateTypes.began) {
+              const location = event.ios.locationInView(overlay);
+              const closeToFocus = !focusBox.hidden &&
+                Math.abs(location.x - focusCenter.x) <= 75 &&
+                Math.abs(location.y - focusCenter.y) <= 90;
+              exposurePanActive = event.ios.numberOfTouches === 1 && closeToFocus;
+              if (exposurePanActive) {
+                if (focusIndicatorTimer) {
+                  clearTimeout(focusIndicatorTimer);
+                  focusIndicatorTimer = undefined;
+                }
+                exposurePanStartBias = activeDevice.exposureTargetBias;
+                exposureTrack.hidden = false;
+              }
+              return;
+            }
+            if (!exposurePanActive) {
+              return;
+            }
+            if (event.state === GestureStateTypes.changed) {
+              const targetBias = Math.max(
+                activeDevice.minExposureTargetBias,
+                Math.min(
+                  activeDevice.maxExposureTargetBias,
+                  exposurePanStartBias - (event.deltaY / 55)
+                )
+              );
+              const exposureError = new interop.Reference<NSError>();
+              if (!activeDevice.lockForConfiguration(exposureError)) {
+                return;
+              }
+              activeDevice.setExposureTargetBiasCompletionHandler(targetBias, () => undefined);
+              activeDevice.unlockForConfiguration();
+              positionExposureControl(targetBias);
+              return;
+            }
+            exposurePanActive = false;
+            exposureTrack.hidden = true;
+            scheduleFocusControlHide();
+          },
+          this
+        );
+        this.iosExposurePanObserver.observe(GestureTypes.pan);
+        if (overlay.gestureRecognizers?.count) {
+          overlay.gestureRecognizers
+            .objectAtIndex(overlay.gestureRecognizers.count - 1)
+            .cancelsTouchesInView = false;
+        }
 
         const formatControl = UISegmentedControl.alloc().initWithItems(['Full', '4:3']);
         formatControl.frame = CGRectMake((bounds.size.width - 150) / 2, 92, 150, 34);
@@ -731,11 +911,19 @@ export class EzeeTimestampCameraService {
             return;
           }
           isFinished = true;
+          if (focusIndicatorTimer) {
+            clearTimeout(focusIndicatorTimer);
+            focusIndicatorTimer = undefined;
+          }
           session.stopRunning();
           controller.dismissViewControllerAnimatedCompletion(true, () => {
             this.iosPhotoCaptureDelegate = undefined;
             this.iosPinchZoomObserver?.disconnect();
             this.iosPinchZoomObserver = undefined;
+            this.iosTapFocusObserver?.disconnect();
+            this.iosTapFocusObserver = undefined;
+            this.iosExposurePanObserver?.disconnect();
+            this.iosExposurePanObserver = undefined;
             resolve(photoCount);
           });
         };
@@ -914,6 +1102,12 @@ export class EzeeTimestampCameraService {
               activeDevice = nextDevice;
               pinchStartZoom = activeDevice.videoZoomFactor;
               updateZoomIndicator(pinchStartZoom);
+              if (focusIndicatorTimer) {
+                clearTimeout(focusIndicatorTimer);
+                focusIndicatorTimer = undefined;
+              }
+              hideFocusControl();
+              exposurePanActive = false;
             } else {
               session.addInput(activeInput);
             }
@@ -1024,6 +1218,10 @@ export class EzeeTimestampCameraService {
         this.iosPhotoCaptureDelegate = undefined;
         this.iosPinchZoomObserver?.disconnect();
         this.iosPinchZoomObserver = undefined;
+        this.iosTapFocusObserver?.disconnect();
+        this.iosTapFocusObserver = undefined;
+        this.iosExposurePanObserver?.disconnect();
+        this.iosExposurePanObserver = undefined;
         reject(error);
       }
     });
