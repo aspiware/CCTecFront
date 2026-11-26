@@ -34,6 +34,7 @@ export interface EzeeOrderPhoto {
 export class EzeeTimestampCameraService {
   private iosCameraDelegate?: UIImagePickerControllerDelegate & UINavigationControllerDelegate;
   private iosPhotoCaptureDelegate?: AVCapturePhotoCaptureDelegate;
+  private iosPhotoPreviewScrollDelegate?: UIScrollViewDelegate;
   private iosCoordinateLabel?: UILabel;
   private locationWatchId?: number;
   private locationWatchStarting?: Promise<number>;
@@ -731,31 +732,51 @@ export class EzeeTimestampCameraService {
         thumbnailStrip.hidden = true;
         overlay.addSubview(thumbnailStrip);
 
-        const addPhotoThumbnail = (filePath: string) => {
-          const index = photoPaths.push(filePath) - 1;
-          const thumbnailButton = UIButton.buttonWithType(UIButtonType.Custom);
-          thumbnailButton.frame = CGRectMake(4 + (index * 62), 3, 58, 58);
-          thumbnailButton.backgroundColor = UIColor.colorWithWhiteAlpha(0, 0.5);
-          thumbnailButton.layer.cornerRadius = 8;
-          thumbnailButton.layer.borderColor = UIColor.whiteColor.CGColor;
-          thumbnailButton.layer.borderWidth = 1.5;
-          thumbnailButton.layer.masksToBounds = true;
-          thumbnailButton.imageView.contentMode = UIViewContentMode.ScaleAspectFill;
-          const thumbnail = ImageSource.fromFileSync(filePath);
-          thumbnailButton.setImageForState(thumbnail?.ios || null, UIControlState.Normal);
-          thumbnailButton.addActionForControlEvents(
-            UIAction.actionWithHandler(() => {
-              if (!isCapturing) {
-                this.presentContinuousPhotoPreview(controller, photoPaths.slice(), index);
-              }
-            }),
-            UIControlEvents.TouchUpInside
-          );
-          thumbnailStrip.addSubview(thumbnailButton);
+        const renderPhotoThumbnails = (scrollToLatest = false) => {
+          while (thumbnailStrip.subviews.count) {
+            thumbnailStrip.subviews.objectAtIndex(0).removeFromSuperview();
+          }
+          photoPaths.forEach((filePath, index) => {
+            const thumbnailButton = UIButton.buttonWithType(UIButtonType.Custom);
+            thumbnailButton.frame = CGRectMake(4 + (index * 62), 3, 58, 58);
+            thumbnailButton.backgroundColor = UIColor.colorWithWhiteAlpha(0, 0.5);
+            thumbnailButton.layer.cornerRadius = 8;
+            thumbnailButton.layer.borderColor = UIColor.whiteColor.CGColor;
+            thumbnailButton.layer.borderWidth = 1.5;
+            thumbnailButton.layer.masksToBounds = true;
+            thumbnailButton.imageView.contentMode = UIViewContentMode.ScaleAspectFill;
+            const thumbnail = ImageSource.fromFileSync(filePath);
+            thumbnailButton.setImageForState(thumbnail?.ios || null, UIControlState.Normal);
+            thumbnailButton.addActionForControlEvents(
+              UIAction.actionWithHandler(() => {
+                if (!isCapturing) {
+                  this.presentContinuousPhotoPreview(
+                    controller,
+                    order.number,
+                    photoPaths,
+                    index,
+                    () => {
+                      photoCount = photoPaths.length;
+                      renderPhotoThumbnails();
+                    }
+                  );
+                }
+              }),
+              UIControlEvents.TouchUpInside
+            );
+            thumbnailStrip.addSubview(thumbnailButton);
+          });
           thumbnailStrip.contentSize = CGSizeMake(8 + (photoPaths.length * 62), 64);
-          thumbnailStrip.hidden = false;
-          const latestX = Math.max(0, thumbnailStrip.contentSize.width - thumbnailStrip.bounds.size.width);
-          thumbnailStrip.setContentOffsetAnimated(CGPointMake(latestX, 0), true);
+          thumbnailStrip.hidden = !photoPaths.length;
+          if (scrollToLatest) {
+            const latestX = Math.max(0, thumbnailStrip.contentSize.width - thumbnailStrip.bounds.size.width);
+            thumbnailStrip.setContentOffsetAnimated(CGPointMake(latestX, 0), true);
+          }
+        };
+
+        const addPhotoThumbnail = (filePath: string) => {
+          photoPaths.push(filePath);
+          renderPhotoThumbnails(true);
         };
 
         const doneButton = UIButton.buttonWithType(UIButtonType.System);
@@ -1139,11 +1160,12 @@ export class EzeeTimestampCameraService {
 
   private presentContinuousPhotoPreview(
     cameraController: UIViewController,
+    orderNumber: string,
     filePaths: string[],
-    initialIndex: number
+    initialIndex: number,
+    onPhotosChanged: () => void
   ): void {
-    const availablePaths = filePaths.filter((filePath) => !!ImageSource.fromFileSync(filePath)?.ios);
-    if (!availablePaths.length) {
+    if (!filePaths.length) {
       return;
     }
 
@@ -1155,20 +1177,64 @@ export class EzeeTimestampCameraService {
     scrollView.pagingEnabled = true;
     scrollView.showsHorizontalScrollIndicator = false;
     scrollView.showsVerticalScrollIndicator = false;
-    scrollView.alwaysBounceHorizontal = availablePaths.length > 1;
-    scrollView.contentSize = CGSizeMake(bounds.size.width * availablePaths.length, bounds.size.height);
-    availablePaths.forEach((filePath, index) => {
-      const source = ImageSource.fromFileSync(filePath);
-      const imageView = UIImageView.alloc().initWithFrame(
-        CGRectMake(bounds.size.width * index, 0, bounds.size.width, bounds.size.height)
-      );
-      imageView.image = source?.ios || null;
-      imageView.contentMode = UIViewContentMode.ScaleAspectFit;
-      scrollView.addSubview(imageView);
-    });
-    const safeInitialIndex = Math.max(0, Math.min(availablePaths.length - 1, initialIndex));
-    scrollView.contentOffset = CGPointMake(bounds.size.width * safeInitialIndex, 0);
     preview.view.addSubview(scrollView);
+
+    const counterLabel = UILabel.alloc().initWithFrame(
+      CGRectMake((bounds.size.width - 90) / 2, bounds.size.height - 72, 90, 34)
+    );
+    counterLabel.backgroundColor = UIColor.colorWithWhiteAlpha(0, 0.62);
+    counterLabel.textColor = UIColor.whiteColor;
+    counterLabel.font = UIFont.boldSystemFontOfSize(14);
+    counterLabel.textAlignment = NSTextAlignment.Center;
+    counterLabel.layer.cornerRadius = 17;
+    counterLabel.layer.masksToBounds = true;
+    preview.view.addSubview(counterLabel);
+
+    const currentIndex = () => Math.max(
+      0,
+      Math.min(
+        filePaths.length - 1,
+        Math.round(scrollView.contentOffset.x / Math.max(1, bounds.size.width))
+      )
+    );
+    const updateCounter = () => {
+      counterLabel.text = filePaths.length ? `${currentIndex() + 1} / ${filePaths.length}` : '';
+    };
+    const renderPhotoPages = (selectedIndex: number) => {
+      while (scrollView.subviews.count) {
+        scrollView.subviews.objectAtIndex(0).removeFromSuperview();
+      }
+      scrollView.alwaysBounceHorizontal = filePaths.length > 1;
+      scrollView.contentSize = CGSizeMake(bounds.size.width * filePaths.length, bounds.size.height);
+      filePaths.forEach((filePath, index) => {
+        const source = ImageSource.fromFileSync(filePath);
+        const imageView = UIImageView.alloc().initWithFrame(
+          CGRectMake(bounds.size.width * index, 0, bounds.size.width, bounds.size.height)
+        );
+        imageView.image = source?.ios || null;
+        imageView.contentMode = UIViewContentMode.ScaleAspectFit;
+        scrollView.addSubview(imageView);
+      });
+      const safeIndex = Math.max(0, Math.min(filePaths.length - 1, selectedIndex));
+      scrollView.contentOffset = CGPointMake(bounds.size.width * safeIndex, 0);
+      updateCounter();
+    };
+
+    const owner = new WeakRef(this);
+    const ScrollDelegate = (NSObject as any).extend(
+      {
+        scrollViewDidScroll() {
+          updateCounter();
+        },
+      },
+      {
+        protocols: [UIScrollViewDelegate],
+        name: `EzeePhotoPreviewScrollDelegate${Date.now()}`,
+      }
+    );
+    this.iosPhotoPreviewScrollDelegate = ScrollDelegate.new();
+    scrollView.delegate = this.iosPhotoPreviewScrollDelegate;
+    renderPhotoPages(initialIndex);
 
     const closeButton = UIButton.buttonWithType(UIButtonType.System);
     closeButton.frame = CGRectMake(18, 48, 72, 42);
@@ -1180,10 +1246,120 @@ export class EzeeTimestampCameraService {
     closeButton.addActionForControlEvents(
       UIAction.actionWithHandler(() => {
         preview.dismissViewControllerAnimatedCompletion(true, null);
+        const service = owner.deref();
+        if (service) {
+          service.iosPhotoPreviewScrollDelegate = undefined;
+        }
       }),
       UIControlEvents.TouchUpInside
     );
     preview.view.addSubview(closeButton);
+
+    const deleteButton = UIButton.buttonWithType(UIButtonType.System);
+    deleteButton.frame = CGRectMake((bounds.size.width - 82) / 2, 48, 82, 42);
+    deleteButton.setTitleForState('Delete', UIControlState.Normal);
+    deleteButton.setTitleColorForState(UIColor.whiteColor, UIControlState.Normal);
+    deleteButton.titleLabel.font = UIFont.boldSystemFontOfSize(17);
+    deleteButton.backgroundColor = UIColor.colorWithRedGreenBlueAlpha(0.72, 0.12, 0.12, 0.82);
+    deleteButton.layer.cornerRadius = 11;
+
+    const showMessage = (title: string, message: string) => {
+      const alertController = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
+        title,
+        message,
+        UIAlertControllerStyle.Alert
+      );
+      alertController.addAction(
+        UIAlertAction.actionWithTitleStyleHandler('OK', UIAlertActionStyle.Default, null)
+      );
+      preview.presentViewControllerAnimatedCompletion(alertController, true, null);
+    };
+
+    const deleteCurrentPhoto = async (deleteEverywhere: boolean) => {
+      const index = currentIndex();
+      const filePath = filePaths[index];
+      const photo = this.getOrderPhotos(orderNumber).find((item) => item.path === filePath);
+      try {
+        let unlinkedGalleryCopies = 0;
+        if (photo) {
+          const result = await this.deleteOrderPhotos(orderNumber, [photo], deleteEverywhere);
+          unlinkedGalleryCopies = result.unlinkedGalleryCopies;
+        } else if (File.exists(filePath)) {
+          File.fromPath(filePath).removeSync();
+        }
+        filePaths.splice(index, 1);
+        onPhotosChanged();
+        if (!filePaths.length) {
+          preview.dismissViewControllerAnimatedCompletion(true, null);
+          this.iosPhotoPreviewScrollDelegate = undefined;
+          return;
+        }
+        renderPhotoPages(Math.min(index, filePaths.length - 1));
+        if (deleteEverywhere && unlinkedGalleryCopies) {
+          showMessage(
+            'Photo Deleted',
+            'The CCTec copy was deleted. This photo had no saved gallery link, so any Photos copy must be deleted manually.'
+          );
+        }
+      } catch (error) {
+        showMessage(
+          'Unable to Delete Photo',
+          String((error as any)?.localizedDescription || (error as any)?.message || error)
+        );
+      }
+    };
+
+    const confirmDelete = (deleteEverywhere: boolean) => {
+      const title = deleteEverywhere ? 'Delete Everywhere' : 'Delete from CCTec';
+      const confirmation = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
+        title,
+        deleteEverywhere
+          ? 'Delete this photo from CCTec and Photos when a gallery link is available?'
+          : 'Delete this photo from this order in CCTec?',
+        UIAlertControllerStyle.Alert
+      );
+      confirmation.addAction(
+        UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, null)
+      );
+      confirmation.addAction(
+        UIAlertAction.actionWithTitleStyleHandler('Delete', UIAlertActionStyle.Destructive, () => {
+          void deleteCurrentPhoto(deleteEverywhere);
+        })
+      );
+      preview.presentViewControllerAnimatedCompletion(confirmation, true, null);
+    };
+
+    deleteButton.addActionForControlEvents(
+      UIAction.actionWithHandler(() => {
+        const menu = UIAlertController.alertControllerWithTitleMessagePreferredStyle(
+          'Delete Photo',
+          null,
+          UIAlertControllerStyle.ActionSheet
+        );
+        menu.addAction(
+          UIAlertAction.actionWithTitleStyleHandler('Delete from CCTec', UIAlertActionStyle.Destructive, () => {
+            setTimeout(() => confirmDelete(false), 250);
+          })
+        );
+        menu.addAction(
+          UIAlertAction.actionWithTitleStyleHandler('Delete Everywhere', UIAlertActionStyle.Destructive, () => {
+            setTimeout(() => confirmDelete(true), 250);
+          })
+        );
+        menu.addAction(
+          UIAlertAction.actionWithTitleStyleHandler('Cancel', UIAlertActionStyle.Cancel, null)
+        );
+        const popover = menu.popoverPresentationController;
+        if (popover) {
+          popover.sourceView = deleteButton;
+          popover.sourceRect = deleteButton.bounds;
+          popover.permittedArrowDirections = UIPopoverArrowDirection.Any;
+        }
+        preview.presentViewControllerAnimatedCompletion(menu, true, null);
+      }),
+      UIControlEvents.TouchUpInside
+    );
+    preview.view.addSubview(deleteButton);
 
     const shareButton = UIButton.buttonWithType(UIButtonType.System);
     shareButton.frame = CGRectMake(bounds.size.width - 90, 48, 72, 42);
@@ -1194,14 +1370,7 @@ export class EzeeTimestampCameraService {
     shareButton.layer.cornerRadius = 11;
     shareButton.addActionForControlEvents(
       UIAction.actionWithHandler(() => {
-        const currentIndex = Math.max(
-          0,
-          Math.min(
-            availablePaths.length - 1,
-            Math.round(scrollView.contentOffset.x / Math.max(1, bounds.size.width))
-          )
-        );
-        const fileUrl = NSURL.fileURLWithPath(availablePaths[currentIndex]);
+        const fileUrl = NSURL.fileURLWithPath(filePaths[currentIndex()]);
         const activity = UIActivityViewController.alloc()
           .initWithActivityItemsApplicationActivities([fileUrl], []);
         const popover = activity.popoverPresentationController;
