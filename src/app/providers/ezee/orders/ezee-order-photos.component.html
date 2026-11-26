@@ -57,8 +57,11 @@
         (tap)="share()"></Button>
     </GridLayout>
 
-    <GridLayout *ngIf="previewPhoto" row="0" rowSpan="3" class="preview-overlay">
-      <Image [src]="previewPhoto.path" stretch="aspectFit" class="preview-image"></Image>
+    <GridLayout *ngIf="previewPhoto" row="0" rowSpan="3" class="preview-overlay"
+      (swipe)="onPreviewSwipe($event)">
+      <Image #previewImage [src]="previewPhoto.path" stretch="aspectFit" class="preview-image"></Image>
+      <Label [text]="previewPosition" class="preview-position" horizontalAlignment="center"
+        verticalAlignment="bottom"></Label>
       <Label text="&#xf00d;" class="fas preview-close" horizontalAlignment="right"
         verticalAlignment="top" (tap)="closePreview()"></Label>
     </GridLayout>

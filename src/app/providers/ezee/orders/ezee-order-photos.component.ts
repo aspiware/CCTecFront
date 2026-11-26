@@ -1,6 +1,20 @@
-import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnInit } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  NO_ERRORS_SCHEMA,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { ModalDialogParams, NativeScriptCommonModule } from '@nativescript/angular';
-import { Screen, alert, confirm } from '@nativescript/core';
+import {
+  Screen,
+  SwipeDirection,
+  SwipeGestureEventData,
+  View,
+  alert,
+  confirm,
+} from '@nativescript/core';
 import { MenuEvent } from '../../../shared/components/menu-button/common';
 import { Item } from '../../../shared/components/menu-button/item';
 import { shareEzeeImages } from '../ezee-file';
@@ -20,6 +34,7 @@ import { EzeeOrdersService } from './ezee-orders.service';
   styleUrl: './ezee-order-photos.component.scss',
 })
 export class EzeeOrderPhotosComponent implements OnInit {
+  @ViewChild('previewImage', { static: false }) private previewImageRef?: ElementRef<View>;
   public order: EzeeOrderListItem;
   public photos: EzeeOrderPhoto[] = [];
   public previewPhoto?: EzeeOrderPhoto;
@@ -36,6 +51,7 @@ export class EzeeOrderPhotosComponent implements OnInit {
   };
   private readonly selectedPaths = new Set<string>();
   private isUpdatingScreenshotToggle = false;
+  private isPreviewAnimating = false;
 
   public constructor(
     private modalParams: ModalDialogParams,
@@ -56,6 +72,14 @@ export class EzeeOrderPhotosComponent implements OnInit {
 
   public get hasOrderScreenshot(): boolean {
     return this.photos.some((photo) => photo.kind === 'screenshot');
+  }
+
+  public get previewPosition(): string {
+    if (!this.previewPhoto) {
+      return '';
+    }
+    const index = this.photos.findIndex((photo) => photo.path === this.previewPhoto?.path);
+    return index >= 0 ? `${index + 1} / ${this.photos.length}` : '';
   }
 
   public close(): void {
@@ -94,6 +118,51 @@ export class EzeeOrderPhotosComponent implements OnInit {
   public closePreview(): void {
     this.previewPhoto = undefined;
     this.cdr.detectChanges();
+  }
+
+  public async onPreviewSwipe(event: SwipeGestureEventData): Promise<void> {
+    if (!this.previewPhoto || this.isPreviewAnimating) {
+      return;
+    }
+    const currentIndex = this.photos.findIndex(
+      (photo) => photo.path === this.previewPhoto?.path
+    );
+    const nextIndex = event.direction === SwipeDirection.left
+      ? currentIndex + 1
+      : event.direction === SwipeDirection.right
+        ? currentIndex - 1
+        : currentIndex;
+    if (nextIndex < 0 || nextIndex >= this.photos.length || nextIndex === currentIndex) {
+      return;
+    }
+
+    const direction = nextIndex > currentIndex ? -1 : 1;
+    const imageView = this.previewImageRef?.nativeElement;
+    this.isPreviewAnimating = true;
+    try {
+      if (imageView) {
+        await imageView.animate({
+          translate: { x: direction * 55, y: 0 },
+          duration: 150,
+          curve: 'easeIn',
+        });
+      }
+      this.previewPhoto = this.photos[nextIndex];
+      this.cdr.detectChanges();
+      if (imageView) {
+        imageView.translateX = direction * -55;
+        await imageView.animate({
+          translate: { x: 0, y: 0 },
+          duration: 200,
+          curve: 'easeOut',
+        });
+      }
+    } finally {
+      if (imageView) {
+        imageView.translateX = 0;
+      }
+      this.isPreviewAnimating = false;
+    }
   }
 
   public async onIncludeScreenshotChanged(event: any): Promise<void> {
