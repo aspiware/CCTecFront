@@ -22,6 +22,7 @@ import {
   EzeeOrderListItem,
   EzeeOrdersDay,
   EzeeOrdersResponse,
+  EzeeOrdersByDateResponse,
 } from './ezee-order.model';
 
 @Injectable({ providedIn: 'root' })
@@ -30,11 +31,18 @@ export class EzeeOrdersService {
   private readonly summarySubject = new BehaviorSubject<EzeeOrdersDay>(this.emptySummary());
   private readonly loadingSubject = new BehaviorSubject<boolean>(false);
   private readonly errorSubject = new Subject<string>();
+  private readonly historyOrdersSubject = new BehaviorSubject<EzeeOrderListItem[]>([]);
+  private readonly historyLoadingSubject = new BehaviorSubject<boolean>(false);
+  private readonly historyErrorSubject = new Subject<string>();
+  private historyRequestId = 0;
 
   public readonly orders$ = this.ordersSubject.asObservable();
   public readonly summary$ = this.summarySubject.asObservable();
   public readonly loading$ = this.loadingSubject.asObservable();
   public readonly error$ = this.errorSubject.asObservable();
+  public readonly historyOrders$ = this.historyOrdersSubject.asObservable();
+  public readonly historyLoading$ = this.historyLoadingSubject.asObservable();
+  public readonly historyError$ = this.historyErrorSubject.asObservable();
 
   constructor(
     private httpClient: HttpClient,
@@ -306,6 +314,88 @@ export class EzeeOrdersService {
         );
       },
     });
+  }
+
+  public loadByDate(
+    startDate: string,
+    endDate: string,
+    onFinished?: (success: boolean) => void
+  ): void {
+    const requestId = ++this.historyRequestId;
+    const token = getString('token', '');
+    const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
+    const params = { startDate, endDate };
+    this.historyLoadingSubject.next(true);
+    this.historyErrorSubject.next('');
+    let succeeded = false;
+
+    this.httpClient.get<EzeeOrdersByDateResponse>(
+      `${this.configService.getUrlBase()}/ezee-fiber/orders/by-date`,
+      { headers, params }
+    ).pipe(
+      timeout(20000),
+      finalize(() => {
+        if (requestId === this.historyRequestId) {
+          this.historyLoadingSubject.next(false);
+        }
+        onFinished?.(succeeded);
+      })
+    ).subscribe({
+      next: (response) => {
+        if (requestId !== this.historyRequestId) {
+          return;
+        }
+        if (response?.error) {
+          this.historyOrdersSubject.next([]);
+          this.historyErrorSubject.next(response?.message || 'Unable to load orders.');
+          return;
+        }
+
+        const orders = Array.isArray(response?.data?.orders) ? response.data.orders : [];
+        this.historyOrdersSubject.next(orders.map((order) => this.normalizeHistoryOrder(order)));
+        succeeded = true;
+      },
+      error: (error) => {
+        if (requestId !== this.historyRequestId) {
+          return;
+        }
+        this.historyOrdersSubject.next([]);
+        this.historyErrorSubject.next(
+          String(error?.error?.message || error?.message || 'Unable to load orders.')
+        );
+      },
+    });
+  }
+
+  private normalizeHistoryOrder(order: any): EzeeOrderListItem {
+    const isCompleted = String(order?.state || order?.status || '').toLowerCase() === 'completed' ||
+      String(order?.status || '').toLowerCase() === 'complete';
+
+    return {
+      ...order,
+      number: String(order?.number || ''),
+      date: String(order?.date || ''),
+      status: String(order?.status || ''),
+      timeFrom: order?.timeFrom || null,
+      timeTo: order?.timeTo || null,
+      workType: String(order?.workType || ''),
+      initialReason: order?.initialReason || null,
+      workUnits: order?.workUnits ?? 0,
+      callFirst: order?.callFirst ?? null,
+      address: String(order?.address || ''),
+      detailPath: String(order?.detailPath || ''),
+      customer: order?.customer || {
+        subscriberNumber: '',
+        status: '',
+        fullName: '',
+        firstName: '',
+        lastName: '',
+        phones: [],
+        emails: [],
+        contactMethods: [],
+      },
+      workflowStatus: isCompleted ? 'Completed' : 'Pending',
+    };
   }
 
   private normalizeResponse(response: EzeeOrdersResponse): EzeeOrdersDay {

@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit, ViewContainerRef } from '@angular/core';
+import { ChangeDetectorRef, Component, Input, NO_ERRORS_SCHEMA, OnDestroy, OnInit, ViewContainerRef } from '@angular/core';
 import { ModalDialogService, NativeScriptCommonModule, RouterExtensions } from '@nativescript/angular';
 import { Application, ObservableArray, Page, Screen, SegmentedBarItem, Utils, alert } from '@nativescript/core';
 import { NativeScriptUIListViewModule } from 'nativescript-ui-listview/angular';
@@ -32,12 +32,15 @@ import { EzeeTimestampCameraService } from './ezee-timestamp-camera.service';
   styleUrl: '../../../today/today.component.scss',
 })
 export class EzeeOrdersComponent implements OnInit, OnDestroy {
+  @Input() public historyMode = false;
   public orders = new ObservableArray<EzeeOrderListItem>([]);
   public isLoading = false;
   public errorMessage = '';
   public reportDate = '';
   public reportDateValue = new Date();
   public todayDate = new Date();
+  public startDate = this.startOfCurrentWeek(new Date());
+  public endDate = this.endOfCurrentWeek(new Date());
   public todayTotal = 0;
   public weekTotal = 0;
   public totalUnits = 0;
@@ -99,7 +102,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       { name: 'Order Screenshot', icon: 'camera' },
     ],
   };
-  private allOrders: EzeeOrderListItem[] = [];
+  public allOrders: EzeeOrderListItem[] = [];
   private allWeekTotal = 0;
   private readonly actionTapStates: Record<string, boolean> = {};
   private readonly actionTapTimers: Record<string, any> = {};
@@ -115,6 +118,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
   private isErrorAlertOpen = false;
   private appearanceChangedHandler?: () => void;
   private readonly subscriptions = new Subscription();
+  private datePickersReady = false;
 
   constructor(
     private ordersService: EzeeOrdersService,
@@ -141,33 +145,51 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     };
     Application.on(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
 
-    this.subscriptions.add(this.ordersService.orders$.subscribe((orders) => {
+    const ordersSource = this.historyMode
+      ? this.ordersService.historyOrders$
+      : this.ordersService.orders$;
+    const loadingSource = this.historyMode
+      ? this.ordersService.historyLoading$
+      : this.ordersService.loading$;
+    const errorSource = this.historyMode
+      ? this.ordersService.historyError$
+      : this.ordersService.error$;
+
+    this.subscriptions.add(ordersSource.subscribe((orders) => {
       this.allOrders = orders;
+      if (this.historyMode) {
+        this.pendingCount = orders.filter((order) => order.workflowStatus === 'Pending').length;
+        this.completedCount = orders.filter((order) => order.workflowStatus === 'Completed').length;
+      }
       this.applyOrdersFilter();
       this.cdr.detectChanges();
     }));
-    this.subscriptions.add(this.ordersService.loading$.subscribe((isLoading) => {
+    this.subscriptions.add(loadingSource.subscribe((isLoading) => {
       this.isLoading = isLoading;
       this.cdr.detectChanges();
     }));
-    this.subscriptions.add(this.ordersService.summary$.subscribe((summary) => {
-      this.reportDate = summary.date;
-      if (summary.date) {
-        this.reportDateValue = new Date(`${summary.date}T12:00:00`);
-      }
-      this.pendingCount = summary.pending.count;
-      this.completedCount = summary.completed.count;
-      this.cdr.detectChanges();
-    }));
-    this.subscriptions.add(this.ordersService.error$.subscribe((message) => {
+    if (!this.historyMode) {
+      this.subscriptions.add(this.ordersService.summary$.subscribe((summary) => {
+        this.reportDate = summary.date;
+        if (summary.date) {
+          this.reportDateValue = new Date(`${summary.date}T12:00:00`);
+        }
+        this.pendingCount = summary.pending.count;
+        this.completedCount = summary.completed.count;
+        this.cdr.detectChanges();
+      }));
+    }
+    this.subscriptions.add(errorSource.subscribe((message) => {
       this.errorMessage = message;
       this.cdr.detectChanges();
       if (message) {
         this.showOrdersError(message);
       }
     }));
-    this.ordersService.loadToday();
-    this.loadWeeklyTotal();
+    this.reloadOrders();
+    if (!this.historyMode) {
+      this.loadWeeklyTotal();
+    }
   }
 
   public ngOnDestroy(): void {
@@ -179,8 +201,10 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
   }
 
   public refresh(): void {
-    this.ordersService.loadToday();
-    this.loadWeeklyTotal(true);
+    this.reloadOrders();
+    if (!this.historyMode) {
+      this.loadWeeklyTotal(true);
+    }
   }
 
   private async showOrdersError(message: string): Promise<void> {
@@ -537,13 +561,40 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
 
   public onRootLoaded(): void {
     this.syncTheme();
+    setTimeout(() => {
+      this.datePickersReady = true;
+    }, 0);
     this.cdr.detectChanges();
+  }
+
+  public onStartDateChange(event: any): void {
+    if (!this.historyMode || !this.datePickersReady) {
+      return;
+    }
+    this.startDate = event?.value instanceof Date ? event.value : this.startDate;
+    if (this.startDate > this.endDate) {
+      this.endDate = new Date(this.startDate);
+    }
+    this.reloadOrders();
+  }
+
+  public onEndDateChange(event: any): void {
+    if (!this.historyMode || !this.datePickersReady) {
+      return;
+    }
+    this.endDate = event?.value instanceof Date ? event.value : this.endDate;
+    if (this.endDate < this.startDate) {
+      this.startDate = new Date(this.endDate);
+    }
+    this.reloadOrders();
   }
 
   public onPullToRefresh(event: any): void {
     const listView = event?.object;
-    this.loadWeeklyTotal(true);
-    this.ordersService.loadToday(() => {
+    if (!this.historyMode) {
+      this.loadWeeklyTotal(true);
+    }
+    this.reloadOrders(() => {
       listView?.notifyPullToRefreshFinished?.();
       listView?.scrollToIndex?.(0, false);
     });
@@ -766,7 +817,10 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
 
     this.modalService.showModal(EzeeEditOrderComponent, options).then((result) => {
       if (result) {
-        this.ordersService.loadToday((success) => {
+        this.reloadOrders((success) => {
+          if (this.historyMode) {
+            return;
+          }
           const refreshedOrder = this.allOrders.find((item) => item.number === order.number);
           const refreshedTotal = Number(refreshedOrder?.pricing?.total);
           const priceDelta = refreshedTotal - Number(result.previousTotal);
@@ -1071,6 +1125,39 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     return Math.round((value + Number.EPSILON) * 100) / 100;
   }
 
+  private reloadOrders(onFinished?: (success: boolean) => void): void {
+    if (this.historyMode) {
+      this.ordersService.loadByDate(
+        this.formatDateParam(this.startDate),
+        this.formatDateParam(this.endDate),
+        onFinished
+      );
+      return;
+    }
+    this.ordersService.loadToday(onFinished);
+  }
+
+  private formatDateParam(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private startOfCurrentWeek(date: Date): Date {
+    const start = new Date(date);
+    start.setDate(start.getDate() - start.getDay());
+    start.setHours(0, 0, 0, 0);
+    return start;
+  }
+
+  private endOfCurrentWeek(date: Date): Date {
+    const end = this.startOfCurrentWeek(date);
+    end.setDate(end.getDate() + 6);
+    end.setHours(23, 59, 59, 999);
+    return end;
+  }
+
   private loadWeeklyTotal(forceRefresh = false): void {
     this.subscriptions.add(
       this.summaryService.getCurrentWeek(forceRefresh).subscribe({
@@ -1112,7 +1199,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
           message: response?.message || 'Work order note added successfully.',
           okButtonText: 'OK',
         });
-        this.ordersService.loadToday();
+        this.reloadOrders();
       },
       error: (error) => {
         const message = String(
@@ -1157,7 +1244,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
             : successMessage,
           okButtonText: 'OK',
         });
-        this.ordersService.loadToday();
+        this.reloadOrders();
       },
       error: (error) => {
         const message = String(

@@ -1,4 +1,4 @@
-<ActionBar class="action-bar" title="Today’s Orders">
+<ActionBar class="action-bar" [title]="historyMode ? 'Orders (' + allOrders.length + ')' : 'Today’s Orders'">
   <ActionItem ios.position="right" ios.systemIcon="13" [visibility]="isLoading ? 'collapse' : 'visible'"
     [isEnabled]="!isLoading" (tap)="refresh()">
   </ActionItem>
@@ -34,7 +34,33 @@
 </ActionBar>
 
 <StackLayout [class]="'container ' + (isDarkTheme ? 'theme-dark' : 'theme-light')" (loaded)="onRootLoaded()">
-  <GridLayout rows="auto" columns="*" style="margin-left: 10; margin-right: 10; margin-top: 10;">
+  <GridLayout *ngIf="historyMode" rows="auto,auto" columns="*"
+    style="margin-left: 10; margin-right: 10; margin-top: 10;">
+    <GridLayout row="0" columns="*,*" style="margin-bottom: 10;">
+      <StackLayout col="0" horizontalAlignment="left">
+        <Label text="From" class="secondRow"></Label>
+        <DatePicker class="today-date-picker" [date]="startDate"
+          (dateChange)="onStartDateChange($event)"></DatePicker>
+      </StackLayout>
+      <StackLayout col="1" horizontalAlignment="right">
+        <Label text="To" class="secondRow"></Label>
+        <DatePicker class="today-date-picker" [date]="endDate"
+          (dateChange)="onEndDateChange($event)"></DatePicker>
+      </StackLayout>
+    </GridLayout>
+
+    <GridLayout row="1" columns="*,auto" class="input-shell" width="100%">
+      <TextField col="0" hint="Search orders" [text]="ordersSearch"
+        (textChange)="onOrdersSearchChange($event.value)" class="custom-tf-inline">
+      </TextField>
+      <Label col="1" class="search-icon fas"
+        [text]="ordersSearch?.trim() ? '&#xf057;' : '&#xf002;'"
+        [isUserInteractionEnabled]="!!ordersSearch?.trim()" (tap)="clearOrdersSearch()">
+      </Label>
+    </GridLayout>
+  </GridLayout>
+
+  <GridLayout *ngIf="!historyMode" rows="auto" columns="*" style="margin-left: 10; margin-right: 10; margin-top: 10;">
     <StackLayout horizontalAlignment="left" orientation="horizontal">
       <Label class="action-bar-title today-label" [text]="'Today: ' + (todayTotal | currency)"></Label>
     </StackLayout>
@@ -86,7 +112,8 @@
           </GridLayout>
 
           <GridLayout columns="*,auto" style="margin-bottom: 10;">
-            <Label col="0" class="second-row" [text]="orderTime(order)"></Label>
+            <Label col="0" class="second-row"
+              [text]="(historyMode ? (order.date | date: 'EEE, MMM d') + ' · ' : '') + orderTime(order)"></Label>
             <Label col="1" class="second-row" [text]="order.customer.fullName || ''"></Label>
           </GridLayout>
 

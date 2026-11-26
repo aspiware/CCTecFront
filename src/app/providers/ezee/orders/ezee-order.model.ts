@@ -247,6 +247,7 @@ export interface EzeeOrder {
   timeFrom: string | null;
   timeTo: string | null;
   workType: string;
+  workTypeDescription?: string;
   initialReason: string | null;
   workUnits: unknown;
   callFirst: unknown;
@@ -278,4 +279,20 @@ export interface EzeeOrdersResponse {
   message: string;
   error: boolean;
   data: EzeeOrdersDay;
+}
+
+export interface EzeeOrdersByDateResponse {
+  statusCode: number;
+  message: string;
+  error: boolean;
+  data: {
+    startDate: string;
+    endDate: string;
+    count: number;
+    orders: Array<Partial<EzeeOrder> & {
+      number: string;
+      date: string;
+      state?: string;
+    }>;
+  };
 }
