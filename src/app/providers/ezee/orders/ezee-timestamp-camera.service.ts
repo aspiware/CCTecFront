@@ -1099,50 +1099,50 @@ export class EzeeTimestampCameraService {
     const timeY = panelTop + (112 * scale);
     drawText(
       timeParts.time,
-      CGRectMake(left, timeY, 270 * scale, 112 * scale),
-      UIFont.systemFontOfSizeWeight(104 * scale, UIFontWeightLight)
+      CGRectMake(left, timeY, 300 * scale, 126 * scale),
+      UIFont.systemFontOfSizeWeight(112 * scale, UIFontWeightLight)
     );
     drawText(
       timeParts.meridiem,
       CGRectMake(left + (270 * scale), timeY + (7 * scale), 70 * scale, 40 * scale),
-      UIFont.systemFontOfSize(31 * scale)
+      UIFont.systemFontOfSize(34 * scale)
     );
     UIColor.colorWithRedGreenBlueAlpha(1, 0.71, 0.05, 1).setFill();
     UIRectFill(CGRectMake(left + (350 * scale), timeY + (6 * scale), 5 * scale, 102 * scale));
     drawText(
       this.dateText(capturedAt),
       CGRectMake(left + (375 * scale), timeY + (4 * scale), 450 * scale, 52 * scale),
-      UIFont.systemFontOfSize(39 * scale)
+      UIFont.systemFontOfSize(43 * scale)
     );
     drawText(
       this.weekdayText(capturedAt),
       CGRectMake(left + (375 * scale), timeY + (58 * scale), 220 * scale, 48 * scale),
-      UIFont.systemFontOfSize(37 * scale)
+      UIFont.systemFontOfSize(41 * scale)
     );
 
     const detailsY = panelTop + (235 * scale);
     drawText(
       this.formatAddress(order?.address),
       CGRectMake(left, detailsY, width - (left * 2), 48 * scale),
-      UIFont.systemFontOfSize(27 * scale)
+      UIFont.systemFontOfSize(30 * scale)
     );
     drawText(
       this.coordinateText(location),
       CGRectMake(left, detailsY + (50 * scale), width - (left * 2), 40 * scale),
-      UIFont.systemFontOfSize(27 * scale)
+      UIFont.systemFontOfSize(30 * scale)
     );
     drawText(
       `Order #: ${String(order?.number || 'n/a')}`,
       CGRectMake(left, detailsY + (96 * scale), 430 * scale, 38 * scale),
-      UIFont.systemFontOfSize(28 * scale)
+      UIFont.systemFontOfSize(31 * scale)
     );
     drawText(
       `Tech: ${technician}`,
       CGRectMake(left, detailsY + (140 * scale), width - (left * 2), 40 * scale),
-      UIFont.systemFontOfSize(29 * scale)
+      UIFont.systemFontOfSize(32 * scale)
     );
     const creditText = NSString.stringWithString('Photo by CCTec');
-    const creditFont = UIFont.systemFontOfSize(25 * scale);
+    const creditFont = UIFont.systemFontOfSize(28 * scale);
     const creditAttributes = NSDictionary.dictionaryWithObjectsForKeys<string, any>(
       [creditFont, UIColor.whiteColor],
       [NSFontAttributeName, NSForegroundColorAttributeName]
