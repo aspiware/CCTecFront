@@ -610,7 +610,23 @@ export class EzeeTimestampCameraService {
         overlay.multipleTouchEnabled = true;
         controller.view.addSubview(overlay);
 
+        const zoomIndicator = this.makeOverlayLabel(
+          CGRectMake((bounds.size.width - 68) / 2, bounds.size.height - 166, 68, 38),
+          '1.0\u00d7',
+          1
+        );
+        zoomIndicator.font = UIFont.boldSystemFontOfSize(19);
+        zoomIndicator.textAlignment = NSTextAlignment.Center;
+        zoomIndicator.backgroundColor = UIColor.colorWithWhiteAlpha(0.28, 0.48);
+        zoomIndicator.layer.cornerRadius = 12;
+        zoomIndicator.layer.masksToBounds = true;
+        overlay.addSubview(zoomIndicator);
+
         let pinchStartZoom = activeDevice.videoZoomFactor;
+        const updateZoomIndicator = (zoom: number) => {
+          zoomIndicator.text = `${zoom.toFixed(1)}\u00d7`;
+        };
+        updateZoomIndicator(pinchStartZoom);
         const gestureTarget = {
           nativeViewProtected: overlay,
           isLoaded: true,
@@ -623,6 +639,7 @@ export class EzeeTimestampCameraService {
           (event: PinchGestureEventData) => {
           if (event.state === GestureStateTypes.began) {
             pinchStartZoom = activeDevice.videoZoomFactor;
+            updateZoomIndicator(pinchStartZoom);
           }
           if (
             event.state !== GestureStateTypes.began &&
@@ -638,6 +655,7 @@ export class EzeeTimestampCameraService {
           }
           activeDevice.videoZoomFactor = targetZoom;
           activeDevice.unlockForConfiguration();
+          updateZoomIndicator(targetZoom);
           },
           this
         );
@@ -894,6 +912,8 @@ export class EzeeTimestampCameraService {
               session.addInput(nextInput);
               activeInput = nextInput;
               activeDevice = nextDevice;
+              pinchStartZoom = activeDevice.videoZoomFactor;
+              updateZoomIndicator(pinchStartZoom);
             } else {
               session.addInput(activeInput);
             }
