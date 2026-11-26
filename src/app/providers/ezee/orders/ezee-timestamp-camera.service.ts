@@ -225,22 +225,22 @@ export class EzeeTimestampCameraService {
 
   private buildIosCameraOverlay(
     bounds: CGRect,
-    order: EzeeOrderListItem
-  ): { overlay: UIView; coordinateLabel: UILabel } {
+    order: EzeeOrderListItem,
+    initialContentFrame: CGRect = bounds
+  ): {
+    overlay: UIView;
+    coordinateLabel: UILabel;
+    updateContentFrame: (contentFrame: CGRect) => void;
+  } {
     const overlay = UIView.alloc().initWithFrame(bounds);
     overlay.backgroundColor = UIColor.clearColor;
     overlay.userInteractionEnabled = false;
     overlay.autoresizingMask = UIViewAutoresizing.FlexibleWidth | UIViewAutoresizing.FlexibleHeight;
 
-    const left = 18;
-    const bottom = 126;
-    const contentWidth = bounds.size.width - (left * 2);
-    const startY = bounds.size.height - bottom - 310;
-    const logo = UIView.alloc().initWithFrame(CGRectMake(left, startY, 142, 62));
+    const logo = UIView.new();
     logo.backgroundColor = UIColor.colorWithWhiteAlpha(1, 0.92);
-    logo.layer.cornerRadius = 9;
     logo.layer.masksToBounds = true;
-    const ezeeLogo = UIImageView.alloc().initWithFrame(CGRectMake(8, 7, 126, 48));
+    const ezeeLogo = UIImageView.new();
     ezeeLogo.image = this.iosEzeeLogo();
     ezeeLogo.contentMode = UIViewContentMode.ScaleAspectFit;
     logo.addSubview(ezeeLogo);
@@ -248,77 +248,128 @@ export class EzeeTimestampCameraService {
 
     const now = new Date();
     const timeParts = this.timeParts(now);
-    const time = this.makeOverlayLabel(CGRectMake(left, startY + 72, 145, 66), timeParts.time, 58);
-    time.font = UIFont.systemFontOfSizeWeight(58, UIFontWeightLight);
+    const time = this.makeOverlayLabel(CGRectZero, timeParts.time, 1);
     overlay.addSubview(time);
-    const meridiem = this.makeOverlayLabel(CGRectMake(left + 145, startY + 74, 36, 25), timeParts.meridiem, 17);
+    const meridiem = this.makeOverlayLabel(CGRectZero, timeParts.meridiem, 1);
     overlay.addSubview(meridiem);
 
-    const divider = UIView.alloc().initWithFrame(CGRectMake(left + 183, startY + 76, 3, 61));
+    const divider = UIView.new();
     divider.backgroundColor = UIColor.colorWithRedGreenBlueAlpha(1, 0.71, 0.05, 1);
     overlay.addSubview(divider);
-    const date = this.makeOverlayLabel(
-      CGRectMake(left + 198, startY + 76, contentWidth - 198, 31),
-      this.dateText(now),
-      21
-    );
+    const date = this.makeOverlayLabel(CGRectZero, this.dateText(now), 1);
     overlay.addSubview(date);
-    const weekday = this.makeOverlayLabel(
-      CGRectMake(left + 198, startY + 108, contentWidth - 198, 29),
-      this.weekdayText(now),
-      20
-    );
+    const weekday = this.makeOverlayLabel(CGRectZero, this.weekdayText(now), 1);
     overlay.addSubview(weekday);
     this.startIosClock(time, meridiem, date, weekday);
 
-    const address = this.makeOverlayLabel(
-      CGRectMake(left, startY + 145, contentWidth, 40),
-      this.formatAddress(order?.address),
-      15
-    );
+    const address = this.makeOverlayLabel(CGRectZero, this.formatAddress(order?.address), 1);
     address.numberOfLines = 2;
     overlay.addSubview(address);
-    const coordinates = this.makeOverlayLabel(
-      CGRectMake(left, startY + 188, contentWidth, 28),
-      'Coordinate: locating…',
-      15
-    );
+    const coordinates = this.makeOverlayLabel(CGRectZero, 'Coordinate: locating…', 1);
     overlay.addSubview(coordinates);
     const orderLabel = this.makeOverlayLabel(
-      CGRectMake(left, startY + 221, contentWidth, 26),
+      CGRectZero,
       `Order #: ${String(order?.number || 'n/a')}`,
-      15
+      1
     );
     overlay.addSubview(orderLabel);
     const technician = this.makeOverlayLabel(
-      CGRectMake(left, startY + 251, contentWidth, 28),
+      CGRectZero,
       `Tech: ${this.getTechnician() || 'unavailable'}`,
-      16
+      1
     );
     overlay.addSubview(technician);
-    const credit = this.makeOverlayLabel(
-      CGRectMake(0, 0, 1, 22),
-      'Photo by CCTec',
-      12
-    );
+    const credit = this.makeOverlayLabel(CGRectZero, 'Photo by CCTec', 1);
     credit.textAlignment = NSTextAlignment.Left;
-    credit.sizeToFit();
-    const creditWidth = credit.frame.size.width;
-    const creditX = bounds.size.width - 18 - creditWidth;
-    credit.frame = CGRectMake(creditX, bounds.size.height - 29, creditWidth, 22);
     const appIcon = this.iosAppIcon();
+    let iconView: UIImageView | null = null;
     if (appIcon) {
-      const iconView = UIImageView.alloc().initWithFrame(
-        CGRectMake(creditX - 28, bounds.size.height - 31, 24, 24)
-      );
+      iconView = UIImageView.new();
       iconView.image = appIcon;
       iconView.contentMode = UIViewContentMode.ScaleAspectFit;
-      iconView.layer.cornerRadius = 5;
       iconView.layer.masksToBounds = true;
       overlay.addSubview(iconView);
     }
     overlay.addSubview(credit);
-    return { overlay, coordinateLabel: coordinates };
+
+    const updateContentFrame = (contentFrame: CGRect) => {
+      const scale = contentFrame.size.width / 1200;
+      const left = contentFrame.origin.x + (34 * scale);
+      const contentWidth = contentFrame.size.width - (68 * scale);
+      const isFourThreePreview = contentFrame.size.height < bounds.size.height;
+      const contentBottom = contentFrame.origin.y + contentFrame.size.height -
+        (isFourThreePreview ? 8 : 0);
+      const panelTop = contentBottom - (464 * scale);
+
+      logo.frame = CGRectMake(left, panelTop, 250 * scale, 100 * scale);
+      logo.layer.cornerRadius = 14 * scale;
+      ezeeLogo.frame = CGRectMake(12 * scale, 12 * scale, 226 * scale, 76 * scale);
+
+      const timeY = panelTop + (112 * scale);
+      time.frame = CGRectMake(left, timeY, 300 * scale, 126 * scale);
+      time.font = UIFont.systemFontOfSizeWeight(112 * scale, UIFontWeightLight);
+      meridiem.frame = CGRectMake(
+        left + (270 * scale),
+        timeY + (7 * scale),
+        70 * scale,
+        40 * scale
+      );
+      meridiem.font = UIFont.systemFontOfSize(34 * scale);
+      divider.frame = CGRectMake(
+        left + (350 * scale),
+        timeY + (6 * scale),
+        5 * scale,
+        102 * scale
+      );
+      date.frame = CGRectMake(
+        left + (375 * scale),
+        timeY + (4 * scale),
+        450 * scale,
+        52 * scale
+      );
+      date.font = UIFont.systemFontOfSize(43 * scale);
+      weekday.frame = CGRectMake(
+        left + (375 * scale),
+        timeY + (58 * scale),
+        220 * scale,
+        48 * scale
+      );
+      weekday.font = UIFont.systemFontOfSize(41 * scale);
+
+      const detailsY = panelTop + (235 * scale);
+      address.frame = CGRectMake(left, detailsY, contentWidth, 48 * scale);
+      address.font = UIFont.systemFontOfSize(30 * scale);
+      coordinates.frame = CGRectMake(left, detailsY + (50 * scale), contentWidth, 40 * scale);
+      coordinates.font = UIFont.systemFontOfSize(30 * scale);
+      orderLabel.frame = CGRectMake(left, detailsY + (96 * scale), 430 * scale, 38 * scale);
+      orderLabel.font = UIFont.systemFontOfSize(31 * scale);
+      technician.frame = CGRectMake(left, detailsY + (140 * scale), contentWidth, 40 * scale);
+      technician.font = UIFont.systemFontOfSize(32 * scale);
+
+      credit.font = UIFont.systemFontOfSize(28 * scale);
+      credit.sizeToFit();
+      const creditX = contentFrame.origin.x + contentFrame.size.width -
+        (90 * scale) - credit.frame.size.width;
+      const creditY = contentBottom - (44 * scale) - credit.frame.size.height;
+      credit.frame = CGRectMake(
+        creditX,
+        creditY,
+        credit.frame.size.width,
+        credit.frame.size.height
+      );
+      if (iconView) {
+        const iconSize = 36 * scale;
+        iconView.frame = CGRectMake(
+          creditX - iconSize - (5 * scale),
+          contentBottom - (44 * scale) - iconSize,
+          iconSize,
+          iconSize
+        );
+        iconView.layer.cornerRadius = 5 * scale;
+      }
+    };
+    updateContentFrame(initialContentFrame);
+    return { overlay, coordinateLabel: coordinates, updateContentFrame };
   }
 
   private makeOverlayLabel(
@@ -384,28 +435,33 @@ export class EzeeTimestampCameraService {
         const previewLayer = AVCaptureVideoPreviewLayer.layerWithSession(session);
         let aspectMode = this.savedIosPhotoAspectMode();
         let captureAspectMode = aspectMode;
+        let updateOverlayContentFrame: ((contentFrame: CGRect) => void) | undefined;
+        const previewFrameForMode = (mode: IosPhotoAspectMode): CGRect => {
+          if (mode !== '4:3') {
+            return bounds;
+          }
+          const previewHeight = bounds.size.width * (4 / 3);
+          return CGRectMake(
+            0,
+            (bounds.size.height - previewHeight) / 2,
+            bounds.size.width,
+            previewHeight
+          );
+        };
         const applyAspectMode = (mode: IosPhotoAspectMode) => {
           aspectMode = mode;
           ApplicationSettings.setString('ezee-camera-aspect-mode', mode);
-          if (mode === '4:3') {
-            const previewHeight = bounds.size.width * (4 / 3);
-            previewLayer.frame = CGRectMake(
-              0,
-              (bounds.size.height - previewHeight) / 2,
-              bounds.size.width,
-              previewHeight
-            );
-          } else {
-            previewLayer.frame = bounds;
-          }
+          previewLayer.frame = previewFrameForMode(mode);
           previewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
+          updateOverlayContentFrame?.(previewLayer.frame);
         };
         applyAspectMode(aspectMode);
         this.configureIosCaptureConnection(previewLayer.connection);
         this.configureIosCaptureConnection(photoOutput.connectionWithMediaType(AVMediaTypeVideo));
         controller.view.layer.addSublayer(previewLayer);
 
-        const overlayResult = this.buildIosCameraOverlay(bounds, order);
+        const overlayResult = this.buildIosCameraOverlay(bounds, order, previewLayer.frame);
+        updateOverlayContentFrame = overlayResult.updateContentFrame;
         const overlay = overlayResult.overlay;
         const coordinateLabel = overlayResult.coordinateLabel;
         this.iosCoordinateLabel = coordinateLabel;
