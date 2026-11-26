@@ -97,8 +97,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       { name: 'Add Install Note', icon: 'text.badge.plus' },
       { name: 'OSP Template', icon: 'ticket.fill' },
       { name: 'Finalize', icon: 'checkmark.circle.fill' },
-      { name: 'Timestamp Photo', icon: 'camera.viewfinder' },
-      { name: 'Continuous Photos', icon: 'camera.badge.ellipsis' },
+      { name: 'Take Photo', icon: 'camera.viewfinder' },
       { name: 'Order Screenshot', icon: 'camera' },
     ],
   };
@@ -260,45 +259,34 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
   public onSelectedOrderMenu(event: MenuEvent, order: EzeeOrderListItem): void {
     this.selectOrder(order);
     const selected = this.orderMenu.options[event?.index ?? 0];
-    if (event?.index === 0) {
-      this.setOrderEnroute(order);
-      return;
-    }
-    if (event?.index === 1) {
-      this.setOrderInProgress(order);
-      return;
-    }
-    if (event?.index === 2) {
-      this.preProvisionOrder(order);
-      return;
-    }
-    if (event?.index === 3) {
-      this.openAddNoteModal(order);
-      return;
-    }
-    if (event?.index === 4) {
-      this.addInstallNote(order);
-      return;
-    }
-    if (event?.index === 5) {
-      this.openOspTicketTemplate(order);
-      return;
-    }
-    if (event?.index === 6) {
-      this.openFinalizeModal(order);
-      return;
-    }
-    if (selected?.name === 'Timestamp Photo') {
-      void this.captureTimestampPhoto(order);
-      return;
-    }
-    if (selected?.name === 'Continuous Photos') {
-      void this.captureContinuousPhotos(order);
-      return;
-    }
-    if (selected?.name === 'Order Screenshot') {
-      void this.captureOrderScreenshot(order);
-      return;
+    switch (selected?.name) {
+      case 'Go Enroute':
+        this.setOrderEnroute(order);
+        return;
+      case 'Go In Progress':
+        this.setOrderInProgress(order);
+        return;
+      case 'Pre-Provision':
+        this.preProvisionOrder(order);
+        return;
+      case 'Add Note':
+        this.openAddNoteModal(order);
+        return;
+      case 'Add Install Note':
+        this.addInstallNote(order);
+        return;
+      case 'OSP Template':
+        this.openOspTicketTemplate(order);
+        return;
+      case 'Finalize':
+        this.openFinalizeModal(order);
+        return;
+      case 'Take Photo':
+        void this.captureContinuousPhotos(order);
+        return;
+      case 'Order Screenshot':
+        void this.captureOrderScreenshot(order);
+        return;
     }
     this.showUnavailable(
       `${selected?.name || 'This order action'} is not connected for Ezee Fiber yet.`
