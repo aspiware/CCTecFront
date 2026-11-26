@@ -8,9 +8,9 @@ import {
 } from '@angular/core';
 import { ModalDialogParams, NativeScriptCommonModule } from '@nativescript/angular';
 import {
+  GestureStateTypes,
+  PanGestureEventData,
   Screen,
-  SwipeDirection,
-  SwipeGestureEventData,
   View,
   alert,
   confirm,
@@ -34,7 +34,9 @@ import { EzeeOrdersService } from './ezee-orders.service';
   styleUrl: './ezee-order-photos.component.scss',
 })
 export class EzeeOrderPhotosComponent implements OnInit {
+  @ViewChild('previousPreviewImage', { static: false }) private previousPreviewImageRef?: ElementRef<View>;
   @ViewChild('previewImage', { static: false }) private previewImageRef?: ElementRef<View>;
+  @ViewChild('nextPreviewImage', { static: false }) private nextPreviewImageRef?: ElementRef<View>;
   public order: EzeeOrderListItem;
   public photos: EzeeOrderPhoto[] = [];
   public previewPhoto?: EzeeOrderPhoto;
@@ -42,6 +44,7 @@ export class EzeeOrderPhotosComponent implements OnInit {
   public includeOrderScreenshot = false;
   public isGeneratingScreenshot = false;
   public readonly photoCellSize = Math.floor((Screen.mainScreen.widthDIPs - 40) / 3);
+  public readonly previewWidth = Screen.mainScreen.widthDIPs;
   public readonly deleteMenu: Item = {
     name: 'Delete Photos',
     options: [
@@ -52,6 +55,7 @@ export class EzeeOrderPhotosComponent implements OnInit {
   private readonly selectedPaths = new Set<string>();
   private isUpdatingScreenshotToggle = false;
   private isPreviewAnimating = false;
+  private previewPanDelta = 0;
 
   public constructor(
     private modalParams: ModalDialogParams,
@@ -80,6 +84,16 @@ export class EzeeOrderPhotosComponent implements OnInit {
     }
     const index = this.photos.findIndex((photo) => photo.path === this.previewPhoto?.path);
     return index >= 0 ? `${index + 1} / ${this.photos.length}` : '';
+  }
+
+  public get previousPreviewPhoto(): EzeeOrderPhoto | undefined {
+    const index = this.currentPreviewIndex();
+    return index > 0 ? this.photos[index - 1] : undefined;
+  }
+
+  public get nextPreviewPhoto(): EzeeOrderPhoto | undefined {
+    const index = this.currentPreviewIndex();
+    return index >= 0 && index < this.photos.length - 1 ? this.photos[index + 1] : undefined;
   }
 
   public close(): void {
@@ -113,6 +127,7 @@ export class EzeeOrderPhotosComponent implements OnInit {
   public openPreview(photo: EzeeOrderPhoto): void {
     this.previewPhoto = photo;
     this.cdr.detectChanges();
+    setTimeout(() => this.resetPreviewPositions(), 0);
   }
 
   public closePreview(): void {
@@ -120,47 +135,56 @@ export class EzeeOrderPhotosComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  public async onPreviewSwipe(event: SwipeGestureEventData): Promise<void> {
+  public onPreviewPan(event: PanGestureEventData): void {
     if (!this.previewPhoto || this.isPreviewAnimating) {
       return;
     }
-    const currentIndex = this.photos.findIndex(
-      (photo) => photo.path === this.previewPhoto?.path
-    );
-    const nextIndex = event.direction === SwipeDirection.left
-      ? currentIndex + 1
-      : event.direction === SwipeDirection.right
-        ? currentIndex - 1
-        : currentIndex;
-    if (nextIndex < 0 || nextIndex >= this.photos.length || nextIndex === currentIndex) {
+
+    if (event.state === GestureStateTypes.began) {
+      this.previewPanDelta = 0;
       return;
     }
 
-    const direction = nextIndex > currentIndex ? -1 : 1;
-    const imageView = this.previewImageRef?.nativeElement;
+    if (event.state === GestureStateTypes.changed) {
+      let delta = event.deltaX;
+      if ((!this.previousPreviewPhoto && delta > 0) || (!this.nextPreviewPhoto && delta < 0)) {
+        delta *= 0.22;
+      }
+      this.previewPanDelta = Math.max(-this.previewWidth, Math.min(this.previewWidth, delta));
+      this.applyPreviewPositions(this.previewPanDelta);
+      return;
+    }
+
+    if (event.state === GestureStateTypes.ended || event.state === GestureStateTypes.cancelled) {
+      void this.settlePreviewPan();
+    }
+  }
+
+  private async settlePreviewPan(): Promise<void> {
+    if (this.isPreviewAnimating || !this.previewPhoto) {
+      return;
+    }
+    const currentIndex = this.currentPreviewIndex();
+    const threshold = this.previewWidth * 0.18;
+    const moveNext = this.previewPanDelta < -threshold && !!this.nextPreviewPhoto;
+    const movePrevious = this.previewPanDelta > threshold && !!this.previousPreviewPhoto;
+    const nextIndex = moveNext ? currentIndex + 1 : movePrevious ? currentIndex - 1 : currentIndex;
+    const finalDelta = moveNext
+      ? -this.previewWidth
+      : movePrevious
+        ? this.previewWidth
+        : 0;
+
     this.isPreviewAnimating = true;
     try {
-      if (imageView) {
-        await imageView.animate({
-          translate: { x: direction * 55, y: 0 },
-          duration: 150,
-          curve: 'easeIn',
-        });
-      }
-      this.previewPhoto = this.photos[nextIndex];
-      this.cdr.detectChanges();
-      if (imageView) {
-        imageView.translateX = direction * -55;
-        await imageView.animate({
-          translate: { x: 0, y: 0 },
-          duration: 200,
-          curve: 'easeOut',
-        });
+      await this.animatePreviewPositions(finalDelta);
+      if (nextIndex !== currentIndex) {
+        this.previewPhoto = this.photos[nextIndex];
+        this.cdr.detectChanges();
       }
     } finally {
-      if (imageView) {
-        imageView.translateX = 0;
-      }
+      this.previewPanDelta = 0;
+      this.resetPreviewPositions();
       this.isPreviewAnimating = false;
     }
   }
@@ -306,6 +330,58 @@ export class EzeeOrderPhotosComponent implements OnInit {
   private selectedPhotosOrAll(): EzeeOrderPhoto[] {
     const selected = this.selectedPhotos();
     return selected.length ? selected : this.photos;
+  }
+
+  private currentPreviewIndex(): number {
+    return this.photos.findIndex((photo) => photo.path === this.previewPhoto?.path);
+  }
+
+  private applyPreviewPositions(delta: number): void {
+    const previous = this.previousPreviewImageRef?.nativeElement;
+    const current = this.previewImageRef?.nativeElement;
+    const next = this.nextPreviewImageRef?.nativeElement;
+    if (previous) {
+      previous.translateX = -this.previewWidth + delta;
+    }
+    if (current) {
+      current.translateX = delta;
+    }
+    if (next) {
+      next.translateX = this.previewWidth + delta;
+    }
+  }
+
+  private async animatePreviewPositions(delta: number): Promise<void> {
+    const animations: Promise<void>[] = [];
+    const previous = this.previousPreviewImageRef?.nativeElement;
+    const current = this.previewImageRef?.nativeElement;
+    const next = this.nextPreviewImageRef?.nativeElement;
+    if (previous) {
+      animations.push(previous.animate({
+        translate: { x: -this.previewWidth + delta, y: 0 },
+        duration: 190,
+        curve: 'easeOut',
+      }));
+    }
+    if (current) {
+      animations.push(current.animate({
+        translate: { x: delta, y: 0 },
+        duration: 190,
+        curve: 'easeOut',
+      }));
+    }
+    if (next) {
+      animations.push(next.animate({
+        translate: { x: this.previewWidth + delta, y: 0 },
+        duration: 190,
+        curve: 'easeOut',
+      }));
+    }
+    await Promise.all(animations);
+  }
+
+  private resetPreviewPositions(): void {
+    this.applyPreviewPositions(0);
   }
 
   private async generateAndSaveOrderScreenshot(): Promise<EzeeOrderPhoto> {

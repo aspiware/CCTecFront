@@ -58,8 +58,13 @@
     </GridLayout>
 
     <GridLayout *ngIf="previewPhoto" row="0" rowSpan="3" class="preview-overlay"
-      (swipe)="onPreviewSwipe($event)">
-      <Image #previewImage [src]="previewPhoto.path" stretch="aspectFit" class="preview-image"></Image>
+      (pan)="onPreviewPan($event)">
+      <Image #previousPreviewImage [src]="previousPreviewPhoto?.path || ''" stretch="aspectFit"
+        class="preview-image" [translateX]="-previewWidth"></Image>
+      <Image #previewImage [src]="previewPhoto.path" stretch="aspectFit"
+        class="preview-image"></Image>
+      <Image #nextPreviewImage [src]="nextPreviewPhoto?.path || ''" stretch="aspectFit"
+        class="preview-image" [translateX]="previewWidth"></Image>
       <Label [text]="previewPosition" class="preview-position" horizontalAlignment="center"
         verticalAlignment="bottom"></Label>
       <Label text="&#xf00d;" class="fas preview-close" horizontalAlignment="right"
