@@ -1141,26 +1141,39 @@ export class EzeeTimestampCameraService {
       CGRectMake(left, detailsY + (140 * scale), width - (left * 2), 40 * scale),
       UIFont.systemFontOfSize(29 * scale)
     );
+    const creditText = NSString.stringWithString('Photo by CCTec');
     const creditFont = UIFont.systemFontOfSize(25 * scale);
     const creditAttributes = NSDictionary.dictionaryWithObjectsForKeys<string, any>(
-      [creditFont],
-      [NSFontAttributeName]
+      [creditFont, UIColor.whiteColor],
+      [NSFontAttributeName, NSForegroundColorAttributeName]
     );
-    const creditSize = NSString.stringWithString('Photo by CCTec').sizeWithAttributes(creditAttributes);
-    const creditX = width - (34 * scale) - creditSize.width;
+    const creditShadowAttributes = NSDictionary.dictionaryWithObjectsForKeys<string, any>(
+      [creditFont, UIColor.colorWithWhiteAlpha(0, 0.9)],
+      [NSFontAttributeName, NSForegroundColorAttributeName]
+    );
+    const creditSize = creditText.sizeWithAttributes(creditAttributes);
+    const creditX = width - (90 * scale) - creditSize.width;
     const iconSize = 36 * scale;
+    const creditBottom = 44 * scale;
+    const creditY = height - creditBottom - creditSize.height;
     const appIcon = this.iosAppIcon();
     if (appIcon) {
       appIcon.drawInRect(
-        CGRectMake(creditX - iconSize - (5 * scale), height - (48 * scale), iconSize, iconSize)
+        CGRectMake(
+          creditX - iconSize - (5 * scale),
+          height - creditBottom - iconSize,
+          iconSize,
+          iconSize
+        )
       );
     }
-    drawText(
-      'Photo by CCTec',
-      CGRectMake(creditX, height - (46 * scale), creditSize.width + (2 * scale), 38 * scale),
-      creditFont,
-      UIColor.whiteColor,
-      NSTextAlignment.Left
+    creditText.drawAtPointWithAttributes(
+      CGPointMake(creditX + (2 * scale), creditY + (2 * scale)),
+      creditShadowAttributes
+    );
+    creditText.drawAtPointWithAttributes(
+      CGPointMake(creditX, creditY),
+      creditAttributes
     );
     const stamped = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
