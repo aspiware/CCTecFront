@@ -1,0 +1,46 @@
+<ModalStack dismissEnabled="true" class="photos-modal">
+  <GridLayout rows="auto,*,auto" class="photos-page">
+    <GridLayout row="0" columns="*,auto,auto" class="photos-header">
+      <StackLayout col="0">
+        <Label text="Order Photos" class="photos-title"></Label>
+        <Label [text]="'Order #' + order.number + ' · ' + photos.length + ' photos'" class="photos-subtitle"></Label>
+      </StackLayout>
+      <Button col="1" [text]="selectedCount === photos.length && photos.length ? 'Clear' : 'Select All'"
+        class="header-button" (tap)="toggleSelectAll()"></Button>
+      <Label col="2" text="&#xf00d;" class="fas close-button" (tap)="close()"></Label>
+    </GridLayout>
+
+    <GridLayout row="1">
+      <StackLayout *ngIf="!photos.length" verticalAlignment="middle" horizontalAlignment="center">
+        <Label text="&#xf03e;" class="fas empty-icon"></Label>
+        <Label text="No photos saved for this order." class="empty-text"></Label>
+      </StackLayout>
+
+      <ScrollView *ngIf="photos.length">
+        <WrapLayout orientation="horizontal" class="photos-grid">
+          <GridLayout *ngFor="let photo of photos" rows="110" columns="110" class="photo-cell">
+            <Image row="0" col="0" [src]="photo.path" stretch="aspectFill" class="photo-thumbnail"
+              (tap)="openPreview(photo)"></Image>
+            <Label row="0" col="0" horizontalAlignment="right" verticalAlignment="top"
+              [text]="isSelected(photo) ? '&#xf058;' : '&#xf111;'"
+              [class]="'fas selection-button ' + (isSelected(photo) ? 'selected' : '')"
+              (tap)="toggleSelection(photo)"></Label>
+          </GridLayout>
+        </WrapLayout>
+      </ScrollView>
+    </GridLayout>
+
+    <GridLayout row="2" columns="*,*" class="photos-footer">
+      <Button col="0" [text]="selectedCount ? 'Share Selected' : 'Share All'"
+        class="share-button" [isEnabled]="!!photos.length && !isDeleting" (tap)="share()"></Button>
+      <Button col="1" [text]="isDeleting ? 'Deleting...' : 'Delete Selected'"
+        class="delete-button" [isEnabled]="!!selectedCount && !isDeleting" (tap)="deleteSelected()"></Button>
+    </GridLayout>
+
+    <GridLayout *ngIf="previewPhoto" row="0" rowSpan="3" class="preview-overlay">
+      <Image [src]="previewPhoto.path" stretch="aspectFit" class="preview-image"></Image>
+      <Label text="&#xf00d;" class="fas preview-close" horizontalAlignment="right"
+        verticalAlignment="top" (tap)="closePreview()"></Label>
+    </GridLayout>
+  </GridLayout>
+</ModalStack>

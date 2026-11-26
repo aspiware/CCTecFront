@@ -23,6 +23,12 @@ declare const CIContext: any;
 
 type IosPhotoAspectMode = 'full' | '4:3';
 
+export interface EzeeOrderPhoto {
+  path: string;
+  fileName: string;
+  galleryAssetIdentifier?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class EzeeTimestampCameraService {
   private iosCameraDelegate?: UIImagePickerControllerDelegate & UINavigationControllerDelegate;
@@ -73,6 +79,10 @@ export class EzeeTimestampCameraService {
   }
 
   public getOrderPhotoPaths(orderNumber: string): string[] {
+    return this.getOrderPhotos(orderNumber).map((photo) => photo.path);
+  }
+
+  public getOrderPhotos(orderNumber: string): EzeeOrderPhoto[] {
     const safeOrderNumber = this.safeFilePart(orderNumber);
     const orderFolder = knownFolders.documents()
       .getFolder('ezee-order-photos')
@@ -80,15 +90,62 @@ export class EzeeTimestampCameraService {
     const legacyFolder = knownFolders.documents().getFolder('ezee-timestamp-photos');
     const legacyPrefix = `ezee-${safeOrderNumber}-`;
     const isPhoto = (filePath: string) => /\.(jpe?g|png)$/i.test(filePath);
+    const manifest = this.readPhotoManifest(orderNumber);
 
     const orderPhotos = orderFolder.getEntitiesSync()
       .filter((entity) => File.exists(entity.path) && isPhoto(entity.path))
-      .map((entity) => entity.path);
+      .map((entity) => ({
+        path: entity.path,
+        fileName: entity.name,
+        galleryAssetIdentifier: manifest[entity.name],
+      }));
     const legacyPhotos = legacyFolder.getEntitiesSync()
       .filter((entity) => File.exists(entity.path) && entity.name.startsWith(legacyPrefix) && isPhoto(entity.path))
-      .map((entity) => entity.path);
+      .map((entity) => ({ path: entity.path, fileName: entity.name }));
 
-    return Array.from(new Set([...orderPhotos, ...legacyPhotos])).sort();
+    const photosByPath = new Map<string, EzeeOrderPhoto>();
+    [...orderPhotos, ...legacyPhotos].forEach((photo) => photosByPath.set(photo.path, photo));
+    return Array.from(photosByPath.values()).sort((a, b) => a.fileName.localeCompare(b.fileName));
+  }
+
+  public async deleteOrderPhotos(
+    orderNumber: string,
+    photos: EzeeOrderPhoto[],
+    deleteFromPhotos: boolean
+  ): Promise<{ deleted: number; galleryDeleted: number; unlinkedGalleryCopies: number }> {
+    const selected = photos.filter((photo) => File.exists(photo.path));
+    const galleryIdentifiers = deleteFromPhotos
+      ? selected.map((photo) => photo.galleryAssetIdentifier).filter((value): value is string => !!value)
+      : [];
+
+    if (galleryIdentifiers.length && isIOS) {
+      const permission = await camera.requestPhotosPermissions();
+      if (!permission?.Success) {
+        throw new Error('Photos permission is required to delete gallery copies.');
+      }
+      const assets = PHAsset.fetchAssetsWithLocalIdentifiersOptions(galleryIdentifiers, null as any);
+      await new Promise<void>((resolve, reject) => {
+        PHPhotoLibrary.sharedPhotoLibrary().performChangesCompletionHandler(
+          () => PHAssetChangeRequest.deleteAssets(assets),
+          (success, error) => success ? resolve() : reject(error)
+        );
+      });
+    }
+
+    const manifest = this.readPhotoManifest(orderNumber);
+    let deleted = 0;
+    selected.forEach((photo) => {
+      File.fromPath(photo.path).removeSync();
+      delete manifest[photo.fileName];
+      deleted += 1;
+    });
+    this.writePhotoManifest(orderNumber, manifest);
+
+    return {
+      deleted,
+      galleryDeleted: galleryIdentifiers.length,
+      unlinkedGalleryCopies: deleteFromPhotos ? selected.length - galleryIdentifiers.length : 0,
+    };
   }
 
   public async capture(order: EzeeOrderListItem): Promise<string> {
@@ -919,14 +976,21 @@ export class EzeeTimestampCameraService {
     }
     if (saveToPhotos) {
       try {
+        let galleryAssetIdentifier = '';
         await new Promise<void>((resolve, reject) => {
           PHPhotoLibrary.sharedPhotoLibrary().performChangesCompletionHandler(
             () => {
-              PHAssetChangeRequest.creationRequestForAssetFromImage(stamped.ios);
+              const request = PHAssetChangeRequest.creationRequestForAssetFromImage(stamped.ios);
+              galleryAssetIdentifier = request.placeholderForCreatedAsset?.localIdentifier || '';
             },
             (success, error) => success ? resolve() : reject(error)
           );
         });
+        if (galleryAssetIdentifier) {
+          const manifest = this.readPhotoManifest(order.number);
+          manifest[fileName] = galleryAssetIdentifier;
+          this.writePhotoManifest(order.number, manifest);
+        }
       } catch (error) {
         console.log('[EzeeTimestampCamera] Unable to save copy to Photos', error);
         ApplicationSettings.setBoolean('ezee-camera-save-to-photos', false);
@@ -939,6 +1003,22 @@ export class EzeeTimestampCameraService {
     return knownFolders.documents()
       .getFolder('ezee-order-photos')
       .getFolder(this.safeFilePart(orderNumber));
+  }
+
+  private readPhotoManifest(orderNumber: string): Record<string, string> {
+    const manifestFile = this.orderPhotosFolder(orderNumber).getFile('photos.json');
+    try {
+      const parsed = JSON.parse(manifestFile.readTextSync() || '{}');
+      return parsed && typeof parsed === 'object' ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+
+  private writePhotoManifest(orderNumber: string, manifest: Record<string, string>): void {
+    this.orderPhotosFolder(orderNumber)
+      .getFile('photos.json')
+      .writeTextSync(JSON.stringify(manifest));
   }
 
   private prepareIosImageForAspect(

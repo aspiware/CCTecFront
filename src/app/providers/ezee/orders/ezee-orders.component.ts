@@ -22,6 +22,7 @@ import { EzeeOspTicketComponent } from './ezee-osp-ticket.component';
 import { EzeeInstallNoteComponent } from './ezee-install-note.component';
 import { shareEzeeImage, shareEzeeImages, shareEzeeOrderScreenshot } from '../ezee-file';
 import { EzeeTimestampCameraService } from './ezee-timestamp-camera.service';
+import { EzeeOrderPhotosComponent } from './ezee-order-photos.component';
 
 @Component({
   standalone: true,
@@ -98,7 +99,7 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       { name: 'OSP Template', icon: 'ticket.fill' },
       { name: 'Finalize', icon: 'checkmark.circle.fill' },
       { name: 'Take Photos', icon: 'camera.viewfinder' },
-      { name: 'Share Photos', icon: 'square.and.arrow.up.on.square' },
+      { name: 'Order Photos', icon: 'photo.on.rectangle.angled' },
       { name: 'Order Screenshot', icon: 'camera' },
     ],
   };
@@ -285,8 +286,8 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       case 'Take Photos':
         void this.captureContinuousPhotos(order);
         return;
-      case 'Share Photos':
-        void this.shareOrderPhotos(order);
+      case 'Order Photos':
+        void this.openOrderPhotos(order);
         return;
       case 'Order Screenshot':
         void this.captureOrderScreenshot(order);
@@ -442,24 +443,21 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
     }
   }
 
-  private async shareOrderPhotos(order: EzeeOrderListItem): Promise<void> {
+  private async openOrderPhotos(order: EzeeOrderListItem): Promise<void> {
     await new Promise<void>((resolve) => setTimeout(resolve, 350));
-    const photoPaths = this.timestampCameraService.getOrderPhotoPaths(order.number);
-    if (!photoPaths.length) {
-      await alert({
-        title: 'Order Photos',
-        message: `No photos have been saved for order ${order.number}.`,
-        okButtonText: 'OK',
-      });
-      return;
-    }
-    if (!shareEzeeImages(photoPaths, `Share Order ${order.number} Photos`)) {
-      await alert({
-        title: 'Order Photos',
-        message: 'Unable to open the share menu.',
-        okButtonText: 'OK',
-      });
-    }
+    const options: any = {
+      context: { order },
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: true,
+      stretched: true,
+      cancelable: true,
+      dismissEnabled: true,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.FullScreen,
+      },
+    };
+    await this.modalService.showModal(EzeeOrderPhotosComponent, options);
   }
 
   private async captureTimestampPhoto(order: EzeeOrderListItem): Promise<void> {
