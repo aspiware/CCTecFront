@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, Input, NO_ERRORS_SCHEMA, OnDestroy, OnInit, ViewContainerRef } from '@angular/core';
 import { ModalDialogService, NativeScriptCommonModule, RouterExtensions } from '@nativescript/angular';
-import { Application, ObservableArray, Page, Screen, SegmentedBarItem, Utils, alert } from '@nativescript/core';
+import { Application, ObservableArray, Page, Screen, SegmentedBarItem, Utils, alert, confirm } from '@nativescript/core';
 import { NativeScriptUIListViewModule } from 'nativescript-ui-listview/angular';
 import { finalize, Subscription } from 'rxjs';
 import { EzeeOrdersService } from './ezee-orders.service';
@@ -20,7 +20,7 @@ import { EzeeOrderPackagesComponent } from './ezee-order-packages.component';
 import { EzeeWorkOrderInfoComponent } from './ezee-work-order-info.component';
 import { EzeeOspTicketComponent } from './ezee-osp-ticket.component';
 import { EzeeInstallNoteComponent } from './ezee-install-note.component';
-import { shareEzeeImage, shareEzeeOrderScreenshot } from '../ezee-file';
+import { shareEzeeImage, shareEzeeImages, shareEzeeOrderScreenshot } from '../ezee-file';
 import { EzeeTimestampCameraService } from './ezee-timestamp-camera.service';
 
 @Component({
@@ -97,7 +97,8 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       { name: 'Add Install Note', icon: 'text.badge.plus' },
       { name: 'OSP Template', icon: 'ticket.fill' },
       { name: 'Finalize', icon: 'checkmark.circle.fill' },
-      { name: 'Take Photo', icon: 'camera.viewfinder' },
+      { name: 'Take Photos', icon: 'camera.viewfinder' },
+      { name: 'Share Photos', icon: 'square.and.arrow.up.on.square' },
       { name: 'Order Screenshot', icon: 'camera' },
     ],
   };
@@ -281,8 +282,11 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       case 'Finalize':
         this.openFinalizeModal(order);
         return;
-      case 'Take Photo':
+      case 'Take Photos':
         void this.captureContinuousPhotos(order);
+        return;
+      case 'Share Photos':
+        void this.shareOrderPhotos(order);
         return;
       case 'Order Screenshot':
         void this.captureOrderScreenshot(order);
@@ -435,6 +439,26 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       if (!this.subscriptions.closed) {
         this.cdr.detectChanges();
       }
+    }
+  }
+
+  private async shareOrderPhotos(order: EzeeOrderListItem): Promise<void> {
+    await new Promise<void>((resolve) => setTimeout(resolve, 350));
+    const photoPaths = this.timestampCameraService.getOrderPhotoPaths(order.number);
+    if (!photoPaths.length) {
+      await alert({
+        title: 'Order Photos',
+        message: `No photos have been saved for order ${order.number}.`,
+        okButtonText: 'OK',
+      });
+      return;
+    }
+    if (!shareEzeeImages(photoPaths, `Share Order ${order.number} Photos`)) {
+      await alert({
+        title: 'Order Photos',
+        message: 'Unable to open the share menu.',
+        okButtonText: 'OK',
+      });
     }
   }
 
@@ -1240,13 +1264,28 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
         this.selectedFinalizeReasons.delete(order.number);
         const successMessage = response?.message || 'Work order finalized successfully.';
         const finalizedReason = String(response?.data?.reason || '').trim();
-        alert({
-          title: 'Order Finalized',
-          message: finalizedReason
-            ? `${successMessage}\nReason: ${finalizedReason}`
-            : successMessage,
-          okButtonText: 'OK',
-        });
+        const finalizedMessage = finalizedReason
+          ? `${successMessage}\nReason: ${finalizedReason}`
+          : successMessage;
+        const photoPaths = this.timestampCameraService.getOrderPhotoPaths(order.number);
+        if (photoPaths.length) {
+          void confirm({
+            title: 'Order Finalized',
+            message: `${finalizedMessage}\n\n${photoPaths.length} order photo${photoPaths.length === 1 ? '' : 's'} ready to share.`,
+            okButtonText: 'Share Photos',
+            cancelButtonText: 'Later',
+          }).then((shouldShare) => {
+            if (shouldShare) {
+              shareEzeeImages(photoPaths, `Share Order ${order.number} Photos`);
+            }
+          });
+        } else {
+          alert({
+            title: 'Order Finalized',
+            message: finalizedMessage,
+            okButtonText: 'OK',
+          });
+        }
         this.reloadOrders();
       },
       error: (error) => {

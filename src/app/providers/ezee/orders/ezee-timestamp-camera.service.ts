@@ -4,6 +4,7 @@ import * as geolocation from '@nativescript/geolocation';
 import {
   ApplicationSettings,
   CoreTypes,
+  File,
   GestureStateTypes,
   GesturesObserver,
   GestureTypes,
@@ -69,6 +70,25 @@ export class EzeeTimestampCameraService {
     }
   }
 
+  public getOrderPhotoPaths(orderNumber: string): string[] {
+    const safeOrderNumber = this.safeFilePart(orderNumber);
+    const orderFolder = knownFolders.documents()
+      .getFolder('ezee-order-photos')
+      .getFolder(safeOrderNumber);
+    const legacyFolder = knownFolders.documents().getFolder('ezee-timestamp-photos');
+    const legacyPrefix = `ezee-${safeOrderNumber}-`;
+    const isPhoto = (filePath: string) => /\.(jpe?g|png)$/i.test(filePath);
+
+    const orderPhotos = orderFolder.getEntitiesSync()
+      .filter((entity) => File.exists(entity.path) && isPhoto(entity.path))
+      .map((entity) => entity.path);
+    const legacyPhotos = legacyFolder.getEntitiesSync()
+      .filter((entity) => File.exists(entity.path) && entity.name.startsWith(legacyPrefix) && isPhoto(entity.path))
+      .map((entity) => entity.path);
+
+    return Array.from(new Set([...orderPhotos, ...legacyPhotos])).sort();
+  }
+
   public async capture(order: EzeeOrderListItem): Promise<string> {
     console.log('[EzeeTimestampCamera] Capture started');
     if (!camera.isAvailable()) {
@@ -114,7 +134,7 @@ export class EzeeTimestampCameraService {
           ? this.stampAndroid(source, lines)
           : source;
 
-      const folder = knownFolders.documents().getFolder('ezee-timestamp-photos');
+      const folder = this.orderPhotosFolder(order.number);
       const fileName = `ezee-${this.safeFilePart(order.number)}-${this.fileTimestamp(capturedAt)}.jpg`;
       const filePath = path.join(folder.path, fileName);
       if (!stamped.saveToFile(filePath, 'jpg', 92)) {
@@ -847,7 +867,7 @@ export class EzeeTimestampCameraService {
       this.latestLocation || null,
       aspectMode
     );
-    const folder = knownFolders.documents().getFolder('ezee-timestamp-photos');
+    const folder = this.orderPhotosFolder(order.number);
     const fileName = `ezee-${this.safeFilePart(order.number)}-${this.fileTimestamp(capturedAt)}.jpg`;
     const filePath = path.join(folder.path, fileName);
     if (!stamped.saveToFile(filePath, 'jpg', 92)) {
@@ -862,6 +882,12 @@ export class EzeeTimestampCameraService {
       );
     });
     return filePath;
+  }
+
+  private orderPhotosFolder(orderNumber: string) {
+    return knownFolders.documents()
+      .getFolder('ezee-order-photos')
+      .getFolder(this.safeFilePart(orderNumber));
   }
 
   private prepareIosImageForAspect(
