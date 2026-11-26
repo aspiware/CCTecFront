@@ -435,7 +435,13 @@ export class EzeeTimestampCameraService {
         }
         session.addOutput(photoOutput);
         photoOutput.highResolutionCaptureEnabled = true;
-        photoOutput.maxPhotoQualityPrioritization = AVCapturePhotoQualityPrioritization.Quality;
+        photoOutput.maxPhotoQualityPrioritization = AVCapturePhotoQualityPrioritization.Speed;
+        if (photoOutput.responsiveCaptureSupported) {
+          photoOutput.responsiveCaptureEnabled = true;
+        }
+        if (photoOutput.fastCapturePrioritizationSupported) {
+          photoOutput.fastCapturePrioritizationEnabled = true;
+        }
 
         const previewLayer = AVCaptureVideoPreviewLayer.layerWithSession(session);
         let aspectMode = this.savedIosPhotoAspectMode();
@@ -530,6 +536,7 @@ export class EzeeTimestampCameraService {
         let lastPhotoPath = '';
         let isCapturing = false;
         let isFinished = false;
+        let captureStartedAt = 0;
         const finish = () => {
           if (isFinished || isCapturing) {
             return;
@@ -599,11 +606,12 @@ export class EzeeTimestampCameraService {
               return;
             }
             isCapturing = true;
+            captureStartedAt = Date.now();
             captureAspectMode = aspectMode;
             shutter.alpha = 0.45;
             const settings = AVCapturePhotoSettings.photoSettings();
             settings.highResolutionPhotoEnabled = true;
-            settings.photoQualityPrioritization = AVCapturePhotoQualityPrioritization.Quality;
+            settings.photoQualityPrioritization = AVCapturePhotoQualityPrioritization.Speed;
             photoOutput.capturePhotoWithSettingsDelegate(
               settings,
               this.iosPhotoCaptureDelegate!
@@ -624,6 +632,10 @@ export class EzeeTimestampCameraService {
               const service = owner.deref();
               const data = !error ? photo?.fileDataRepresentation() : null;
               const image = data ? UIImage.imageWithData(data) : null;
+              console.log(
+                '[EzeeTimestampCamera] Capture response time',
+                `${Date.now() - captureStartedAt}ms`
+              );
               if (!service || !image || error) {
                 if (error) {
                   console.log('[EzeeTimestampCamera] Photo capture failed', error);
@@ -650,6 +662,10 @@ export class EzeeTimestampCameraService {
                   });
                 })
                 .finally(() => {
+                  console.log(
+                    '[EzeeTimestampCamera] Photo ready time',
+                    `${Date.now() - captureStartedAt}ms`
+                  );
                   Utils.executeOnMainThread(() => {
                     isCapturing = false;
                     shutter.alpha = 1;
