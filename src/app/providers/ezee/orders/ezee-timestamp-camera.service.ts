@@ -4,11 +4,15 @@ import * as geolocation from '@nativescript/geolocation';
 import {
   ApplicationSettings,
   CoreTypes,
+  GestureStateTypes,
+  GesturesObserver,
+  GestureTypes,
   ImageSource,
   isAndroid,
   isIOS,
   knownFolders,
   path,
+  PinchGestureEventData,
   Utils,
 } from '@nativescript/core';
 import { EzeeOrderListItem } from './ezee-order.model';
@@ -32,6 +36,7 @@ export class EzeeTimestampCameraService {
   private iosMeridiemLabel?: UILabel;
   private iosDateLabel?: UILabel;
   private iosWeekdayLabel?: UILabel;
+  private iosPinchZoomObserver?: GesturesObserver;
 
   public async captureContinuous(order: EzeeOrderListItem): Promise<number> {
     if (!isIOS || !camera.isAvailable()) {
@@ -500,7 +505,41 @@ export class EzeeTimestampCameraService {
           }
         });
         overlay.userInteractionEnabled = true;
+        overlay.multipleTouchEnabled = true;
         controller.view.addSubview(overlay);
+
+        let pinchStartZoom = activeDevice.videoZoomFactor;
+        const gestureTarget = {
+          nativeViewProtected: overlay,
+          isLoaded: true,
+          on: () => undefined,
+          off: () => undefined,
+          notify: () => undefined,
+        } as any;
+        this.iosPinchZoomObserver = new GesturesObserver(
+          gestureTarget,
+          (event: PinchGestureEventData) => {
+          if (event.state === GestureStateTypes.began) {
+            pinchStartZoom = activeDevice.videoZoomFactor;
+          }
+          if (
+            event.state !== GestureStateTypes.began &&
+            event.state !== GestureStateTypes.changed
+          ) {
+            return;
+          }
+          const maxZoom = Math.min(10, activeDevice.activeFormat.videoMaxZoomFactor);
+          const targetZoom = Math.max(1, Math.min(maxZoom, pinchStartZoom * event.scale));
+          const zoomError = new interop.Reference<NSError>();
+          if (!activeDevice.lockForConfiguration(zoomError)) {
+            return;
+          }
+          activeDevice.videoZoomFactor = targetZoom;
+          activeDevice.unlockForConfiguration();
+          },
+          this
+        );
+        this.iosPinchZoomObserver.observe(GestureTypes.pinch);
 
         const formatControl = UISegmentedControl.alloc().initWithItems(['Full', '4:3']);
         formatControl.frame = CGRectMake((bounds.size.width - 150) / 2, 92, 150, 34);
@@ -542,6 +581,8 @@ export class EzeeTimestampCameraService {
           session.stopRunning();
           controller.dismissViewControllerAnimatedCompletion(true, () => {
             this.iosPhotoCaptureDelegate = undefined;
+            this.iosPinchZoomObserver?.disconnect();
+            this.iosPinchZoomObserver = undefined;
             resolve(photoCount);
           });
         };
@@ -785,6 +826,8 @@ export class EzeeTimestampCameraService {
         });
       } catch (error) {
         this.iosPhotoCaptureDelegate = undefined;
+        this.iosPinchZoomObserver?.disconnect();
+        this.iosPinchZoomObserver = undefined;
         reject(error);
       }
     });
