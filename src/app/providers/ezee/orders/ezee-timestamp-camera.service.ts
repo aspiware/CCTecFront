@@ -27,6 +27,7 @@ export interface EzeeOrderPhoto {
   path: string;
   fileName: string;
   galleryAssetIdentifier?: string;
+  kind: 'photo' | 'screenshot';
 }
 
 @Injectable({ providedIn: 'root' })
@@ -98,10 +99,11 @@ export class EzeeTimestampCameraService {
         path: entity.path,
         fileName: entity.name,
         galleryAssetIdentifier: manifest[entity.name],
+        kind: entity.name.startsWith('order-screenshot-') ? 'screenshot' as const : 'photo' as const,
       }));
     const legacyPhotos = legacyFolder.getEntitiesSync()
       .filter((entity) => File.exists(entity.path) && entity.name.startsWith(legacyPrefix) && isPhoto(entity.path))
-      .map((entity) => ({ path: entity.path, fileName: entity.name }));
+      .map((entity) => ({ path: entity.path, fileName: entity.name, kind: 'photo' as const }));
 
     const photosByPath = new Map<string, EzeeOrderPhoto>();
     [...orderPhotos, ...legacyPhotos].forEach((photo) => photosByPath.set(photo.path, photo));
@@ -144,8 +146,26 @@ export class EzeeTimestampCameraService {
     return {
       deleted,
       galleryDeleted: galleryIdentifiers.length,
-      unlinkedGalleryCopies: deleteFromPhotos ? selected.length - galleryIdentifiers.length : 0,
+      unlinkedGalleryCopies: deleteFromPhotos
+        ? selected.filter((photo) => photo.kind === 'photo' && !photo.galleryAssetIdentifier).length
+        : 0,
     };
+  }
+
+  public getOrderScreenshot(orderNumber: string): EzeeOrderPhoto | undefined {
+    return this.getOrderPhotos(orderNumber).find((photo) => photo.kind === 'screenshot');
+  }
+
+  public saveOrderScreenshot(orderNumber: string, sourcePath: string): EzeeOrderPhoto {
+    const fileName = `order-screenshot-${this.safeFilePart(orderNumber)}.png`;
+    const destinationPath = path.join(this.orderPhotosFolder(orderNumber).path, fileName);
+    if (File.exists(destinationPath)) {
+      File.fromPath(destinationPath).removeSync();
+    }
+    if (!File.fromPath(sourcePath).copySync(destinationPath)) {
+      throw new Error('Unable to save the order screenshot.');
+    }
+    return { path: destinationPath, fileName, kind: 'screenshot' };
   }
 
   public async capture(order: EzeeOrderListItem): Promise<string> {

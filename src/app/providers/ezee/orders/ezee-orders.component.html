@@ -158,9 +158,17 @@
               </MenuButton>
 
               <MenuButton class="fas job-action-button"
-                [class.job-action-tapped]="isActionTapped(order, 'activate-service')"
-                style="font-size: 16px; height: 70px; width: 100px; margin-right: 6" text="&#xe012;"
-                (tap)="markActionTap(order, 'activate-service'); activateService(order)">
+                [class.job-action-tapped]="isActionTapped(order, 'photos')"
+                style="font-size: 16px; height: 70px; width: 100px; margin-right: 6"
+                [showSpinner]="isOrderMenuLoading(order)"
+                [isRightSide]="true"
+                [useSFIcon]="true"
+                [sfIconName]="'camera.viewfinder'"
+                [imageInsets]="{ top: 0, left: 0, bottom: 0, right: 0 }"
+                [options]="photoMenu.options"
+                (tap)="markActionTap(order, 'photos')"
+                (menuOpened)="selectOrder(order)"
+                (selected)="onSelectedPhotoMenu($event, order)">
               </MenuButton>
 
               <StackLayout class="job-action-button" style="width: 100px; height: 70px;">

@@ -15,7 +15,8 @@
       <GridLayout row="0" columns="*,auto" class="screenshot-option">
         <StackLayout col="0" verticalAlignment="middle">
           <Label text="Include Order Screenshot" class="screenshot-title"></Label>
-          <Label text="Generate and attach it when sharing" class="screenshot-subtitle"></Label>
+          <Label [text]="isGeneratingScreenshot ? 'Updating screenshot...' : (hasOrderScreenshot ? 'Saved with this order · disable to remove' : 'Enable to generate and save')"
+            class="screenshot-subtitle"></Label>
         </StackLayout>
         <Switch col="1" [checked]="includeOrderScreenshot" [isEnabled]="!isGeneratingScreenshot"
           (checkedChange)="onIncludeScreenshotChanged($event)" verticalAlignment="middle"></Switch>
@@ -36,6 +37,9 @@
               [text]="isSelected(photo) ? '&#xf058;' : '&#xf111;'"
               [class]="'fas selection-button ' + (isSelected(photo) ? 'selected' : '')"
               (tap)="toggleSelection(photo)"></Label>
+            <Label *ngIf="photo.kind === 'screenshot'" row="0" col="0"
+              horizontalAlignment="left" verticalAlignment="bottom" text="ORDER"
+              class="photo-kind-badge"></Label>
           </GridLayout>
         </WrapLayout>
       </ScrollView>

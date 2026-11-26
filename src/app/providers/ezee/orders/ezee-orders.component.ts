@@ -98,6 +98,11 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       { name: 'Add Install Note', icon: 'text.badge.plus' },
       { name: 'OSP Template', icon: 'ticket.fill' },
       { name: 'Finalize', icon: 'checkmark.circle.fill' },
+    ],
+  };
+  public photoMenu: Item = {
+    name: 'Photo Menu',
+    options: [
       { name: 'Take Photos', icon: 'camera.viewfinder' },
       { name: 'Order Photos', icon: 'photo.on.rectangle.angled' },
       { name: 'Order Screenshot', icon: 'camera' },
@@ -283,6 +288,16 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
       case 'Finalize':
         this.openFinalizeModal(order);
         return;
+    }
+    this.showUnavailable(
+      `${selected?.name || 'This order action'} is not connected for Ezee Fiber yet.`
+    );
+  }
+
+  public onSelectedPhotoMenu(event: MenuEvent, order: EzeeOrderListItem): void {
+    this.selectOrder(order);
+    const selected = this.photoMenu.options[event?.index ?? -1];
+    switch (selected?.name) {
       case 'Take Photos':
         void this.captureContinuousPhotos(order);
         return;
@@ -293,9 +308,6 @@ export class EzeeOrdersComponent implements OnInit, OnDestroy {
         void this.captureOrderScreenshot(order);
         return;
     }
-    this.showUnavailable(
-      `${selected?.name || 'This order action'} is not connected for Ezee Fiber yet.`
-    );
   }
 
   public addInstallNote(order: EzeeOrderListItem): void {

@@ -35,6 +35,7 @@ export class EzeeOrderPhotosComponent implements OnInit {
     ],
   };
   private readonly selectedPaths = new Set<string>();
+  private isUpdatingScreenshotToggle = false;
 
   public constructor(
     private modalParams: ModalDialogParams,
@@ -51,6 +52,10 @@ export class EzeeOrderPhotosComponent implements OnInit {
 
   public get selectedCount(): number {
     return this.selectedPaths.size;
+  }
+
+  public get hasOrderScreenshot(): boolean {
+    return this.photos.some((photo) => photo.kind === 'screenshot');
   }
 
   public close(): void {
@@ -91,29 +96,65 @@ export class EzeeOrderPhotosComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  public onIncludeScreenshotChanged(event: any): void {
-    this.includeOrderScreenshot = !!event?.value;
+  public async onIncludeScreenshotChanged(event: any): Promise<void> {
+    const enabled = !!event?.value;
+    if (this.isUpdatingScreenshotToggle || enabled === this.includeOrderScreenshot) {
+      return;
+    }
+
+    this.includeOrderScreenshot = enabled;
+    this.isUpdatingScreenshotToggle = true;
+    this.isGeneratingScreenshot = true;
+    this.cdr.detectChanges();
+    try {
+      const existingScreenshot = this.cameraService.getOrderScreenshot(this.order.number);
+      if (enabled && !existingScreenshot) {
+        await this.generateAndSaveOrderScreenshot();
+      } else if (!enabled && existingScreenshot) {
+        await this.cameraService.deleteOrderPhotos(
+          this.order.number,
+          [existingScreenshot],
+          false
+        );
+      }
+    } catch (error) {
+      await alert({
+        title: 'Order Screenshot',
+        message: String((error as any)?.message || 'Unable to update the order screenshot.'),
+        okButtonText: 'OK',
+      });
+    } finally {
+      this.isGeneratingScreenshot = false;
+      this.isUpdatingScreenshotToggle = false;
+      this.loadPhotos();
+    }
   }
 
   public async share(): Promise<void> {
     const photos = this.selectedPhotosOrAll();
     const filePaths = photos.map((photo) => photo.path);
     if (this.includeOrderScreenshot) {
-      this.isGeneratingScreenshot = true;
-      this.cdr.detectChanges();
-      try {
-        const screenshot = await this.ordersService.downloadOrderScreenshot(this.order.number);
-        filePaths.push(screenshot.path);
-      } catch (error) {
-        await alert({
-          title: 'Order Screenshot',
-          message: String((error as any)?.message || 'Unable to generate the order screenshot.'),
-          okButtonText: 'OK',
-        });
-        return;
-      } finally {
-        this.isGeneratingScreenshot = false;
+      let screenshot = this.cameraService.getOrderScreenshot(this.order.number);
+      if (!screenshot) {
+        this.isGeneratingScreenshot = true;
         this.cdr.detectChanges();
+        try {
+          screenshot = await this.generateAndSaveOrderScreenshot();
+          this.loadPhotos();
+        } catch (error) {
+          await alert({
+            title: 'Order Screenshot',
+            message: String((error as any)?.message || 'Unable to generate the order screenshot.'),
+            okButtonText: 'OK',
+          });
+          return;
+        } finally {
+          this.isGeneratingScreenshot = false;
+          this.cdr.detectChanges();
+        }
+      }
+      if (screenshot && !filePaths.includes(screenshot.path)) {
+        filePaths.push(screenshot.path);
       }
     }
     if (!shareEzeeImages(filePaths, `Share Order ${this.order.number} Photos`)) {
@@ -183,6 +224,7 @@ export class EzeeOrderPhotosComponent implements OnInit {
 
   private loadPhotos(): void {
     this.photos = this.cameraService.getOrderPhotos(this.order.number);
+    this.includeOrderScreenshot = this.photos.some((photo) => photo.kind === 'screenshot');
     this.selectedPaths.clear();
     this.previewPhoto = undefined;
     this.cdr.detectChanges();
@@ -195,5 +237,10 @@ export class EzeeOrderPhotosComponent implements OnInit {
   private selectedPhotosOrAll(): EzeeOrderPhoto[] {
     const selected = this.selectedPhotos();
     return selected.length ? selected : this.photos;
+  }
+
+  private async generateAndSaveOrderScreenshot(): Promise<EzeeOrderPhoto> {
+    const downloaded = await this.ordersService.downloadOrderScreenshot(this.order.number);
+    return this.cameraService.saveOrderScreenshot(this.order.number, downloaded.path);
   }
 }
