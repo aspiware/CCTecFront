@@ -56,6 +56,7 @@ export class EzeeOrderPhotosComponent implements OnInit {
   private isUpdatingScreenshotToggle = false;
   private isPreviewAnimating = false;
   private previewPanDelta = 0;
+  private previewPanStartedAt = 0;
 
   public constructor(
     private modalParams: ModalDialogParams,
@@ -142,6 +143,7 @@ export class EzeeOrderPhotosComponent implements OnInit {
 
     if (event.state === GestureStateTypes.began) {
       this.previewPanDelta = 0;
+      this.previewPanStartedAt = Date.now();
       return;
     }
 
@@ -165,9 +167,12 @@ export class EzeeOrderPhotosComponent implements OnInit {
       return;
     }
     const currentIndex = this.currentPreviewIndex();
-    const threshold = this.previewWidth * 0.18;
-    const moveNext = this.previewPanDelta < -threshold && !!this.nextPreviewPhoto;
-    const movePrevious = this.previewPanDelta > threshold && !!this.previousPreviewPhoto;
+    const threshold = this.previewWidth * 0.09;
+    const elapsed = Date.now() - this.previewPanStartedAt;
+    const isFastFlick = elapsed <= 260 && Math.abs(this.previewPanDelta) >= 12;
+    const shouldAdvance = Math.abs(this.previewPanDelta) >= threshold || isFastFlick;
+    const moveNext = shouldAdvance && this.previewPanDelta < 0 && !!this.nextPreviewPhoto;
+    const movePrevious = shouldAdvance && this.previewPanDelta > 0 && !!this.previousPreviewPhoto;
     const nextIndex = moveNext ? currentIndex + 1 : movePrevious ? currentIndex - 1 : currentIndex;
     const finalDelta = moveNext
       ? -this.previewWidth
@@ -359,21 +364,21 @@ export class EzeeOrderPhotosComponent implements OnInit {
     if (previous) {
       animations.push(previous.animate({
         translate: { x: -this.previewWidth + delta, y: 0 },
-        duration: 190,
+        duration: 155,
         curve: 'easeOut',
       }));
     }
     if (current) {
       animations.push(current.animate({
         translate: { x: delta, y: 0 },
-        duration: 190,
+        duration: 155,
         curve: 'easeOut',
       }));
     }
     if (next) {
       animations.push(next.animate({
         translate: { x: this.previewWidth + delta, y: 0 },
-        duration: 190,
+        duration: 155,
         curve: 'easeOut',
       }));
     }
