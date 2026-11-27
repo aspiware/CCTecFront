@@ -64,14 +64,6 @@ export class EzeeSettingsComponent extends SettingsComponent {
     if (this.isOpeningStripePortal) {
       return;
     }
-    if (!this.ezeeSubscriptionService.canOpenEzeeStripe()) {
-      await Dialogs.alert({
-        title: 'Manage Subscription',
-        message: 'Stripe billing is unavailable from this storefront.',
-        okButtonText: 'OK',
-      });
-      return;
-    }
     this.isOpeningStripePortal = true;
     try {
       const { url } = await firstValueFrom(this.ezeeSubscriptionService.createEzeeStripeSession('portal'));

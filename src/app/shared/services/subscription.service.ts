@@ -244,10 +244,6 @@ export class SubscriptionService {
     );
   }
 
-  public canOpenEzeeStripe(): boolean {
-    return __IOS__ && SKPaymentQueue.defaultQueue().storefront?.countryCode === 'USA';
-  }
-
   private ezeeBillingRequestOptions() {
     return { headers: { Authorization: `Bearer ${ApplicationSettings.getString('token', '')}` } };
   }
