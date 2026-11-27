@@ -1,7 +1,8 @@
 import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA } from '@angular/core';
 import { Router } from '@angular/router';
 import { NativeScriptCommonModule, RouterExtensions } from '@nativescript/angular';
-import { Dialogs, Page } from '@nativescript/core';
+import { Application, Dialogs, Page, Utils } from '@nativescript/core';
+import { firstValueFrom } from 'rxjs';
 import { SettingsComponent } from '../../../settings/settings.component';
 import { SettingsService } from '../../../settings/settings.service';
 import { ConfigService } from '../../../shared/services/config.service';
@@ -20,9 +21,11 @@ import { VersionService } from '../../../shared/services/version.service';
 })
 export class EzeeSettingsComponent extends SettingsComponent {
   public override isEzeeSettings = true;
+  private isOpeningStripePortal = false;
+  private readonly refreshBilling = () => this.loadSubscriptionDetails();
 
   constructor(
-    subscriptionService: SubscriptionService,
+    private ezeeSubscriptionService: SubscriptionService,
     configService: ConfigService,
     settingsService: SettingsService,
     todayJobsCountService: TodayJobsCountService,
@@ -34,7 +37,7 @@ export class EzeeSettingsComponent extends SettingsComponent {
     page: Page
   ) {
     super(
-      subscriptionService,
+      ezeeSubscriptionService,
       configService,
       settingsService,
       todayJobsCountService,
@@ -45,6 +48,49 @@ export class EzeeSettingsComponent extends SettingsComponent {
       cdr,
       page
     );
+  }
+
+  public override ngOnInit(): void {
+    super.ngOnInit();
+    Application.on(Application.resumeEvent, this.refreshBilling);
+  }
+
+  public override ngOnDestroy(): void {
+    Application.off(Application.resumeEvent, this.refreshBilling);
+    super.ngOnDestroy();
+  }
+
+  public override async onManageSubscription(): Promise<void> {
+    if (this.isOpeningStripePortal) {
+      return;
+    }
+    if (!this.ezeeSubscriptionService.canOpenEzeeStripe()) {
+      await Dialogs.alert({
+        title: 'Manage Subscription',
+        message: 'Stripe billing is unavailable from this storefront.',
+        okButtonText: 'OK',
+      });
+      return;
+    }
+    this.isOpeningStripePortal = true;
+    try {
+      const { url } = await firstValueFrom(this.ezeeSubscriptionService.createEzeeStripeSession('portal'));
+      if (!Utils.openUrl(url)) {
+        throw new Error('Unable to open Stripe billing.');
+      }
+    } catch (error) {
+      if (error?.status === 404) {
+        this.openSubscription();
+        return;
+      }
+      await Dialogs.alert({
+        title: 'Manage Subscription',
+        message: error?.error?.message || 'Unable to open Stripe billing.',
+        okButtonText: 'OK',
+      });
+    } finally {
+      this.isOpeningStripePortal = false;
+    }
   }
 
   public override openResidentialJobPrices(): void {

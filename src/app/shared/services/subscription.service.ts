@@ -4,7 +4,21 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import { ConfigService } from './config.service';
+import { ProviderService } from './provider.service';
 import { UsersService } from './users.service';
+
+interface EzeeStripeSubscription {
+  enabled: boolean;
+  isActive: boolean;
+  subscription: {
+    planName: string;
+    amount: number | null;
+    interval: string | null;
+    expiresAt: string;
+    autoRenewStatus: boolean;
+    canceledAt: string | null;
+  } | null;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -18,7 +32,8 @@ export class SubscriptionService {
   constructor(
     private httpClient: HttpClient,
     private configService: ConfigService,
-    private usersService: UsersService
+    private usersService: UsersService,
+    private providerService: ProviderService
   ) {}
 
   public hasLocalStatus(): boolean {
@@ -35,6 +50,10 @@ export class SubscriptionService {
   }
 
   public verifyWithBackend(): Observable<boolean> {
+    if (this.providerService.isEzeeFiber()) {
+      return this.getEzeeStripeSubscription().pipe(map((result) => result.isActive));
+    }
+
     if (this.usersService.isActiveDemoUser()) {
       this.setLocalStatus(true);
       return of(true);
@@ -72,6 +91,25 @@ export class SubscriptionService {
     autoRenewStatus?: boolean;
     canceledAt?: Date;
   }> {
+    if (this.providerService.isEzeeFiber()) {
+      return this.getEzeeStripeSubscription().pipe(
+        map(({ isActive, subscription }) => {
+          const expiresDate = this.pickDate(subscription?.expiresAt);
+          return {
+            isActive,
+            expiresDate,
+            nextPaymentDate: isActive && subscription?.autoRenewStatus ? expiresDate : undefined,
+            planName: subscription?.planName,
+            amount: subscription?.amount ?? undefined,
+            interval: subscription?.interval ?? undefined,
+            autoRenewStatus: subscription?.autoRenewStatus,
+            canceledAt: this.pickDate(subscription?.canceledAt),
+          };
+        }),
+        catchError(() => of({ isActive: false }))
+      );
+    }
+
     if (this.usersService.isActiveDemoUser()) {
       this.setLocalStatus(true);
       const nextPaymentDate = new Date();
@@ -189,6 +227,29 @@ export class SubscriptionService {
           return of({ isActive: false });
         })
       );
+  }
+
+  public getEzeeStripeSubscription(): Observable<EzeeStripeSubscription> {
+    return this.httpClient.get<EzeeStripeSubscription>(
+      `${this.configService.getUrlBase()}/ezee-fiber/billing/subscription`,
+      this.ezeeBillingRequestOptions(),
+    ).pipe(tap((result) => this.setLocalStatus(result.isActive)));
+  }
+
+  public createEzeeStripeSession(destination: 'checkout' | 'portal'): Observable<{ url: string }> {
+    return this.httpClient.post<{ url: string }>(
+      `${this.configService.getUrlBase()}/ezee-fiber/billing/${destination}`,
+      {},
+      this.ezeeBillingRequestOptions(),
+    );
+  }
+
+  public canOpenEzeeStripe(): boolean {
+    return __IOS__ && SKPaymentQueue.defaultQueue().storefront?.countryCode === 'USA';
+  }
+
+  private ezeeBillingRequestOptions() {
+    return { headers: { Authorization: `Bearer ${ApplicationSettings.getString('token', '')}` } };
   }
 
   public validateApplePurchase(payload: {

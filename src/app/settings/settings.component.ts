@@ -190,7 +190,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     this.isDarkTheme = pageClassName.includes('ns-dark');
   }
 
-  private loadSubscriptionDetails(): void {
+  protected loadSubscriptionDetails(): void {
     this.subscriptionService.getSubscriptionDetails().subscribe((details) => {
       const next = details?.nextPaymentDate;
       const expires = details?.expiresDate;
@@ -213,7 +213,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
           maximumFractionDigits: 2,
         });
         const intervalText = details?.interval ? ` / ${details.interval}` : '';
-        this.subscriptionPriceIntervalText = `$${amountText}${intervalText}`;
+        this.subscriptionPriceIntervalText = `${amountText}${intervalText}`;
       } else {
         this.subscriptionPriceIntervalText = details?.interval ? String(details.interval) : '-';
       }

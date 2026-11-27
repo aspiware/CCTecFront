@@ -4,11 +4,13 @@ import { RouterExtensions } from '@nativescript/angular';
 import { Observable, of } from 'rxjs';
 import { catchError, map, take } from 'rxjs/operators';
 import { SubscriptionService } from '../shared/services/subscription.service';
+import { ProviderService } from '../shared/services/provider.service';
 
 export const subscriptionGuard: CanActivateFn = (_route, state): boolean | Observable<boolean> => {
   console.log('[subscriptionGuard] start:', state.url);
   const routerExtensions = inject(RouterExtensions);
   const subscriptionService = inject(SubscriptionService);
+  const providerService = inject(ProviderService);
   const environment = { production: !!(globalThis as any).IS_PRODUCTION };
   const subscriptionBypass = !!(globalThis as any).SUBSCRIPTION_BYPASS;
   const enforceSubscription = !!(globalThis as any).ENFORCE_SUBSCRIPTION;
@@ -28,12 +30,12 @@ export const subscriptionGuard: CanActivateFn = (_route, state): boolean | Obser
     return true;
   }
 
-  if (!environment.production && !enforceSubscription) {
+  if (!providerService.isEzeeFiber() && !environment.production && !enforceSubscription) {
     console.log('[subscriptionGuard] skipping check in non-production mode');
     return true;
   }
 
-  if (!subscriptionService.hasLocalStatus()) {
+  if (providerService.isEzeeFiber() || !subscriptionService.hasLocalStatus()) {
     console.log('[subscriptionGuard] no local status, verifying with backend');
     return subscriptionService.verifyWithBackend().pipe(
       take(1),

@@ -2,7 +2,9 @@ import { ChangeDetectorRef, Component, NO_ERRORS_SCHEMA, OnDestroy, OnInit } fro
 import { ActivatedRoute } from '@angular/router';
 import { NativeScriptCommonModule, RouterExtensions } from '@nativescript/angular';
 import { alert, Application, Page, Utils } from '@nativescript/core';
+import { finalize, Subscription } from 'rxjs';
 import { ConfigService } from '../shared/services/config.service';
+import { ProviderService } from '../shared/services/provider.service';
 import { SubscriptionService } from '../shared/services/subscription.service';
 import { UsersService } from '../shared/services/users.service';
 
@@ -14,10 +16,14 @@ import { UsersService } from '../shared/services/users.service';
   templateUrl: './subscription.component.html',
   styleUrl: './subscription.component.scss',
 })
-export class SubscriptionComponent implements OnInit {
+export class SubscriptionComponent implements OnInit, OnDestroy {
   public isDarkTheme = Application.systemAppearance() === 'dark';
   public isBusy = false;
+  public isEzeeFiber = false;
+  public isCheckingStripe = false;
+  public stripeEnabled = false;
 
+  private readonly stripeRequests = new Subscription();
   private redirectTo = '/tabs';
   private readonly productId = 'com.aspiware.cctec.basic.monthly';
   private iapObserver: any;
@@ -41,10 +47,14 @@ export class SubscriptionComponent implements OnInit {
     private routerExtensions: RouterExtensions,
     private route: ActivatedRoute,
     private cdr: ChangeDetectorRef,
-    private page: Page
+    private page: Page,
+    private providerService: ProviderService
   ) {}
 
   ngOnInit(): void {
+    this.isEzeeFiber = this.providerService.isEzeeFiber();
+    this.redirectTo = this.route.snapshot.queryParamMap.get('redirect') ||
+      this.providerService.getHomeRoute();
     this.syncTheme();
     this.appearanceChangedHandler = () => {
       this.syncTheme();
@@ -52,13 +62,19 @@ export class SubscriptionComponent implements OnInit {
     };
     Application.on(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
 
+    if (this.isEzeeFiber) {
+      this.resumeHandler = () => this.refreshEzeeStripe();
+      Application.on(Application.resumeEvent, this.resumeHandler);
+      this.refreshEzeeStripe();
+      return;
+    }
+
     if (__IOS__) {
       this.ensureTransactionObserver();
       this.resumeHandler = () => this.processCurrentTransactions();
       Application.on(Application.resumeEvent, this.resumeHandler);
     }
 
-    this.redirectTo = this.route.snapshot.queryParamMap.get('redirect') || '/tabs';
     const reason = this.route.snapshot.queryParamMap.get('reason');
     const shouldRestore = this.route.snapshot.queryParamMap.get('restore') === '1';
 
@@ -74,6 +90,7 @@ export class SubscriptionComponent implements OnInit {
   }
 
   ngOnDestroy(): void {
+    this.stripeRequests.unsubscribe();
     if (this.appearanceChangedHandler) {
       Application.off(Application.systemAppearanceChangedEvent, this.appearanceChangedHandler);
     }
@@ -95,6 +112,11 @@ export class SubscriptionComponent implements OnInit {
   }
 
   public onSubscribe(): void {
+    if (this.isEzeeFiber) {
+      this.openStripeCheckout();
+      return;
+    }
+
     const userId = Number(this.usersService.getUser()?.userId || 0);
     if (userId === 15 || userId === 17) {
       this.subscriptionService.setLocalStatus(true);
@@ -152,6 +174,11 @@ export class SubscriptionComponent implements OnInit {
   }
 
   public onRestore(): void {
+    if (this.isEzeeFiber) {
+      this.refreshEzeeStripe(true);
+      return;
+    }
+
     if (this.usersService.isActiveDemoUser()) {
       this.subscriptionService.setLocalStatus(true);
       this.routerExtensions.navigate([this.redirectTo], { clearHistory: true });
@@ -193,6 +220,63 @@ export class SubscriptionComponent implements OnInit {
 
   public openPrivacyPolicy(): void {
     Utils.openUrl('https://cctec.aspiware.com/privacy/');
+  }
+
+  public get canShowStripeCheckout(): boolean {
+    return this.stripeEnabled;
+  }
+
+  private openStripeCheckout(): void {
+    if (!this.canShowStripeCheckout || this.isBusy || this.isCheckingStripe) {
+      return;
+    }
+
+    this.isBusy = true;
+    this.stripeRequests.add(this.subscriptionService.createEzeeStripeSession('checkout').pipe(
+      finalize(() => {
+        this.isBusy = false;
+        if (!this.stripeRequests.closed) {
+          this.cdr.detectChanges();
+        }
+      }),
+    ).subscribe({
+      next: ({ url }) => {
+        if (!Utils.openUrl(url)) {
+          this.showErrorAlert('Unable to open Stripe Checkout.');
+        }
+      },
+      error: (error) => this.showErrorAlert(error?.error?.message || 'Unable to start Stripe Checkout.'),
+    }));
+  }
+
+  private refreshEzeeStripe(showInactive = false): void {
+    if (this.isBusy || this.isCheckingStripe) {
+      return;
+    }
+
+    this.isCheckingStripe = true;
+    this.stripeRequests.add(this.subscriptionService.getEzeeStripeSubscription().pipe(
+      finalize(() => {
+        this.isCheckingStripe = false;
+        if (!this.stripeRequests.closed) {
+          this.cdr.detectChanges();
+        }
+      }),
+    ).subscribe({
+      next: ({ enabled, isActive }) => {
+        this.stripeEnabled = enabled;
+        if (isActive) {
+          this.routerExtensions.navigate([this.redirectTo], { clearHistory: true });
+        } else if (showInactive) {
+          this.showErrorAlert('No active Stripe subscription was found for this Ezee Fiber account.');
+        }
+      },
+      error: () => {
+        if (showInactive) {
+          this.showErrorAlert('Unable to verify your Ezee Fiber subscription.');
+        }
+      },
+    }));
   }
 
   public openTermsOfService(): void {
