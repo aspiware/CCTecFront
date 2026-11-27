@@ -7,21 +7,18 @@
   <ScrollView>
     <StackLayout class="content-wrap">
       <StackLayout class="plan-card">
-        <Label [text]="isEzeeFiber ? 'Ezee Fiber' : 'Basic'" class="plan-title"></Label>
         <Label text="Track your work and real earnings in one place." class="plan-subtitle"></Label>
 
-        <GridLayout *ngIf="!isEzeeFiber" columns="auto,auto" class="price-row">
+        <GridLayout columns="auto,auto" class="price-row">
           <Label col="0" text="$9.99" class="price-main"></Label>
           <StackLayout col="1" verticalAlignment="middle">
             <Label text="/ month" class="price-unit"></Label>
           </StackLayout>
         </GridLayout>
 
-        <Label *ngIf="!isEzeeFiber" text="Auto-renewable subscription" class="billing-note"></Label>
+        <Label text="Auto-renewable subscription" class="billing-note"></Label>
 
-        <Label *ngIf="!isEzeeFiber" text="7-day free trial • Cancel anytime" class="message message-in-card"></Label>
-        <Label *ngIf="isEzeeFiber && canShowStripeCheckout" text="See the price and billing terms in Stripe Checkout."
-          textWrap="true" class="billing-note"></Label>
+        <Label text="7-day free trial • Cancel anytime" class="message message-in-card"></Label>
 
         <Button
           *ngIf="!isEzeeFiber || canShowStripeCheckout"
@@ -40,8 +37,8 @@
 
         <StackLayout orientation="horizontal" horizontalAlignment="center" class="legal-links">
           <Label text="Privacy Policy" class="legal-link" (tap)="openPrivacyPolicy()"></Label>
-          <Label *ngIf="!isEzeeFiber" text=" | " class="legal-links-separator"></Label>
-          <Label *ngIf="!isEzeeFiber" text="Terms of Use" class="legal-link" (tap)="openTermsOfService()"></Label>
+          <Label text=" | " class="legal-links-separator"></Label>
+          <Label text="Terms of Use" class="legal-link" (tap)="openTermsOfService()"></Label>
         </StackLayout>
 
         <StackLayout class="features-list">
