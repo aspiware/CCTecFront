@@ -1,8 +1,10 @@
-import { AfterViewInit, Component, ElementRef, NO_ERRORS_SCHEMA, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, NO_ERRORS_SCHEMA, OnDestroy, OnInit, ViewChild, ViewContainerRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { NativeScriptCommonModule, PageRouterOutlet } from '@nativescript/angular';
+import { ModalDialogService, NativeScriptCommonModule, PageRouterOutlet } from '@nativescript/angular';
 import { Color, isAndroid, isIOS, TabView } from '@nativescript/core';
 import { Subscription } from 'rxjs';
+import { ForceUpdateComponent } from '../../../force-update/force-update.component';
+import { VersionService } from '../../../shared/services/version.service';
 import { EzeeOrdersService } from '../orders/ezee-orders.service';
 
 @Component({
@@ -20,11 +22,16 @@ export class EzeeTabsContainerComponent implements OnInit, AfterViewInit, OnDest
   private readonly todayTabIndex = 2;
   private readonly todayBadgeBgColor = new Color('#E57373');
   private readonly todayBadgeTextColor = new Color('#FFFFFF');
+  private hasCheckedVersion = false;
+  private hasShownForceUpdate = false;
 
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    private ordersService: EzeeOrdersService
+    private ordersService: EzeeOrdersService,
+    private versionService: VersionService,
+    private modalService: ModalDialogService,
+    private vcRef: ViewContainerRef
   ) {}
 
   public ngOnInit(): void {
@@ -39,7 +46,9 @@ export class EzeeTabsContainerComponent implements OnInit, AfterViewInit, OnDest
         },
       }],
       { relativeTo: this.route, replaceUrl: true }
-    );
+    ).then(() => {
+      this.checkRequiredUpdate();
+    });
   }
 
   public ngAfterViewInit(): void {
@@ -145,5 +154,43 @@ export class EzeeTabsContainerComponent implements OnInit, AfterViewInit, OnDest
     if (tabBar.scrollEdgeAppearance !== undefined) {
       tabBar.scrollEdgeAppearance = appearance;
     }
+  }
+
+  private checkRequiredUpdate(): void {
+    if (this.hasCheckedVersion) {
+      return;
+    }
+
+    this.hasCheckedVersion = true;
+    this.versionService.checkAppStoreVersion().subscribe((status) => {
+      if (!status?.isUpdateAvailable || this.hasShownForceUpdate) {
+        return;
+      }
+
+      this.hasShownForceUpdate = true;
+      const options: any = {
+        context: {
+          localVersion: status.localVersion,
+          storeVersion: status.storeVersion,
+          appStoreUrl: status.appStoreUrl,
+        },
+        viewContainerRef: this.vcRef,
+        animated: true,
+        fullscreen: false,
+        stretched: false,
+        cancelable: false,
+        dismissEnabled: false,
+        ios: {
+          presentationStyle: UIModalPresentationStyle.Custom,
+        },
+      };
+
+      setTimeout(() => {
+        this.modalService.showModal(ForceUpdateComponent, options).catch((error) => {
+          console.log('[EzeeTabsContainer] show force update modal error', error);
+          this.hasShownForceUpdate = false;
+        });
+      }, 200);
+    });
   }
 }

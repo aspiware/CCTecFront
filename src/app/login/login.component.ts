@@ -300,7 +300,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     setNumber("roleId", Number(demoUser.roleId || 2));
     setNumber("settingId", Number(demoUser.settingId || 999999));
     setString("bp", String(demoUser.bp || 'demo'));
-    this.providerService.setProvider(this.loginForm.controls.provider.value);
+    this.providerService.setProvider('xfinity');
     this.subscriptionService.setLocalStatus(!isExpiredDemo);
     this.configService.login();
     this.isBusy = false;
