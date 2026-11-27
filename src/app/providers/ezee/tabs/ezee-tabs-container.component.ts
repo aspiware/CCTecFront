@@ -2,9 +2,11 @@ import { AfterViewInit, Component, ElementRef, NO_ERRORS_SCHEMA, OnDestroy, OnIn
 import { ActivatedRoute, Router } from '@angular/router';
 import { ModalDialogService, NativeScriptCommonModule, PageRouterOutlet } from '@nativescript/angular';
 import { Color, isAndroid, isIOS, TabView } from '@nativescript/core';
+import { getBoolean } from '@nativescript/core/application-settings';
 import { Subscription } from 'rxjs';
 import { ForceUpdateComponent } from '../../../force-update/force-update.component';
 import { VersionService } from '../../../shared/services/version.service';
+import { EzeeOnboardingComponent } from '../onboarding/ezee-onboarding.component';
 import { EzeeOrdersService } from '../orders/ezee-orders.service';
 
 @Component({
@@ -24,6 +26,8 @@ export class EzeeTabsContainerComponent implements OnInit, AfterViewInit, OnDest
   private readonly todayBadgeTextColor = new Color('#FFFFFF');
   private hasCheckedVersion = false;
   private hasShownForceUpdate = false;
+  private hasCheckedOnboarding = false;
+  private hasShownOnboarding = false;
 
   constructor(
     private router: Router,
@@ -158,12 +162,14 @@ export class EzeeTabsContainerComponent implements OnInit, AfterViewInit, OnDest
 
   private checkRequiredUpdate(): void {
     if (this.hasCheckedVersion) {
+      this.checkOnboarding();
       return;
     }
 
     this.hasCheckedVersion = true;
     this.versionService.checkAppStoreVersion().subscribe((status) => {
       if (!status?.isUpdateAvailable || this.hasShownForceUpdate) {
+        this.checkOnboarding();
         return;
       }
 
@@ -192,5 +198,44 @@ export class EzeeTabsContainerComponent implements OnInit, AfterViewInit, OnDest
         });
       }, 200);
     });
+  }
+
+  private checkOnboarding(): void {
+    if (this.hasCheckedOnboarding) {
+      return;
+    }
+
+    this.hasCheckedOnboarding = true;
+    const hasSeenOnboarding = getBoolean('hasSeenEzeeOnboarding', false);
+    if (hasSeenOnboarding || this.hasShownOnboarding) {
+      return;
+    }
+
+    this.hasShownOnboarding = true;
+    const options: any = {
+      context: {},
+      viewContainerRef: this.vcRef,
+      animated: true,
+      fullscreen: true,
+      stretched: true,
+      cancelable: false,
+      dismissEnabled: false,
+      ios: {
+        presentationStyle: UIModalPresentationStyle.FullScreen,
+      },
+    };
+
+    setTimeout(() => {
+      this.modalService.showModal(EzeeOnboardingComponent, options)
+        .then((result) => {
+          if (result?.openSettings && this.mainTabsRef?.nativeElement) {
+            this.mainTabsRef.nativeElement.selectedIndex = 4;
+          }
+        })
+        .catch((error) => {
+          console.log('[EzeeTabsContainer] show onboarding modal error', error);
+          this.hasShownOnboarding = false;
+        });
+    }, 220);
   }
 }
